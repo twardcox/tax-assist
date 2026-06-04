@@ -1,0 +1,67 @@
+# ── Secrets & credentials ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Database (contains user financial data) ───────────────────────────────────
+state/transactions.db
+state/*.db
+state/update_state.json
+
+# ── User-uploaded documents ───────────────────────────────────────────────────
+documents/receipts/*
+documents/contracts/*
+documents/cpa_reviews/*
+documents/entity_docs/*
+documents/payroll/*
+documents/property_docs/*
+documents/tax_returns/*
+!documents/receipts/.gitkeep
+!documents/contracts/.gitkeep
+!documents/cpa_reviews/.gitkeep
+!documents/entity_docs/.gitkeep
+!documents/payroll/.gitkeep
+!documents/property_docs/.gitkeep
+!documents/tax_returns/.gitkeep
+
+# ── Generated reports ─────────────────────────────────────────────────────────
+reports/*.md
+reports/*.pdf
+!reports/.gitkeep
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+.venv/
+venv/
+env/
+.Python
+build/
+dist/
+*.so
+
+# ── Node / frontend ───────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/
+*.tsbuildinfo
+
+# ── Test / coverage ───────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
