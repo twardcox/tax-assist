@@ -1,0 +1,80 @@
+id: section-121-exclusion
+name: Section 121 Primary Residence Gain Exclusion
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "121"
+  irs_publication: "523"
+  form_instruction: "Instructions for Schedule D"
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  Excludes up to $250,000 ($500,000 MFJ) of capital gain from the sale
+  of a primary residence. One of the most valuable tax exclusions for
+  homeowners. Requires the home to have been owned and used as primary
+  residence for at least 2 of the last 5 years.
+
+estimated_value:
+  typical_range: "$0 – $100,000+ in excluded capital gains tax"
+  calculation_basis: "Gain excluded × applicable capital gains rate (0%, 15%, or 20%)"
+  depends_on: [gain_amount, filing_status, holding_period, qualifying_use_period]
+
+eligibility_rules:
+  - rule: "Must have owned the home for at least 2 years in the 5-year period ending on sale date"
+  - rule: "Must have used the home as primary residence for at least 2 years in the 5-year period"
+  - rule: "Cannot have claimed this exclusion within the prior 2 years"
+  - rule: "Exclusion: $250,000 single; $500,000 MFJ (both spouses must meet use test for MFJ)"
+  - rule: "Gain above exclusion is taxable capital gain (may be LTCG eligible)"
+  - rule: "Depreciation taken during rental use is NOT excluded — recaptured at 25%"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "Partial exclusion available if sale due to job change, health, or unforeseen circumstances"
+
+required_user_facts:
+  - fact: "real_estate[*].property_type"
+  - fact: "real_estate[*].primary_residence.years_lived_in"
+  - fact: "real_estate[*].primary_residence.used_as_primary_for_2_of_last_5"
+  - fact: "real_estate[*].acquisition.purchase_price"
+  - fact: "real_estate[*].acquisition.current_market_value"
+
+required_documents:
+  - document: "Closing disclosure from purchase"
+  - document: "Closing disclosure from sale"
+  - document: "Records of capital improvements (increase basis)"
+  - document: "Records of any rental use during ownership period"
+
+required_forms:
+  - form: "Schedule D (Capital Gains and Losses)"
+  - form: "Form 8949 (Sales and Other Dispositions of Capital Assets)"
+
+deadlines:
+  - deadline: "Report in the year of sale"
+
+stacking_rules:
+  compatible_with: []
+  conflicts_with:
+    - rule: "Cannot stack with 1031 exchange on same property in same sale"
+
+risk_level: low
+
+planning_notes: |
+  - Track all capital improvements — they increase basis and reduce the taxable gain
+  - If property was also rented: depreciation recapture applies to rental period depreciation
+  - Timing the sale to maximize qualifying use period (2 of last 5 years) is key
+  - Partial exclusion: if you must sell before 2 years, calculate partial proration based on qualifying days
+
+qualification_pathways:
+  - "If under 2-year threshold: delay sale until 2-year mark if economically feasible"
+  - "If gain exceeds exclusion: consider capital improvements or installment sale to spread gain"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

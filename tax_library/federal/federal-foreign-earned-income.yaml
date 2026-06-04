@@ -1,0 +1,76 @@
+id: foreign-earned-income-exclusion
+name: Foreign Earned Income Exclusion (FEIE)
+category: individual_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "911"
+  irs_publication: "54"
+  form_instruction: "Instructions for Form 2555"
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  US citizens and resident aliens living abroad may exclude up to $130,000
+  (2025) of foreign earned income from US taxable income. Also provides a
+  foreign housing exclusion/deduction for housing costs above a base amount.
+  Must pass either the Bona Fide Residence Test or the Physical Presence Test.
+
+estimated_value:
+  typical_range: "$10,000 – $40,000+/year in tax savings"
+  calculation_basis: "Excluded income × marginal tax rate"
+  depends_on: [foreign_earned_income, days_abroad, housing_costs]
+
+eligibility_rules:
+  - rule: "Must be a US citizen or resident alien with foreign earned income"
+  - rule: "Tax home must be in a foreign country"
+  - rule: "Bona Fide Residence Test: resident of foreign country for full calendar year"
+  - rule: "Physical Presence Test: present in foreign country 330+ days of any 12-month period"
+  - rule: "Exclusion 2025: $130,000 (indexed annually)"
+  - rule: "Does NOT exclude passive income, investment income, or US-source income"
+
+phaseouts:
+  - rule: "No income phaseout for the exclusion itself"
+  - rule: "Stacking issue: FEIE reduces the income base for calculating other US tax benefits (EITC, credits)"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "income.w2_employment"
+  - fact: "income.self_employment"
+
+required_documents:
+  - document: "Passport showing days in foreign country"
+  - document: "Foreign employer records or client contracts"
+  - document: "Lease agreement or utility bills for foreign housing"
+
+required_forms:
+  - form: "Form 2555 (Foreign Earned Income)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (automatic 2-month extension for taxpayers abroad = June 15)"
+
+stacking_rules:
+  compatible_with: [foreign-tax-credit]
+  conflicts_with:
+    - rule: "Cannot use Foreign Tax Credit on income excluded via FEIE"
+
+risk_level: low
+
+planning_notes: |
+  - FEIE vs. Foreign Tax Credit: model both — one is usually better depending on foreign tax rate
+  - Self-employed abroad: still subject to SE tax even with FEIE
+  - Digital nomads: Physical Presence Test (330 days) is the common path
+  - State residency: some states still tax income regardless of FEIE — check domicile rules
+
+qualification_pathways:
+  - "If spending 330+ days abroad: qualify via Physical Presence Test"
+  - "If established abroad long-term: qualify via Bona Fide Residence Test (stronger)"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

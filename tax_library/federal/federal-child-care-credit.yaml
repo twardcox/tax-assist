@@ -1,0 +1,80 @@
+id: child-dependent-care-credit
+name: Child and Dependent Care Credit (CDCC)
+category: individual_credit
+jurisdiction: federal
+
+authority:
+  irc_section: "21"
+  irs_publication: "503"
+  form_instruction: "Instructions for Form 2441"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Credit for expenses paid for care of qualifying children under 13 (or
+  disabled spouse/dependent) so taxpayer could work or look for work.
+  Credit is 20–35% of up to $3,000 (one qualifying person) or $6,000
+  (two or more). Dependent care FSA reduces the expense base dollar-for-dollar.
+
+estimated_value:
+  typical_range: "$600 – $1,200/year (nonrefundable)"
+  calculation_basis: "Qualifying expenses × credit percentage (20–35% based on AGI)"
+  depends_on: [qualifying_expenses, agi, number_of_qualifying_persons]
+
+eligibility_rules:
+  - rule: "Child must be under age 13 when care was provided"
+  - rule: "Must have earned income (or be a full-time student)"
+  - rule: "Married taxpayers: both spouses must have earned income (or one is full-time student/disabled)"
+  - rule: "Care must enable taxpayer to work or look for work"
+  - rule: "Care provider cannot be taxpayer's spouse, child under 19, or dependent"
+  - rule: "Must provide care provider's name, address, and TIN"
+  - rule: "Dependent care FSA reduces qualifying expenses: $5,000 FSA → reduce expense base by $5,000"
+
+phaseouts:
+  - rule: "Credit % decreases from 35% to 20% as AGI rises from $15,000 to $43,000"
+  - rule: "Flat 20% for AGI above $43,000 (not indexed)"
+  - rule: "Credit is non-refundable (cannot exceed tax liability)"
+
+required_user_facts:
+  - fact: "dependents[*].care_expenses"
+  - fact: "dependents[*].age_at_year_end"
+  - fact: "household.estimated_agi"
+  - fact: "healthcare.flexible_spending_accounts.dependent_care_fsa.enrolled"
+  - fact: "healthcare.flexible_spending_accounts.dependent_care_fsa.election_amount"
+
+required_documents:
+  - document: "Care provider's name, address, and TIN (EIN or SSN)"
+  - document: "Receipts or records of care expenses paid"
+  - document: "Dependent care FSA statement (if applicable)"
+
+required_forms:
+  - form: "Form 2441 (Child and Dependent Care Expenses)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [child-tax-credit, earned-income-tax-credit]
+  conflicts_with:
+    - rule: "Expenses reimbursed by dependent care FSA cannot also be claimed for CDCC"
+
+risk_level: low
+
+planning_notes: |
+  - Dependent care FSA ($5,000) is generally more valuable than CDCC for higher earners — use both up to combined $6,000 limit
+  - At 20% credit rate: max credit = $600 (one child) or $1,200 (two+ children)
+  - Summer day camp qualifies; overnight camp does not
+  - Before-school and after-school care qualifies
+
+qualification_pathways:
+  - "If not using dependent care FSA: enroll during open enrollment to layer on top of CDCC"
+  - "If care provider won't give TIN: still report the expense with provider info — credit may still apply"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

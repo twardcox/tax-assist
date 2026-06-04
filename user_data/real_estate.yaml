@@ -1,0 +1,58 @@
+# Real Estate Holdings
+# Add one entry per property. Copy the block to add more.
+
+tax_year: 2025
+
+properties:
+
+  - address:
+    property_type:             # primary_residence | second_home | rental_residential | rental_commercial | land | mixed_use
+    ownership_type:            # individual | llc | partnership | s_corp | tenants_in_common | joint
+    ownership_percent: 100
+
+    acquisition:
+      purchase_date:
+      purchase_price:
+      closing_costs:
+      improvements_since_purchase:
+      current_market_value:
+      cost_basis:              # leave blank — system will calculate if enough data provided
+
+    financing:
+      mortgage_balance:
+      mortgage_interest_paid:
+      points_paid_this_year:
+      property_tax_paid:
+      pmi_paid:
+      refinanced_this_year: false
+
+    rental_use:
+      rental_days:
+      personal_use_days:
+      gross_rental_income:
+      rental_expenses:
+        repairs_maintenance:
+        insurance:
+        utilities:
+        management_fees:
+        advertising:
+        hoa_fees:
+        other:
+      depreciation_taken_prior_years:
+      passive_activity_losses_suspended:
+
+    primary_residence:
+      years_lived_in: null
+      used_as_primary_for_2_of_last_5: null
+      section_121_exclusion_available: null  # $250k/$500k gain exclusion
+
+    short_term_rental:
+      average_rental_period_days: null       # affects tax treatment
+      material_participation: false
+
+    opportunity_zone: false
+    historic_property: false
+    low_income_housing: false
+
+    notes: |
+      Add property notes here.

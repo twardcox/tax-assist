@@ -1,0 +1,95 @@
+id: premium-tax-credit
+name: Premium Tax Credit (ACA Marketplace Subsidy)
+category: healthcare
+jurisdiction: federal
+
+authority:
+  irc_section: "36B"
+  irs_publication: "974"
+  form_instruction: "Instructions for Form 8962"
+  state_source: null
+
+status: active
+
+benefit_type: credit
+
+summary: |
+  The Premium Tax Credit (§36B) subsidizes the cost of health insurance purchased through
+  the ACA Marketplace (healthcare.gov or state exchanges). The credit is based on household
+  income relative to the Federal Poverty Level (FPL): the lower your income relative to FPL,
+  the larger the credit. For 2025, the credit caps your premium cost at a sliding scale from
+  0% (below 150% FPL) to 8.5% (above 400% FPL) of household income. Self-employed individuals
+  and early retirees without employer coverage are the most common beneficiaries.
+
+estimated_value:
+  typical_range: "$2,000 – $20,000+/year depending on household size, age, and income"
+  calculation_basis: "Benchmark plan premium minus required contribution (% of household income)"
+  depends_on:
+    - healthcare.coverage_type (must be marketplace)
+    - household.estimated_agi
+    - household_size
+
+eligibility_rules:
+  - rule: "Must purchase insurance through an ACA Marketplace (not employer plan, not Medicaid)"
+    required_fact: "healthcare.coverage_type = marketplace"
+  - rule: "Household income must be at or above 100% of the Federal Poverty Level"
+    required_fact: "household.estimated_agi, household_size"
+  - rule: "Must not have access to affordable employer-sponsored insurance (<9.83% of income)"
+    required_fact: "no affordable employer coverage"
+  - rule: "Self-employed taxpayers may use SE health insurance deduction AND PTC (complex interaction)"
+    required_fact: "self_employment status"
+
+required_user_facts:
+  - fact: "healthcare.coverage_type"
+  - fact: "household.estimated_agi"
+  - fact: "household_size (household.yaml: spouse + dependents count)"
+
+required_documents:
+  - document: "Form 1095-A (Health Insurance Marketplace Statement) from exchange"
+  - document: "Proof of income for advance credit reconciliation"
+
+required_forms:
+  - form: "Form 8962 (Premium Tax Credit)"
+  - form: "Form 1040 Schedule 3 (nonrefundable and refundable credit)"
+
+deadlines:
+  - deadline: "Advance credit paid monthly during year — reconcile on Form 8962 at filing"
+  - deadline: "Annual enrollment or special enrollment event required"
+
+phaseouts:
+  - rule: "No hard phaseout ceiling — premium is capped at 8.5% of income at all income levels (2025)"
+  - rule: "If advance credit was more than actual credit, repay excess on Form 8962 (repayment cap varies)"
+  - rule: "Income must stay below estimated level — large income increase mid-year can trigger repayment"
+
+stacking_rules:
+  compatible_with:
+    - self-employed-health-insurance
+    - hsa-triple-tax-advantage
+  conflicts_with:
+    - none
+
+risk_level: moderate
+
+risk_notes: |
+  Main risk: income fluctuation. If MAGI ends up significantly above projected income,
+  you may owe back some or all of the advance credit. Self-employed taxpayers face a
+  complex interaction between the SE health insurance deduction (which reduces MAGI)
+  and the PTC amount — iterative calculation required. Use tax software or CPA.
+
+planning_notes: |
+  - Income management is critical: Roth conversions, capital gains, business income spike can cause clawback
+  - SE health insurance deduction reduces MAGI → increases PTC → reduces deduction → circular calculation
+  - ACA open enrollment is November 1 – January 15 — plan insurance before year-end
+  - 150% FPL: $0 premium for benchmark plan (Silver plan cost sharing also maximized at 100-150% FPL)
+  - Household definition: includes spouse and all dependents claimed on return
+
+qualification_pathways:
+  - "Self-employed without employer insurance: check healthcare.gov for your household size and estimated income"
+  - "Early retiree pre-Medicare: ACA PTC can cover the gap years 62-65 — MAGI management is the key lever"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

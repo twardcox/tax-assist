@@ -1,0 +1,6 @@
+# Local Tax Forms Registry
+# Populated as local jurisdictions are added.
+# Most local taxes are payroll/business privilege taxes — few have deduction forms.
+
+forms: []
+# No local forms yet — add when local libraries are enabled in config/jurisdictions.yaml

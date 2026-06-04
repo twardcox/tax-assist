@@ -1,0 +1,60 @@
+# UTBIS Application Configuration
+
+system:
+  name: "Universal Tax Benefit Intelligence System"
+  short_name: "UTBIS"
+  version: "0.1.0"
+  build_phase: 1               # current MVP phase (1-5)
+
+paths:
+  user_data: "user_data/"
+  tax_library: "tax_library/"
+  rules: "rules/"
+  reports: "reports/"
+  documents: "documents/"
+  forms: "forms/"
+  scripts: "scripts/"
+  tests: "tests/"
+
+ai:
+  provider: "anthropic"        # anthropic | openai | local
+  model: "claude-opus-4-8"     # most capable for complex tax reasoning
+  temperature: 0.1             # low temperature for factual/legal reasoning
+  # api_key: loaded from environment variable ANTHROPIC_API_KEY
+
+output:
+  default_report_format: markdown   # markdown | yaml | json | html
+  include_citations: true
+  include_risk_levels: true
+  include_documentation_checklists: true
+  include_form_references: true
+  include_qualification_pathways: true
+
+scanner:
+  include_nearly_eligible: true        # show near-misses in reports
+  include_eligible_if_changed: true    # show pathway opportunities
+  include_future_opportunities: true   # show upcoming law changes
+  minimum_estimated_value: 0           # filter by minimum $ value (0 = show all)
+  risk_level_cap: aggressive           # max risk level to show without CPA flag
+                                       # low | moderate | aggressive | high_review_required
+
+tax_year:
+  current: 2025
+  prior: 2024
+  planning_horizon_years: 3
+
+jurisdictions:
+  federal: true
+  state: true
+  local: false               # enable when local benefit library is populated
+
+report_settings:
+  cpa_packet_auto_generate: false
+  opportunity_report_auto_generate: true
+  flag_missing_documents: true
+  flag_approaching_deadlines: true
+  deadline_warning_days: 90
+
+logging:
+  level: INFO                # DEBUG | INFO | WARNING | ERROR
+  log_file: "utbis.log"

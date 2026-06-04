@@ -1,0 +1,107 @@
+# UTBIS Tax Benefit Record — Schema and Example
+# This file documents the canonical schema for all benefit records.
+# Real benefit records live in tax_library/federal/, tax_library/state/, etc.
+#
+# Copy this file as a starting point for new benefit records.
+# File naming convention: <jurisdiction>-<kebab-benefit-name>.yaml
+# Example: federal-home-office-deduction.yaml
+
+id: home-office-deduction
+name: Home Office Deduction
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "280A"
+  irs_publication: "587"
+  form_instruction: "Instructions for Form 8829"
+  state_source: null           # fill in if state has conforming provision
+
+status: active                 # active | future_effective | proposed | expired | sunsetting
+
+benefit_type: deduction        # deduction | credit | exclusion | deferral | election | exemption | adjustment
+
+summary: |
+  Allows self-employed individuals and certain employees to deduct expenses
+  for the business use of their home. Requires a dedicated space used
+  regularly and exclusively for business.
+
+estimated_value:
+  typical_range: "$500 – $5,000/year"
+  calculation_basis: "Percentage of home expenses based on office square footage"
+  depends_on:
+    - home_expenses
+    - office_square_footage
+    - net_profit
+
+eligibility_rules:
+  - rule: "Must be self-employed (sole prop, LLC, S corp) OR required to work from home by employer"
+    required_fact: "self_employment or employer_required_home_office"
+  - rule: "Space must be used REGULARLY and EXCLUSIVELY for business"
+    required_fact: "exclusive_use_workspace_exists"
+  - rule: "Home office must be principal place of business, or meeting-client location"
+    required_fact: "home_is_primary_business_location"
+  - rule: "Cannot deduct more than net business income (simplified or regular method)"
+    required_fact: "business_net_profit"
+
+required_user_facts:
+  - fact: "self_employment (businesses.yaml)"
+  - fact: "home_office.claimed (businesses.yaml)"
+  - fact: "home_office.square_footage (businesses.yaml)"
+  - fact: "home_total_sqft (businesses.yaml)"
+  - fact: "residence.state (household.yaml)"
+
+required_documents:
+  - document: "Floor plan or sketch showing office dimensions"
+  - document: "Photographs of the exclusive-use workspace"
+  - document: "Utility bills showing home expenses"
+  - document: "Mortgage statement or rent receipts"
+  - document: "Homeowner's or renter's insurance statement"
+  - document: "Business records showing home as principal place of business"
+
+required_forms:
+  - form: "Form 8829 (regular method)"
+  - form: "Schedule C, Part II, Line 30 (simplified method)"
+
+deadlines:
+  - deadline: "Claimed on annual return — April 15 (or extension date)"
+  - deadline: "Election of simplified vs. regular method made on originally-filed return"
+
+phaseouts:
+  - rule: "No income phaseout, but limited to net business profit"
+  - rule: "Employee home office eliminated by TCJA through 2025; evaluate post-2025 law"
+
+stacking_rules:
+  compatible_with:
+    - qbi-deduction
+    - self-employed-health-insurance
+    - business-vehicle-deduction
+    - sep-ira-contribution
+  conflicts_with:
+    - none
+
+risk_level: low
+# low | moderate | aggressive | high_review_required
+
+risk_notes: |
+  Home office is a commonly scrutinized deduction but is very defensible with
+  proper documentation. Exclusive use requirement is the most frequent audit trigger.
+  The simplified method ($5/sq ft up to 300 sq ft) reduces complexity.
+
+planning_notes: |
+  - Compare simplified method ($5/sq ft, max $1,500) vs. regular method (actual expenses)
+  - Regular method is usually better for higher-value homes
+  - Consider photographing workspace annually for audit defense
+  - Deduction reduces QBI base — model both scenarios
+
+qualification_pathways:
+  - "If no dedicated workspace exists: designate and furnish one room or defined area for exclusive business use"
+  - "If workspace is not exclusive: remove personal items and uses from the designated area"
+  - "If business has net loss: deduction is limited; carry forward to profitable year"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

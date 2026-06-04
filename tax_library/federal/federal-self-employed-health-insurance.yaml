@@ -1,0 +1,80 @@
+id: self-employed-health-insurance
+name: Self-Employed Health Insurance Deduction
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "162(l)"
+  irs_publication: "535"
+  form_instruction: "Instructions for Schedule 1, Line 17"
+  state_source: null
+
+status: active
+benefit_type: adjustment
+
+summary: |
+  Self-employed individuals may deduct 100% of health, dental, and long-term
+  care insurance premiums paid for themselves, their spouse, and dependents.
+  This is an above-the-line deduction (reduces AGI), saving both income tax
+  and potentially improving eligibility for other income-tested benefits.
+
+estimated_value:
+  typical_range: "$2,000 – $12,000+/year"
+  calculation_basis: "Premiums paid × marginal tax rate"
+  depends_on: [premium_amount, marginal_tax_rate, net_profit]
+
+eligibility_rules:
+  - rule: "Must have net profit from self-employment (deduction cannot exceed net profit from the business)"
+  - rule: "Cannot be eligible for employer-subsidized health coverage (through own employer or spouse's employer)"
+  - rule: "Premiums must be paid by the business or reimbursed by the business to the owner"
+  - rule: "S Corp owners: premiums must be included in W-2 Box 1 wages, then deducted on Schedule 1"
+  - rule: "Includes health, dental, vision, and qualified long-term care insurance"
+
+phaseouts:
+  - rule: "No income phaseout, but limited to net profit from the business"
+  - rule: "If eligible for employer plan (spouse's employer) in any month, premium for that month is not deductible"
+
+required_user_facts:
+  - fact: "businesses[*].entity_type"
+  - fact: "businesses[*].health_insurance.owner_health_insurance_deducted"
+  - fact: "businesses[*].health_insurance.premium_amount"
+  - fact: "businesses[*].financials.net_profit_loss"
+  - fact: "healthcare.coverage_type"
+  - fact: "household.spouse.employed"
+
+required_documents:
+  - document: "Health insurance premium statements or invoices"
+  - document: "Schedule C or K-1 showing net profit"
+  - document: "Confirmation that no employer plan was available"
+  - document: "W-2 showing premium in Box 1 (S Corp owners)"
+
+required_forms:
+  - form: "Schedule 1, Line 17 (deduction entry)"
+  - form: "Schedule C (net profit basis)"
+
+deadlines:
+  - deadline: "Claimed on annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [qbi-deduction, sep-ira-contribution, solo-401k, home-office-deduction]
+  conflicts_with:
+    - rule: "Cannot deduct if eligible for employer-subsidized plan in same month"
+
+risk_level: low
+
+planning_notes: |
+  - This deduction reduces AGI, making it more powerful than an itemized deduction
+  - Also reduces ACA premium tax credit eligibility at some income levels — model both
+  - Long-term care premium deduction has age-based limits: age 61–70 → $4,710 (2025); 71+ → $5,880
+  - S Corp best practice: have the corporation purchase the policy or reimburse owner, add to W-2
+
+qualification_pathways:
+  - "If on spouse's employer plan: not eligible — but consider whether switching to own plan is cost-effective"
+  - "If no coverage: obtain health insurance policy in business name or as owner"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

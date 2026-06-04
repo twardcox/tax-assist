@@ -1,0 +1,90 @@
+id: pte-election
+name: State Pass-Through Entity (PTE) Tax Election
+category: business_deduction
+jurisdiction: state
+
+authority:
+  irc_section: "164(b)(2) (SALT cap); IRS Notice 2020-75"
+  irs_publication: null
+  state_source: "CA AB 150 (2021); NY Tax Law §860; NJ P.L. 2019 c.320; IL 35 ILCS 5/201; MA G.L. c.62C §6B"
+
+status: active
+
+benefit_type: election
+
+summary: |
+  A PTE tax election allows a pass-through entity (S Corp, partnership, LLC taxed as
+  partnership) to pay state income tax at the entity level and deduct it as a business
+  expense for federal purposes — effectively circumventing the $10,000 SALT deduction cap.
+  The individual owner receives a credit on their state return equal to their share of the
+  PTE tax paid, making the election economically neutral at the state level while generating
+  a federal deduction that can be worth thousands per year.
+
+estimated_value:
+  typical_range: "$3,000 – $50,000+/year"
+  calculation_basis: "Federal marginal rate × state income tax that would otherwise be capped"
+  depends_on:
+    - household.residence.state
+    - businesses.financials.net_profit_loss
+    - household.estimated_agi
+
+eligibility_rules:
+  - rule: "Taxpayer must be a resident of a state that has enacted a PTE tax election"
+    required_fact: "household.residence.state (CA, NY, NJ, IL, MA, and ~30 others)"
+  - rule: "Must have pass-through business income (S Corp, partnership, LLC)"
+    required_fact: "has_self_employment"
+  - rule: "AGI above $200,000 single / $400,000 MFJ for the election to produce net savings vs. standard SALT strategy"
+    required_fact: "household.estimated_agi"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "businesses.entity_type (s_corp | llc_multi | partnership)"
+  - fact: "businesses.financials.net_profit_loss"
+
+required_documents:
+  - document: "State PTE election form filed with entity's state return"
+  - document: "Entity operating agreement or shareholder agreement confirming consent"
+
+required_forms:
+  - form: "CA Form 3893 (PTE Elective Tax Payment Voucher)"
+  - form: "NY IT-204-LL / IT-653"
+  - form: "NJ PTE-100 / PTE-150"
+  - form: "Federal Schedule E / K-1 (entity-level tax flows through)"
+
+deadlines:
+  - deadline: "CA: payment due by June 15 of the tax year to get full credit; election on entity return"
+  - deadline: "NY: election due March 15 for calendar-year entities"
+  - deadline: "Most states: election made on the entity's annual return"
+
+phaseouts: []
+
+stacking_rules:
+  compatible_with:
+    - qbi-deduction
+    - home-office-deduction
+    - sep-ira-contribution
+    - solo-401k
+  conflicts_with:
+    - salt-deduction
+
+risk_level: moderate
+
+risk_notes: |
+  The IRS blessed PTE elections via Notice 2020-75 — this is not an aggressive position.
+  Risk arises from (1) missing the state election deadline, (2) electing in a state where
+  the credit is non-refundable and the owner has insufficient state liability to absorb it,
+  and (3) multi-state entities where the analysis is more complex. CPA coordination required
+  to model the net federal vs. state benefit.
+
+planning_notes: |
+  - Model the net benefit: federal deduction gained vs. any state credit limitations
+  - Election timing matters — some states require payment by June 15 of the tax year
+  - Non-resident partner/shareholder state credits may not be available in all states
+  - S Corps with multiple shareholders must get shareholder consent before electing
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

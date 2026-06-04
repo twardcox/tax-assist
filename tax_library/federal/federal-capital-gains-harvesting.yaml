@@ -1,0 +1,94 @@
+id: capital-gains-harvesting
+name: Capital Gains 0% Bracket Tax Harvesting
+category: investment
+jurisdiction: federal
+
+authority:
+  irc_section: "1(h)"
+  irs_publication: "550"
+  form_instruction: "Schedule D Instructions"
+  state_source: null
+
+status: active
+
+benefit_type: planning_strategy
+
+summary: |
+  Taxpayers in the 10% or 12% ordinary income tax bracket pay 0% federal income tax on
+  long-term capital gains and qualified dividends. "Gain harvesting" means intentionally
+  selling appreciated assets to realize gains while in this bracket, then repurchasing
+  them — permanently eliminating the deferred tax liability on those gains. This strategy
+  is especially powerful in low-income years: retirement transitions, sabbaticals, early
+  retirement, or years with large deductions. Unlike tax-loss harvesting, there is no
+  wash sale rule for gains.
+
+estimated_value:
+  typical_range: "Varies — can eliminate tax on $10,000–$500,000+ of gains"
+  calculation_basis: "0% × eligible LTCG instead of 15% or 20% — permanent tax elimination, not deferral"
+  depends_on:
+    - household.estimated_agi
+    - household.filing_status
+    - investments.taxable_accounts (unrealized gains)
+
+eligibility_rules:
+  - rule: "Taxable income (after deductions) must fall within the 0% LTCG bracket"
+    required_fact: "household.estimated_agi, household.filing_status"
+  - rule: "Must hold appreciated assets in a taxable brokerage account for 12+ months"
+    required_fact: "investments.taxable_accounts"
+  - rule: "2025 0% LTCG bracket tops out at $47,025 taxable income (single) or $94,050 (MFJ)"
+    required_fact: "household.estimated_agi"
+
+required_user_facts:
+  - fact: "household.estimated_agi"
+  - fact: "household.filing_status"
+  - fact: "investments.taxable_accounts"
+
+required_documents:
+  - document: "Brokerage account statements with unrealized gain/loss detail"
+  - document: "Cost basis records for positions held 12+ months"
+
+required_forms:
+  - form: "Schedule D (Capital Gains and Losses)"
+  - form: "Form 8949 (Sales and Other Dispositions of Capital Assets)"
+
+deadlines:
+  - deadline: "Sell by December 31 of tax year to realize gains in that year"
+  - deadline: "Hold period must be >12 months on the sale date for long-term rates"
+
+phaseouts:
+  - rule: "2025: 0% rate applies up to $47,025 taxable income (single), $94,050 (MFJ), $63,000 (HOH)"
+  - rule: "NIIT (3.8% net investment income tax) applies only above $200k single / $250k MFJ — does not affect the 0% bracket"
+
+stacking_rules:
+  compatible_with:
+    - charitable-contribution-deduction
+    - backdoor-roth-ira
+    - salt-deduction
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Very low risk. There is no wash sale rule for gains (unlike losses). After selling,
+  you can immediately repurchase the same shares at the higher cost basis with no penalty.
+  The main risk is miscalculating taxable income and accidentally crossing into the 15%
+  bracket — model carefully with your CPA or tax software.
+
+planning_notes: |
+  - Best years to execute: year of retirement, year of large deductions, or low-income transition years
+  - Model the exact headroom: (0% bracket ceiling) - (taxable income before gains) = maximum harvestable gain
+  - Repurchase the same shares the same day — no waiting period needed (unlike loss harvesting wash sale rule)
+  - Couples: can harvest in lower-earning spouse's individual accounts — filing status affects bracket ceiling
+  - Do NOT let state income tax erode the benefit — some states tax capital gains as ordinary income
+
+qualification_pathways:
+  - "High earner in a low-income year: model taxable income carefully to identify 0% gain headroom"
+  - "No brokerage account with gains yet: start accumulating index funds in taxable accounts now for future harvesting"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

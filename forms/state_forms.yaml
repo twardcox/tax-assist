@@ -1,0 +1,95 @@
+# State Tax Forms Registry
+# Populated as state libraries are built out.
+
+forms:
+
+  # ── No-Income-Tax States ─────────────────────────────────────────────────
+  # No state return required for AK, FL, NV, SD, TX, WA, WY
+
+  # ── PTE Election Forms ───────────────────────────────────────────────────
+
+  - form_number: "CA Form 3893"
+    form_name: "Pass-Through Entity Elective Tax Payment Voucher"
+    jurisdiction: state
+    state: CA
+    official_link: "https://www.ftb.ca.gov/forms/2023/2023-3893.pdf"
+    instructions_link: "https://www.ftb.ca.gov/forms/2023/2023-3893-instructions.html"
+    deadline: "June 15 of the tax year (prepayment); entity return deadline"
+    related_benefits:
+      - pte-election
+
+  - form_number: "NY IT-204-LL"
+    form_name: "Partnership, Limited Liability Company, and Limited Liability Partnership Filing Fee Payment Form"
+    jurisdiction: state
+    state: NY
+    official_link: "https://www.tax.ny.gov/pdf/current_forms/it/it204ll.pdf"
+    instructions_link: ""
+    deadline: "March 15 for calendar-year entities"
+    related_benefits:
+      - pte-election
+
+  - form_number: "NY IT-653"
+    form_name: "Pass-Through Entity Tax Credit"
+    jurisdiction: state
+    state: NY
+    official_link: ""
+    instructions_link: ""
+    deadline: "Filed with individual NY return"
+    related_benefits:
+      - pte-election
+
+  - form_number: "NJ PTE-100"
+    form_name: "Pass-Through Business Alternative Income Tax Return"
+    jurisdiction: state
+    state: NJ
+    official_link: "https://www.nj.gov/treasury/taxation/prntgit.shtml"
+    instructions_link: ""
+    deadline: "Entity return deadline"
+    related_benefits:
+      - pte-election
+
+  # ── EV Credit Forms ──────────────────────────────────────────────────────
+
+  - form_number: "CO DR 0617"
+    form_name: "Alternative Fuel Vehicle Credit"
+    jurisdiction: state
+    state: CO
+    official_link: "https://tax.colorado.gov/sites/tax/files/documents/DR_0617.pdf"
+    instructions_link: ""
+    deadline: "Filed with CO state return for purchase year"
+    related_benefits:
+      - state-ev-credit
+
+  - form_number: "NY IT-253"
+    form_name: "Alternative Fuels and Electric Vehicle Recharging Property Credit"
+    jurisdiction: state
+    state: NY
+    official_link: ""
+    instructions_link: ""
+    deadline: "Filed with NY state return for purchase year"
+    related_benefits:
+      - state-ev-credit
+
+  # ── 529 / Education ──────────────────────────────────────────────────────
+  # Most states: 529 deduction claimed on state income tax return (no separate form)
+  # Line references vary by state — see individual state instructions
+  - form_number: "State Income Tax Return (529 line)"
+    form_name: "529 Contribution Deduction — varies by state return"
+    jurisdiction: state
+    state: ALL
+    official_link: ""
+    instructions_link: ""
+    deadline: "Filed with annual state return; contribution by December 31"
+    related_benefits:
+      - state-529-deduction
+
+  # ── Homestead Exemption ──────────────────────────────────────────────────
+  - form_number: "County Homestead Application"
+    form_name: "Homestead Property Tax Exemption Application (county-specific)"
+    jurisdiction: state
+    state: ALL
+    official_link: ""
+    instructions_link: "Contact your county property appraiser or assessor"
+    deadline: "Most states: March 1; CA: no recurring application"
+    related_benefits:
+      - state-homestead-exemption

@@ -1,0 +1,69 @@
+id: no-income-tax-state
+name: No State Income Tax Benefit
+category: individual_credit
+jurisdiction: state
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "State constitutional or statutory provisions; AK, FL, NV, SD, TX, WA, WY have no broad-based individual income tax"
+
+status: active
+
+benefit_type: exclusion
+
+summary: |
+  Nine states impose no broad-based individual income tax. Residents of these
+  states owe zero state income tax on wages, self-employment income, and most
+  other ordinary income — a permanent, structural savings that compounds every
+  year. NH taxes only interest and dividends (phasing out by 2027); TN phased
+  out its Hall Tax entirely in 2021.
+
+estimated_value:
+  typical_range: "$2,000 – $30,000+/year depending on income and prior-state comparison"
+  calculation_basis: "State effective rate × taxable income avoided"
+  depends_on:
+    - household.residence.state
+    - estimated_agi
+
+eligibility_rules:
+  - rule: "Taxpayer must be a domiciliary resident of a no-income-tax state"
+    required_fact: "household.residence.state"
+
+required_user_facts:
+  - fact: "household.residence.state"
+
+required_documents: []
+
+required_forms: []
+
+deadlines:
+  - deadline: "No filing required for state income tax (no return to file in these states)"
+
+phaseouts: []
+
+stacking_rules:
+  compatible_with:
+    - pte-election
+    - state-529-deduction
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Zero risk — this is simply the absence of a state income tax. The only
+  compliance note is establishing genuine domicile; part-year residents may
+  still owe tax to their prior state for the portion of the year lived there.
+
+planning_notes: |
+  - Residency change to a no-tax state is one of the highest-leverage planning moves for high earners
+  - Document domicile change carefully: driver's license, voter registration, bank address, primary residence
+  - Community property rules (TX, NV, WA) interact with federal planning — flag for CPA review
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

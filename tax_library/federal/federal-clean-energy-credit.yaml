@@ -1,0 +1,72 @@
+id: residential-clean-energy-credit
+name: Residential Clean Energy Credit (Solar, Battery, Wind)
+category: energy
+jurisdiction: federal
+
+authority:
+  irc_section: "25D"
+  irs_publication: null
+  form_instruction: "Instructions for Form 5695"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  30% credit (through 2032) for solar panels, solar water heaters, battery
+  storage (3+ kWh), wind turbines, geothermal heat pumps, and fuel cells
+  installed at primary or secondary residence. Carries forward if it exceeds
+  tax liability. No cap on credit amount.
+
+estimated_value:
+  typical_range: "$3,000 – $15,000+ per installation"
+  calculation_basis: "30% × installed cost of qualifying property"
+  depends_on: [installation_cost, tax_liability]
+
+eligibility_rules:
+  - rule: "Property must be installed at taxpayer's US residence (primary or secondary home)"
+  - rule: "Solar panels, solar water heater, small wind turbines, geothermal heat pump, battery storage (3 kWh+)"
+  - rule: "Credit is 30% through 2032, declining to 26% (2033), 22% (2034), 0% (2035)"
+  - rule: "Battery storage added to qualifying property by Inflation Reduction Act (IRA 2022)"
+  - rule: "Carries forward — excess credit can be used in future years"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "Credit limited to tax liability — excess carries forward indefinitely"
+
+required_user_facts:
+  - fact: "real_estate[*].property_type"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Contractor invoice showing system cost and installation date"
+  - document: "Manufacturer certification statement for qualifying property"
+
+required_forms:
+  - form: "Form 5695 (Residential Energy Credits)"
+
+deadlines:
+  - deadline: "Property must be installed and placed in service during tax year"
+
+stacking_rules:
+  compatible_with: [energy-efficient-home-improvement-credit]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - 30% credit makes solar a compelling investment — model ROI including credit
+  - Battery storage (standalone) now qualifies even without solar — added 2023
+  - State incentives often stack on top of the federal credit
+  - Large systems can generate multi-year carryforwards
+
+qualification_pathways:
+  - "If renting: credit not available for renters — applicable only to homeowners"
+  - "If tax liability too low to use full credit: carryforward to future years"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

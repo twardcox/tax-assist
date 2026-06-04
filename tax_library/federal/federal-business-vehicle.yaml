@@ -1,0 +1,83 @@
+id: business-vehicle-deduction
+name: Business Vehicle Deduction (Mileage or Actual Expense)
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "162, 274"
+  irs_publication: "463"
+  form_instruction: "Instructions for Schedule C, Part II"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Business use of a vehicle is deductible using either the standard mileage
+  rate (67 cents/mile for 2024; 2025 rate to be announced) or the actual
+  expense method (depreciation + gas + insurance + repairs × business use %).
+  Heavy SUVs and trucks (>6,000 lb GVWR) get favorable depreciation treatment.
+
+estimated_value:
+  typical_range: "$2,000 – $25,000+/year"
+  calculation_basis: "Business miles × rate OR actual expenses × business use %"
+  depends_on: [business_miles, vehicle_cost, business_use_percent]
+
+eligibility_rules:
+  - rule: "Vehicle must be used for business — commuting is NOT deductible"
+  - rule: "Standard mileage: 67¢/mile (2024); IRS announces 2025 rate in December 2024"
+  - rule: "Must choose method in first year vehicle is placed in service"
+  - rule: "Standard mileage cannot be used if: fleet of 5+ vehicles, MACRS depreciation claimed, Section 179 claimed, or vehicle is leased (in some cases)"
+  - rule: "Actual method: deduct gas, insurance, repairs, registration, depreciation — × business use %"
+  - rule: "Heavy vehicle (GVWR >6,000 lbs): Section 179 up to $30,500 (SUV); unlimited for trucks/vans"
+  - rule: "Must maintain contemporaneous mileage log: date, destination, business purpose, miles"
+
+phaseouts:
+  - rule: "Luxury auto depreciation limits apply (passenger vehicles)"
+  - rule: "2024 luxury auto Year 1 limit: $20,400 (with bonus depreciation)"
+
+required_user_facts:
+  - fact: "businesses[*].vehicle.business_vehicle"
+  - fact: "businesses[*].vehicle.business_miles"
+  - fact: "businesses[*].vehicle.total_miles"
+  - fact: "businesses[*].vehicle.standard_mileage_method"
+  - fact: "businesses[*].vehicle.actual_expense_method"
+
+required_documents:
+  - document: "Contemporaneous mileage log (date, destination, business purpose, miles)"
+  - document: "Vehicle purchase documents (if using actual method)"
+  - document: "Fuel, insurance, repair receipts (if using actual method)"
+  - document: "Vehicle registration showing GVWR (for heavy vehicle treatment)"
+
+required_forms:
+  - form: "Schedule C, Part IV (vehicle information)"
+  - form: "Form 4562 (if claiming depreciation)"
+
+deadlines:
+  - deadline: "Claimed on annual return — April 15 (or extension)"
+  - deadline: "Mileage log must be contemporaneous — do not reconstruct at year-end"
+
+stacking_rules:
+  compatible_with: [section-179-expensing, bonus-depreciation, qbi-deduction]
+  conflicts_with:
+    - rule: "Cannot use standard mileage after claiming Section 179 or bonus on the vehicle"
+
+risk_level: low
+
+planning_notes: |
+  - Mileage log is the #1 audit target for vehicle deductions — maintain rigorously
+  - Standard mileage is simpler; actual method wins for high-cost or high-expense vehicles
+  - Heavy SUV (GVWR >6,000 lbs): Section 179 available up to $30,500; popular year-end strategy
+  - Non-SUV truck/van (GVWR >6,000 lbs): full Section 179 available — larger benefit
+  - Commuting miles are never deductible regardless of method
+
+qualification_pathways:
+  - "If no mileage log maintained: begin tracking immediately using MileIQ, TripLog, or manual log"
+  - "If mixed personal/business vehicle: calculate business use % and apply to actual expenses"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

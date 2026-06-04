@@ -1,0 +1,85 @@
+id: backdoor-roth-ira
+name: Backdoor Roth IRA Conversion
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "408A, 408(d)(2)"
+  irs_publication: "590-A, 590-B"
+  form_instruction: "Instructions for Form 8606"
+  state_source: null
+
+status: active
+benefit_type: election
+
+summary: |
+  High-income taxpayers who exceed the Roth IRA contribution income limits
+  can still contribute by making a nondeductible traditional IRA contribution
+  and immediately converting it to a Roth IRA. Done correctly with no pre-tax
+  IRA balances, the conversion is essentially tax-free. This unlocks permanent
+  tax-free growth regardless of income.
+
+estimated_value:
+  typical_range: "$1,000 – $10,000+/year in future tax savings"
+  calculation_basis: "Roth contribution × projected tax rate at withdrawal (avoided)"
+  depends_on: [contribution_amount, age, investment_horizon, future_tax_rate]
+
+eligibility_rules:
+  - rule: "Direct Roth IRA contribution income limit 2025: MFJ phases out $236,000–$246,000; Single $150,000–$165,000"
+  - rule: "Backdoor Roth: make nondeductible traditional IRA contribution, then convert — no income limit on conversion"
+  - rule: "Pro-rata rule: if you have other pre-tax IRA balances, the conversion is partially taxable"
+  - rule: "Contribution limit 2025: $7,000 ($8,000 if age 50+) per person"
+  - rule: "Must have earned income at least equal to contribution amount"
+  - rule: "Cannot contribute more than the individual's taxable compensation"
+
+phaseouts:
+  - rule: "Roth IRA direct contribution: MFJ $236,000–$246,000; Single $150,000–$165,000 (2025)"
+  - rule: "Backdoor has no income phaseout for the conversion step itself"
+
+required_user_facts:
+  - fact: "household.estimated_agi"
+  - fact: "household.filing_status"
+  - fact: "retirement.roth_ira.income_eligible"
+  - fact: "retirement.traditional_ira.balance"
+  - fact: "retirement.traditional_ira.nondeductible_basis"
+  - fact: "retirement.roth_conversion.conversions_this_year"
+
+required_documents:
+  - document: "Form 5498 from IRA custodian (confirming contribution)"
+  - document: "Form 1099-R from custodian showing conversion distribution"
+  - document: "Prior Form 8606s (showing accumulated nondeductible basis)"
+
+required_forms:
+  - form: "Form 8606, Part I (nondeductible IRA contribution)"
+  - form: "Form 8606, Part II (Roth conversion reporting)"
+
+deadlines:
+  - deadline: "IRA contribution: April 15 (can contribute for prior year)"
+  - deadline: "Roth conversion: December 31 of the tax year"
+  - deadline: "Best practice: contribute in January, convert immediately (same tax year)"
+
+stacking_rules:
+  compatible_with: [solo-401k, sep-ira-contribution, mega-backdoor-roth]
+  conflicts_with:
+    - rule: "Pro-rata rule: pre-tax IRA balances dilute the tax-free nature of conversion — consider rolling pre-tax IRA into employer 401(k) first"
+
+risk_level: low
+
+planning_notes: |
+  - Pro-rata trap: if you have $100k in traditional IRA and add $7k nondeductible, only 6.5% converts tax-free
+  - Solution: roll pre-tax IRA balance into current employer 401(k) before doing backdoor
+  - Mega backdoor Roth (Solo 401k): up to $46,500 after-tax contributions → Roth conversion
+  - Married couple: both spouses can do backdoor = $14,000/year ($16,000 if both 50+) into Roth
+  - File Form 8606 EVERY YEAR you make nondeductible contributions — tracks basis
+
+qualification_pathways:
+  - "If income below Roth limit: contribute directly to Roth IRA (simpler)"
+  - "If pre-tax IRA balance exists: roll to 401(k) before converting to avoid pro-rata rule"
+  - "If no earned income: cannot contribute to IRA (spousal IRA exception: working spouse can contribute for non-working spouse)"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

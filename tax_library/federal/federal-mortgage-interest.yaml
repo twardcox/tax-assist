@@ -1,0 +1,74 @@
+id: mortgage-interest-deduction
+name: Mortgage Interest Deduction
+category: individual_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "163(h)"
+  irs_publication: "936"
+  form_instruction: "Instructions for Schedule A"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Interest on up to $750,000 of mortgage debt (acquisition debt) on a primary
+  and one secondary residence is deductible if itemizing. Applies to first and
+  second mortgages, home equity loans used to buy/build/improve the home.
+  Points paid to obtain a mortgage are also deductible.
+
+estimated_value:
+  typical_range: "$3,000 – $25,000+/year"
+  calculation_basis: "Mortgage interest paid × marginal tax rate (if itemizing)"
+  depends_on: [mortgage_balance, interest_rate, itemizing_deductions]
+
+eligibility_rules:
+  - rule: "Must itemize deductions — does not benefit taxpayers taking standard deduction"
+  - rule: "Debt limit: $750,000 for loans taken after December 15, 2017 ($1M for prior loans)"
+  - rule: "Applies to primary residence and ONE secondary/vacation home"
+  - rule: "Home equity loan interest deductible only if used to buy, build, or substantially improve the home"
+  - rule: "Must receive Form 1098 from lender"
+
+phaseouts:
+  - rule: "No income-based phaseout (itemized deduction limitation eliminated by TCJA)"
+  - rule: "Loan balance above $750k: prorate deductible interest"
+
+required_user_facts:
+  - fact: "real_estate[*].financing.mortgage_balance"
+  - fact: "real_estate[*].financing.mortgage_interest_paid"
+  - fact: "household.itemizing_deductions"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Form 1098 (Mortgage Interest Statement) from lender"
+  - document: "Closing disclosure showing loan origination date (for pre/post 2017 limit)"
+
+required_forms:
+  - form: "Schedule A (Itemized Deductions)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [salt-deduction, charitable-contribution-deduction, real-estate-depreciation]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Key question: do total itemized deductions exceed standard deduction ($30,000 MFJ / $15,000 Single in 2025)?
+  - If not itemizing: mortgage interest provides no federal benefit
+  - Points paid to reduce interest rate are deductible in year paid (purchase) or amortized (refinance)
+  - SALT $10k cap limits the combined benefit — mortgage interest is the bigger driver for most homeowners
+
+qualification_pathways:
+  - "If using standard deduction: calculate whether itemized deductions (mortgage + SALT + charity) exceed the standard"
+  - "If below standard deduction threshold: bunching charitable gifts into alternate years can tip the balance"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

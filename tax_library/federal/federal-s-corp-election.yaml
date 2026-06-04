@@ -1,0 +1,85 @@
+id: s-corp-election
+name: S Corporation Election (SE Tax Reduction)
+category: entity_election
+jurisdiction: federal
+
+authority:
+  irc_section: "1361-1379, 3121"
+  irs_publication: "589"
+  form_instruction: "Instructions for Form 2553"
+  state_source: null
+
+status: active
+benefit_type: election
+
+summary: |
+  An LLC or C Corp can elect S Corp tax status. Owner-employees pay
+  themselves a reasonable W-2 salary; profit above that salary avoids
+  self-employment tax (15.3% on first $176,100; 2.9% above). For
+  profitable businesses this can save $5,000–$20,000+ per year.
+
+estimated_value:
+  typical_range: "$3,000 – $20,000+/year"
+  calculation_basis: "15.3% SE tax savings on net profit above reasonable salary"
+  depends_on: [net_profit, reasonable_salary, filing_status]
+
+eligibility_rules:
+  - rule: "Business must have net profit consistently above ~$50,000–$60,000/year (general threshold for S Corp to be worthwhile after payroll costs)"
+  - rule: "Must be a domestic corporation or LLC"
+  - rule: "Cannot have more than 100 shareholders"
+  - rule: "Shareholders must be US citizens/residents (no foreign shareholders, no C corps as shareholders)"
+  - rule: "Must have only one class of stock"
+  - rule: "Owner must take reasonable W-2 compensation — IRS compares to market rates"
+
+phaseouts:
+  - rule: "No income phaseout, but payroll compliance costs offset savings at low profit levels"
+  - rule: "SE tax savings decrease above Social Security wage base ($176,100 in 2025) — only Medicare rate (2.9%) saved above that"
+
+required_user_facts:
+  - fact: "businesses[*].entity_type"
+  - fact: "businesses[*].financials.net_profit_loss"
+  - fact: "businesses[*].employees.owner_w2_salary"
+  - fact: "businesses[*].employees.payroll_tax_deposits"
+
+required_documents:
+  - document: "Prior year Schedule C or partnership return showing net profit trend"
+  - document: "Comparable salary data for owner's role (BLS, salary surveys)"
+  - document: "State S Corp filing confirmation (some states require separate election)"
+
+required_forms:
+  - form: "Form 2553 (S Corp election — must file within 2 months 15 days of tax year start)"
+  - form: "Form 941 (quarterly payroll tax deposits)"
+  - form: "Form W-2 (annual wage reporting for owner)"
+  - form: "Form 1120-S (S Corp annual return)"
+  - form: "Schedule K-1 (owner's share of income)"
+
+deadlines:
+  - deadline: "Form 2553: no later than 2 months and 15 days after the beginning of the first tax year the election is to take effect"
+  - deadline: "Form 941: quarterly — April 30, July 31, October 31, January 31"
+  - deadline: "Form 1120-S: March 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [qbi-deduction, home-office-deduction, solo-401k, sep-ira-contribution, self-employed-health-insurance]
+  conflicts_with: []
+
+risk_level: moderate
+
+planning_notes: |
+  - Run payroll throughout the year — do not pay all W-2 compensation in December
+  - IRS audits low W-2 salary / high distribution splits aggressively
+  - Reasonable salary: typically 30–50% of net profit, anchored to market data
+  - State conformity varies — some states (CA, NY, NJ) have separate S Corp taxes or fees
+  - Must maintain corporate formalities: meeting minutes, separate bank account, operating agreement
+  - Solo 401(k) employee deferrals based on W-2, not distributions — salary amount matters
+
+qualification_pathways:
+  - "If profit < $50k: wait until profit grows; sole prop is simpler and cheaper at low income"
+  - "If no payroll setup: hire a payroll provider (Gusto, ADP) — cost ~$600–1,200/year"
+  - "If existing LLC: file Form 2553 before March 15 to elect for current year (or get late election relief)"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

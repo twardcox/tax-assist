@@ -1,0 +1,114 @@
+# Documents Index
+# Tracks which source documents have been collected and their file locations.
+# This is a manifest — actual documents live in the documents/ subdirectories.
+
+tax_year: 2025
+
+income_documents:
+  w2_forms:
+    - employer:
+      file:                    # e.g. documents/tax_returns/w2-employer-2025.pdf
+      date_received:
+      processed: false
+
+  form_1099_nec:               # Nonemployee compensation
+    - payer:
+      amount:
+      file:
+      processed: false
+
+  form_1099_misc:
+    - payer:
+      file:
+      processed: false
+
+  form_1099_int:               # Interest income
+    - institution:
+      file:
+      processed: false
+
+  form_1099_div:               # Dividends
+    - institution:
+      file:
+      processed: false
+
+  form_1099_b:                 # Brokerage proceeds
+    - institution:
+      file:
+      processed: false
+
+  form_1099_r:                 # Retirement distributions
+    - institution:
+      file:
+      processed: false
+
+  form_k1:
+    - entity:
+      file:
+      processed: false
+
+  form_ssa1099:                # Social Security
+    file:
+    processed: false
+
+  form_1098:                   # Mortgage interest
+    - lender:
+      file:
+      processed: false
+
+  form_1098t:                  # Tuition
+    - school:
+      file:
+      processed: false
+
+  form_1098e:                  # Student loan interest
+    - servicer:
+      file:
+      processed: false
+
+prior_returns:
+  - year: 2024
+    file:
+    processed: false
+  - year: 2023
+    file:
+    processed: false
+
+business_documents:
+  bank_statements: false
+  profit_loss_statement: false
+  mileage_log: false
+  home_office_photos: false
+  home_office_floor_plan: false
+  receipts_organized: false    # see documents/receipts/
+
+real_estate_documents:
+  closing_disclosures: false
+  property_tax_bills: false
+  lease_agreements: false
+  rental_ledgers: false
+  improvement_receipts: false
+
+entity_documents:
+  articles_of_incorporation: false
+  operating_agreement: false
+  bylaws: false
+  s_corp_election_2553: false
+  ein_confirmation: false
+
+payroll_records:
+  payroll_reports: false
+  form_941: false
+  w3_summary: false
+
+charitable_giving:
+  receipt_letters: false       # required for gifts over $250
+  non_cash_appraisals: false   # required for non-cash gifts over $500
+
+healthcare:
+  hsa_statement: false
+  medical_receipts: false
+  insurance_explanation_of_benefits: false
+
+notes: |
+  Add document collection notes here. Flag any missing critical documents.

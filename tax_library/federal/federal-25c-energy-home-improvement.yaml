@@ -1,0 +1,89 @@
+id: 25c-energy-home-improvement
+name: Energy Efficient Home Improvement Credit (§25C)
+category: energy
+jurisdiction: federal
+
+authority:
+  irc_section: "25C"
+  irs_publication: "null"
+  form_instruction: "Instructions for Form 5695 (Part II)"
+  state_source: null
+
+status: active
+
+benefit_type: credit
+
+summary: |
+  The §25C credit provides a 30% credit on eligible home energy improvements including
+  heat pumps (HVAC and water heaters), insulation, exterior doors, windows and skylights,
+  and home energy audits. The credit is capped at $1,200/year for most items, with a
+  separate $2,000/year limit for heat pumps and biomass stoves — for a combined maximum
+  of $3,200/year. Unlike §25D (solar), this credit requires improvements to an existing
+  primary residence (new construction does not qualify).
+
+estimated_value:
+  typical_range: "$600 – $3,200/year"
+  calculation_basis: "30% × eligible improvement costs; annual caps apply per category"
+  depends_on:
+    - real_estate.properties (primary_residence present)
+    - home improvement costs this tax year
+
+eligibility_rules:
+  - rule: "Must own and live in the home (primary residence; renter does not qualify)"
+    required_fact: "real_estate.properties (primary_residence type)"
+  - rule: "Home must be an existing structure — new construction does not qualify"
+    required_fact: "primary residence ownership"
+  - rule: "Products must meet energy efficiency standards (ENERGY STAR certified or equivalent)"
+    required_fact: "qualifying product purchased this year"
+  - rule: "Annual caps: $1,200 (insulation, doors, windows, energy audit) + $2,000 (heat pumps, biomass)"
+    required_fact: "improvement amount"
+
+required_user_facts:
+  - fact: "real_estate.properties (primary_residence)"
+
+required_documents:
+  - document: "Product manufacturer's certification statement (Energy Star or §25C compliance)"
+  - document: "Purchase receipts for qualifying improvements"
+  - document: "Contractor invoice if professionally installed"
+
+required_forms:
+  - form: "Form 5695, Part II"
+
+deadlines:
+  - deadline: "Improvements must be placed in service by December 31 of the tax year"
+  - deadline: "Credit claimed on annual return (Form 5695)"
+
+phaseouts:
+  - rule: "No income phaseout — available at all income levels"
+  - rule: "Annual cap resets each tax year — spread improvements across multiple years to maximize"
+
+stacking_rules:
+  compatible_with:
+    - residential-clean-energy-credit
+    - mortgage-interest-deduction
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Very low risk. Credit is well-defined with specific product categories and certification
+  requirements. The main pitfall is purchasing non-qualifying products or applying the
+  wrong annual cap. Always get the manufacturer's certification statement.
+
+planning_notes: |
+  - §25C and §25D are separate credits — claiming solar (§25D) does not reduce the §25C limit
+  - If you have multiple improvements planned, spread them across tax years to use the $3,200 annual cap each year
+  - Heat pumps ($2,000 cap) and insulation/windows/doors ($1,200 cap) have separate annual limits — both can be claimed in the same year
+  - Home energy audit: credit up to $150 for an energy audit (counted toward $1,200 cap)
+
+qualification_pathways:
+  - "Planning HVAC replacement: heat pump qualifies for up to $2,000 30% credit vs. gas furnace which does not qualify"
+  - "Drafty windows: ENERGY STAR certified windows = up to $600 (30% × $2,000 window cap)"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

@@ -1,0 +1,74 @@
+id: clean-vehicle-credit
+name: Clean Vehicle Credit (EV Tax Credit)
+category: energy
+jurisdiction: federal
+
+authority:
+  irc_section: "30D, 25E"
+  irs_publication: null
+  form_instruction: "Instructions for Form 8936"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Up to $7,500 for purchase of a new clean vehicle (EV or PHEV) or up to
+  $4,000 for a used clean vehicle. Effective 2024, credit can be transferred
+  to the dealer as an immediate discount at point of sale. Income and vehicle
+  price caps apply under the Inflation Reduction Act.
+
+estimated_value:
+  typical_range: "$3,750 – $7,500 (new); $2,000 – $4,000 (used)"
+  calculation_basis: "Credit amount varies by battery size and vehicle assembly location"
+  depends_on: [vehicle_msrp, buyer_agi, vehicle_assembly_location, battery_kwh]
+
+eligibility_rules:
+  - rule: "New vehicle: final assembly in North America"
+  - rule: "New vehicle MSRP limits: SUVs/trucks/vans ≤ $80,000; sedans/other ≤ $55,000"
+  - rule: "New vehicle income limit: MFJ ≤ $300,000; Single ≤ $150,000; HOH ≤ $225,000"
+  - rule: "Used vehicle: model year 2 or more years old; price ≤ $25,000; purchased from dealer"
+  - rule: "Used vehicle income limit: MFJ ≤ $150,000; Single ≤ $75,000"
+  - rule: "Credit can be transferred to dealer as cash-equivalent reduction in purchase price (2024+)"
+  - rule: "Battery sourcing requirements: North American critical minerals and battery component thresholds"
+
+phaseouts:
+  - rule: "Income limits are cliffs, not gradual phaseouts — exceeding by $1 disqualifies"
+  - rule: "Income tested on PRIOR YEAR or CURRENT YEAR AGI, whichever is lower"
+
+required_user_facts:
+  - fact: "household.estimated_agi"
+  - fact: "household.filing_status"
+
+required_documents:
+  - document: "Dealer's time-of-sale report confirming vehicle VIN and credit eligibility"
+  - document: "Purchase agreement showing MSRP"
+
+required_forms:
+  - form: "Form 8936 (Clean Vehicle Credits)"
+
+deadlines:
+  - deadline: "Vehicle must be purchased and titled during tax year"
+
+stacking_rules:
+  compatible_with: [residential-clean-energy-credit]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Transfer option: take credit at dealer at time of purchase — no need to wait for tax return
+  - Check current VIN eligibility at fueleconomy.gov before purchase
+  - Battery sourcing rules change annually — verify credit amount before purchase
+  - Commercial clean vehicle credit (Form 8936) has different rules for business vehicles
+
+qualification_pathways:
+  - "If income above limit: check prior year AGI — lower of current/prior year applies"
+  - "If vehicle MSRP above cap: look for qualifying models below threshold"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

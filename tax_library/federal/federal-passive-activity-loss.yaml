@@ -1,0 +1,80 @@
+id: passive-activity-loss
+name: Rental Real Estate Passive Loss & $25,000 Allowance
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "469"
+  irs_publication: "527, 925"
+  form_instruction: "Instructions for Form 8582"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Rental real estate losses are generally passive, offsetting only passive income.
+  However, active participants in rental real estate can deduct up to $25,000 of
+  rental losses against ordinary income. This allowance phases out $50,000–$150,000
+  AGI. Real estate professionals with 750+ hours can deduct unlimited rental losses
+  against all income.
+
+estimated_value:
+  typical_range: "$0 – $25,000/year (ordinary) or unlimited for REPs"
+  calculation_basis: "Rental losses deductible up to allowance or offset by passive income"
+  depends_on: [rental_net_loss, agi, real_estate_professional_hours]
+
+eligibility_rules:
+  - rule: "Must actively participate in rental activity (make management decisions)"
+  - rule: "$25,000 allowance: AGI must be under $150,000 (full allowance below $100,000)"
+  - rule: "Must own at least 10% of rental property"
+  - rule: "Real estate professional: 750+ hours/year in real property trades + more time in RE than any other activity"
+  - rule: "Suspended losses carry forward and are fully deductible at property sale"
+
+phaseouts:
+  - rule: "Full $25,000 allowance when AGI ≤ $100,000"
+  - rule: "Phases out $1 per $2 of AGI above $100,000"
+  - rule: "Fully phased out when AGI ≥ $150,000"
+  - rule: "Real estate professionals: no phaseout — losses fully deductible"
+
+required_user_facts:
+  - fact: "real_estate[*].rental_use.rental_days"
+  - fact: "real_estate[*].rental_use.gross_rental_income"
+  - fact: "real_estate[*].rental_use.rental_expenses"
+  - fact: "real_estate[*].rental_use.passive_activity_losses_suspended"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Schedule E showing rental income and expenses"
+  - document: "Hours log (especially if claiming real estate professional status)"
+  - document: "Prior suspended loss carryforward amounts"
+
+required_forms:
+  - form: "Form 8582 (Passive Activity Loss Limitations)"
+  - form: "Schedule E (rental income and expenses)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [real-estate-depreciation, real-estate-professional-status, cost-segregation]
+  conflicts_with: []
+
+risk_level: moderate
+
+planning_notes: |
+  - Above $150k AGI: rental losses suspend and carry forward until rental income or property sale
+  - Real estate professional status is powerful but heavily scrutinized — maintain hourly logs
+  - STR (short-term rental) with material participation may be non-passive — different analysis
+  - Consider Roth conversion to manage AGI below $100k threshold in low-income years
+
+qualification_pathways:
+  - "If AGI above $150k: pursue real estate professional status OR use STR + material participation strategy"
+  - "If carrying suspended losses: they release fully at property sale — factor into exit planning"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

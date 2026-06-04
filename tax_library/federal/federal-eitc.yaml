@@ -1,0 +1,82 @@
+id: earned-income-tax-credit
+name: Earned Income Tax Credit (EITC)
+category: individual_credit
+jurisdiction: federal
+
+authority:
+  irc_section: "32"
+  irs_publication: "596"
+  form_instruction: "Instructions for Schedule EIC"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Refundable credit for low-to-moderate income workers. Maximum credit for 2025:
+  $649 (no children), $4,328 (1 child), $7,152 (2 children), $8,046 (3+ children).
+  Fully refundable — can exceed taxes owed. One of the largest anti-poverty
+  programs in the tax code.
+
+estimated_value:
+  typical_range: "$649 – $8,046/year"
+  calculation_basis: "Earned income × credit rate, phased in and then out by income"
+  depends_on: [earned_income, agi, filing_status, number_of_qualifying_children]
+
+eligibility_rules:
+  - rule: "Must have earned income (wages, self-employment — not investment income)"
+  - rule: "Investment income limit 2025: $11,950 — exceeding this disqualifies the entire credit"
+  - rule: "Must be US citizen or resident alien with valid SSN"
+  - rule: "Cannot use MFS filing status"
+  - rule: "Cannot be claimed as a dependent on another return"
+  - rule: "Qualifying children must meet age, residency, and relationship tests"
+  - rule: "No qualifying children: must be age 25–64 at year-end"
+
+phaseouts:
+  - rule: "2025 AGI phaseout begins (MFJ, 3+ children): $26,511; fully phased out at $66,819"
+  - rule: "Single, 3+ children: phases out $20,000 to $59,899"
+  - rule: "Phaseout ranges vary by filing status and number of children — see IRS tables"
+
+required_user_facts:
+  - fact: "household.estimated_agi"
+  - fact: "household.filing_status"
+  - fact: "income.w2_employment[*].wages"
+  - fact: "income.self_employment[*].net_profit"
+  - fact: "income.investment_income"
+  - fact: "dependents[*].eitc_qualifying_child"
+
+required_documents:
+  - document: "W-2 or Schedule C showing earned income"
+  - document: "Proof of qualifying child relationship and residency"
+  - document: "SSN documentation for all qualifying children"
+
+required_forms:
+  - form: "Schedule EIC (qualifying child information)"
+  - form: "Form 1040 (credit claimed on main return)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+  - deadline: "Can amend up to 3 years back to claim missed EITC"
+
+stacking_rules:
+  compatible_with: [child-tax-credit, child-dependent-care-credit]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - EITC is fully refundable — valuable even with zero tax liability
+  - Self-employed: calculate carefully — both too low and too high net income reduce the credit
+  - IRS audits EITC at high rates — keep documentation of qualifying child's residency
+  - Fraudulent EITC claims can result in multi-year bars from claiming the credit
+
+qualification_pathways:
+  - "If just above phaseout: retirement contributions (IRA, SEP) reduce AGI and may restore eligibility"
+  - "If investment income near limit: consider shifting investments to tax-deferred accounts"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

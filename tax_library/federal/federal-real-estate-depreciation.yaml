@@ -1,0 +1,81 @@
+id: real-estate-depreciation
+name: Rental Property Depreciation
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "167, 168"
+  irs_publication: "527, 946"
+  form_instruction: "Instructions for Schedule E / Form 4562"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Residential rental property is depreciated over 27.5 years; commercial over
+  39 years. Depreciation is a non-cash deduction that shelters rental income
+  and can create paper losses — one of the most powerful benefits of real estate
+  ownership. Cost segregation can accelerate depreciation to 5, 7, or 15 years
+  for personal property and land improvements.
+
+estimated_value:
+  typical_range: "$3,000 – $50,000+/year per property"
+  calculation_basis: "Depreciable basis ÷ 27.5 (residential) or 39 (commercial)"
+  depends_on: [purchase_price, land_value, improvements, cost_segregation]
+
+eligibility_rules:
+  - rule: "Property must be held for rental or business use"
+  - rule: "Land is not depreciable — only the building and improvements"
+  - rule: "Property must be placed in service (available for rent)"
+  - rule: "Must allocate purchase price between land and building (use property tax assessment ratio)"
+  - rule: "Depreciation recapture applies at sale (25% rate on accumulated depreciation)"
+
+phaseouts:
+  - rule: "No phaseout for depreciation itself — but passive activity rules may limit deductibility"
+  - rule: "Passive losses deductible against passive income; $25,000 rental loss allowance phases out above $100,000 AGI"
+
+required_user_facts:
+  - fact: "real_estate[*].property_type"
+  - fact: "real_estate[*].acquisition.purchase_price"
+  - fact: "real_estate[*].acquisition.purchase_date"
+  - fact: "real_estate[*].rental_use.rental_days"
+  - fact: "real_estate[*].rental_use.depreciation_taken_prior_years"
+
+required_documents:
+  - document: "Closing disclosure showing purchase price and allocation"
+  - document: "Property tax assessment (land vs. improvement breakdown)"
+  - document: "Depreciation schedule (Form 4562)"
+  - document: "Records of capital improvements (added to basis)"
+
+required_forms:
+  - form: "Schedule E (rental income and expenses)"
+  - form: "Form 4562 (depreciation schedule)"
+
+deadlines:
+  - deadline: "Claimed annually on return — April 15 (or extension)"
+  - deadline: "If missed in prior years, catch up via Form 3115 (change of accounting method)"
+
+stacking_rules:
+  compatible_with: [passive-activity-loss, real-estate-professional-status, cost-segregation, 1031-exchange, bonus-depreciation]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - MUST take depreciation even if you choose not to — IRS computes recapture as if taken
+  - Cost segregation study can move 20–30% of building value to 5/7/15-year property → bonus depreciation eligible
+  - Short-term rentals (avg stay < 7 days) may be active income — different rules
+  - Depreciation recapture at sale taxed at 25% — factor into hold/sell analysis
+  - Form 3115 allows catching up missed depreciation in a single year without amending prior returns
+
+qualification_pathways:
+  - "If not yet tracking depreciation: calculate from purchase date; file Form 3115 to catch up"
+  - "If large building: commission cost segregation study for reclassification opportunity"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

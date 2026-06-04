@@ -1,0 +1,62 @@
+# Supported Jurisdictions
+# Controls which state and local benefit libraries are active.
+# Phase 1: Federal only. Enable states as their library records are populated.
+
+federal:
+  enabled: true
+  irs_base_url: "https://www.irs.gov"
+  treasury_url: "https://home.treasury.gov"
+
+states:
+  # Set enabled: true once tax_library/state/<abbr>/ directory is populated
+  AL: {name: Alabama,          enabled: false, dept_url: "https://revenue.alabama.gov",         income_tax: true,  no_income_tax: false}
+  AK: {name: Alaska,           enabled: false, dept_url: "https://tax.alaska.gov",              income_tax: false, no_income_tax: true}
+  AZ: {name: Arizona,          enabled: false, dept_url: "https://azdor.gov",                   income_tax: true,  no_income_tax: false}
+  AR: {name: Arkansas,         enabled: false, dept_url: "https://www.dfa.arkansas.gov",        income_tax: true,  no_income_tax: false}
+  CA: {name: California,       enabled: false, dept_url: "https://www.ftb.ca.gov",              income_tax: true,  no_income_tax: false}
+  CO: {name: Colorado,         enabled: false, dept_url: "https://tax.colorado.gov",            income_tax: true,  no_income_tax: false}
+  CT: {name: Connecticut,      enabled: false, dept_url: "https://portal.ct.gov/drs",           income_tax: true,  no_income_tax: false}
+  DE: {name: Delaware,         enabled: false, dept_url: "https://revenue.delaware.gov",        income_tax: true,  no_income_tax: false}
+  FL: {name: Florida,          enabled: false, dept_url: "https://floridarevenue.com",          income_tax: false, no_income_tax: true}
+  GA: {name: Georgia,          enabled: false, dept_url: "https://dor.georgia.gov",             income_tax: true,  no_income_tax: false}
+  HI: {name: Hawaii,           enabled: false, dept_url: "https://tax.hawaii.gov",              income_tax: true,  no_income_tax: false}
+  ID: {name: Idaho,            enabled: false, dept_url: "https://tax.idaho.gov",               income_tax: true,  no_income_tax: false}
+  IL: {name: Illinois,         enabled: false, dept_url: "https://tax.illinois.gov",            income_tax: true,  no_income_tax: false}
+  IN: {name: Indiana,          enabled: false, dept_url: "https://www.in.gov/dor",              income_tax: true,  no_income_tax: false}
+  IA: {name: Iowa,             enabled: false, dept_url: "https://tax.iowa.gov",                income_tax: true,  no_income_tax: false}
+  KS: {name: Kansas,           enabled: false, dept_url: "https://www.ksrevenue.gov",           income_tax: true,  no_income_tax: false}
+  KY: {name: Kentucky,         enabled: false, dept_url: "https://revenue.ky.gov",              income_tax: true,  no_income_tax: false}
+  LA: {name: Louisiana,        enabled: false, dept_url: "https://revenue.louisiana.gov",       income_tax: true,  no_income_tax: false}
+  ME: {name: Maine,            enabled: false, dept_url: "https://www.maine.gov/revenue",       income_tax: true,  no_income_tax: false}
+  MD: {name: Maryland,         enabled: false, dept_url: "https://www.marylandtaxes.gov",       income_tax: true,  no_income_tax: false}
+  MA: {name: Massachusetts,    enabled: false, dept_url: "https://www.mass.gov/dor",            income_tax: true,  no_income_tax: false}
+  MI: {name: Michigan,         enabled: false, dept_url: "https://www.michigan.gov/treasury",   income_tax: true,  no_income_tax: false}
+  MN: {name: Minnesota,        enabled: false, dept_url: "https://www.revenue.state.mn.us",     income_tax: true,  no_income_tax: false}
+  MS: {name: Mississippi,      enabled: false, dept_url: "https://www.dor.ms.gov",              income_tax: true,  no_income_tax: false}
+  MO: {name: Missouri,         enabled: false, dept_url: "https://dor.mo.gov",                  income_tax: true,  no_income_tax: false}
+  MT: {name: Montana,          enabled: false, dept_url: "https://mtrevenue.gov",               income_tax: true,  no_income_tax: false}
+  NE: {name: Nebraska,         enabled: false, dept_url: "https://revenue.nebraska.gov",        income_tax: true,  no_income_tax: false}
+  NV: {name: Nevada,           enabled: false, dept_url: "https://tax.nv.gov",                  income_tax: false, no_income_tax: true}
+  NH: {name: New Hampshire,    enabled: false, dept_url: "https://www.revenue.nh.gov",          income_tax: false, no_income_tax: false}  # interest/dividends only
+  NJ: {name: New Jersey,       enabled: false, dept_url: "https://www.nj.gov/treasury/taxation", income_tax: true, no_income_tax: false}
+  NM: {name: New Mexico,       enabled: false, dept_url: "https://www.tax.newmexico.gov",       income_tax: true,  no_income_tax: false}
+  NY: {name: New York,         enabled: false, dept_url: "https://www.tax.ny.gov",              income_tax: true,  no_income_tax: false}
+  NC: {name: North Carolina,   enabled: false, dept_url: "https://www.ncdor.gov",               income_tax: true,  no_income_tax: false}
+  ND: {name: North Dakota,     enabled: false, dept_url: "https://www.nd.gov/tax",              income_tax: true,  no_income_tax: false}
+  OH: {name: Ohio,             enabled: false, dept_url: "https://tax.ohio.gov",                income_tax: true,  no_income_tax: false}
+  OK: {name: Oklahoma,         enabled: false, dept_url: "https://oklahoma.gov/tax",            income_tax: true,  no_income_tax: false}
+  OR: {name: Oregon,           enabled: false, dept_url: "https://www.oregon.gov/dor",          income_tax: true,  no_income_tax: false}
+  PA: {name: Pennsylvania,     enabled: false, dept_url: "https://www.revenue.pa.gov",          income_tax: true,  no_income_tax: false}
+  RI: {name: Rhode Island,     enabled: false, dept_url: "https://tax.ri.gov",                  income_tax: true,  no_income_tax: false}
+  SC: {name: South Carolina,   enabled: false, dept_url: "https://dor.sc.gov",                  income_tax: true,  no_income_tax: false}
+  SD: {name: South Dakota,     enabled: false, dept_url: "https://dor.sd.gov",                  income_tax: false, no_income_tax: true}
+  TN: {name: Tennessee,        enabled: false, dept_url: "https://www.tn.gov/revenue",          income_tax: false, no_income_tax: true}  # Hall tax repealed 2021
+  TX: {name: Texas,            enabled: false, dept_url: "https://comptroller.texas.gov",       income_tax: false, no_income_tax: true}
+  UT: {name: Utah,             enabled: false, dept_url: "https://tax.utah.gov",                income_tax: true,  no_income_tax: false}
+  VT: {name: Vermont,          enabled: false, dept_url: "https://tax.vermont.gov",             income_tax: true,  no_income_tax: false}
+  VA: {name: Virginia,         enabled: false, dept_url: "https://www.tax.virginia.gov",        income_tax: true,  no_income_tax: false}
+  WA: {name: Washington,       enabled: false, dept_url: "https://dor.wa.gov",                  income_tax: false, no_income_tax: true}
+  WV: {name: West Virginia,    enabled: false, dept_url: "https://tax.wv.gov",                  income_tax: true,  no_income_tax: false}
+  WI: {name: Wisconsin,        enabled: false, dept_url: "https://www.revenue.wi.gov",          income_tax: true,  no_income_tax: false}
+  WY: {name: Wyoming,          enabled: false, dept_url: "https://revenue.wyo.gov",             income_tax: false, no_income_tax: true}
+  DC: {name: Washington DC,    enabled: false, dept_url: "https://otr.cfo.dc.gov",              income_tax: true,  no_income_tax: false}

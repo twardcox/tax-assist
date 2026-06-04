@@ -1,0 +1,79 @@
+id: state-retirement-income-exemption
+name: State Retirement Income Exemption
+category: retirement
+jurisdiction: state
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "Varies by state — most states exempt some or all Social Security, pension, or IRA/401(k) distributions from state income tax"
+
+status: active
+
+benefit_type: exclusion
+
+summary: |
+  The majority of states provide a full or partial exemption for retirement income —
+  including Social Security benefits, pension distributions, and IRA/401(k) withdrawals.
+  Eleven states do not tax Social Security at all (beyond the federal exclusion formula);
+  several fully exempt public/private pension income; and many allow a "retirement income
+  subtraction" of $5,000 – $75,000 per taxpayer. This benefit can be worth thousands per
+  year for retirees and near-retirees.
+
+estimated_value:
+  typical_range: "$200 – $5,000+/year"
+  calculation_basis: "State income tax rate × exempt retirement income amount"
+  depends_on:
+    - household.residence.state
+    - income.social_security.gross_benefits
+    - income.retirement_distributions
+
+eligibility_rules:
+  - rule: "Taxpayer must have retirement income (SS, pension, IRA/401k distributions)"
+    required_fact: "income_sources.retirement_distributions or income.social_security.gross_benefits"
+  - rule: "Must reside in a state that provides a retirement income exemption"
+    required_fact: "household.residence.state"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "income.social_security.gross_benefits (if receiving SS)"
+  - fact: "income.retirement_distributions (IRA/401k withdrawal amounts)"
+
+required_documents:
+  - document: "SSA-1099 (Social Security benefit statement)"
+  - document: "1099-R (pension/IRA/401k distribution statements)"
+
+required_forms:
+  - form: "State income tax return (retirement income subtraction worksheet)"
+
+deadlines:
+  - deadline: "Claimed on annual state tax return"
+
+phaseouts:
+  - rule: "Some states phase out the exemption above certain AGI thresholds (e.g., CO phases out military pension exemption above $20k)"
+
+stacking_rules:
+  compatible_with:
+    - no-income-tax-state
+    - backdoor-roth-ira
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Very low risk. Exemptions are statutory and well-defined per state. The only complexity
+  is determining which types of retirement income qualify (some states exempt public pensions
+  but not private; some exempt SS but not IRA distributions).
+
+planning_notes: |
+  - Roth conversion strategy: convert traditional IRA to Roth while in a state with high retirement income exemptions to minimize combined federal + state tax
+  - Moving to a state with full SS exemption before taking distributions can be high-value
+  - Some states (e.g., PA) exempt ALL retirement income including IRA distributions
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

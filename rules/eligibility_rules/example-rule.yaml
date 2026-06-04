@@ -1,0 +1,95 @@
+# UTBIS Eligibility Rule — Schema and Example
+# Rules are evaluated by scan_opportunities.py against user_data/ facts.
+#
+# Each rule maps one benefit to its eligibility conditions.
+# Rules should be deterministic given complete user facts.
+# When facts are missing, the rule returns "unknown" not "ineligible".
+
+rule_id: home-office-deduction-eligibility
+benefit_id: home-office-deduction        # must match id in tax_library/
+version: "1.0"
+effective_for_tax_years: "2018-2025"
+
+evaluation_logic:
+
+  required_conditions:
+    # ALL must be true for eligible_now status
+    - condition_id: is_self_employed
+      description: "Taxpayer has self-employment income"
+      fact_path: "businesses[*].entity_type"
+      operator: exists_any
+      expected: ["sole_prop", "llc_single", "llc_multi", "s_corp", "partnership"]
+      if_missing: return_unknown
+
+    - condition_id: has_exclusive_workspace
+      description: "Dedicated workspace confirmed as exclusive business use"
+      fact_path: "businesses[*].home_office.claimed"
+      operator: equals
+      expected: true
+      if_missing: return_nearly_eligible    # missing facts → near-miss, not disqualified
+
+    - condition_id: has_sqft_data
+      description: "Office square footage is recorded"
+      fact_path: "businesses[*].home_office.square_footage"
+      operator: greater_than
+      expected: 0
+      if_missing: return_nearly_eligible
+
+    - condition_id: has_profitable_business
+      description: "Business has net profit (deduction limited to profit)"
+      fact_path: "businesses[*].financials.net_profit_loss"
+      operator: greater_than
+      expected: 0
+      if_missing: return_unknown
+
+  nearly_eligible_conditions:
+    # If required conditions fail ONLY due to these gaps, status is nearly_eligible
+    - "has_exclusive_workspace is false or missing"
+    - "has_sqft_data is missing"
+
+  eligible_if_changed_conditions:
+    # If user fails here, specific changes would qualify them
+    - condition_id: workspace_not_exclusive
+      description: "Has home office but not dedicated/exclusive"
+      resolution: "Designate a specific area used only for business and remove personal items"
+
+  disqualifying_conditions:
+    # If ANY of these are true, benefit is not_applicable
+    - condition_id: w2_employee_without_requirement
+      description: "W-2 employee whose employer does not require home office (TCJA 2018-2025)"
+      fact_path: "household.income_sources[*].w2_wages"
+      operator: equals
+      expected: true
+      also_requires: "businesses == empty"
+      disqualifies: true
+
+outputs:
+  eligible_now:
+    message: "Home office deduction available. Use Form 8829 or simplified method."
+    next_steps:
+      - "Calculate square footage percentage"
+      - "Gather home expense receipts (utilities, mortgage/rent, insurance)"
+      - "Choose simplified ($5/sqft, max $1,500) vs. regular method"
+      - "Complete Form 8829 or Schedule C line 30"
+
+  nearly_eligible:
+    message: "Home office likely available — verify workspace exclusivity and measure square footage."
+    missing_items:
+      - "Confirmation that workspace is used exclusively for business"
+      - "Office square footage measurement"
+    next_steps:
+      - "Confirm workspace has no personal use"
+      - "Measure and record square footage"
+      - "Photograph workspace"
+
+  eligible_if_changed:
+    message: "Home office deduction available if you establish a dedicated exclusive-use workspace."
+    changes_needed:
+      - "Designate a specific room or defined area exclusively for business"
+      - "Remove personal items from the workspace"
+      - "Photograph the space and document its dimensions"
+
+  not_applicable:
+    message: "Home office deduction does not apply. W-2 employees cannot claim this deduction under current law (2018-2025)."
+    explanation: "The Tax Cuts and Jobs Act suspended the employee home office deduction through 2025."
+    note: "May become available again if TCJA provisions expire."

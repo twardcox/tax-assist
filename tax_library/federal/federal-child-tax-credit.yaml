@@ -1,0 +1,78 @@
+id: child-tax-credit
+name: Child Tax Credit (CTC)
+category: individual_credit
+jurisdiction: federal
+
+authority:
+  irc_section: "24"
+  irs_publication: "972"
+  form_instruction: "Instructions for Schedule 8812"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Up to $2,000 per qualifying child under age 17. Up to $1,700 is refundable
+  (Additional Child Tax Credit) for 2025. Phases out at $200,000 (single) /
+  $400,000 (MFJ) of AGI. One of the highest-value credits for families.
+
+estimated_value:
+  typical_range: "$2,000 per qualifying child per year"
+  calculation_basis: "$2,000 per child, partially refundable"
+  depends_on: [number_of_qualifying_children, agi, filing_status]
+
+eligibility_rules:
+  - rule: "Child must be under age 17 at end of tax year"
+  - rule: "Child must be a US citizen, US national, or US resident alien"
+  - rule: "Child must have a Social Security Number"
+  - rule: "Child must be a qualifying child: son, daughter, stepchild, foster child, sibling, or descendant"
+  - rule: "Child must have lived with taxpayer for more than half the year"
+  - rule: "Child cannot provide more than half their own support"
+  - rule: "Taxpayer must claim child as dependent"
+
+phaseouts:
+  - rule: "Credit reduced by $50 per $1,000 of AGI above $200,000 (single) or $400,000 (MFJ)"
+  - rule: "Fully phased out well above those thresholds depending on number of children"
+
+required_user_facts:
+  - fact: "dependents[*].age_at_year_end"
+  - fact: "dependents[*].ssn_obtained"
+  - fact: "dependents[*].lives_with_taxpayer"
+  - fact: "dependents[*].child_tax_credit_eligible"
+  - fact: "household.filing_status"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Child's Social Security card"
+  - document: "Birth certificate or adoption decree"
+  - document: "School or medical records confirming residency (if needed)"
+
+required_forms:
+  - form: "Schedule 8812 (Credits for Qualifying Children and Other Dependents)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [child-dependent-care-credit, earned-income-tax-credit]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Refundable portion (ACTC): up to $1,700 in 2025 — reduces tax below zero
+  - Other Dependent Credit: $500 non-refundable for dependents who don't qualify for CTC
+  - If child turns 17 during the year, the credit is lost for that year
+  - Both parents cannot claim the same child — divorce decree or custody agreement controls
+
+qualification_pathways:
+  - "If child lacks SSN: apply for SSN immediately — must have by return due date"
+  - "If divorced: review divorce decree — custodial parent generally claims the credit"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

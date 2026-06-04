@@ -1,0 +1,96 @@
+id: savers-credit
+name: Retirement Savings Contributions Credit (Saver's Credit)
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "22"
+  irs_publication: "590-A"
+  form_instruction: "Instructions for Form 8880"
+  state_source: null
+
+status: active
+
+benefit_type: credit
+
+summary: |
+  The Saver's Credit (§22) provides a nonrefundable tax credit of 10%, 20%, or 50% of
+  contributions to a qualified retirement plan (IRA, 401k, 403b, 457b, SIMPLE IRA, SEP-IRA).
+  The credit is available to moderate-income taxpayers — the income limits are low, making
+  this an easy-to-miss credit for lower-to-middle income earners who are saving for retirement.
+  The maximum contribution eligible for the credit is $2,000 per person ($4,000 MFJ).
+
+estimated_value:
+  typical_range: "$100 – $2,000/year ($4,000 MFJ)"
+  calculation_basis: "Credit rate (10%, 20%, or 50%) × retirement contributions up to $2,000 per person"
+  depends_on:
+    - household.estimated_agi
+    - household.filing_status
+    - retirement contributions made this year
+
+eligibility_rules:
+  - rule: "Must be 18 or older and not a full-time student and not claimed as a dependent"
+    required_fact: "household.taxpayer.age, household.taxpayer.student"
+  - rule: "AGI must be below the threshold for your filing status"
+    required_fact: "household.estimated_agi, household.filing_status"
+  - rule: "Must have made contributions to a qualified retirement plan"
+    required_fact: "retirement contributions (IRA, 401k, 403b, 457b, SIMPLE, SEP)"
+
+required_user_facts:
+  - fact: "household.estimated_agi"
+  - fact: "household.filing_status"
+  - fact: "household.taxpayer.age"
+  - fact: "retirement contributions (retirement.yaml)"
+
+required_documents:
+  - document: "Form W-2 showing retirement contributions"
+  - document: "IRA contribution confirmation from custodian"
+  - document: "Prior year distributions from retirement accounts (may reduce current credit)"
+
+required_forms:
+  - form: "Form 8880 (Credit for Qualified Retirement Savings Contributions)"
+
+deadlines:
+  - deadline: "IRA contributions: up to April 15 of following year"
+  - deadline: "401k/SIMPLE IRA: must be made during the tax year"
+  - deadline: "Credit claimed on Form 8880 with annual return"
+
+phaseouts:
+  - rule: "2025 AGI limits — 50% credit: ≤$23,500 single, ≤$35,250 HOH, ≤$47,000 MFJ"
+  - rule: "2025 AGI limits — 10% credit: $23,501–$40,500 single, $35,251–$60,750 HOH, $47,001–$81,000 MFJ"
+  - rule: "No credit above: $40,500 single, $60,750 HOH, $81,000 MFJ (2025 est.)"
+  - rule: "Credit is nonrefundable — cannot exceed tax liability"
+  - rule: "Prior year distributions from retirement accounts reduce the contribution eligible for credit"
+
+stacking_rules:
+  compatible_with:
+    - sep-ira-contribution
+    - solo-401k
+    - backdoor-roth-ira
+    - hsa-triple-tax-advantage
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Very low risk. Standard credit with clear eligibility rules. The main oversight is
+  forgetting to file Form 8880 when eligible. Prior-year distributions from retirement
+  accounts reduce the eligible contribution amount — common mistake.
+
+planning_notes: |
+  - Contribute enough to at least capture the 50% credit tier — even $400 contribution → $200 credit at the 50% rate
+  - SECURE 2.0 (2023+): A new "matching contribution" type Saver's Credit replaces the nonrefundable credit starting 2027 — the current nonrefundable form is in place through 2026
+  - Married couples: each spouse can claim the credit separately on up to $2,000 each
+  - Roth IRA contributions count — not just traditional
+
+qualification_pathways:
+  - "If AGI is above the limit: Roth IRA conversion can reduce AGI via traditional IRA deduction in prior years"
+  - "No contributions yet: contribute to IRA before April 15 to claim credit on prior year return"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

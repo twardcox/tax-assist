@@ -1,0 +1,85 @@
+id: hsa-triple-tax-advantage
+name: Health Savings Account (HSA) — Triple Tax Advantage
+category: healthcare
+jurisdiction: federal
+
+authority:
+  irc_section: "223"
+  irs_publication: "969"
+  form_instruction: "Instructions for Form 8889"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  HSAs offer a unique triple tax benefit: contributions are tax-deductible
+  (or pre-tax via payroll), growth is tax-free, and qualified withdrawals are
+  tax-free. For 2025: $4,300 self-only / $8,550 family. Age 55+ adds $1,000.
+  Unused balances roll over indefinitely and can be invested — making the HSA
+  an effective stealth retirement account.
+
+estimated_value:
+  typical_range: "$700 – $3,500+/year in tax savings; $100k+ lifetime value"
+  calculation_basis: "Annual contributions × marginal rate + tax-free investment growth"
+  depends_on: [contribution_amount, marginal_tax_rate, hdhp_coverage_level, age]
+
+eligibility_rules:
+  - rule: "Must be enrolled in a High Deductible Health Plan (HDHP) for the months contributed"
+  - rule: "2025 HDHP minimum deductible: $1,650 self-only / $3,300 family"
+  - rule: "2025 HDHP out-of-pocket max: $8,300 self-only / $16,600 family"
+  - rule: "Cannot be enrolled in Medicare, Medicaid, or most FSAs simultaneously"
+  - rule: "Cannot be claimed as a dependent on someone else's return"
+  - rule: "Contribution limit 2025: $4,300 self-only / $8,550 family; +$1,000 if age 55+"
+
+phaseouts:
+  - rule: "No income phaseout — HSA is available at any income level"
+  - rule: "Non-qualified withdrawals before 65 subject to income tax + 20% penalty"
+  - rule: "After age 65, non-qualified withdrawals taxed as ordinary income (no penalty)"
+
+required_user_facts:
+  - fact: "healthcare.hdhp_enrolled"
+  - fact: "healthcare.hdhp_coverage_level"
+  - fact: "healthcare.health_savings_account.existing_balance"
+  - fact: "healthcare.health_savings_account.contributions_ytd"
+  - fact: "taxpayer.age"
+
+required_documents:
+  - document: "HDHP insurance card or policy documents confirming HDHP status"
+  - document: "HSA account statement showing contributions"
+  - document: "Receipts for qualified medical expenses (retain for audit — no submission required)"
+
+required_forms:
+  - form: "Form 8889 (annual HSA reporting)"
+  - form: "Schedule 1, Line 13 (deduction for contributions not through payroll)"
+
+deadlines:
+  - deadline: "Can contribute up to April 15 of following year for prior tax year"
+  - deadline: "Must have HDHP coverage in effect for the months being contributed"
+
+stacking_rules:
+  compatible_with: [self-employed-health-insurance, medical-expense-deduction]
+  conflicts_with:
+    - rule: "Cannot contribute if enrolled in general-purpose FSA (limited FSA is allowed)"
+    - rule: "Cannot contribute if enrolled in Medicare Part A or B"
+
+risk_level: low
+
+planning_notes: |
+  - Maximize annual contribution every year — this is one of the best tax shelters available
+  - Invest HSA funds in index funds rather than leaving in cash — treat like a retirement account
+  - Pay medical expenses out-of-pocket now, save receipts, reimburse yourself years later (tax-free)
+  - At 65, HSA becomes equivalent to a traditional IRA for non-medical expenses
+  - Self-employed: open individual HSA at Fidelity (no fees, investment options)
+
+qualification_pathways:
+  - "If on non-HDHP plan: switch to HDHP during open enrollment — compare premium savings + HSA benefit vs. higher deductible risk"
+  - "If on spouse employer plan: check if that plan qualifies as HDHP"
+  - "If on Medicare: no longer eligible to contribute (but can still spend existing HSA balance)"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

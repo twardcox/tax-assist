@@ -1,0 +1,77 @@
+id: opportunity-zone-investment
+name: Qualified Opportunity Zone Investment
+category: investment
+jurisdiction: federal
+
+authority:
+  irc_section: "1400Z-1, 1400Z-2"
+  irs_publication: null
+  form_instruction: "Instructions for Form 8949 / Form 8997"
+  state_source: null
+
+status: active
+benefit_type: deferral
+
+summary: |
+  Capital gains from any asset sale can be deferred and reduced by investing
+  in a Qualified Opportunity Fund (QOF) within 180 days. The original gain
+  is deferred until 2026 or fund sale. Gains from the QOF investment itself
+  are permanently excluded if held 10+ years.
+
+estimated_value:
+  typical_range: "$5,000 – $500,000+ depending on deferred gain and appreciation"
+  calculation_basis: "Deferred gain tax value + permanent exclusion of QOF appreciation"
+  depends_on: [gain_amount, holding_period, qof_appreciation]
+
+eligibility_rules:
+  - rule: "Must invest eligible gain (capital gain from any asset) into a QOF within 180 days of recognition"
+  - rule: "Eligible gain: capital gains from stocks, real estate, business assets"
+  - rule: "QOF must invest 90% of assets in qualified opportunity zone property"
+  - rule: "10+ year hold: appreciation on the QOF investment permanently excluded from income"
+  - rule: "Original deferred gain recognized December 31, 2026 (or earlier if sold)"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "Deferred gain must be recognized no later than December 31, 2026"
+
+required_user_facts:
+  - fact: "investments.opportunity_zone_investments"
+  - fact: "income.investment_income.short_term_capital_gains"
+  - fact: "income.investment_income.long_term_capital_gains"
+
+required_documents:
+  - document: "QOF investment confirmation"
+  - document: "Original sale documentation showing gain and recognition date"
+  - document: "Form 8997 (Annual tracking of QOF investment)"
+
+required_forms:
+  - form: "Form 8949 (original gain reporting)"
+  - form: "Form 8997 (QOF investment tracking)"
+
+deadlines:
+  - deadline: "Must invest in QOF within 180 days of capital gain recognition"
+  - deadline: "Original deferred gain recognized December 31, 2026 — plan for tax liability"
+
+stacking_rules:
+  compatible_with: [1031-exchange]
+  conflicts_with:
+    - rule: "Cannot combine QOZ deferral and 1031 exchange on the same gain"
+
+risk_level: moderate
+
+planning_notes: |
+  - 2026 deadline: deferred gain is taxed regardless of whether QOF is sold — prepare for tax bill
+  - QOF quality varies enormously — conduct thorough due diligence on the fund
+  - Real estate QOFs are most common; operating businesses in OZ also qualify
+  - Primary benefit now is the 10-year permanent exclusion on QOF appreciation
+
+qualification_pathways:
+  - "If recently sold appreciated stocks or real estate: identify QOF within 180 days"
+  - "If planning a sale with large gain: line up QOF before selling"
+
+review_required:
+  cpa: required
+  attorney: required
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

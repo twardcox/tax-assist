@@ -1,0 +1,73 @@
+id: annual-gift-tax-exclusion
+name: Annual Gift Tax Exclusion
+category: estate
+jurisdiction: federal
+
+authority:
+  irc_section: "2503(b)"
+  irs_publication: "559"
+  form_instruction: "Instructions for Form 709"
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  Each taxpayer may give up to $19,000 per recipient per year (2025) without
+  gift tax, gift tax return filing, or use of the lifetime exemption. A married
+  couple can give $38,000 per recipient per year via gift splitting. This is a
+  powerful, simple estate reduction tool available to anyone.
+
+estimated_value:
+  typical_range: "$3,000 – $50,000+/year in estate tax savings"
+  calculation_basis: "Gifts × estate/gift tax rate (40%) avoided"
+  depends_on: [estate_size, number_of_recipients, annual_giving_capacity]
+
+eligibility_rules:
+  - rule: "Any person can give up to $19,000 to any number of recipients per year (2025)"
+  - rule: "Married couples can split gifts — combined $38,000 per recipient per year"
+  - rule: "Gift splitting requires both spouses to consent and file Form 709"
+  - rule: "Gifts must be of a present interest (not future interest or trust without Crummey powers)"
+  - rule: "Direct tuition and medical payments to institutions are ALSO excluded — unlimited amount"
+
+phaseouts:
+  - rule: "No phaseout — available regardless of income or estate size"
+  - rule: "Gifts above annual exclusion reduce the lifetime exemption ($13.99M in 2025; watch 2026 sunset)"
+
+required_user_facts:
+  - fact: "goals.transfer_wealth_to_heirs"
+  - fact: "household.filing_status"
+
+required_documents:
+  - document: "No documentation required if under annual exclusion"
+  - document: "Form 709 required for gifts above annual exclusion or gift splitting elections"
+
+required_forms:
+  - form: "Form 709 (only required if above annual exclusion or gift splitting)"
+
+deadlines:
+  - deadline: "Gifts must be completed by December 31"
+  - deadline: "Form 709 due April 15 of following year if required"
+
+stacking_rules:
+  compatible_with: [lifetime-gift-tax-exemption]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Direct tuition payments to educational institutions are excluded (no limit) — powerful for grandchildren
+  - Direct medical payments to providers are excluded (no limit) — useful for elderly parents
+  - 529 superfunding: contribute 5 years of annual exclusion at once ($95,000 single / $190,000 MFJ per beneficiary)
+  - 2026 TCJA sunset: lifetime exemption may drop to ~$7M — accelerate large gifts before 2026
+
+qualification_pathways:
+  - "If making large gifts: use annual exclusion first before touching lifetime exemption"
+  - "If paying for college: pay tuition directly to institution instead of giving to child — unlimited exclusion"
+
+review_required:
+  cpa: recommended
+  attorney: recommended
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

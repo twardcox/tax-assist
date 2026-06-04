@@ -1,0 +1,60 @@
+# Healthcare Tax Facts
+
+tax_year: 2025
+
+insurance:
+  coverage_type:               # employer | marketplace | self_purchased | medicare | medicaid | tricare | uninsured | spouse_plan
+  hdhp_enrolled: false         # High Deductible Health Plan — required for HSA
+  hdhp_coverage_level: null    # self | family
+  premium_paid_after_tax:      # employer premiums paid pre-tax don't count
+
+health_savings_account:
+  hsa_eligible: null           # system will evaluate based on HDHP enrollment
+  existing_balance:
+  contributions_ytd:
+  employer_contributions_ytd:
+  distributions_this_year:
+  distributions_for_qualified_expenses: null
+  custodian:
+  investment_account_within_hsa: false
+
+flexible_spending_accounts:
+  healthcare_fsa:
+    enrolled: false
+    election_amount:
+    balance:
+    rollover_allowed: null
+    grace_period: null
+
+  dependent_care_fsa:
+    enrolled: false
+    election_amount:
+    qualifying_expenses_ytd:
+
+long_term_care:
+  policy_held: false
+  premiums_paid:
+  age_based_deductible_limit: null    # system will calculate
+
+medical_expenses:
+  total_out_of_pocket:
+  # Itemized deduction threshold is 7.5% of AGI — system will evaluate
+  large_medical_events_this_year: false
+  dental_expenses:
+  vision_expenses:
+  prescription_expenses:
+  medical_equipment:
+  medical_travel_mileage:
+
+self_employed_health_insurance:
+  # If self-employed and paying for own health insurance
+  owner_health_insurance_premium:     # above-the-line deduction
+  family_covered: false
+
+premium_tax_credit:
+  marketplace_coverage: false
+  advance_ptc_received: false
+  ptc_reconciliation_needed: false
+
+notes: |
+  Add healthcare tax notes here.

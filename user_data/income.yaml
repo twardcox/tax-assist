@@ -1,0 +1,71 @@
+# Income Details
+# Fill in each section that applies to your situation.
+
+tax_year: 2025
+
+w2_employment:
+  - employer_name:
+    wages:
+    federal_withheld:
+    state_withheld:
+    hsa_contributions_through_payroll:
+    retirement_contributions_through_payroll:
+    dependent_care_fsa:
+
+self_employment:
+  - business_name:             # matches entry in businesses.yaml
+    gross_revenue:
+    net_profit:
+    se_tax_estimated:
+
+rental_income:
+  - property_address:          # matches entry in real_estate.yaml
+    gross_rents:
+    net_income_loss:
+
+investment_income:
+  qualified_dividends:
+  ordinary_dividends:
+  interest:
+  short_term_capital_gains:
+  long_term_capital_gains:
+  qualified_opportunity_zone_gains:
+
+retirement_distributions:
+  traditional_ira:
+  roth_ira:                    # generally not taxable
+  401k:
+  pension:
+  annuity:
+  required_minimum_distribution: false
+
+social_security:
+  gross_benefits:
+  taxable_portion:             # leave blank — system will calculate
+
+passive_income:
+  k1_ordinary:
+  k1_rental:
+  k1_guaranteed_payments:
+
+other_income:
+  alimony_received:            # pre-2019 divorces only
+  gambling_winnings:
+  prizes_awards:
+  canceled_debt:
+  other_description:
+  other_amount:
+
+adjustments_to_income:
+  # Items that reduce AGI — fill in known amounts
+  student_loan_interest:
+  educator_expenses:
+  hsa_contributions_outside_payroll:
+  self_employed_health_insurance:
+  self_employed_se_tax_deduction:
+  alimony_paid:                # pre-2019 divorces only
+  ira_deduction:
+  moving_expenses_military:
+
+notes: |
+  Add income clarifications here.

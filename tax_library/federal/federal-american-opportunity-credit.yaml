@@ -1,0 +1,78 @@
+id: american-opportunity-credit
+name: American Opportunity Tax Credit (AOTC)
+category: education
+jurisdiction: federal
+
+authority:
+  irc_section: "25A(b)"
+  irs_publication: "970"
+  form_instruction: "Instructions for Form 8863"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Credit of up to $2,500 per eligible student per year for the first four
+  years of post-secondary education. 40% is refundable (up to $1,000). Covers
+  tuition, fees, and course materials. One of the most valuable education tax
+  credits available.
+
+estimated_value:
+  typical_range: "$1,000 – $2,500/year per eligible student"
+  calculation_basis: "100% of first $2,000 + 25% of next $2,000 = max $2,500"
+  depends_on: [qualifying_expenses, agi, filing_status, years_of_higher_education]
+
+eligibility_rules:
+  - rule: "Student must be in first four years of higher education (no felony drug conviction)"
+  - rule: "Must be enrolled at least half-time for at least one academic period"
+  - rule: "Covers tuition, required fees, and course materials (books, supplies)"
+  - rule: "Cannot be claimed for graduate school or beyond first 4 years"
+  - rule: "Student must have a valid SSN"
+  - rule: "Cannot claim if student is claimed on someone else's return (unless parent claims them as dependent)"
+
+phaseouts:
+  - rule: "2025: Full credit with MAGI ≤ $80,000 (single) / ≤ $160,000 (MFJ)"
+  - rule: "Phases out completely at $90,000 (single) / $180,000 (MFJ)"
+
+required_user_facts:
+  - fact: "dependents[*].education.school_level"
+  - fact: "dependents[*].education.tuition_paid"
+  - fact: "dependents[*].education.form_1098t_expected"
+  - fact: "household.estimated_agi"
+  - fact: "household.filing_status"
+
+required_documents:
+  - document: "Form 1098-T from educational institution"
+  - document: "Receipts for books, supplies, and required materials"
+  - document: "Enrollment verification showing at least half-time status"
+
+required_forms:
+  - form: "Form 8863 (Education Credits)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [529-plan-distributions, lifetime-learning-credit]
+  conflicts_with:
+    - rule: "Cannot claim AOTC and Lifetime Learning Credit for the same student in the same year"
+    - rule: "Expenses paid with 529 distributions cannot also be claimed for AOTC"
+
+risk_level: low
+
+planning_notes: |
+  - Coordinate with 529 plan distributions — cannot double-dip same expenses
+  - If parents are above income limit: consider letting student claim the credit on their own return (if student has tax liability)
+  - Refundable portion ($1,000): available even with zero tax liability
+
+qualification_pathways:
+  - "If AGI above limit: reduce AGI through pre-tax retirement contributions to fall within phaseout range"
+  - "If student is in grad school: use Lifetime Learning Credit instead (no year limit)"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

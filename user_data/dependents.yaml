@@ -1,0 +1,46 @@
+# Dependent Facts
+# Add one entry per dependent. Used for Child Tax Credit, EITC, CDCC, education credits, etc.
+
+tax_year: 2025
+
+dependents:
+
+  - name:
+    relationship:              # child | stepchild | foster_child | sibling | parent | other_relative
+    date_of_birth:
+    age_at_year_end:
+    ssn_obtained: false        # required for most credits
+    lives_with_taxpayer: false
+    months_lived_with_taxpayer:
+    full_time_student: false
+    disabled: false
+    graduate_student: false
+    income_this_year:          # dependent's own income (0 if none)
+
+    child_tax_credit_eligible: null      # system will evaluate (under 17, citizen, etc.)
+    eitc_qualifying_child: null          # system will evaluate
+    dependent_care_credit_eligible: null # system will evaluate (under 13, care needed)
+    education_credit_eligible: null      # system will evaluate
+
+    education:
+      in_school: false
+      school_level:            # k12 | undergraduate | graduate | vocational
+      school_name:
+      tuition_paid:
+      scholarships_received:
+      room_board_paid:
+      form_1098t_expected: false
+      529_distributions_used: false
+
+    care_expenses:
+      daycare_provider:
+      daycare_cost:
+      after_school_care_cost:
+      summer_camp_cost:        # day camp qualifies; overnight camp does not
+
+    adoption:
+      adopted_this_year: false
+      adoption_expenses:       # Adoption Tax Credit
+
+notes: |
+  Add dependent notes here.

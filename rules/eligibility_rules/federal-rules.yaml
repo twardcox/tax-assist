@@ -1,0 +1,445 @@
+# Federal Eligibility Rules Registry
+# Each entry defines how to evaluate a benefit_id against user facts.
+# The RulesEngine in scan_opportunities.py loads this file and applies logic.
+#
+# condition_path uses dot notation into the merged user_data/ dict.
+# Operators: equals, not_equals, greater_than, less_than, exists, is_true, is_false, between, any_of
+
+rules:
+
+  - benefit_id: qbi-deduction
+    version: "1.0"
+    effective_years: "2018-2025"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn          # evaluated by engine function
+        description: "Taxpayer has self-employment / pass-through income"
+    nearly_eligible_conditions:
+      - "has self-employment but net profit not yet provided"
+    disqualifying_conditions:
+      - id: w2_only
+        description: "W-2 only with no business income"
+    phaseout:
+      type: dual_threshold
+      fact_path: household.estimated_agi
+      filing_status_path: household.filing_status
+      thresholds:
+        single:    {full_benefit_below: 197300, phaseout_complete_above: 247300}
+        mfj:       {full_benefit_below: 394600, phaseout_complete_above: 494600}
+        hoh:       {full_benefit_below: 197300, phaseout_complete_above: 247300}
+        mfs:       {full_benefit_below: 197300, phaseout_complete_above: 247300}
+      sstb_flag_path: businesses.businesses[0].specified_service_trade
+
+  - benefit_id: s-corp-election
+    version: "1.0"
+    effective_years: "2018-2025"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn
+      - id: sufficient_profit
+        path: businesses.businesses[0].financials.net_profit_loss
+        operator: greater_than
+        value: 40000
+        description: "Net profit above ~$40,000 where S Corp savings exceed compliance costs"
+    nearly_eligible_conditions:
+      - "has self-employment with profit but no payroll setup"
+      - "profit between $25k-$40k — borderline"
+    disqualifying_conditions:
+      - id: already_s_corp
+        path: businesses.businesses[0].entity_type
+        operator: equals
+        value: s_corp
+        description: "Already elected S Corp"
+
+  - benefit_id: sep-ira-contribution
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn
+      - id: has_profit
+        path: businesses.businesses[0].financials.net_profit_loss
+        operator: greater_than
+        value: 0
+    nearly_eligible_conditions:
+      - "has self-employment but profit not provided"
+    phaseout: none
+
+  - benefit_id: solo-401k
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn
+      - id: no_w2_employees
+        path: businesses.businesses[0].employees.w2_employees_count
+        operator: less_than_or_equal
+        value: 0
+        if_missing: assume_eligible
+    nearly_eligible_conditions:
+      - "plan not yet established (established = false)"
+      - "has employees — need to verify if full-time"
+    disqualifying_conditions:
+      - id: has_full_time_employees
+        path: businesses.businesses[0].employees.w2_employees_count
+        operator: greater_than
+        value: 0
+
+  - benefit_id: self-employed-health-insurance
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn
+      - id: has_profit
+        path: businesses.businesses[0].financials.net_profit_loss
+        operator: greater_than
+        value: 0
+    disqualifying_conditions:
+      - id: eligible_for_employer_plan
+        description: "Eligible for subsidized employer health plan (own or spouse's)"
+        path: healthcare.coverage_type
+        operator: equals
+        value: employer
+
+  - benefit_id: hsa-triple-tax-advantage
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: enrolled_in_hdhp
+        path: healthcare.hdhp_enrolled
+        operator: is_true
+    nearly_eligible_conditions:
+      - "hdhp_enrolled is false or not set"
+    disqualifying_conditions:
+      - id: on_medicare
+        path: healthcare.coverage_type
+        operator: any_of
+        value: [medicare, medicaid]
+
+  - benefit_id: section-179-expensing
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn
+      - id: assets_placed_in_service
+        path: businesses.businesses[0].depreciation.assets_placed_in_service
+        operator: not_empty
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has business but no asset purchases recorded yet this year"
+
+  - benefit_id: bonus-depreciation
+    version: "1.0"
+    effective_years: "2025-2026"
+    required_conditions:
+      - id: has_self_employment_or_rental
+        description: "Has business or rental real estate"
+        path: has_self_employment_fn
+    nearly_eligible_conditions:
+      - "has business but no asset purchases this year"
+
+  - benefit_id: business-vehicle-deduction
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_self_employment
+        path: has_self_employment_fn
+      - id: business_vehicle_exists
+        path: businesses.businesses[0].vehicle.business_vehicle
+        operator: is_true
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has self-employment but no vehicle information provided"
+    disqualifying_conditions: []
+
+  - benefit_id: real-estate-depreciation
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_rental_property
+        path: has_rental_property_fn
+    nearly_eligible_conditions:
+      - "has real estate but rental_days not provided"
+      - "purchase_price not provided — cannot calculate basis"
+    disqualifying_conditions: []
+
+  - benefit_id: passive-activity-loss
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_rental_property
+        path: has_rental_property_fn
+    phaseout:
+      type: dollar_limit
+      full_allowance: 25000
+      full_benefit_below: 100000
+      phaseout_complete_above: 150000
+      fact_path: household.estimated_agi
+      reduction_rate: 0.5
+
+  - benefit_id: 1031-exchange
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_rental_property
+        path: has_rental_property_fn
+      - id: has_unrealized_gain
+        path: real_estate.properties[0].acquisition.current_market_value
+        operator: exists
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has rental property but no market value data to assess gain"
+
+  - benefit_id: augusta-rule
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_business
+        path: has_self_employment_fn
+      - id: owns_home
+        description: "Has primary residence"
+        path: real_estate.properties[0].property_type
+        operator: any_of
+        value: [primary_residence, second_home]
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has business and home but neither confirmed"
+
+  - benefit_id: charitable-contribution-deduction
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: itemizing
+        path: household.itemizing_deductions
+        operator: is_true
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "not confirmed whether itemizing — need total deductions estimate"
+
+  - benefit_id: backdoor-roth-ira
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: above_roth_income_limit
+        path: household.estimated_agi
+        operator: exists
+        if_missing: return_nearly_eligible
+    phaseout:
+      type: roth_ira_income_test
+      benefit_starts_above_phaseout: true
+      thresholds:
+        single:    {direct_roth_phases_out_above: 150000}
+        mfj:       {direct_roth_phases_out_above: 236000}
+    disqualifying_conditions: []
+
+  - benefit_id: child-tax-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_qualifying_children
+        path: has_dependents_fn
+    phaseout:
+      type: dollar_per_thousand
+      rate: 50
+      fact_path: household.estimated_agi
+      thresholds:
+        single:    {full_benefit_below: 200000}
+        mfj:       {full_benefit_below: 400000}
+    disqualifying_conditions:
+      - id: no_dependents
+        path: has_dependents_fn
+        operator: is_false
+
+  - benefit_id: child-dependent-care-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_young_children
+        path: has_dependents_fn
+    nearly_eligible_conditions:
+      - "has dependents but care expenses not recorded"
+    disqualifying_conditions:
+      - id: no_dependents
+        path: has_dependents_fn
+        operator: is_false
+
+  - benefit_id: earned-income-tax-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_earned_income
+        path: has_self_employment_fn_or_w2
+    phaseout:
+      type: eitc_table
+      fact_path: household.estimated_agi
+      thresholds:
+        single_3_children:   {full_phase_in_below: 20000, phase_out_complete_above: 59899}
+        mfj_3_children:      {full_phase_in_below: 26511, phase_out_complete_above: 66819}
+        single_no_children:  {full_phase_in_below: 8490,  phase_out_complete_above: 19524}
+        mfj_no_children:     {full_phase_in_below: 15060, phase_out_complete_above: 26214}
+    disqualifying_conditions:
+      - id: investment_income_too_high
+        path: investment_income_total_fn
+        operator: greater_than
+        value: 11950
+
+  - benefit_id: american-opportunity-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_college_dependent
+        path: has_dependents_fn
+    phaseout:
+      type: range
+      fact_path: household.estimated_agi
+      thresholds:
+        single:    {full_benefit_below: 80000, phaseout_complete_above: 90000}
+        mfj:       {full_benefit_below: 160000, phaseout_complete_above: 180000}
+    disqualifying_conditions:
+      - id: no_dependents
+        path: has_dependents_fn
+        operator: is_false
+
+  - benefit_id: lifetime-learning-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_education_expenses
+        path: has_dependents_fn
+    phaseout:
+      type: range
+      fact_path: household.estimated_agi
+      thresholds:
+        single:    {full_benefit_below: 80000, phaseout_complete_above: 90000}
+        mfj:       {full_benefit_below: 160000, phaseout_complete_above: 180000}
+
+  - benefit_id: residential-clean-energy-credit
+    version: "1.0"
+    effective_years: "2022-2032"
+    required_conditions:
+      - id: owns_home
+        path: real_estate.properties[0].property_type
+        operator: any_of
+        value: [primary_residence, second_home]
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "owns home but no solar/energy upgrade planned or recorded"
+
+  - benefit_id: clean-vehicle-credit
+    version: "1.0"
+    effective_years: "2023-2032"
+    required_conditions:
+      - id: income_under_limit
+        path: household.estimated_agi
+        operator: exists
+        if_missing: return_nearly_eligible
+    phaseout:
+      type: hard_cliff
+      fact_path: household.estimated_agi
+      thresholds:
+        single:    {disqualified_above: 150000}
+        mfj:       {disqualified_above: 300000}
+        hoh:       {disqualified_above: 225000}
+
+  - benefit_id: mortgage-interest-deduction
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_mortgage
+        path: real_estate.properties[0].financing.mortgage_interest_paid
+        operator: exists
+      - id: itemizing
+        path: household.itemizing_deductions
+        operator: is_true
+        if_missing: return_nearly_eligible
+
+  - benefit_id: salt-deduction
+    version: "1.0"
+    effective_years: "2018-2025"
+    required_conditions:
+      - id: itemizing
+        path: household.itemizing_deductions
+        operator: is_true
+        if_missing: return_nearly_eligible
+      - id: pays_state_tax_or_property_tax
+        path: real_estate.properties[0].financing.property_tax_paid
+        operator: exists
+        if_missing: return_nearly_eligible
+
+  - benefit_id: section-121-exclusion
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: owns_primary_residence
+        path: real_estate.properties[0].property_type
+        operator: equals
+        value: primary_residence
+      - id: two_year_use_met
+        path: real_estate.properties[0].primary_residence.used_as_primary_for_2_of_last_5
+        operator: is_true
+        if_missing: return_nearly_eligible
+
+  - benefit_id: foreign-earned-income-exclusion
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: lives_abroad
+        description: "No US state recorded — may indicate abroad residency"
+        path: household.residence.state
+        operator: is_empty
+        if_missing: return_not_applicable
+    nearly_eligible_conditions:
+      - "Taxpayer has foreign income but residency not confirmed"
+
+  - benefit_id: opportunity-zone-investment
+    version: "1.0"
+    effective_years: "2018-2026"
+    required_conditions:
+      - id: has_capital_gains
+        path: income.investment_income.long_term_capital_gains
+        operator: greater_than
+        value: 0
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has investments but capital gains amount not recorded"
+
+  - benefit_id: annual-gift-tax-exclusion
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_estate_goals
+        path: goals.transfer_wealth_to_heirs
+        operator: is_true
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "goals not yet filled in — may apply if estate planning is a priority"
+
+  - benefit_id: real-estate-professional-status
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_rental_property
+        path: has_rental_property_fn
+      - id: high_agi
+        path: household.estimated_agi
+        operator: greater_than
+        value: 150000
+        description: "AGI above $150k where passive loss phaseout has fully eliminated the $25k allowance"
+    nearly_eligible_conditions:
+      - "has rental property and income but hours not tracked"
+
+  - benefit_id: cost-segregation
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_rental_commercial_or_large_residential
+        path: has_rental_property_fn
+      - id: property_value_sufficient
+        path: real_estate.properties[0].acquisition.purchase_price
+        operator: greater_than
+        value: 500000
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has rental property but purchase price not provided"

@@ -1,0 +1,95 @@
+id: qsbs-exclusion
+name: Qualified Small Business Stock Exclusion (§1202)
+category: investment
+jurisdiction: federal
+
+authority:
+  irc_section: "1202"
+  irs_publication: null
+  form_instruction: "Instructions for Form 8949"
+  state_source: null
+
+status: active
+
+benefit_type: exclusion
+
+summary: |
+  Section 1202 allows investors and founders to exclude 100% of capital gains from the
+  sale of Qualified Small Business Stock (QSBS) held for more than 5 years, up to the
+  greater of $10 million or 10× the taxpayer's adjusted basis. The stock must be acquired
+  from a domestic C corporation with aggregate gross assets ≤ $50 million at time of issuance,
+  in an active qualified trade or business (not professional services, finance, hospitality, or other
+  excluded sectors). This can eliminate millions in capital gains tax for startup founders
+  and early investors.
+
+estimated_value:
+  typical_range: "Can exclude $10 million to $100 million+ in gains (federal tax eliminated)"
+  calculation_basis: "Excluded gain × 23.8% LTCG+NIIT rate = potential tax eliminated"
+  depends_on:
+    - investments.has_qualified_small_business_stock
+    - company asset size at issuance
+    - holding period (5+ years)
+
+eligibility_rules:
+  - rule: "Stock must be in a domestic C corporation (not S corp, LLC, or partnership)"
+    required_fact: "investments.has_qualified_small_business_stock or individual_stocks"
+  - rule: "Company's aggregate gross assets must have been ≤ $50M at time of stock issuance"
+    required_fact: "company asset size at investment"
+  - rule: "Stock must be held for more than 5 years"
+    required_fact: "acquisition date + current date"
+  - rule: "Must be original issue shares — purchased directly from the corporation, not secondary market"
+    required_fact: "acquisition method (original issue)"
+  - rule: "Business must be in a qualified trade — excludes professional services, finance, hospitality, farming"
+    required_fact: "company industry"
+
+required_user_facts:
+  - fact: "investments.has_qualified_small_business_stock (true/false)"
+  - fact: "company C corp status, asset size at issuance, acquisition date"
+
+required_documents:
+  - document: "Stock purchase agreement showing original issuance date and price"
+  - document: "Company capitalization table or documentation of asset size at issuance"
+  - document: "Documentation that company was a domestic C corporation"
+  - document: "Evidence of continuous active business qualification"
+
+required_forms:
+  - form: "Form 8949 (Sales and Other Dispositions of Capital Assets)"
+  - form: "Schedule D"
+
+deadlines:
+  - deadline: "5-year holding period must be met before sale"
+  - deadline: "Gains excluded on return for year of sale"
+
+phaseouts:
+  - rule: "Per-issuer limit: $10 million or 10× basis per taxpayer per company"
+  - rule: "Married filing separately: limit halved to $5 million per spouse"
+  - rule: "Some states (CA, MS, PA) do not conform to §1202 — state tax may still apply"
+
+stacking_rules:
+  compatible_with:
+    - opportunity-zone-investment
+    - annual-gift-tax-exclusion
+  conflicts_with:
+    - none
+
+risk_level: high_review_required
+
+risk_notes: |
+  Very high value but requires careful qualification analysis. Common disqualifying issues:
+  (1) company had assets > $50M at issuance, (2) company was in an excluded industry,
+  (3) stock was purchased on secondary market rather than original issuance, (4) company was
+  not a C corp. CA and several other states do not honor §1202 — state tax may still apply.
+  Always involve a tax attorney and CPA before assuming §1202 applies.
+
+planning_notes: |
+  - Gift or transfer QSBS to family members to multiply the per-taxpayer exclusion limit
+  - Section 1045 rollover: sell QSBS before 5 years and reinvest in other QSBS to preserve potential exclusion
+  - Some states (especially CA) do not conform — model federal vs. state separately
+  - Startup employees: early exercise + 83(b) election can start the 5-year holding period clock immediately
+
+review_required:
+  cpa: true
+  attorney: true
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

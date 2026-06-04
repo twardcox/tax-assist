@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(if \\(-not $?\\) { \"Directory is empty or does not exist\" })",
+      "PowerShell(python3 --version 2>&1)",
+      "PowerShell(py --version 2>&1)",
+      "PowerShell(python --version)",
+      "PowerShell(pip install pyyaml 2>&1)",
+      "PowerShell(python -m pip install pyyaml pytest 2>&1)",
+      "Bash(pip install *)",
+      "PowerShell(python -m pip install anthropic -q 2>&1)"
+    ]
+  }
+}

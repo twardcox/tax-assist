@@ -1,0 +1,78 @@
+id: section-179-expensing
+name: Section 179 Immediate Expensing
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "179"
+  irs_publication: "946"
+  form_instruction: "Instructions for Form 4562"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Allows businesses to immediately deduct the full cost of qualifying
+  equipment, machinery, vehicles, and software rather than depreciating
+  over years. 2025 limit: $1,220,000; phases out when total property
+  placed in service exceeds $3,050,000.
+
+estimated_value:
+  typical_range: "$5,000 – $400,000+/year depending on purchases"
+  calculation_basis: "Asset cost × marginal tax rate (accelerated to current year)"
+  depends_on: [asset_cost, net_profit, taxable_income]
+
+eligibility_rules:
+  - rule: "Asset must be tangible personal property used more than 50% for business"
+  - rule: "Includes: machinery, equipment, computers, vehicles (with limits), off-the-shelf software"
+  - rule: "Does NOT include: real property (buildings, land), inventory, property held for investment"
+  - rule: "Vehicle limits apply: SUVs capped at $30,500 (2025); listed property rules apply"
+  - rule: "Deduction cannot exceed net taxable income from active business — no loss creation"
+  - rule: "Property must be placed in service during the tax year"
+
+phaseouts:
+  - rule: "Begins phasing out dollar-for-dollar when total assets placed in service exceed $3,050,000 (2025)"
+  - rule: "Fully phased out at $4,270,000 in total assets placed in service"
+
+required_user_facts:
+  - fact: "businesses[*].depreciation.section_179_claimed"
+  - fact: "businesses[*].depreciation.assets_placed_in_service"
+  - fact: "businesses[*].financials.net_profit_loss"
+
+required_documents:
+  - document: "Purchase invoice or receipt for each asset"
+  - document: "Date asset was placed in service (first business use)"
+  - document: "Business use percentage documentation if < 100%"
+
+required_forms:
+  - form: "Form 4562 (Depreciation and Amortization — Section 179 claimed here)"
+
+deadlines:
+  - deadline: "Asset must be placed in service by December 31 of the tax year"
+  - deadline: "Election made on Form 4562 filed with annual return"
+
+stacking_rules:
+  compatible_with: [bonus-depreciation, qbi-deduction, business-vehicle-deduction]
+  conflicts_with:
+    - rule: "Section 179 applied before bonus depreciation on same asset"
+    - rule: "Vehicle luxury limits apply regardless of Section 179 election"
+
+risk_level: low
+
+planning_notes: |
+  - Stack with bonus depreciation: Section 179 first, bonus on remainder
+  - Buying equipment in Q4 is a common year-end tax move — must actually be placed in service
+  - For vehicles: Section 179 + bonus depreciation available; check annual IRS luxury auto limits
+  - State conformity varies significantly — many states have lower Section 179 limits
+
+qualification_pathways:
+  - "If no planned purchases: evaluate whether needed equipment purchase makes economic sense with tax benefit modeled"
+  - "If net profit too low: deduction limited to taxable income — carryforward available"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

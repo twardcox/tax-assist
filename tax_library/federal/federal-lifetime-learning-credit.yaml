@@ -1,0 +1,72 @@
+id: lifetime-learning-credit
+name: Lifetime Learning Credit (LLC)
+category: education
+jurisdiction: federal
+
+authority:
+  irc_section: "25A(c)"
+  irs_publication: "970"
+  form_instruction: "Instructions for Form 8863"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  20% credit on up to $10,000 of qualified tuition and fees per return
+  (not per student). Maximum $2,000/year. Non-refundable. No year limit —
+  available for graduate school, professional development, and continuing
+  education. Useful when AOTC is unavailable.
+
+estimated_value:
+  typical_range: "$400 – $2,000/year"
+  calculation_basis: "20% of up to $10,000 in qualifying expenses"
+  depends_on: [qualifying_expenses, agi, filing_status]
+
+eligibility_rules:
+  - rule: "No limit on number of years — available for any post-secondary education"
+  - rule: "Student does not need to be pursuing a degree"
+  - rule: "At least one course in an eligible educational institution"
+  - rule: "Cannot claim if AOTC is claimed for same student in same year"
+  - rule: "Must pay tuition and fees for the taxpayer, spouse, or dependent"
+
+phaseouts:
+  - rule: "2025: Full credit with MAGI ≤ $80,000 (single) / ≤ $160,000 (MFJ)"
+  - rule: "Phases out at $90,000 (single) / $180,000 (MFJ)"
+
+required_user_facts:
+  - fact: "dependents[*].education.school_level"
+  - fact: "dependents[*].education.tuition_paid"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Form 1098-T from institution"
+  - document: "Receipts for tuition and required fees"
+
+required_forms:
+  - form: "Form 8863 (Education Credits)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [529-plan-distributions]
+  conflicts_with:
+    - rule: "Cannot claim for same student as AOTC in same year"
+
+risk_level: low
+
+planning_notes: |
+  - Use AOTC first (higher value, partially refundable) for undergrad; switch to LLC for grad/continuing ed
+  - Professional certification courses, trade school, and single courses qualify
+
+qualification_pathways:
+  - "If above income limit: use pre-tax retirement contributions to reduce AGI"
+  - "If student in grad school or beyond 4 years: LLC is the only option"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

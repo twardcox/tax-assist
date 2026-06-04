@@ -1,0 +1,76 @@
+id: bonus-depreciation
+name: Bonus Depreciation (First-Year Expensing)
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "168(k)"
+  irs_publication: "946"
+  form_instruction: "Instructions for Form 4562"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Allows immediate expensing of a percentage of qualifying asset cost in the
+  year placed in service. Unlike Section 179, bonus depreciation CAN create a
+  loss (no income limitation). The TCJA phase-down continues: 40% in 2025,
+  20% in 2026, 0% in 2027 (unless extended by legislation).
+
+estimated_value:
+  typical_range: "$2,000 – $200,000+/year depending on purchases"
+  calculation_basis: "Asset cost × bonus % × marginal tax rate"
+  depends_on: [asset_cost, asset_type, tax_year]
+
+eligibility_rules:
+  - rule: "Asset must have recovery period of 20 years or less (tangible personal property)"
+  - rule: "Includes: equipment, computers, vehicles, qualified improvement property (15-year)"
+  - rule: "Can apply to NEW or USED property (unlike prior law)"
+  - rule: "Luxury auto limits apply to vehicles"
+  - rule: "2025 bonus rate: 40%; 2026: 20%; 2027 and later: 0% (unless law changes)"
+  - rule: "Property must be placed in service during the tax year"
+
+phaseouts:
+  - rule: "Phase-down schedule: 100% (2017-2022), 80% (2023), 60% (2024), 40% (2025), 20% (2026), 0% (2027)"
+  - rule: "No income phaseout — can create a business loss (unlike Section 179)"
+
+required_user_facts:
+  - fact: "businesses[*].depreciation.bonus_depreciation_claimed"
+  - fact: "businesses[*].depreciation.assets_placed_in_service"
+  - fact: "businesses[*].financials.net_profit_loss"
+
+required_documents:
+  - document: "Purchase invoice showing asset cost and date"
+  - document: "Evidence asset was placed in service (delivery receipt, installation records)"
+
+required_forms:
+  - form: "Form 4562 (must elect OUT of bonus depreciation if not desired)"
+
+deadlines:
+  - deadline: "Asset must be placed in service by December 31 of the tax year"
+  - deadline: "Form 4562 filed with annual return — opt-out election available"
+
+stacking_rules:
+  compatible_with: [section-179-expensing, qbi-deduction, cost-segregation]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Use Section 179 first (income-limited), then bonus depreciation on the remainder
+  - Bonus depreciation on real estate: only qualified improvement property (QIP) qualifies — not the building
+  - Cost segregation studies reclassify building components to shorter life → more bonus depreciation
+  - Watch 2027 expiration — consider accelerating asset purchases into 2025/2026
+  - State nonconformity is common — many states do not conform to federal bonus depreciation
+
+qualification_pathways:
+  - "If planning large equipment purchase: model tax impact of 2025 (40%) vs. 2026 (20%) timing"
+  - "If has real estate: cost segregation study unlocks QIP and personal property → bonus eligible"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

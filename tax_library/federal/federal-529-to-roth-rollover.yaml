@@ -1,0 +1,94 @@
+id: 529-to-roth-rollover
+name: 529-to-Roth IRA Rollover (SECURE 2.0)
+category: education
+jurisdiction: federal
+
+authority:
+  irc_section: "529(c)(3)(E)"
+  irs_publication: "970"
+  form_instruction: "SECURE 2.0 Act §126 (effective 2024)"
+  state_source: null
+
+status: active
+
+benefit_type: election
+
+summary: |
+  SECURE 2.0 Act §126 (effective January 1, 2024) allows unused funds in a 529 education
+  savings account to be rolled over to a Roth IRA for the beneficiary without penalty or
+  income tax. Requirements: the 529 account must be at least 15 years old, annual Roth IRA
+  contribution limits apply, and there is a $35,000 lifetime limit per beneficiary. This
+  eliminates the prior fear of "over-saving" in a 529 — unused college savings can become
+  a retirement head start for the beneficiary.
+
+estimated_value:
+  typical_range: "Up to $35,000 in Roth IRA contributions without the usual income limit"
+  calculation_basis: "Up to $35,000 lifetime, limited to annual Roth IRA limit ($7,000 in 2025)"
+  depends_on:
+    - investments.529_plans (account balance, account age)
+    - beneficiary's income (Roth IRA limits apply)
+
+eligibility_rules:
+  - rule: "529 account must be at least 15 years old"
+    required_fact: "investments.529_plans.opened_date (15+ years ago)"
+  - rule: "Lifetime rollover limit: $35,000 per beneficiary (total across all years)"
+    required_fact: "prior rollovers from same account"
+  - rule: "Annual rollover cannot exceed the annual Roth IRA contribution limit ($7,000 in 2025)"
+    required_fact: "Roth IRA annual limit"
+  - rule: "Beneficiary must have earned income equal to or greater than the rollover amount"
+    required_fact: "beneficiary income"
+  - rule: "Contributions to the 529 made within the last 5 years are NOT eligible for rollover"
+    required_fact: "contribution history"
+
+required_user_facts:
+  - fact: "investments.529_plans (account opened date, balance)"
+
+required_documents:
+  - document: "529 account statements showing opening date and contribution history"
+  - document: "Documentation that contributions were made 5+ years ago"
+
+required_forms:
+  - form: "Form 5329 (if applicable, for excess contributions)"
+  - form: "Roth IRA custodian rollover documentation"
+
+deadlines:
+  - deadline: "Rollovers count against annual Roth IRA limit — plan by December 31"
+  - deadline: "529 account must be at least 15 years old before first rollover"
+
+phaseouts:
+  - rule: "No income limit for the rollover itself (bypasses normal Roth IRA MAGI limits)"
+  - rule: "Annual Roth IRA limit still applies ($7,000 for 2025, $8,000 if age 50+)"
+  - rule: "$35,000 lifetime limit per beneficiary — spread over multiple years"
+
+stacking_rules:
+  compatible_with:
+    - backdoor-roth-ira
+    - american-opportunity-credit
+    - state-529-deduction
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  New provision (effective 2024) — IRS guidance is still developing. The 5-year look-back
+  on contributions is the most complex rule. Consult custodian for specific rollover procedures.
+  State tax treatment varies — some states may tax the rollover if 529 funds were deducted.
+
+planning_notes: |
+  - If your child doesn't use all 529 funds for college, start planning this rollover for their retirement
+  - The 529 must be 15 years old — if your account is younger, start the clock now
+  - Roll $7,000/year for up to 5 years to move the full $35,000 (subject to annual Roth limits)
+  - Contributions made in the last 5 years are excluded — plan around this restriction
+  - No income limit means even high earners can benefit (bypasses usual Roth income cap)
+
+qualification_pathways:
+  - "No 529 account yet: open one now to start the 15-year clock — it doesn't need a large balance"
+  - "Existing 529 older than 15 years with unused funds: begin annual rollovers to beneficiary's Roth IRA"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

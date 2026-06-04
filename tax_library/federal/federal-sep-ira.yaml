@@ -1,0 +1,82 @@
+id: sep-ira-contribution
+name: SEP-IRA Contribution Deduction
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "408(k)"
+  irs_publication: "560"
+  form_instruction: "Instructions for Schedule C / Form 1040"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Self-employed individuals can contribute up to 25% of net self-employment
+  income (effectively ~20% of net profit) to a SEP-IRA, up to $70,000 for
+  2025. Contributions are tax-deductible, reducing both income tax and
+  self-employment tax base. Easy to set up with no annual filing requirements.
+
+estimated_value:
+  typical_range: "$2,000 – $20,000+/year tax savings"
+  calculation_basis: "Contribution × marginal tax rate (federal + state)"
+  depends_on: [net_profit, marginal_tax_rate, prior_contributions]
+
+eligibility_rules:
+  - rule: "Must have self-employment income (sole prop, LLC, partnership, S Corp)"
+  - rule: "Contribution limit: lesser of 25% of net self-employment compensation OR $70,000 (2025)"
+  - rule: "Net self-employment compensation = net profit × 0.9235 × 0.25 (due to SE tax deduction)"
+  - rule: "Can establish and fund SEP-IRA up to tax filing deadline including extensions (October 15)"
+  - rule: "If business has employees, must contribute same percentage for eligible employees"
+
+phaseouts:
+  - rule: "No income phaseout — high earners can always contribute"
+  - rule: "Cannot exceed $70,000 total employer contributions (2025)"
+
+required_user_facts:
+  - fact: "businesses[*].entity_type"
+  - fact: "businesses[*].financials.net_profit_loss"
+  - fact: "retirement.sep_ira.established"
+  - fact: "retirement.sep_ira.contributions_ytd"
+  - fact: "businesses[*].employees.w2_employees_count"
+
+required_documents:
+  - document: "Schedule C showing net profit (needed to calculate contribution limit)"
+  - document: "SEP-IRA account statement"
+  - document: "Contribution confirmation from custodian"
+
+required_forms:
+  - form: "Schedule C (net profit calculation)"
+  - form: "Schedule 1, Line 16 (self-employed SEP deduction)"
+  - form: "No separate IRS filing — report on Form 1040"
+
+deadlines:
+  - deadline: "Can establish and fund up to tax return due date including extensions — October 15 if extended"
+  - deadline: "Unlike Solo 401(k), SEP-IRA can be opened after year-end"
+
+stacking_rules:
+  compatible_with: [qbi-deduction, home-office-deduction, s-corp-election, self-employed-health-insurance]
+  conflicts_with:
+    - rule: "SEP-IRA limits coordinated with other employer plan contributions — cannot double-count"
+
+risk_level: low
+
+planning_notes: |
+  - SEP-IRA is the easiest self-employed retirement plan to set up (no paperwork, no annual filings)
+  - Solo 401(k) often allows higher contributions at same profit level — compare
+  - At $100k net profit: SEP max ≈ $18,587; Solo 401(k) max ≈ $41,750 (with employee deferral)
+  - Contributions reduce AGI → may improve eligibility for other income-tested benefits
+  - If you have employees, consider SIMPLE IRA or Safe Harbor 401(k) instead
+
+qualification_pathways:
+  - "If not yet established: open a SEP-IRA at any brokerage (Vanguard, Fidelity, Schwab) — takes 15 minutes online"
+  - "If S Corp: SEP contributions based on W-2 wages (not distributions) — different calculation"
+  - "If underfunded: can make catch-up contribution before October 15 if extended"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

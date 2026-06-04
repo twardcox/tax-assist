@@ -1,0 +1,238 @@
+# Federal Tax Forms Registry
+# Maps forms to the benefits they support.
+# official_link and instructions_link point to irs.gov — verify annually.
+
+forms:
+
+  - form_number: "Schedule C"
+    form_name: "Profit or Loss From Business (Sole Proprietorship)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-schedule-c-form-1040"
+    instructions_link: "https://www.irs.gov/instructions/i1040sc"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - home-office-deduction
+      - business-vehicle-deduction
+      - self-employed-health-insurance
+      - sep-ira-contribution
+      - qbi-deduction
+
+  - form_number: "Schedule E"
+    form_name: "Supplemental Income and Loss"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-schedule-e-form-1040"
+    instructions_link: "https://www.irs.gov/instructions/i1040se"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - rental-real-estate-deductions
+      - passive-activity-loss
+      - qbi-deduction-rental
+
+  - form_number: "Form 8829"
+    form_name: "Expenses for Business Use of Your Home"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8829"
+    instructions_link: "https://www.irs.gov/instructions/i8829"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - home-office-deduction
+
+  - form_number: "Form 4562"
+    form_name: "Depreciation and Amortization"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-4562"
+    instructions_link: "https://www.irs.gov/instructions/i4562"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - depreciation-deduction
+      - section-179-expensing
+      - bonus-depreciation
+      - cost-segregation
+
+  - form_number: "Form 8995"
+    form_name: "Qualified Business Income Deduction Simplified Computation"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8995"
+    instructions_link: "https://www.irs.gov/instructions/i8995"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - qbi-deduction
+    notes: "Use for taxpayers under income thresholds. Use Form 8995-A for complex cases."
+
+  - form_number: "Form 8995-A"
+    form_name: "Qualified Business Income Deduction"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8995-a"
+    instructions_link: "https://www.irs.gov/instructions/i8995a"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - qbi-deduction
+
+  - form_number: "Form 2553"
+    form_name: "Election by a Small Business Corporation (S Corp Election)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-2553"
+    instructions_link: "https://www.irs.gov/instructions/i2553"
+    deadline: "No later than 2 months and 15 days after beginning of tax year the election is to take effect; or any time during the prior tax year"
+    related_benefits:
+      - s-corp-election
+      - self-employment-tax-reduction
+
+  - form_number: "Form 2555"
+    form_name: "Foreign Earned Income Exclusion"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-2555"
+    instructions_link: "https://www.irs.gov/instructions/i2555"
+    deadline: "April 15 (automatic 2-month extension for taxpayers abroad)"
+    related_benefits:
+      - foreign-earned-income-exclusion
+
+  - form_number: "Form 8824"
+    form_name: "Like-Kind Exchanges (1031 Exchange)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8824"
+    instructions_link: "https://www.irs.gov/instructions/i8824"
+    deadline: "April 15 (or extension) — exchange must be identified within 45 days, completed within 180 days"
+    related_benefits:
+      - 1031-exchange
+
+  - form_number: "Form 8582"
+    form_name: "Passive Activity Loss Limitations"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8582"
+    instructions_link: "https://www.irs.gov/instructions/i8582"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - passive-activity-loss
+      - real-estate-professional-status
+
+  - form_number: "Form 5695"
+    form_name: "Residential Clean Energy Credit"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-5695"
+    instructions_link: "https://www.irs.gov/instructions/i5695"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - residential-clean-energy-credit
+      - energy-efficient-home-improvement-credit
+      - ev-credit
+
+  - form_number: "Form 8936"
+    form_name: "Clean Vehicle Credits"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8936"
+    instructions_link: "https://www.irs.gov/instructions/i8936"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - clean-vehicle-credit
+      - used-clean-vehicle-credit
+
+  - form_number: "Form 8606"
+    form_name: "Nondeductible IRAs (Backdoor Roth tracking)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8606"
+    instructions_link: "https://www.irs.gov/instructions/i8606"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - backdoor-roth-ira
+      - nondeductible-ira-contribution
+
+  - form_number: "Form 8889"
+    form_name: "Health Savings Accounts (HSAs)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8889"
+    instructions_link: "https://www.irs.gov/instructions/i8889"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - hsa-deduction
+      - hsa-triple-tax-advantage
+
+  - form_number: "Form 1116"
+    form_name: "Foreign Tax Credit"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-1116"
+    instructions_link: "https://www.irs.gov/instructions/i1116"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - foreign-tax-credit
+
+  - form_number: "Form 8863"
+    form_name: "Education Credits (American Opportunity and Lifetime Learning Credits)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8863"
+    instructions_link: "https://www.irs.gov/instructions/i8863"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - american-opportunity-credit
+      - lifetime-learning-credit
+
+  - form_number: "Schedule A"
+    form_name: "Itemized Deductions"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-schedule-a-form-1040"
+    instructions_link: "https://www.irs.gov/instructions/i1040sca"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - mortgage-interest-deduction
+      - state-local-tax-deduction-salt
+      - charitable-contribution-deduction
+      - medical-expense-deduction
+
+  - form_number: "Form 8938"
+    form_name: "Statement of Specified Foreign Financial Assets (FATCA)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8938"
+    instructions_link: "https://www.irs.gov/instructions/i8938"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - foreign-tax-credit
+    notes: "Required disclosure — not a benefit itself. Failure to file is penalized."
+
+  - form_number: "Form 709"
+    form_name: "United States Gift (and Generation-Skipping Transfer) Tax Return"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-709"
+    instructions_link: "https://www.irs.gov/instructions/i709"
+    deadline: "April 15 (no automatic extension)"
+    related_benefits:
+      - annual-gift-tax-exclusion
+      - lifetime-gift-tax-exemption
+      - 529-superfunding
+
+  # ── Phase 7: New Federal Benefits ────────────────────────────────────────
+
+  - form_number: "Form 5695 Part II"
+    form_name: "Residential Energy Credits (Part II — §25C Efficiency Credits)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-5695"
+    instructions_link: "https://www.irs.gov/instructions/i5695"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - 25c-energy-home-improvement
+
+  - form_number: "Form 8880"
+    form_name: "Credit for Qualified Retirement Savings Contributions (Saver's Credit)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8880"
+    instructions_link: "https://www.irs.gov/instructions/i8880"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - savers-credit
+
+  - form_number: "Form 8962"
+    form_name: "Premium Tax Credit (PTC)"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8962"
+    instructions_link: "https://www.irs.gov/instructions/i8962"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - premium-tax-credit
+
+  - form_number: "Form 8881"
+    form_name: "Credit for Small Employer Pension Plan Startup Costs"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8881"
+    instructions_link: "https://www.irs.gov/instructions/i8881"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - small-employer-retirement-startup-credit

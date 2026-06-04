@@ -1,0 +1,82 @@
+id: qbi-deduction
+name: Qualified Business Income (QBI) Deduction
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "199A"
+  irs_publication: "535"
+  form_instruction: "Instructions for Form 8995 / 8995-A"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Self-employed individuals and pass-through entity owners may deduct up to 20%
+  of qualified business income. One of the most valuable deductions for small
+  business owners, subject to income-based phaseouts and W-2/capital limitations
+  for high earners.
+
+estimated_value:
+  typical_range: "$2,000 – $30,000+/year"
+  calculation_basis: "20% of QBI, limited to 20% of taxable income minus net capital gains"
+  depends_on: [net_profit, filing_status, taxable_income, w2_wages_paid, qualified_property]
+
+eligibility_rules:
+  - rule: "Must have qualified business income from a pass-through entity (sole prop, partnership, S corp, LLC taxed as one of these)"
+  - rule: "Cannot be W-2 employee-only income"
+  - rule: "Specified Service Trade or Business (SSTB) phaseout applies above income thresholds"
+  - rule: "For income above threshold: deduction limited to greater of 50% of W-2 wages OR 25% of W-2 wages + 2.5% of qualified property"
+
+phaseouts:
+  - rule: "2025 thresholds (MFJ): full deduction below $394,600; phases out through $494,600"
+  - rule: "2025 thresholds (Single/HOH): full deduction below $197,300; phases out through $247,300"
+  - rule: "SSTB owners above upper threshold receive $0 deduction"
+  - rule: "Non-SSTB owners above upper threshold use W-2 wage / property limitation"
+
+required_user_facts:
+  - fact: "businesses[*].entity_type"
+  - fact: "businesses[*].financials.net_profit_loss"
+  - fact: "businesses[*].qbi_eligible"
+  - fact: "businesses[*].specified_service_trade"
+  - fact: "household.filing_status"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Schedule C or K-1 showing net profit"
+  - document: "W-2s issued to employees (if above income threshold)"
+  - document: "Depreciation schedule showing qualified property (if above threshold)"
+
+required_forms:
+  - form: "Form 8995 (below income threshold)"
+  - form: "Form 8995-A (above income threshold or multiple businesses)"
+
+deadlines:
+  - deadline: "Claimed on annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [home-office-deduction, sep-ira-contribution, business-vehicle-deduction, s-corp-election]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Home office deduction reduces QBI — model net effect
+  - Retirement contributions (SEP, Solo 401k) reduce QBI
+  - S Corp W-2 salary reduces QBI; model optimal salary split
+  - SSTB includes: health, law, accounting, actuarial, performing arts, consulting, athletics, financial services
+  - Real estate can qualify if treated as a trade or business (not passive)
+  - Consider aggregating multiple businesses to optimize W-2 wage limitation
+
+qualification_pathways:
+  - "If SSTB above threshold: reduce income below phaseout through retirement contributions or entity restructuring"
+  - "If W-2 limitation binding: hire employees or pay owner reasonable W-2 compensation (S Corp)"
+  - "If not yet a pass-through entity: convert from C Corp or establish new entity"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

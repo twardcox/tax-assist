@@ -1,0 +1,69 @@
+# Planning Goals
+# Check the goals that apply. The AI advisor will prioritize recommendations
+# based on these goals and weight opportunity discovery accordingly.
+
+tax_year: 2025
+
+primary_goals:
+  reduce_current_year_tax: false
+  reduce_future_year_tax: false
+  reduce_lifetime_tax: false
+  build_retirement_wealth: false
+  acquire_real_estate: false
+  start_or_grow_business: false
+  reduce_self_employment_tax: false
+  protect_assets: false
+  transfer_wealth_to_heirs: false
+  fund_education: false
+  reduce_healthcare_costs: false
+  improve_documentation: false
+  prepare_for_audit: false
+  simplify_tax_situation: false
+
+timeline:
+  short_term_focus: true       # current year / next 12 months
+  multi_year_planning: false   # 2-5 year horizon
+  long_term_planning: false    # 5+ year horizon
+
+risk_tolerance:
+  aggressive_legal_strategies: false   # willing to use legal but higher-scrutiny strategies
+  moderate_strategies: true            # well-documented, commonly-used strategies
+  conservative_strategies_only: false  # standard, low-audit-risk strategies only
+
+professional_advisors:
+  cpa_on_file: false
+  tax_attorney: false
+  financial_advisor: false
+  estate_attorney: false
+
+major_life_events_this_year:
+  marriage: false
+  divorce: false
+  new_child: false
+  adoption: false
+  home_purchase: false
+  home_sale: false
+  job_change: false
+  started_business: false
+  sold_business: false
+  inheritance: false
+  retirement: false
+  disability: false
+  death_of_spouse: false
+
+anticipated_changes_next_year:
+  income_increase: false
+  income_decrease: false
+  business_start: false
+  real_estate_purchase: false
+  real_estate_sale: false
+  retirement_start: false
+  new_dependent: false
+  large_medical_expense: false
+  large_charitable_gift: false
+  moving_states: false
+  new_state:                   # if moving_states is true
+
+notes: |
+  Describe any specific tax planning priorities or constraints here.
+  For example: "Want to maximize deductions before a large income year next year."

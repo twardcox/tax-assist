@@ -1,0 +1,82 @@
+id: 1031-exchange
+name: 1031 Like-Kind Exchange (Tax-Deferred Real Estate Sale)
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "1031"
+  irs_publication: "544"
+  form_instruction: "Instructions for Form 8824"
+  state_source: null
+
+status: active
+benefit_type: deferral
+
+summary: |
+  When selling investment or business real property, a 1031 exchange defers
+  ALL capital gains and depreciation recapture taxes by rolling proceeds into
+  a like-kind replacement property. With proper planning, taxes can be deferred
+  indefinitely and eliminated entirely at death (stepped-up basis).
+
+estimated_value:
+  typical_range: "$10,000 – $500,000+ in deferred taxes per transaction"
+  calculation_basis: "Capital gain + depreciation recapture × applicable tax rates"
+  depends_on: [gain_amount, depreciation_recapture, replacement_property_value]
+
+eligibility_rules:
+  - rule: "Property must be held for investment or productive use in business — NOT primary residence or inventory"
+  - rule: "Must identify replacement property within 45 days of closing the relinquished property"
+  - rule: "Must close replacement property within 180 days of closing relinquished property"
+  - rule: "Must use a Qualified Intermediary (QI) — cannot touch the exchange funds"
+  - rule: "Replacement property must be equal or greater value; any 'boot' received is taxable"
+  - rule: "'Like-kind' = any real property (US only) exchanged for any other US real property"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "Personal property exchanges no longer qualify under TCJA (2018+)"
+
+required_user_facts:
+  - fact: "real_estate[*].property_type"
+  - fact: "real_estate[*].acquisition.purchase_price"
+  - fact: "real_estate[*].acquisition.current_market_value"
+  - fact: "real_estate[*].rental_use.depreciation_taken_prior_years"
+
+required_documents:
+  - document: "Qualified Intermediary agreement (must be executed BEFORE closing)"
+  - document: "Closing disclosure for relinquished property"
+  - document: "45-day identification letter"
+  - document: "Closing disclosure for replacement property"
+  - document: "Exchange agreement and assignment documents"
+
+required_forms:
+  - form: "Form 8824 (Like-Kind Exchanges — filed for each exchange)"
+
+deadlines:
+  - deadline: "QI must be engaged BEFORE the sale closes — cannot be done retroactively"
+  - deadline: "Replacement property identification: 45 days from relinquished property closing"
+  - deadline: "Replacement property closing: 180 days from relinquished closing (or tax return due date if earlier)"
+
+stacking_rules:
+  compatible_with: [real-estate-depreciation, cost-segregation, passive-activity-loss]
+  conflicts_with:
+    - rule: "Cannot combine with Section 121 exclusion on same exchange (must allocate between residence and rental portions)"
+
+risk_level: moderate
+
+planning_notes: |
+  - Engage QI BEFORE listing or closing — this is the most common fatal error
+  - "Swap till you drop" strategy: defer taxes indefinitely, heirs get stepped-up basis at death
+  - Partial exchange: receive some cash (boot) and defer the rest
+  - Reverse exchange: acquire replacement before selling relinquished (expensive but possible)
+  - Delaware Statutory Trust (DST): passive replacement property option for diversification
+
+qualification_pathways:
+  - "If property already sold without QI: exchange cannot be done retroactively — no remedy"
+  - "If planning future sale: engage QI 30–60 days before closing to allow proper setup"
+
+review_required:
+  cpa: required
+  attorney: required
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

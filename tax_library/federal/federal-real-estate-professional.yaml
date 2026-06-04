@@ -1,0 +1,80 @@
+id: real-estate-professional-status
+name: Real Estate Professional Status (REP)
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "469(c)(7)"
+  irs_publication: "925"
+  form_instruction: "Instructions for Schedule E / Form 8582"
+  state_source: null
+
+status: active
+benefit_type: election
+
+summary: |
+  A taxpayer who qualifies as a Real Estate Professional can deduct rental
+  real estate losses against ordinary income without limitation — bypassing
+  the passive activity loss rules entirely. Requires 750+ hours per year in
+  real property activities AND more hours in real estate than any other
+  profession. Can shelter hundreds of thousands in ordinary income.
+
+estimated_value:
+  typical_range: "$10,000 – $200,000+ in unlocked deductions"
+  calculation_basis: "Suspended rental losses now deductible × marginal tax rate"
+  depends_on: [suspended_losses, current_year_losses, marginal_rate]
+
+eligibility_rules:
+  - rule: "Must spend more than 750 hours per year in real property trades or businesses"
+  - rule: "More than 50% of personal services must be in real property trades/businesses"
+  - rule: "Must MATERIALLY PARTICIPATE in each rental activity (or elect aggregation)"
+  - rule: "W-2 employee in a non-real-estate job cannot use those hours toward the test"
+  - rule: "Real property activities include: development, construction, acquisition, rental, operation, management, leasing, brokerage"
+
+phaseouts:
+  - rule: "No income phaseout once status is established"
+  - rule: "Status must be qualified in each tax year — not automatic from prior years"
+
+required_user_facts:
+  - fact: "real_estate[*].rental_use.rental_days"
+  - fact: "real_estate[*].rental_use.passive_activity_losses_suspended"
+  - fact: "household.estimated_agi"
+  - fact: "income.w2_employment"
+
+required_documents:
+  - document: "Detailed hour-by-hour log of real property activities throughout the year"
+  - document: "Documentation of activities: emails, contracts, management records, travel logs"
+  - document: "Aggregation election statement (if elected)"
+
+required_forms:
+  - form: "Form 8582 (Passive Activity Loss Limitations)"
+  - form: "Schedule E (rental income/loss)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+  - deadline: "Aggregation election: file with first return that includes it"
+
+stacking_rules:
+  compatible_with: [real-estate-depreciation, passive-activity-loss, cost-segregation, bonus-depreciation]
+  conflicts_with: []
+
+risk_level: aggressive
+
+planning_notes: |
+  - This is heavily IRS-audited — maintaining meticulous time logs is essential
+  - Spouse hours do NOT count toward the test (each spouse must qualify independently if filing separately)
+  - However: if one spouse qualifies, MFJ return benefits from their REP status
+  - Aggregation election: treat all rental properties as a single activity — easier to meet material participation
+  - STR alternative: short-term rentals with material participation can achieve similar result without 750-hour test
+
+qualification_pathways:
+  - "If close to 750 hours: increase participation in property management and document every activity"
+  - "If W-2 professional with long hours: consider whether STR + material participation is easier path"
+  - "If spouse available: structure so spouse manages properties and qualifies (750 hrs is more achievable)"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

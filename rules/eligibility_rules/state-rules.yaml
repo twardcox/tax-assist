@@ -1,0 +1,86 @@
+# State Eligibility Rules Registry
+# Evaluated by RulesEngine._rule_* methods in scan_opportunities.py.
+# State rules always gate first on household.residence.state.
+
+rules:
+
+  - benefit_id: no-income-tax-state
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: is_resident
+        path: household.residence.state
+        operator: any_of
+        value: ["AK", "FL", "NV", "SD", "TX", "WA", "WY", "NH", "TN"]
+        description: "Resident of a no or minimal income tax state"
+    disqualifying_conditions: []
+
+  - benefit_id: pte-election
+    version: "1.0"
+    effective_years: "2021-onwards"
+    required_conditions:
+      - id: pte_state
+        path: household.residence.state
+        description: "Resident of a state that has enacted a PTE election"
+      - id: has_self_employment
+        path: has_self_employment_fn
+        description: "Has pass-through business income"
+    nearly_eligible_conditions:
+      - "has self-employment but no net profit recorded"
+    disqualifying_conditions:
+      - id: no_income_tax_state
+        description: "No income tax in this state — PTE election produces no benefit"
+
+  - benefit_id: state-529-deduction
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: participating_state
+        path: household.residence.state
+        description: "State offers a 529 deduction or credit (~34 states + DC)"
+    nearly_eligible_conditions:
+      - "state offers deduction but no 529 account present"
+    disqualifying_conditions:
+      - id: no_income_tax
+        description: "No income tax state — no deduction benefit"
+
+  - benefit_id: state-retirement-income-exemption
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_retirement_income
+        description: "Has Social Security, pension, or IRA/401k distributions"
+      - id: exempt_state
+        path: household.residence.state
+        description: "State provides retirement income exemption"
+    disqualifying_conditions:
+      - id: no_retirement_income
+        description: "No retirement income sources"
+
+  - benefit_id: state-homestead-exemption
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: owns_primary_residence
+        path: real_estate.properties
+        description: "Owns a primary residence"
+    nearly_eligible_conditions:
+      - "owns primary residence but homestead_exemption_applied not set to true"
+
+  - benefit_id: state-ev-credit
+    version: "1.0"
+    effective_years: "2021-onwards"
+    required_conditions:
+      - id: ev_state
+        path: household.residence.state
+        operator: any_of
+        value: ["CA", "CO", "NY", "CT", "MA", "OR", "NJ", "IL", "VT", "ME"]
+        description: "State with active EV credit/rebate program"
+      - id: has_ev
+        path: investments.vehicles
+        description: "Has an electric or plug-in hybrid vehicle"
+    nearly_eligible_conditions:
+      - "in EV credit state but no EV recorded"
+    disqualifying_conditions:
+      - id: ca_income_limit
+        description: "CA CVRP income limit exceeded"

@@ -1,0 +1,83 @@
+id: augusta-rule
+name: Augusta Rule — Home Rental to Business (Section 280A(g))
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "280A(g)"
+  irs_publication: "527"
+  form_instruction: null
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  A homeowner may rent their home to their own business for up to 14 days per
+  year. The rental income is excluded from the homeowner's gross income (not
+  taxable). The business deducts the rent as a business expense. The net effect
+  is a tax-free transfer from the business to the owner.
+
+estimated_value:
+  typical_range: "$5,000 – $25,000+/year depending on market rental rate"
+  calculation_basis: "Days rented × fair market daily rental rate, tax savings = rent × owner's marginal rate"
+  depends_on: [fair_market_rent, days_rented, business_marginal_rate]
+
+eligibility_rules:
+  - rule: "Home must be rented for 14 or fewer days in the year — the 15th day kills the exclusion entirely"
+  - rule: "Must charge fair market rent — not below market or above market"
+  - rule: "Business must have a legitimate business purpose for renting the home (meeting, retreat, event)"
+  - rule: "Rental must be at arm's length — even if owner is also the business owner"
+  - rule: "Must create a rental agreement between homeowner and business"
+  - rule: "Meeting must actually take place and be documented"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "Benefit disappears entirely if 15+ days rented"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "businesses[*].entity_type"
+  - fact: "businesses[*].financials.net_profit_loss"
+
+required_documents:
+  - document: "Written rental agreement between homeowner and business"
+  - document: "Invoice from homeowner to business"
+  - document: "Business payment confirmation (check or bank transfer)"
+  - document: "Meeting agenda documenting business purpose"
+  - document: "Attendee list"
+  - document: "Comparable rental rate documentation (similar venues in the area)"
+
+required_forms:
+  - form: "No Form required for homeowner (income not reported on tax return)"
+  - form: "Business Schedule C or S Corp return deducts rent as ordinary business expense"
+
+deadlines:
+  - deadline: "Rental must occur during the tax year"
+  - deadline: "Rental days must not exceed 14 in the calendar year"
+
+stacking_rules:
+  compatible_with: [qbi-deduction, home-office-deduction]
+  conflicts_with:
+    - rule: "If home office is claimed using the regular method, some home expenses overlap — coordinate with CPA"
+
+risk_level: moderate
+
+planning_notes: |
+  - Named for Augusta National Golf Club area homeowners who rent during the Masters
+  - IRS has accepted the strategy but scrutinizes lack of documentation and above-market rates
+  - State tax treatment varies — some states don't conform to the exclusion
+  - Business entity must be separate from owner (S Corp, partnership, or multi-member LLC work best)
+  - Sole proprietors should structure carefully — one-person sole prop may face IRS challenge on arm's-length nature
+  - Total annual benefit scales with days: 10 days × $1,500/day = $15,000 tax-free transfer
+
+qualification_pathways:
+  - "If no business entity: establish LLC or S Corp first to create proper arm's-length counterparty"
+  - "If no documented meetings: schedule legitimate business strategy sessions, board meetings, or training events"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

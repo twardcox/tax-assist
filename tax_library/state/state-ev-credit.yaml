@@ -1,0 +1,87 @@
+id: state-ev-credit
+name: State Electric Vehicle Tax Credit
+category: energy
+jurisdiction: state
+
+authority:
+  irc_section: "30D (federal; state credits are additive)"
+  irs_publication: null
+  state_source: "CA Clean Vehicle Rebate Project (CVRP); CO §39-22-516.8; NY Drive Clean Rebate; and others"
+
+status: active
+
+benefit_type: credit
+
+summary: |
+  Several states offer EV purchase credits or rebates that stack on top of the federal
+  §30D Clean Vehicle Credit. California, Colorado, and New York are the highest-value
+  state programs. These credits can add $2,500 – $7,500 to the federal credit, making the
+  combined incentive substantial for eligible vehicle purchases.
+
+estimated_value:
+  typical_range: "$1,500 – $7,500 per vehicle (state portion)"
+  calculation_basis: "Fixed credit or rebate amount per qualifying vehicle purchase"
+  depends_on:
+    - household.residence.state
+    - investments.vehicles (EV presence)
+    - household.estimated_agi (income limits apply in some states)
+
+eligibility_rules:
+  - rule: "Must reside in a state with an active EV credit program"
+    required_fact: "household.residence.state (CA, CO, NY, and others)"
+  - rule: "Must have purchased or leased an eligible new BEV or PHEV"
+    required_fact: "investments.vehicles with fuel_type: electric/ev/bev/phev"
+  - rule: "Income limits apply in some states (CA: $135k single / $200k MFJ for rebate)"
+    required_fact: "household.estimated_agi"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "investments.vehicles (fuel_type: electric, ev, bev, or phev)"
+  - fact: "household.estimated_agi (for income-limited states)"
+
+required_documents:
+  - document: "Vehicle purchase or lease agreement showing EV qualification"
+  - document: "State rebate application (CA CVRP; CO Form DR 0617; NY application)"
+
+required_forms:
+  - form: "CO Form DR 0617 (Alternative Fuel Vehicle Credit)"
+  - form: "CA CVRP rebate application (separate from tax return)"
+  - form: "NY IT-253 (Alternative Fuels and Electric Vehicle Recharging Property Credit)"
+
+deadlines:
+  - deadline: "CA CVRP: apply within 18 months of vehicle purchase"
+  - deadline: "CO: claimed on state return for purchase year"
+  - deadline: "NY: claimed on state return for purchase year"
+
+phaseouts:
+  - rule: "CA CVRP: income limits — $135k single, $175k HOH, $200k MFJ/MFS"
+  - rule: "Some state programs are subject to funding availability and may pause"
+
+stacking_rules:
+  compatible_with:
+    - clean-vehicle-credit
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Low risk but requires timely application. CA CVRP is a rebate (applied for separately,
+  not on the tax return) and has limited funding — apply immediately after purchase. CO and
+  NY are traditional tax credits claimed on the state return. Income limits in CA may
+  disqualify higher-income taxpayers.
+
+planning_notes: |
+  - Stack state credit with federal §30D for maximum combined incentive
+  - CA CVRP funding can run out — apply the day of purchase if possible
+  - CO credit is available for both purchase and lease; NY credit is purchase only
+
+qualification_pathways:
+  - "Planning an EV purchase: research your state's program before purchase date for timing requirements"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

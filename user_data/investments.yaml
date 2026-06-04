@@ -1,0 +1,65 @@
+# Investment Account Facts
+# Covers taxable brokerage accounts and non-retirement investment holdings.
+# Retirement accounts are in user_data/retirement.yaml
+
+tax_year: 2025
+
+taxable_accounts:
+
+  - account_name:
+    custodian:
+    account_type:              # individual | joint | trust | custodial
+    approximate_value:
+
+    holdings:
+      individual_stocks: false
+      mutual_funds: false
+      etfs: false
+      bonds: false
+      crypto: false
+      options: false
+      real_estate_notes: false
+      other: false
+
+    realized_gains_losses_this_year:
+      short_term_gains:
+      short_term_losses:
+      long_term_gains:
+      long_term_losses:
+
+    unrealized_gains:          # approximate — used for tax-loss harvesting analysis
+    unrealized_losses:         # approximate
+
+    qualified_dividends_ytd:
+    ordinary_dividends_ytd:
+    interest_income_ytd:
+
+    tax_loss_harvesting:
+      opportunities_identified: false
+      wash_sale_risk: null
+
+529_plans:
+  - beneficiary:
+    owner:
+    state_plan:
+    balance:
+    contributions_this_year:
+    state_deduction_available: null
+    qualified_expenses_planned:
+
+opportunity_zone_investments:
+  - fund_name:
+    investment_date:
+    amount_invested:
+    original_gain_deferred:
+    step_up_date:              # date of 10% basis step-up if applicable
+
+crypto:
+  held: false
+  approximate_value:
+  transactions_this_year: false
+  staking_rewards: false
+  nft_activity: false
+
+notes: |
+  Add investment notes here.

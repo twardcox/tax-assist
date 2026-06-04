@@ -1,0 +1,52 @@
+# Household & Filing Facts
+# Edit these fields with your actual information before running any scripts.
+# All fields are optional — leave blank if unknown or not applicable.
+
+filing_status:           # single | married_filing_jointly | married_filing_separately | head_of_household | qualifying_surviving_spouse
+
+tax_year: 2025
+
+residence:
+  state:                 # two-letter state code, e.g. TX, CA, NY
+  city:                  # city name (for local tax purposes)
+  county:                # county name
+  zip:
+
+spouse:
+  present: false         # true | false
+  employed: null         # true | false | null
+  self_employed: null    # true | false | null
+  age: null
+
+taxpayer:
+  age:
+  blind: false
+  disabled: false
+  active_military: false
+  veteran: false
+  student: false
+
+dependents:
+  count: 0
+  # See user_data/dependents.yaml for individual dependent records
+
+income_sources:
+  # List all that apply — details in user_data/income.yaml
+  - w2_wages: false
+  - self_employment: false
+  - rental: false
+  - investments: false
+  - retirement_distributions: false
+  - social_security: false
+  - alimony_received: false
+  - gambling: false
+  - other: false
+
+estimated_agi:           # approximate adjusted gross income for current year
+
+prior_year_agi:          # from last filed return
+
+itemizing_deductions: null   # true | false | null (unknown)
+
+notes: |
+  Add any relevant household notes here.

@@ -1,0 +1,95 @@
+# Retirement Account Facts
+
+tax_year: 2025
+
+# Contribution limits are updated annually — system will validate against current limits
+
+employer_plans:
+  traditional_401k:
+    participating: false
+    employer_match_percent:
+    employer_match_cap:
+    employee_contribution_ytd:
+    roth_401k_option_available: false
+    roth_401k_contributions_ytd:
+    vesting_schedule:
+    plan_balance_approx:
+
+  403b:
+    participating: false
+    contribution_ytd:
+    balance_approx:
+
+  457b:
+    participating: false
+    contribution_ytd:
+    balance_approx:
+
+  simple_ira:
+    participating: false
+    contribution_ytd:
+    balance_approx:
+
+  defined_benefit_pension:
+    participating: false
+    vested: null
+    projected_monthly_benefit:
+
+individual_retirement_accounts:
+  traditional_ira:
+    accounts:
+      - custodian:
+        balance:
+    contributions_ytd:
+    deductible_contributions:  # depends on income and workplace plan — system will evaluate
+    nondeductible_basis:       # prior nondeductible contributions (Form 8606)
+    rmd_required: false        # age 73+ for most
+
+  roth_ira:
+    accounts:
+      - custodian:
+        balance:
+    contributions_ytd:
+    income_eligible: null      # system will evaluate based on MAGI
+    backdoor_roth_candidate: null
+
+  rollover_ira:
+    balance:
+    source:                    # what plan it was rolled from
+
+self_employed_plans:
+  sep_ira:
+    established: false
+    contributions_ytd:
+    balance:
+    eligible_businesses:       # list business names from businesses.yaml
+
+  solo_401k:
+    established: false
+    employee_contributions_ytd:
+    employer_contributions_ytd:
+    roth_solo_option: false
+    loan_outstanding: false
+    balance:
+    eligible_businesses:
+
+  simple_ira_employer:
+    established: false
+    contributions_ytd:
+    balance:
+
+  defined_benefit_plan:
+    established: false
+    annual_contribution:
+    actuary_required: true
+
+health_savings_account:
+  # HSA is covered in healthcare.yaml
+
+roth_conversion:
+  conversions_this_year: false
+  amount_converted:
+  strategic_roth_conversion_candidate: null   # system will evaluate
+
+notes: |
+  Add retirement planning notes here.

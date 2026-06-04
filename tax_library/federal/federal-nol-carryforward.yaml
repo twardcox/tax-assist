@@ -1,0 +1,89 @@
+id: nol-carryforward
+name: Net Operating Loss (NOL) Carryforward
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "172"
+  irs_publication: "536"
+  form_instruction: "Instructions for Form 1045"
+  state_source: null
+
+status: active
+
+benefit_type: deferral
+
+summary: |
+  A Net Operating Loss (NOL) arises when deductions exceed income for the year. Under
+  post-TCJA rules (2018+), NOLs carry forward indefinitely and can offset up to 80% of
+  taxable income in any future year. For business owners, real estate investors, and
+  self-employed individuals who experience a down year, the carryforward ensures the
+  loss retains value — permanently reducing future tax when the taxpayer returns to
+  profitability. NOLs do not expire, cannot be carried back (except farming), and
+  survive ownership continuity in some entity structures.
+
+estimated_value:
+  typical_range: "Depends on NOL amount — 37% federal rate × carryforward balance"
+  calculation_basis: "Future taxable income × federal marginal rate × carryforward utilized (up to 80%/year)"
+  depends_on:
+    - businesses.financials.net_profit_loss (net loss present)
+    - prior year NOL balance
+
+eligibility_rules:
+  - rule: "Taxable income must be negative in the NOL year (deductions > gross income)"
+    required_fact: "businesses.financials.net_profit_loss (negative)"
+  - rule: "NOL must be tracked and carried forward on Schedule A (Form 1045) or Form 1040X"
+    required_fact: "prior year returns showing NOL calculation"
+
+required_user_facts:
+  - fact: "businesses.financials.net_profit_loss (negative value indicates potential NOL)"
+
+required_documents:
+  - document: "Prior year tax return showing NOL computation (Schedule A of Form 1045)"
+  - document: "Business records showing deductions exceeding income"
+
+required_forms:
+  - form: "Form 1045 (Application for Tentative Refund — optional; used for carryback)"
+  - form: "Form 1040 Schedule 1 (other income/loss)"
+  - form: "IRS Publication 536 worksheet (to compute NOL)"
+
+deadlines:
+  - deadline: "NOL carryforward: indefinite — no deadline to use"
+  - deadline: "Must file consistent returns tracking NOL balance year by year"
+
+phaseouts:
+  - rule: "TCJA (2018+): NOL limited to 80% of taxable income per year (pre-2018 NOLs not subject to 80% limit)"
+  - rule: "TCJA (2018+): carryback eliminated for most business NOLs (farming losses still allow 2-year carryback)"
+  - rule: "At-risk rules and passive activity rules may limit NOL before it reaches the return"
+
+stacking_rules:
+  compatible_with:
+    - qbi-deduction
+    - home-office-deduction
+    - real-estate-depreciation
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Low risk but requires meticulous record-keeping across tax years. Failure to properly
+  document and carry the NOL balance means it may be lost or challenged. If the NOL
+  arose before 2018 and was computed under old rules, different limits apply.
+
+planning_notes: |
+  - If you have a NOL carryforward, model future income to determine optimal year to utilize
+  - The 80% limit means high-income years are best for using the carryforward (80% × high income > 80% × low income)
+  - Partnership and S Corp losses pass through to owners — owners may have individual NOLs even if entity does not
+  - Consider accelerating income into years with large carryforwards to absorb the 80% cap faster
+
+qualification_pathways:
+  - "Business had net loss this year: flag for NOL computation — may reduce future taxes significantly"
+  - "Prior years had losses not tracked: consider amended returns or Form 1045 to claim carryforward"
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

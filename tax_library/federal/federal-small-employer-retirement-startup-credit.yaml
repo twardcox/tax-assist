@@ -1,0 +1,95 @@
+id: small-employer-retirement-startup-credit
+name: Small Employer Retirement Plan Startup Credit (§45E)
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "45E"
+  irs_publication: null
+  form_instruction: "Instructions for Form 8881"
+  state_source: null
+
+status: active
+
+benefit_type: credit
+
+summary: |
+  Section 45E provides a tax credit of 50–100% of qualified startup costs for establishing
+  a new qualified retirement plan (401k, SIMPLE IRA, SEP-IRA, or defined benefit plan).
+  Credit = 100% of costs for employers with ≤ 50 employees; 50% for 51–100 employees.
+  Maximum credit: $5,000 per year × 3 years = $15,000 total. Additionally, SECURE 2.0
+  added an employer contribution credit of up to $1,000 per employee for small employers
+  (≤ 50 employees) that set up new plans with employer contributions — for up to 5 years.
+  This effectively pays for setting up a new retirement plan for small business owners.
+
+estimated_value:
+  typical_range: "$500 – $5,000/year for 3 years ($1,500 – $15,000 total startup credit)"
+  calculation_basis: "100% of startup costs up to $5,000/year (≤50 employees); 50% for 51–100"
+  depends_on:
+    - has_any_business
+    - employee count (≤100)
+    - no existing qualified retirement plan
+
+eligibility_rules:
+  - rule: "Employer must have ≤ 100 employees who received at least $5,000 in compensation in the prior year"
+    required_fact: "businesses.employees.w2_employees_count"
+  - rule: "Must not have established a qualified plan in the 3 preceding tax years"
+    required_fact: "no prior retirement plan"
+  - rule: "At least 1 employee other than the owner must be a non-highly-compensated employee"
+    required_fact: "employees exist"
+  - rule: "Qualified startup costs: plan administration, employee education, and fiduciary costs"
+    required_fact: "retirement plan establishment costs"
+
+required_user_facts:
+  - fact: "has_any_business"
+  - fact: "businesses.employees.w2_employees_count"
+  - fact: "businesses.retirement_plans (existing plan check)"
+
+required_documents:
+  - document: "Invoices for plan setup, administration, and employee education costs"
+  - document: "Prior 3 years: no qualified plan existed (documentation)"
+
+required_forms:
+  - form: "Form 8881 (Credit for Small Employer Pension Plan Startup Costs)"
+
+deadlines:
+  - deadline: "Credit claimed for each of the 3 tax years following plan establishment"
+  - deadline: "Plan must be established during the tax year"
+
+phaseouts:
+  - rule: "No income phaseout — available to any qualifying small employer"
+  - rule: "Credit limited to actual costs ($250 minimum × non-HCEs, max $5,000)"
+  - rule: "Additional employer contribution credit: up to $1,000/employee × 5 years (≤50 employees, SECURE 2.0)"
+
+stacking_rules:
+  compatible_with:
+    - sep-ira-contribution
+    - solo-401k
+    - qbi-deduction
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Very low risk. Straightforward credit with clear qualification rules. The main eligibility
+  trap is the requirement that at least one non-highly-compensated employee must be eligible —
+  sole proprietors with no employees do not qualify (they can still set up a SEP or Solo 401k,
+  but this specific startup credit requires employees).
+
+planning_notes: |
+  - Set up a 401k instead of a SEP-IRA to qualify: 401k enables higher employee deferrals and is more attractive
+  - Add auto-enrollment to the new plan to claim the additional $500/year SECURE 2.0 auto-enrollment credit
+  - The credit covers administration costs — consult a plan provider about setup costs to maximize the credit
+  - Employer contribution credit (SECURE 2.0): up to $1,000/employee for up to 5 years if employer contributions made
+
+qualification_pathways:
+  - "Small business with employees but no retirement plan: set up 401k or SIMPLE IRA this year — credit pays for setup"
+  - "Solo operator: credit requires at least 1 non-HCE employee — hire one to unlock; otherwise use SEP/Solo 401k"
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

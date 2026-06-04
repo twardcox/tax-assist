@@ -1,0 +1,75 @@
+id: cost-segregation
+name: Cost Segregation Study
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "168, 1.168(i)-4"
+  irs_publication: "946"
+  form_instruction: "Instructions for Form 4562"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  An engineering study that reclassifies building components from 27.5/39-year
+  property into 5, 7, or 15-year property eligible for bonus depreciation and
+  Section 179. Typically moves 20–40% of building value to shorter-lived assets,
+  generating large first-year deductions.
+
+estimated_value:
+  typical_range: "$20,000 – $500,000+ in accelerated depreciation (first year)"
+  calculation_basis: "Reclassified asset value × bonus depreciation % × marginal tax rate"
+  depends_on: [building_cost, property_type, bonus_depreciation_rate]
+
+eligibility_rules:
+  - rule: "Must own (not rent) commercial or residential rental real estate"
+  - rule: "Property must have been purchased, constructed, or improved"
+  - rule: "Generally cost-effective for properties valued over $1,000,000"
+  - rule: "Can be applied retroactively to prior-year purchases via Form 3115 (catch-up in current year)"
+  - rule: "Qualified improvement property (QIP) gets 15-year life → eligible for bonus depreciation"
+
+phaseouts:
+  - rule: "Bonus depreciation rate: 40% in 2025, 20% in 2026, 0% in 2027"
+  - rule: "Passive activity rules may limit deductibility for non-REPs"
+
+required_user_facts:
+  - fact: "real_estate[*].property_type"
+  - fact: "real_estate[*].acquisition.purchase_price"
+  - fact: "real_estate[*].acquisition.purchase_date"
+
+required_documents:
+  - document: "Cost segregation study report from qualified engineering firm"
+  - document: "Purchase closing disclosure"
+  - document: "Construction cost records (if new build)"
+
+required_forms:
+  - form: "Form 4562 (Depreciation schedule reflects reclassified assets)"
+  - form: "Form 3115 (if catching up prior years)"
+
+deadlines:
+  - deadline: "Commission study before filing return — ideally before December 31 of purchase year for maximum benefit"
+
+stacking_rules:
+  compatible_with: [real-estate-depreciation, bonus-depreciation, real-estate-professional-status, passive-activity-loss]
+  conflicts_with: []
+
+risk_level: moderate
+
+planning_notes: |
+  - Study cost: typically $5,000–$20,000 — usually generates 5–10× ROI in first-year tax savings
+  - REP + cost segregation: the most aggressive legal real estate tax strategy (unlimited loss against ordinary income)
+  - Lookback study: can reclassify assets from prior years in current year via Form 3115 — no amended returns needed
+  - Watch 2027: bonus depreciation disappears — rush high-value studies into 2025/2026
+
+qualification_pathways:
+  - "If property purchased in prior years: commission lookback study and file Form 3115"
+  - "If property under $500k: study cost may not be justified — evaluate ROI first"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

@@ -1,0 +1,88 @@
+id: state-529-deduction
+name: State 529 Plan Contribution Deduction/Credit
+category: education
+jurisdiction: state
+
+authority:
+  irc_section: "529"
+  irs_publication: "970"
+  state_source: "Varies by state — approximately 34 states and DC offer a deduction or credit for contributions to the home-state 529 plan"
+
+status: active
+
+benefit_type: deduction
+
+summary: |
+  Most states with an income tax allow residents to deduct (or receive a credit for)
+  contributions to their home-state's 529 college savings plan. The deduction reduces
+  state taxable income dollar-for-dollar up to the annual limit; credits reduce state tax
+  directly. Combined with the federal tax-free growth and withdrawal benefit, state
+  deductions make 529 contributions the equivalent of an immediate state-tax-rate return
+  on the contributed dollars.
+
+estimated_value:
+  typical_range: "$100 – $1,500/year per beneficiary"
+  calculation_basis: "State income tax rate × deductible contribution amount"
+  depends_on:
+    - household.residence.state
+    - investments.education_accounts (529 account presence)
+    - estimated_agi
+
+eligibility_rules:
+  - rule: "Taxpayer must reside in a state that offers a 529 deduction or credit"
+    required_fact: "household.residence.state"
+  - rule: "Must have or open a 529 account for a beneficiary"
+    required_fact: "investments.education_accounts"
+  - rule: "Most states require contributing to the home-state plan for the deduction"
+    required_fact: "529 plan must be home-state plan (varies)"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "investments.education_accounts (529 presence)"
+
+required_documents:
+  - document: "529 account statement showing contribution amount"
+  - document: "State return showing deduction claimed"
+
+required_forms:
+  - form: "State income tax return (line varies by state)"
+
+deadlines:
+  - deadline: "Most states: contributions must be made by December 31 of the tax year"
+  - deadline: "PA: allows prior-year contributions up to April 15 deadline (like IRA)"
+
+phaseouts:
+  - rule: "Most states: no income phaseout — deduction available at all income levels"
+  - rule: "Some states (e.g., CT) have AGI phase-outs"
+
+stacking_rules:
+  compatible_with:
+    - american-opportunity-credit
+    - lifetime-learning-credit
+    - no-income-tax-state
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Very low risk. The deduction is straightforward and well-established. The only
+  complexity is ensuring the 529 is the home-state plan (a few states offer deductions
+  for any plan, but most require the home-state plan). Superfunding (5-year gift tax
+  election) is a separate planning strategy.
+
+planning_notes: |
+  - Contribute at least up to the state deduction limit each year — it's an immediate return equal to your state tax rate
+  - If you have multiple children, each beneficiary account counts separately in most states
+  - Superfunding: elect to spread a 5-year gift ($95,000 single / $190,000 MFJ in 2025) over 5 years for a large upfront deduction
+  - SECURE 2.0 §126: unused 529 funds can roll to a Roth IRA (lifetime $35k limit; 15-yr account age required)
+
+qualification_pathways:
+  - "No 529 account yet: open one today — deduction applies to contributions in the current tax year"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

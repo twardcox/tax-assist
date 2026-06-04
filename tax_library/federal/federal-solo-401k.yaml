@@ -1,0 +1,85 @@
+id: solo-401k
+name: Solo 401(k) — Self-Employed Retirement Plan
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "401(k), 402(g)"
+  irs_publication: "560"
+  form_instruction: "Instructions for Schedule C / Form 5500-EZ"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  For self-employed individuals with no full-time employees (other than a spouse),
+  the Solo 401(k) allows employee deferrals up to $23,500 (2025) plus employer
+  contributions of 25% of W-2 or ~20% of net profit, for a combined max of $70,000.
+  Typically allows far higher contributions than a SEP-IRA at the same profit level.
+
+estimated_value:
+  typical_range: "$5,000 – $25,000+/year tax savings"
+  calculation_basis: "Total contributions × marginal tax rate (federal + state)"
+  depends_on: [net_profit, w2_salary_if_s_corp, marginal_tax_rate, age]
+
+eligibility_rules:
+  - rule: "Must have self-employment income with no full-time W-2 employees other than spouse"
+  - rule: "Employee deferral: up to $23,500 (2025); $31,000 if age 50+ (catch-up)"
+  - rule: "Employer contribution: up to 25% of W-2 compensation (S Corp) or ~20% of net profit (sole prop)"
+  - rule: "Combined limit: $70,000 (2025); $77,500 if age 50+"
+  - rule: "Plan must be established by December 31 of the tax year (unlike SEP-IRA)"
+  - rule: "Roth Solo 401(k) option available at many custodians — no income limit for Roth contributions"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "Must file Form 5500-EZ annually when plan assets exceed $250,000"
+
+required_user_facts:
+  - fact: "businesses[*].entity_type"
+  - fact: "businesses[*].financials.net_profit_loss"
+  - fact: "businesses[*].employees.w2_employees_count"
+  - fact: "retirement.solo_401k.established"
+  - fact: "retirement.solo_401k.employee_contributions_ytd"
+  - fact: "taxpayer.age"
+
+required_documents:
+  - document: "Plan adoption agreement (from custodian)"
+  - document: "Contribution records showing employee vs. employer split"
+  - document: "Form 5500-EZ if plan assets > $250,000"
+
+required_forms:
+  - form: "Schedule C or W-2 (profit/compensation basis)"
+  - form: "Schedule 1, Line 16 (deductible contributions)"
+  - form: "Form 5500-EZ (annual if assets > $250,000)"
+
+deadlines:
+  - deadline: "Plan must be ESTABLISHED by December 31 of the tax year"
+  - deadline: "Employee deferrals: by December 31 (sole prop) or W-2 payroll date (S Corp)"
+  - deadline: "Employer contributions: by tax return due date including extension — October 15"
+
+stacking_rules:
+  compatible_with: [qbi-deduction, s-corp-election, home-office-deduction, self-employed-health-insurance]
+  conflicts_with:
+    - rule: "Combined employer contribution limits apply across all plans for the same employer"
+
+risk_level: low
+
+planning_notes: |
+  - Must establish plan by December 31 — cannot retroactively create like SEP-IRA
+  - Roth Solo 401(k) is powerful: no income limit, tax-free growth
+  - Spouse can also participate if employed by the business — doubles contribution room
+  - S Corp: employee deferrals come from W-2 salary; employer contributions from S Corp separately
+  - Mega backdoor Roth possible if plan allows after-tax contributions + in-service distribution
+
+qualification_pathways:
+  - "If plan not yet established: open at Fidelity (free), Vanguard, or Schwab before December 31"
+  - "If has other W-2 employees: ineligible; consider SIMPLE IRA or Safe Harbor 401(k) instead"
+  - "If SEP-IRA already exists: can convert to Solo 401(k) and roll over balance"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

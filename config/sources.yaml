@@ -1,0 +1,148 @@
+# Tax Law Update Source Registry
+# Used by scripts/update_tax_law.py to monitor authoritative legal sources.
+
+federal_sources:
+
+  irs_news:
+    name: "IRS Newsroom"
+    type: rss_or_scrape
+    url: "https://www.irs.gov/newsroom/irs-news"
+    check_frequency: daily
+    change_types: [new_benefit, deadline_change, form_change, threshold_change]
+
+  irs_publications:
+    name: "IRS Publications"
+    type: scrape
+    url: "https://www.irs.gov/forms-instructions-and-publications"
+    check_frequency: weekly
+    change_types: [new_benefit, changed_threshold, risk_change]
+
+  internal_revenue_bulletin:
+    name: "Internal Revenue Bulletin"
+    type: scrape
+    url: "https://www.irs.gov/irb"
+    check_frequency: weekly
+    change_types: [revenue_ruling, revenue_procedure, new_benefit, risk_change]
+
+  treasury_regulations:
+    name: "Treasury Regulations (Final and Proposed)"
+    type: scrape
+    url: "https://home.treasury.gov/policy-issues/tax-policy/tax-regulations"
+    check_frequency: weekly
+    change_types: [new_benefit, risk_change, changed_threshold]
+
+  federal_register:
+    name: "Federal Register — Treasury/IRS Rules"
+    type: api
+    url: "https://www.federalregister.gov/documents/search?agencies%5B%5D=internal-revenue-service"
+    check_frequency: daily
+    change_types: [proposed_rule, final_rule, new_benefit, risk_change]
+
+  congress_legislation:
+    name: "Congress.gov — Tax Legislation"
+    type: scrape
+    url: "https://www.congress.gov/search?q=%7B%22source%22%3A%22legislation%22%2C%22search%22%3A%22tax%22%7D"
+    check_frequency: weekly
+    change_types: [future_effective_law, new_benefit, expired_benefit]
+
+  tax_court:
+    name: "US Tax Court Opinions"
+    type: scrape
+    url: "https://www.ustaxcourt.gov/opinions.html"
+    check_frequency: weekly
+    change_types: [risk_change, new_interpretation]
+
+state_sources:
+
+  state_ca:
+    name: "California Franchise Tax Board"
+    url: "https://www.ftb.ca.gov/about-ftb/newsroom/news-releases/"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_ny:
+    name: "New York Department of Taxation and Finance"
+    url: "https://www.tax.ny.gov/press/releases/"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_il:
+    name: "Illinois Department of Revenue"
+    url: "https://tax.illinois.gov/about/newsroom.html"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_ma:
+    name: "Massachusetts Department of Revenue"
+    url: "https://www.mass.gov/lists/dor-news-and-updates"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_nj:
+    name: "New Jersey Division of Taxation"
+    url: "https://www.nj.gov/treasury/taxation/news.shtml"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_co:
+    name: "Colorado Department of Revenue"
+    url: "https://tax.colorado.gov/news"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_or:
+    name: "Oregon Department of Revenue"
+    url: "https://www.oregon.gov/dor/news/Pages/default.aspx"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_pa:
+    name: "Pennsylvania Department of Revenue"
+    url: "https://www.revenue.pa.gov/GeneralTaxInformation/News/Pages/default.aspx"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_oh:
+    name: "Ohio Department of Taxation"
+    url: "https://tax.ohio.gov/latest-news"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+  state_ga:
+    name: "Georgia Department of Revenue"
+    url: "https://dor.georgia.gov/news"
+    check_frequency: monthly
+    change_types: [new_benefit, changed_threshold, expired_benefit]
+
+trusted_secondary_sources:
+  # Secondary sources used to cross-check — never used as sole authority
+  tax_foundation:
+    name: "Tax Foundation"
+    url: "https://taxfoundation.org"
+    use_for: threshold_updates, state_tax_changes
+    trust_level: reference_only
+
+  jct:
+    name: "Joint Committee on Taxation"
+    url: "https://www.jct.gov"
+    use_for: legislative_analysis, revenue_estimates
+    trust_level: reference_only
+
+  aicpa:
+    name: "AICPA Tax Resources"
+    url: "https://www.aicpa-cima.com/resources/landing/tax"
+    use_for: practice_guidance
+    trust_level: reference_only
+
+update_classifications:
+  new_benefit: "A brand-new tax benefit has been enacted"
+  changed_threshold: "Dollar amounts, income limits, or phaseouts changed"
+  expired_benefit: "A benefit has expired and is no longer available"
+  future_effective_law: "Law enacted but not yet in effect"
+  new_form: "A new or revised IRS form affects a benefit"
+  deadline_change: "Filing or election deadline has changed"
+  risk_change: "Audit risk or enforcement posture for a benefit has changed"
+  new_interpretation: "Court ruling or ruling changes how a benefit is interpreted"
+  proposed_rule: "Treasury or IRS has issued a proposed rule"
+  revenue_ruling: "IRS has issued a revenue ruling"
+  revenue_procedure: "IRS has issued a revenue procedure"

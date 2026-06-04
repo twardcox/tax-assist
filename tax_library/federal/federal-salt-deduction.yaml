@@ -1,0 +1,72 @@
+id: salt-deduction
+name: State and Local Tax Deduction (SALT)
+category: individual_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "164"
+  irs_publication: null
+  form_instruction: "Instructions for Schedule A"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Allows itemizing taxpayers to deduct state and local taxes — income taxes
+  (or sales taxes) plus property taxes — up to $10,000 per return ($5,000 MFS).
+  The TCJA cap of $10,000 is set to expire after 2025; potential legislative
+  change could raise or remove the cap.
+
+estimated_value:
+  typical_range: "$1,000 – $10,000/year (capped)"
+  calculation_basis: "State income tax + property tax, capped at $10,000"
+  depends_on: [state_income_tax, property_tax, itemizing_deductions]
+
+eligibility_rules:
+  - rule: "Must itemize deductions"
+  - rule: "Combined state income/sales tax + property tax capped at $10,000 ($5,000 MFS)"
+  - rule: "Can deduct state income tax OR state sales tax (not both) — sales tax better for no-income-tax states"
+  - rule: "Foreign taxes may also qualify but are often better taken as Foreign Tax Credit"
+
+phaseouts:
+  - rule: "No income-based phaseout; hard cap at $10,000"
+  - rule: "TCJA cap expires December 31, 2025 — post-2025 law uncertain as of this writing"
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "household.itemizing_deductions"
+  - fact: "real_estate[*].financing.property_tax_paid"
+
+required_documents:
+  - document: "State tax return or W-2 showing state taxes withheld"
+  - document: "Property tax statements"
+
+required_forms:
+  - form: "Schedule A (Itemized Deductions)"
+
+deadlines:
+  - deadline: "Annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with: [mortgage-interest-deduction, charitable-contribution-deduction]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - For most taxpayers with significant state taxes, the $10,000 cap is binding — little planning opportunity
+  - Pass-through entity (PTE) SALT workaround: many states allow pass-through entity tax elections that bypass the $10k cap — entity pays state tax, deducts it at entity level (no cap), passes through reduced income to owner
+  - High-income taxpayers in CA, NY, NJ should evaluate PTE election with CPA
+  - Watch for 2025 TCJA expiration — cap may change
+
+qualification_pathways:
+  - "If in high-tax state with pass-through business: evaluate state PTE tax election (SALT cap workaround)"
+  - "If not itemizing: SALT deduction provides no benefit"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

@@ -1,0 +1,88 @@
+id: charitable-contribution-deduction
+name: Charitable Contribution Deduction
+category: individual_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "170"
+  irs_publication: "526"
+  form_instruction: "Instructions for Schedule A"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Cash and non-cash donations to qualified 501(c)(3) organizations are
+  deductible if itemizing. Key strategies: appreciated stock donations
+  (avoid capital gains + deduct full FMV), donor-advised funds (bunch
+  multiple years' giving into one deduction), and qualified charitable
+  distributions from IRAs (age 70.5+, direct from IRA, $105,000 limit).
+
+estimated_value:
+  typical_range: "$500 – $50,000+/year depending on giving levels"
+  calculation_basis: "Donation amount × marginal tax rate (cash); FMV × rate (stock)"
+  depends_on: [donation_amount, type_of_property, itemizing, marginal_rate]
+
+eligibility_rules:
+  - rule: "Must itemize deductions (Schedule A) — standard deduction limits benefit for many"
+  - rule: "Organization must be a qualified 501(c)(3) — verify at IRS Tax Exempt Organization Search"
+  - rule: "Cash donations over $250: must have written acknowledgment from charity"
+  - rule: "Non-cash donations over $500: Form 8283 required"
+  - rule: "Non-cash donations over $5,000: qualified appraisal required (except publicly traded securities)"
+  - rule: "Appreciated stock: deduct FMV, avoid capital gains — must hold > 1 year"
+  - rule: "Qualified charitable distribution (QCD): age 70.5+, direct from IRA custodian, up to $105,000 (2025)"
+
+phaseouts:
+  - rule: "Cash to public charity: AGI limit 60% (excess carries forward 5 years)"
+  - rule: "Appreciated property: AGI limit 30% (carries forward 5 years)"
+  - rule: "No phaseout by income level"
+
+required_user_facts:
+  - fact: "household.itemizing_deductions"
+  - fact: "household.estimated_agi"
+  - fact: "taxpayer.age"
+  - fact: "retirement.traditional_ira"
+  - fact: "investments.taxable_accounts[*].unrealized_gains"
+
+required_documents:
+  - document: "Written acknowledgment letter from charity for gifts over $250"
+  - document: "Bank statement or cancelled check for cash donations"
+  - document: "Form 8283 for non-cash gifts over $500"
+  - document: "Qualified appraisal for non-cash gifts over $5,000"
+  - document: "Brokerage transfer confirmation for stock donations"
+
+required_forms:
+  - form: "Schedule A (itemized deduction reporting)"
+  - form: "Form 8283 (non-cash charitable contributions over $500)"
+
+deadlines:
+  - deadline: "Donation must be made by December 31 of the tax year"
+  - deadline: "QCD: must be completed by December 31"
+  - deadline: "Credit card charge by December 31 counts even if statement arrives in January"
+
+stacking_rules:
+  compatible_with: [donor-advised-fund, mortgage-interest-deduction, salt-deduction]
+  conflicts_with:
+    - rule: "QCD cannot also be deducted as charitable contribution on Schedule A"
+
+risk_level: low
+
+planning_notes: |
+  - Appreciated stock donation is the gold standard — avoids capital gains AND gets full FMV deduction
+  - Donor-Advised Fund (DAF): contribute stock this year (large deduction), grant to charities over time
+  - Bunching: alternate years of high/low giving to maximize itemized deductions in giving years
+  - QCD: reduces RMD income dollar-for-dollar — highly effective for 70.5+ IRA owners
+  - Vehicle donations: deduct only what charity actually receives (sale price), not FMV
+
+qualification_pathways:
+  - "If using standard deduction: bunch 2-3 years of giving into one year via DAF to exceed standard deduction"
+  - "If holding appreciated stock: donate stock directly to charity instead of selling first"
+  - "If age 70.5+ with IRA: use QCD to satisfy giving goals with pre-tax dollars"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01
