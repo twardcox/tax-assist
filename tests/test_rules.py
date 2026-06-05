@@ -314,3 +314,21 @@ class TestPteElectionRule:
         result = engine._rule_pte_election(PTE_BENEFIT)
         assert result.status == EligibilityStatus.ELIGIBLE_NOW
         assert "DE" in result.message
+
+    def test_profit_summed_across_all_businesses(self):
+        # First business has $0 profit, second has positive profit → sum > 0 → not NEARLY_ELIGIBLE
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA"},
+            businesses_list=[
+                {"financials": {"net_profit_loss": 0}},
+                {"financials": {"net_profit_loss": 80_000}},
+            ],
+            estimated_agi=200_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        # Combined profit is positive → should not be NEARLY_ELIGIBLE for missing profit
+        assert result.status != EligibilityStatus.NEARLY_ELIGIBLE
+        assert "businesses.financials.net_profit_loss" not in (result.missing_facts or [])
