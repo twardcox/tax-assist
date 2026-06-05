@@ -1,5 +1,6 @@
+import { TOKEN_KEY } from "./constants";
+
 const BASE = "/api";
-const TOKEN_KEY = "utbis_token";
 
 function getToken() {
   return localStorage.getItem(TOKEN_KEY);

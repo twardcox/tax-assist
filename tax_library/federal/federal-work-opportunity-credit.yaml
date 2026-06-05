@@ -1,0 +1,77 @@
+id: work-opportunity-tax-credit
+name: Work Opportunity Tax Credit (WOTC) — §51
+category: business
+jurisdiction: federal
+
+authority:
+  irc_section: "51"
+  irs_publication: null
+  form_instruction: "Instructions for Form 5884"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Employers receive a federal tax credit for hiring workers from designated target groups
+  facing barriers to employment: veterans, SNAP/TANF recipients, ex-felons, vocational
+  rehabilitation referrals, Supplemental Security Income recipients, long-term unemployed,
+  and others. Credit = 40% of first-year qualified wages (up to $6,000 general; up to
+  $24,000 for disabled veterans). Employees must work at least 400 hours to earn the
+  full credit (25% for 120–399 hours). WOTC is authorized through 2025.
+
+estimated_value:
+  typical_range: "$2,400 – $9,600 per qualifying hire; more for disabled veterans"
+  calculation_basis: "40% × first-year wages (capped by group); 25% if 120–399 hours"
+  depends_on: [number_of_qualifying_hires, employee_target_group, wages_paid]
+
+eligibility_rules:
+  - rule: "Must be a for-profit employer (most entity types qualify)"
+  - rule: "New hire must belong to a WOTC target group"
+  - rule: "Must file IRS Form 8850 (pre-screening notice) with state workforce agency within 28 days of hire"
+  - rule: "Employee must work at least 120 hours (25% credit) or 400+ hours (40% full credit)"
+  - rule: "Cannot claim for employees who are family members, majority shareholders, or prior employees"
+
+phaseouts:
+  - rule: "No income phaseout for the employer"
+  - rule: "Credit authorized through December 31, 2025 — watch for renewal"
+
+required_user_facts:
+  - fact: "businesses.businesses[0].employees.w2_employees_count"
+
+required_documents:
+  - document: "IRS Form 8850 — Pre-Screening Notice (filed with state workforce agency within 28 days of hire)"
+  - document: "ETA Form 9061 or 9062 — completed by state workforce agency confirming target group"
+  - document: "W-2s for qualifying employees showing first-year wages"
+
+required_forms:
+  - form: "Form 5884 (Work Opportunity Credit)"
+  - form: "Form 3800 (General Business Credit) — attach Form 5884"
+  - form: "Form 8850 (Pre-Screening Notice — filed with state agency, not IRS)"
+
+deadlines:
+  - deadline: "Form 8850 must be filed with state workforce agency within 28 days of hire date"
+  - deadline: "Claim on business return; carryback 1 year / carryforward 20 years"
+
+stacking_rules:
+  compatible_with: [employer-childcare-credit, small-employer-retirement-startup-credit]
+  conflicts_with:
+    - rule: "Wages claimed for WOTC cannot also be claimed for the Indian Employment Credit"
+
+risk_level: low
+
+planning_notes: |
+  - The 28-day Form 8850 deadline is easy to miss — build it into onboarding paperwork
+  - Target groups include: qualified veterans, SNAP recipients, ex-felons, long-term
+    unemployed (27+ weeks), SSI recipients, vocational rehab referrals, summer youth
+  - Disabled veteran credit can be $9,600 per hire — highest value target group
+  - Staffing agencies and businesses with high turnover in eligible industries
+    (retail, food service, warehousing) often miss substantial credits
+  - No retroactive filing for missed 8850 filings — must be timely
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

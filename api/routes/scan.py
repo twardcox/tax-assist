@@ -2,7 +2,6 @@ import os
 import sys
 import threading
 import uuid
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -14,6 +13,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from scan_opportunities import AIAdvisor, OpportunityScanner, UserFacts  # noqa: E402
 from api.auth import get_current_user_optional                             # noqa: E402
+from api.routes.utils import count_by_status, serialize_result             # noqa: E402
 
 router = APIRouter(tags=["scan"])
 
@@ -49,12 +49,6 @@ def _run_ai_analysis(job_id: str, tax_year: int, mode: str, user_id: str | None 
         _ai_jobs[job_id] = {"status": "error", "report_name": None, "error": str(exc)}
 
 
-def _serialize(result) -> dict:
-    d = asdict(result)
-    d["status"] = result.status.value
-    return d
-
-
 @router.post("/scan")
 def run_scan(tax_year: int = Query(default=2025),
              current_user: dict | None = Depends(get_current_user_optional)):
@@ -65,17 +59,13 @@ def run_scan(tax_year: int = Query(default=2025),
         scanner.scan()
         scanner.write_report()
     except Exception as exc:
-        raise HTTPException(422, f"Scan failed: {exc}") from exc
+        raise HTTPException(500, f"Scan failed: {exc}") from exc
 
-    results = [_serialize(r) for r in scanner.results]
-    counts: dict[str, int] = {}
-    for r in scanner.results:
-        counts[r.status.value] = counts.get(r.status.value, 0) + 1
-
+    results = [serialize_result(r) for r in scanner.results]
     return {
         "tax_year": tax_year,
         "total": len(results),
-        "counts": counts,
+        "counts": count_by_status(scanner.results),
         "results": results,
     }
 

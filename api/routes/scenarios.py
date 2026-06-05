@@ -1,9 +1,9 @@
 import sys
-from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from api.auth import get_current_user_optional
+from api.routes.utils import count_by_status, serialize_result
 from scan_opportunities import UserFacts
 
 ROOT = Path(__file__).parent.parent.parent
@@ -18,19 +18,6 @@ from scenario_simulator import (  # noqa: E402
 )
 
 router = APIRouter(tags=["scenarios"])
-
-
-def _serialize(result) -> dict:
-    d = asdict(result)
-    d["status"] = result.status.value
-    return d
-
-
-def _counts(results: list) -> dict:
-    c: dict[str, int] = {}
-    for r in results:
-        c[r.status.value] = c.get(r.status.value, 0) + 1
-    return c
 
 
 @router.get("/scenarios")
@@ -71,18 +58,18 @@ def run_scenario(key: str, tax_year: int = Query(default=2025),
     return {
         "scenario": key,
         "description": scenario["description"],
-        "baseline_counts": _counts(baseline),
-        "scenario_counts": _counts(scenario_results),
+        "baseline_counts": count_by_status(baseline),
+        "scenario_counts": count_by_status(scenario_results),
         "diff": {
-            "newly_added": [_serialize(r) for r in diff["newly_added"]],
+            "newly_added": [serialize_result(r) for r in diff["newly_added"]],
             "improved": [
-                {"before": _serialize(b), "after": _serialize(a)}
+                {"before": serialize_result(b), "after": serialize_result(a)}
                 for b, a in diff["improved"]
             ],
             "degraded": [
-                {"before": _serialize(b), "after": _serialize(a)}
+                {"before": serialize_result(b), "after": serialize_result(a)}
                 for b, a in diff["degraded"]
             ],
-            "removed": [_serialize(r) for r in diff["removed"]],
+            "removed": [serialize_result(r) for r in diff["removed"]],
         },
     }

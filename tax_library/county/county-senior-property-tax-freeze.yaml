@@ -1,0 +1,97 @@
+id: county-senior-property-tax-freeze
+name: County Senior Property Tax Assessment Freeze
+category: real_estate
+jurisdiction: county
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "State enabling statutes implemented at the county level — available in IL, TX, GA, VA, CO, NJ, NY, PA, and many others; contact county assessor"
+
+status: active
+
+benefit_type: exemption
+
+summary: |
+  Many counties offer a property tax "freeze" for homeowners aged 65 and older that locks the
+  assessed value of their primary residence at the time they qualify. Even as the home's market
+  value rises, property taxes stay based on the frozen assessment — potentially saving thousands
+  per year in rapidly appreciating markets. Some programs also cap annual tax increases to a
+  fixed percentage. This benefit is often unclaimed because seniors don't know it exists or
+  miss the application deadline.
+
+estimated_value:
+  typical_range: "$500 – $5,000+/year in high-appreciation markets"
+  calculation_basis: "County millage rate × (current assessed value − frozen assessment value)"
+  depends_on:
+    - household.taxpayer.age (≥ 65)
+    - household.residence.state
+    - household.residence.county
+    - real_estate.properties (primary_residence)
+
+eligibility_rules:
+  - rule: "Taxpayer (or spouse) must be age 65 or older as of the qualifying date"
+    required_fact: "household.taxpayer.age"
+  - rule: "Must own and occupy the property as a primary residence"
+    required_fact: "real_estate.properties (primary_residence type)"
+  - rule: "Income limits may apply in some counties (e.g., IL Circuit Breaker income cap)"
+    required_fact: "household.estimated_agi"
+  - rule: "Must apply annually or after initial qualifying application"
+    required_fact: "household.residence.county"
+
+required_user_facts:
+  - fact: "household.taxpayer.age (≥ 65)"
+  - fact: "household.residence.state"
+  - fact: "household.residence.county"
+  - fact: "real_estate.properties (primary_residence present)"
+
+required_documents:
+  - document: "Proof of age (driver's license, passport, or birth certificate)"
+  - document: "Proof of ownership (deed or property tax bill)"
+  - document: "County senior freeze application (filed with county assessor)"
+
+required_forms:
+  - form: "County senior freeze / Senior Citizens Assessment Freeze application (varies by county)"
+
+deadlines:
+  - deadline: "IL: July 1 of the levy year"
+  - deadline: "TX: April 30 (age 65 exemption auto-applies but freeze may require separate form)"
+  - deadline: "GA: April 1"
+  - deadline: "Most other states: check with county assessor — typically March 1–July 1"
+
+phaseouts:
+  - threshold: "Income limits in some jurisdictions (IL: ~$65,000 household income cap for enhanced freeze)"
+    effect: "Ineligible for enhanced freeze above limit; base exemption may still apply"
+
+stacking_rules:
+  compatible_with:
+    - county-homestead-exemption
+    - state-homestead-exemption
+    - county-veteran-property-tax-exemption
+    - county-disability-property-tax-exemption
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  No tax risk. The only downside is failing to apply by the annual deadline.
+  In some counties missing a year means the frozen value resets to current assessed value.
+
+planning_notes: |
+  - Apply as soon as you or your spouse turn 65 — the freeze locks in the current assessment
+  - In fast-appreciating markets this can save tens of thousands over a decade
+  - IL: file Form PTAX-340 with county supervisor of assessments
+  - TX: the over-65 homestead exemption is automatically applied but the school tax freeze may need separate action
+  - If you recently moved, re-apply in the new county immediately — the freeze does not transfer
+  - Ask about "portability" in states like FL where accumulated savings can transfer to a new home
+
+qualification_pathways:
+  - "Age 65+, owns primary residence: apply with county assessor as soon as you qualify"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

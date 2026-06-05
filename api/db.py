@@ -325,14 +325,17 @@ CREATE TABLE IF NOT EXISTS documents (
     id              TEXT PRIMARY KEY,
     user_id         TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     filename        TEXT NOT NULL,
-    subdir          TEXT NOT NULL,
-    path            TEXT NOT NULL,
+    subdir          TEXT NOT NULL DEFAULT '',
+    path            TEXT NOT NULL DEFAULT '',
     category        TEXT,
     confidence      TEXT,
     document_type   TEXT,
     uploaded_at     TEXT NOT NULL,
     extracted       INTEGER DEFAULT 0,
-    extraction_json TEXT
+    extraction_json TEXT,
+    content         BLOB,
+    size            INTEGER DEFAULT 0,
+    note            TEXT
 );
 
 -- Transactions (ledger) — user_id nullable so existing rows survive migration
@@ -363,12 +366,24 @@ CREATE TABLE IF NOT EXISTS transaction_benefits (
 );
 """
 
-# Columns added to existing transactions table in older DB instances
+# Columns added to existing tables in older DB instances
 # (try/except — column may already exist)
 _MIGRATIONS = [
     "ALTER TABLE transactions ADD COLUMN user_id TEXT",
     "ALTER TABLE transactions ADD COLUMN file_id TEXT",
     "ALTER TABLE transactions ADD COLUMN section TEXT",
+    "ALTER TABLE documents ADD COLUMN content BLOB",
+    "ALTER TABLE documents ADD COLUMN size INTEGER DEFAULT 0",
+    "ALTER TABLE documents ADD COLUMN note TEXT",
+    # Household taxpayer profile + county
+    "ALTER TABLE households ADD COLUMN county TEXT",
+    "ALTER TABLE households ADD COLUMN taxpayer_veteran INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN taxpayer_disabled INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN taxpayer_blind INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN taxpayer_active_military INTEGER DEFAULT 0",
+    # Business nexus
+    "ALTER TABLE businesses ADD COLUMN formation_state TEXT",
+    "ALTER TABLE businesses ADD COLUMN operating_states TEXT",  # comma-separated state codes
 ]
 
 # Indexes created after migrations (some reference columns added via ALTER TABLE)
@@ -493,16 +508,22 @@ def _save_household_from_dict(user_id: str, tax_year: int, d: dict) -> None:
     with _conn() as c:
         c.execute("""
             INSERT INTO households
-                (user_id, tax_year, filing_status, estimated_agi, state,
-                 taxpayer_age, taxpayer_dob, itemizing_deductions,
-                 has_electric_vehicle, updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?)
+                (user_id, tax_year, filing_status, estimated_agi, state, county,
+                 taxpayer_age, taxpayer_dob, taxpayer_veteran, taxpayer_disabled,
+                 taxpayer_blind, taxpayer_active_military,
+                 itemizing_deductions, has_electric_vehicle, updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(user_id, tax_year) DO UPDATE SET
                 filing_status=excluded.filing_status,
                 estimated_agi=excluded.estimated_agi,
                 state=excluded.state,
+                county=excluded.county,
                 taxpayer_age=excluded.taxpayer_age,
                 taxpayer_dob=excluded.taxpayer_dob,
+                taxpayer_veteran=excluded.taxpayer_veteran,
+                taxpayer_disabled=excluded.taxpayer_disabled,
+                taxpayer_blind=excluded.taxpayer_blind,
+                taxpayer_active_military=excluded.taxpayer_active_military,
                 itemizing_deductions=excluded.itemizing_deductions,
                 has_electric_vehicle=excluded.has_electric_vehicle,
                 updated_at=excluded.updated_at
@@ -511,8 +532,13 @@ def _save_household_from_dict(user_id: str, tax_year: int, d: dict) -> None:
             d.get("filing_status"),
             d.get("estimated_agi"),
             residence.get("state") or d.get("state"),
+            residence.get("county") or d.get("county"),
             taxpayer.get("age") or d.get("taxpayer_age"),
             taxpayer.get("dob") or d.get("taxpayer_dob"),
+            1 if taxpayer.get("veteran") else 0,
+            1 if taxpayer.get("disabled") else 0,
+            1 if taxpayer.get("blind") else 0,
+            1 if taxpayer.get("active_military") else 0,
             _to_int_flag(d.get("itemizing_deductions")),
             1 if d.get("has_electric_vehicle") else 0,
             now,
@@ -633,6 +659,12 @@ def _save_businesses_from_dict(hid: int, d: dict) -> None:
             hi = b.get("health_insurance") or {}
             veh = b.get("vehicle") or {}
             dep_info = b.get("depreciation") or {}
+            # Normalise operating_states to a comma-separated uppercase string
+            ops_raw = b.get("operating_states") or []
+            if isinstance(ops_raw, list):
+                ops_str = ",".join(s.strip().upper() for s in ops_raw if s)
+            else:
+                ops_str = ",".join(s.strip().upper() for s in str(ops_raw).split(",") if s.strip())
             c.execute("""
                 INSERT INTO businesses
                 (household_id,name,entity_type,ein,industry,start_date,
@@ -641,8 +673,9 @@ def _save_businesses_from_dict(hid: int, d: dict) -> None:
                  home_office_claimed,home_office_sqft,home_total_sqft,
                  health_insurance_premium,health_insurance_deducted,
                  specified_service_trade,qbi_eligible,owner_draws,retirement_plan_type,
-                 has_business_vehicle,vehicle_fuel_type)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                 has_business_vehicle,vehicle_fuel_type,
+                 formation_state,operating_states)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 hid, b.get("name") or b.get("business_name"),
                 b.get("entity_type"), b.get("ein"), b.get("industry"), b.get("start_date"),
@@ -658,6 +691,8 @@ def _save_businesses_from_dict(hid: int, d: dict) -> None:
                 b.get("owner_draws"), b.get("retirement_plan_type"),
                 1 if veh.get("business_vehicle") else 0,
                 veh.get("fuel_type"),
+                (b.get("formation_state") or "").strip().upper() or None,
+                ops_str or None,
             ))
             biz_id = c.execute("SELECT last_insert_rowid()").fetchone()[0]
 
@@ -871,8 +906,15 @@ def _get_household_dict(user_id: str, tax_year: int) -> dict:
     return {
         "filing_status": hh.get("filing_status"),
         "estimated_agi": hh.get("estimated_agi"),
-        "residence": {"state": hh.get("state")},
-        "taxpayer": {"age": hh.get("taxpayer_age"), "dob": hh.get("taxpayer_dob")},
+        "residence": {"state": hh.get("state"), "county": hh.get("county")},
+        "taxpayer": {
+            "age": hh.get("taxpayer_age"),
+            "dob": hh.get("taxpayer_dob"),
+            "veteran": bool(hh.get("taxpayer_veteran")),
+            "disabled": bool(hh.get("taxpayer_disabled")),
+            "blind": bool(hh.get("taxpayer_blind")),
+            "active_military": bool(hh.get("taxpayer_active_military")),
+        },
         "itemizing_deductions": _from_int_flag(hh.get("itemizing_deductions")),
         "has_electric_vehicle": bool(hh.get("has_electric_vehicle")),
         "spouse": {
@@ -997,6 +1039,8 @@ def _get_businesses_dict(hid: int) -> dict:
                 "qbi_eligible": bool(b.get("qbi_eligible", 1)),
                 "owner_draws": b.get("owner_draws"),
                 "retirement_plan_type": b.get("retirement_plan_type"),
+                "formation_state": b.get("formation_state"),
+                "operating_states": [s for s in (b.get("operating_states") or "").split(",") if s],
                 "depreciation": {
                     "assets": [
                         {"description": a.get("description"),
@@ -1272,29 +1316,42 @@ def apply_dot_path_to_section(
 
 # ── Documents ──────────────────────────────────────────────────────────────────
 
-def upsert_document(user_id: str, file_id: str, filename: str, subdir: str,
-                    path: str, category: str = "", confidence: str = "") -> None:
+def upsert_document(user_id: str, file_id: str, filename: str,
+                    category: str = "", confidence: str = "",
+                    content: bytes | None = None, size: int = 0, note: str = "") -> None:
     with _conn() as c:
         c.execute("""
-            INSERT INTO documents (id, user_id, filename, subdir, path, category, confidence, uploaded_at)
-            VALUES (?,?,?,?,?,?,?,?)
+            INSERT INTO documents (id, user_id, filename, category, confidence,
+                                   content, size, note, uploaded_at)
+            VALUES (?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
-                category=excluded.category, confidence=excluded.confidence
-        """, (file_id, user_id, filename, subdir, path, category, confidence, _now()))
+                category=excluded.category, confidence=excluded.confidence,
+                content=excluded.content, size=excluded.size, note=excluded.note
+        """, (file_id, user_id, filename, category, confidence,
+              content, size, note, _now()))
 
 
 def get_documents_for_user(user_id: str) -> list[dict]:
     with _conn() as c:
-        rows = c.execute("SELECT * FROM documents WHERE user_id=? ORDER BY uploaded_at DESC",
-                         (user_id,)).fetchall()
+        rows = c.execute(
+            "SELECT id, user_id, filename, category, confidence, document_type,"
+            " uploaded_at, extracted, extraction_json, size, note"
+            " FROM documents WHERE user_id=? ORDER BY uploaded_at DESC",
+            (user_id,),
+        ).fetchall()
     return [dict(r) for r in rows]
 
 
-def get_document(user_id: str, file_id: str) -> dict | None:
+def get_document_content(user_id: str, file_id: str) -> tuple[bytes | None, str]:
+    """Returns (content_bytes, filename). content is None if not found."""
     with _conn() as c:
-        row = c.execute("SELECT * FROM documents WHERE id=? AND user_id=?",
-                        (file_id, user_id)).fetchone()
-    return _row(row)
+        row = c.execute(
+            "SELECT content, filename FROM documents WHERE id=? AND user_id=?",
+            (file_id, user_id),
+        ).fetchone()
+    if row is None:
+        return None, ""
+    return row["content"], row["filename"]
 
 
 def delete_document_record(user_id: str, file_id: str) -> bool:

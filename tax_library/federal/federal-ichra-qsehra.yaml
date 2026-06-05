@@ -1,0 +1,81 @@
+id: ichra-qsehra
+name: ICHRA / QSEHRA — Individual Health Reimbursement Arrangement
+category: healthcare
+jurisdiction: federal
+
+authority:
+  irc_section: "9831(d); ACA §1302; IRS Notice 2017-67; final regs 26 CFR §54.9831-1"
+  irs_publication: null
+  form_instruction: "IRS Notice 2019-45; Revenue Procedure 2019-44"
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  Employers can reimburse employees tax-free for individual health insurance premiums
+  and qualified medical expenses using an HRA instead of offering a group health plan.
+  Two types: ICHRA (Individual Coverage HRA) — available to employers of any size, no
+  dollar limit; QSEHRA (Qualified Small Employer HRA) — fewer than 50 full-time employees,
+  2025 limits: $6,350/single, $12,800/family. Reimbursements are tax-free to employees
+  and deductible by the employer as a business expense. Employees must have qualifying
+  individual coverage to participate.
+
+estimated_value:
+  typical_range: "$2,000 – $12,800/employee/year in tax-free health reimbursements"
+  calculation_basis: "Reimbursement amount × combined employer + employee tax rate"
+  depends_on: [reimbursement_amount, employee_count, employer_tax_rate]
+
+eligibility_rules:
+  - rule: "QSEHRA: fewer than 50 full-time equivalent employees; cannot offer a group health plan"
+  - rule: "ICHRA: any employer size; can be offered alongside a group plan to certain employee classes"
+  - rule: "Employees must be enrolled in qualifying individual health coverage (marketplace or off-exchange)"
+  - rule: "QSEHRA: employees receiving QSEHRA must reduce their PTC (Premium Tax Credit) dollar-for-dollar"
+  - rule: "ICHRA: employees are generally ineligible for PTC if ICHRA offer is affordable"
+  - rule: "Must be established before the plan year begins (by Dec 31 for following year)"
+
+phaseouts:
+  - rule: "QSEHRA: 2025 limits $6,350 single / $12,800 family (adjusted annually for inflation)"
+  - rule: "ICHRA: no dollar limit"
+
+required_user_facts:
+  - fact: "businesses.businesses[0].employees.w2_employees_count"
+  - fact: "businesses.businesses[0].entity_type"
+
+required_documents:
+  - document: "Written HRA plan document (required before plan year begins)"
+  - document: "Annual notice to eligible employees (90 days before plan year)"
+  - document: "Employee substantiation of qualifying health coverage (e.g., insurance card)"
+
+required_forms:
+  - form: "Form W-2 Box 12 Code FF (QSEHRA reimbursements — employer reports)"
+  - form: "Form 8962 (employees claiming PTC must reduce by QSEHRA amount)"
+
+deadlines:
+  - deadline: "QSEHRA/ICHRA must be established by December 31 to be effective for the following plan year"
+  - deadline: "Employee notice required 90 days before plan year or 90 days after eligibility"
+
+stacking_rules:
+  compatible_with: [self-employed-health-insurance, hsa-triple-tax-advantage]
+  conflicts_with:
+    - rule: "QSEHRA: employer cannot offer a group health plan to same employees"
+    - rule: "ICHRA: employees cannot contribute to HSA unless enrolled in HSA-eligible HDHP through ICHRA"
+
+risk_level: low
+
+planning_notes: |
+  - QSEHRA is ideal for small employers (< 50 employees) as a low-admin alternative to
+    group health insurance that still provides tax-free health benefits
+  - ICHRA is more flexible — can be offered to different employee classes at different amounts
+  - Both eliminate the need to manage a group health plan entirely
+  - Use a third-party HRA administrator (Take Command, PeopleKeep, etc.) to handle
+    substantiation and compliance — low cost relative to the tax benefit
+  - Employees shopping on marketplace may prefer ICHRA/QSEHRA + ACA plan with subsidies
+    over an employer group plan — model both scenarios
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

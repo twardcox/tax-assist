@@ -52,6 +52,15 @@ BENEFIT_IDS = [
     "no-income-tax-state", "pte-election", "state-529-deduction",
     "state-retirement-income-exemption", "state-homestead-exemption",
     "state-ev-credit",
+    # County
+    "county-homestead-exemption", "county-senior-property-tax-freeze",
+    "county-veteran-property-tax-exemption", "county-disability-property-tax-exemption",
+    "county-solar-exemption", "county-agricultural-use-valuation",
+    # Gap benefits
+    "employer-childcare-credit", "work-opportunity-tax-credit",
+    "net-unrealized-appreciation", "installment-sale",
+    "excess-fica-refund", "ichra-qsehra",
+    "conservation-easement", "qlac",
 ]
 
 # ── Common IRS form line references ───────────────────────────────────────────
@@ -281,6 +290,32 @@ def classify_by_keywords(description: str) -> ExpenseCategory:
     return ExpenseCategory.NEEDS_REVIEW
 
 
+def classify_filename(filename: str, size: int = 0) -> dict:
+    """Classify by filename only — no disk access required."""
+    stem = Path(filename).stem
+    text = f"{stem}".replace("_", " ").replace("-", " ")
+    text_lower = text.lower()
+
+    if any(kw in text_lower for kw in INCOME_FORM_KEYWORDS):
+        return {
+            "file": filename, "file_id": None, "category": "income_document",
+            "confidence": "medium", "size": size,
+            "note": "Detected as income form. Use 'Extract with AI' for box-level data.",
+        }
+
+    category = classify_by_keywords(text)
+    if category != ExpenseCategory.NEEDS_REVIEW:
+        confidence, note = "medium", "Classified from filename. Use 'Extract with AI' for detailed data extraction."
+    else:
+        confidence, note = "low", "Could not classify from filename — add a description or review manually."
+
+    return {
+        "file": filename, "file_id": None,
+        "category": category.value, "confidence": confidence,
+        "size": size, "note": note,
+    }
+
+
 def classify_file(file_path: Path, description: str = "") -> dict:
     text = f"{file_path.stem} {description}".replace("_", " ").replace("-", " ")
     text_lower = text.lower()
@@ -423,6 +458,102 @@ def extract_with_ai(file_path: Path) -> dict:
             result.setdefault("deductible_pct", 1.0)
             result.setdefault("form_line", None)
             # Clamp deductible_pct
+            result["deductible_pct"] = max(0.0, min(1.0, float(result.get("deductible_pct", 1.0))))
+            return result
+
+        return {
+            "error": "Could not parse AI response", "suggested_updates": [],
+            "confidence": "low", "notes": raw[:500],
+            "benefit_ids": [], "deductible_pct": 1.0,
+        }
+
+    except Exception as exc:
+        return {
+            "error": str(exc), "suggested_updates": [],
+            "confidence": "low", "notes": "Extraction failed — see error.",
+            "benefit_ids": [], "deductible_pct": 1.0,
+        }
+
+
+def extract_with_ai_bytes(content: bytes, filename: str) -> dict:
+    """Extract structured tax data from raw file bytes using Claude.
+
+    Identical to extract_with_ai() but takes bytes + filename instead of a Path.
+    """
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        return {
+            "error": "ANTHROPIC_API_KEY not set",
+            "suggested_updates": [], "confidence": "low",
+            "notes": "Set ANTHROPIC_API_KEY to enable AI extraction.",
+            "benefit_ids": [], "deductible_pct": 1.0,
+        }
+
+    try:
+        import anthropic as _anthropic
+    except ImportError:
+        return {
+            "error": "anthropic package not installed",
+            "suggested_updates": [], "confidence": "low",
+            "notes": "Run: pip install anthropic",
+            "benefit_ids": [], "deductible_pct": 1.0,
+        }
+
+    suffix = Path(filename).suffix.lower()
+    client = _anthropic.Anthropic()
+
+    try:
+        if suffix == ".csv":
+            text_content = content.decode("utf-8", errors="replace")[:4000]
+            prompt = _pick_prompt(filename, suffix, text_preview=text_content[:500])
+            msg_content = [{"type": "text", "text": f"{prompt}\n\nDocument content (CSV):\n```\n{text_content}\n```"}]
+
+        elif suffix == ".pdf":
+            data = base64.standard_b64encode(content).decode("utf-8")
+            prompt = _pick_prompt(filename, suffix)
+            msg_content = [
+                {"type": "text", "text": prompt},
+                {"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": data}},
+            ]
+
+        elif suffix in {".jpg", ".jpeg"}:
+            data = base64.standard_b64encode(content).decode("utf-8")
+            prompt = _pick_prompt(filename, suffix)
+            msg_content = [
+                {"type": "text", "text": prompt},
+                {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": data}},
+            ]
+
+        elif suffix == ".png":
+            data = base64.standard_b64encode(content).decode("utf-8")
+            prompt = _pick_prompt(filename, suffix)
+            msg_content = [
+                {"type": "text", "text": prompt},
+                {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": data}},
+            ]
+
+        else:
+            return {
+                "document_type": "other",
+                "tax_category": ExpenseCategory.NEEDS_REVIEW.value,
+                "suggested_updates": [], "confidence": "low",
+                "benefit_ids": [], "deductible_pct": 1.0,
+                "notes": f"File type '{suffix}' is not supported for AI extraction. Convert to PDF, JPG, or PNG.",
+            }
+
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2048,
+            messages=[{"role": "user", "content": msg_content}],
+        )
+        raw = response.content[0].text
+
+        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group())
+            result.setdefault("suggested_updates", [])
+            result.setdefault("benefit_ids", [])
+            result.setdefault("deductible_pct", 1.0)
+            result.setdefault("form_line", None)
             result["deductible_pct"] = max(0.0, min(1.0, float(result.get("deductible_pct", 1.0))))
             return result
 

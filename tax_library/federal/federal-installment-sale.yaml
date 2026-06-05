@@ -1,0 +1,77 @@
+id: installment-sale
+name: Installment Sale Method — §453
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "453"
+  irs_publication: "537"
+  form_instruction: "Instructions for Form 6252"
+  state_source: null
+
+status: active
+benefit_type: deferral
+
+summary: |
+  When selling real estate or business property for a gain, the installment method
+  spreads capital gains recognition across the years in which payments are received,
+  rather than recognizing the entire gain in the year of sale. This keeps taxable income
+  in lower brackets each year instead of creating a large one-year spike. Gross profit
+  percentage × each payment = gain recognized. Particularly valuable for sellers of
+  appreciated real estate or businesses who can negotiate seller financing.
+
+estimated_value:
+  typical_range: "$5,000 – $100,000+ in lifetime tax savings from bracket spreading"
+  calculation_basis: "Tax on lump-sum gain vs. tax on spread-out gain; varies by brackets"
+  depends_on: [sale_price, adjusted_basis, payment_schedule, marginal_tax_rates]
+
+eligibility_rules:
+  - rule: "Must receive at least one payment in a year after the year of sale"
+  - rule: "Applies to real estate and business property (not dealer property — inventory)"
+  - rule: "Cannot use for sales of publicly traded securities"
+  - rule: "Depreciation recapture (§1250/1245) recognized in year of sale regardless"
+  - rule: "Gross profit ratio = gross profit / contract price; applied to each payment received"
+  - rule: "Electing out requires reporting all gain in year of sale on timely-filed return"
+
+phaseouts:
+  - rule: "Installment obligations for sales > $5M may be subject to interest charge on deferred tax"
+  - rule: "Related-party sales have special resale rules to prevent basis manipulation"
+
+required_user_facts:
+  - fact: "real_estate.properties"
+
+required_documents:
+  - document: "Purchase and sale agreement showing installment terms"
+  - document: "Settlement statement / HUD-1 or Closing Disclosure"
+  - document: "Promissory note from buyer"
+  - document: "Prior year Form 6252 (for ongoing installments)"
+
+required_forms:
+  - form: "Form 6252 (Installment Sale Income) — filed every year payments are received"
+  - form: "Schedule D (capital gain summary)"
+
+deadlines:
+  - deadline: "Election to use installment method is automatic; elect OUT by reporting all gain by return due date"
+  - deadline: "File Form 6252 every year payments are received"
+
+stacking_rules:
+  compatible_with: [section-121-exclusion, capital-gains-harvesting, opportunity-zone-investment]
+  conflicts_with:
+    - rule: "Cannot combine installment sale with 1031 exchange unless structured carefully"
+
+risk_level: low
+
+planning_notes: |
+  - Best for sellers who do not need all cash immediately and can negotiate seller financing
+  - Even a 2-3 year spread can push gains into lower brackets each year
+  - Depreciation recapture is taxed in year of sale — plan for this cash requirement
+  - Consider buyer creditworthiness when providing seller financing
+  - Charitable remainder trust (CRT) is an alternative for non-cash-needing sellers
+  - Consult CPA before closing — cannot change to installment method after return filed
+
+review_required:
+  cpa: true
+  attorney: true
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

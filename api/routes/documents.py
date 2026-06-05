@@ -11,16 +11,15 @@ import yaml
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, File
 
 ROOT = Path(__file__).parent.parent.parent
-DOCS_DIR = ROOT / "documents"
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from classify_receipts import classify_file, extract_with_ai, ExpenseCategory  # noqa: E402
-from api.auth import get_current_user, get_current_user_optional               # noqa: E402
-from api.db import (                                                            # noqa: E402
+from classify_receipts import classify_filename, extract_with_ai_bytes  # noqa: E402
+from api.auth import get_current_user, get_current_user_optional         # noqa: E402
+from api.db import (                                                      # noqa: E402
     add_transaction, apply_dot_path_to_section,
     delete_document_record, file_already_applied,
-    get_documents_for_user, get_summary, init_db,
-    mark_document_extracted, upsert_document,
+    get_document_content, get_documents_for_user, init_db,
+    upsert_document,
 )
 
 init_db()
@@ -31,8 +30,6 @@ router = APIRouter(tags=["documents"])
 _extract_jobs: dict[str, dict] = {}
 
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".heic", ".tiff", ".csv"}
-SUBDIRS = ["receipts", "contracts", "cpa_reviews", "entity_docs",
-           "payroll", "property_docs", "tax_returns"]
 
 TAX_YEAR = 2025
 
@@ -46,38 +43,18 @@ def _file_id(name: str) -> str:
     return hashlib.md5(name.encode()).hexdigest()[:12]
 
 
-def _all_files_on_disk() -> list[dict]:
-    """Scan the documents/ directories and return file metadata."""
-    results = []
-    for sub in SUBDIRS:
-        subdir = DOCS_DIR / sub
-        if not subdir.exists():
-            continue
-        for f in subdir.iterdir():
-            if f.suffix.lower() in ALLOWED_EXTENSIONS and f.is_file():
-                info = classify_file(f)
-                info["file_id"] = _file_id(f.name)
-                info["subdir"] = sub
-                info["mtime"] = f.stat().st_mtime
-                results.append(info)
-    results.sort(key=lambda x: x["mtime"], reverse=True)
-    return results
-
-
-def _all_files(user_id: str | None) -> list[dict]:
-    """Return files, filtered by user_id when authenticated."""
-    disk_files = _all_files_on_disk()
-    if not user_id:
-        return disk_files
-    # Filter to files owned by this user (or not yet in DB — legacy files)
-    db_docs = {d["id"]: d for d in get_documents_for_user(user_id)}
-    result = []
-    for f in disk_files:
-        fid = f["file_id"]
-        if fid in db_docs or not db_docs:
-            # Include if owned by user OR if no docs in DB yet (migration state)
-            result.append(f)
-    return result if db_docs else disk_files
+def _normalize(doc: dict) -> dict:
+    """Shape DB row into the API response shape the frontend expects."""
+    return {
+        "file_id":    doc["id"],
+        "file":       doc["filename"],
+        "category":   doc.get("category", ""),
+        "confidence": doc.get("confidence", ""),
+        "size":       doc.get("size", 0),
+        "note":       doc.get("note", ""),
+        "extracted":  bool(doc.get("extracted", 0)),
+        "uploaded_at": doc.get("uploaded_at", ""),
+    }
 
 
 # ── Upload / list / delete ─────────────────────────────────────────────────────
@@ -90,56 +67,48 @@ def upload_document(file: UploadFile = File(...),
         raise HTTPException(400, f"File type '{suffix}' not allowed.")
 
     safe = _safe_name(file.filename)
-    dest_dir = DOCS_DIR / "receipts"
-    dest_dir.mkdir(parents=True, exist_ok=True)
-
-    dest = dest_dir / safe
-    counter = 1
-    while dest.exists():
-        dest = dest_dir / f"{Path(safe).stem}_{counter}{suffix}"
-        counter += 1
-
     content = file.file.read()
-    dest.write_bytes(content)
+    fid = _file_id(safe)
 
-    info = classify_file(dest)
-    fid = _file_id(dest.name)
+    info = classify_filename(safe, size=len(content))
     info["file_id"] = fid
-    info["subdir"] = "receipts"
 
     if current_user:
         upsert_document(
-            current_user["id"], fid, dest.name, "receipts",
-            str(dest.relative_to(ROOT)), info.get("category", ""), info.get("confidence", ""),
+            current_user["id"], fid, safe,
+            category=info.get("category", ""),
+            confidence=info.get("confidence", ""),
+            content=content,
+            size=len(content),
+            note=info.get("note", ""),
         )
     return info
 
 
 @router.get("/documents")
 def list_documents(current_user: dict | None = Depends(get_current_user_optional)):
-    user_id = current_user["id"] if current_user else None
-    return {"files": _all_files(user_id)}
+    if not current_user:
+        return {"files": []}
+    docs = get_documents_for_user(current_user["id"])
+    return {"files": [_normalize(d) for d in docs]}
 
 
 @router.delete("/documents/{file_id}")
 def delete_document(file_id: str,
                     current_user: dict | None = Depends(get_current_user_optional)):
-    for f_info in _all_files_on_disk():
-        if f_info["file_id"] == file_id:
-            path = ROOT / f_info["path"]
-            if path.exists():
-                path.unlink()
-            if current_user:
-                delete_document_record(current_user["id"], file_id)
-            return {"deleted": True, "file": f_info["file"]}
-    raise HTTPException(404, f"Document '{file_id}' not found")
+    if not current_user:
+        raise HTTPException(401, "Authentication required")
+    deleted = delete_document_record(current_user["id"], file_id)
+    if not deleted:
+        raise HTTPException(404, f"Document '{file_id}' not found")
+    return {"deleted": True, "file_id": file_id}
 
 
 # ── AI Extraction ──────────────────────────────────────────────────────────────
 
-def _run_extraction(job_id: str, file_path: Path) -> None:
+def _run_extraction(job_id: str, content: bytes, filename: str) -> None:
     try:
-        result = extract_with_ai(file_path)
+        result = extract_with_ai_bytes(content, filename)
         _extract_jobs[job_id] = {"status": "complete", "extracted": result, "error": None}
     except Exception as exc:
         _extract_jobs[job_id] = {"status": "error", "extracted": None, "error": str(exc)}
@@ -150,13 +119,14 @@ def extract_document(file_id: str,
                      current_user: dict | None = Depends(get_current_user_optional)):
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise HTTPException(503, "ANTHROPIC_API_KEY is not set")
-    target = next((f for f in _all_files_on_disk() if f["file_id"] == file_id), None)
-    if not target:
+    if not current_user:
+        raise HTTPException(401, "Authentication required")
+    content, filename = get_document_content(current_user["id"], file_id)
+    if content is None:
         raise HTTPException(404, f"Document '{file_id}' not found")
-    file_path = ROOT / target["path"]
     job_id = str(uuid.uuid4())
     _extract_jobs[job_id] = {"status": "running", "extracted": None, "error": None}
-    threading.Thread(target=_run_extraction, args=(job_id, file_path), daemon=True).start()
+    threading.Thread(target=_run_extraction, args=(job_id, content, filename), daemon=True).start()
     return {"job_id": job_id}
 
 
@@ -210,7 +180,7 @@ def apply_extraction(body: Any = Body(...),
     Body: {
       "meta": {file_id, filename, date, merchant, total_amount,
                deductible_pct, tax_category, benefit_ids, form_line},
-      "updates": [{yaml_file, dot_path, operation, value, label}]
+      "updates": [{yaml_file|section, dot_path, operation, value, label}]
     }
     Legacy list format also accepted.
     """
@@ -226,7 +196,6 @@ def apply_extraction(body: Any = Body(...),
     deductible_pct = max(0.0, min(1.0, deductible_pct))
     user_id = current_user["id"] if current_user else None
 
-    # Duplicate check (per user when authenticated)
     if file_id and user_id and file_already_applied(user_id, file_id):
         return {"applied": [], "skipped": [u.get("label", "") for u in updates], "duplicate": True}
 
@@ -247,7 +216,6 @@ def apply_extraction(body: Any = Body(...),
             skipped.append(label)
             continue
 
-        # Scale expense amounts by deductibility
         if operation == "add" and isinstance(raw_value, (int, float)) and raw_value > 0:
             value = round(raw_value * deductible_pct, 2)
         else:
@@ -255,19 +223,15 @@ def apply_extraction(body: Any = Body(...),
 
         success = False
         if user_id:
-            # Write to DB
             success = apply_dot_path_to_section(user_id, TAX_YEAR, section, dot_path, operation, value)
         else:
-            # Legacy YAML fallback
-            from pathlib import Path as _P
             yaml_path = ROOT / "user_data" / f"{section}.yaml"
             if yaml_path.exists():
-                import yaml as _yaml
                 with open(yaml_path, encoding="utf-8") as f:
-                    data = _yaml.safe_load(f) or {}
+                    data = yaml.safe_load(f) or {}
                 if _apply_dot_path(data, dot_path, operation, value):
                     with open(yaml_path, "w", encoding="utf-8") as f:
-                        _yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
+                        yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
                     success = True
 
         if success:

@@ -210,6 +210,32 @@ class UserFacts:
         val = self._data.get("household", {}).get("residence", {}).get("state")
         return str(val).strip().upper() if val else None
 
+    def business_nexus_states(self) -> set:
+        """Union of all operating_states across every business, plus the residence state."""
+        states = set()
+        res = self.state()
+        if res:
+            states.add(res)
+        for biz in self.businesses():
+            ops = biz.get("operating_states") or []
+            if isinstance(ops, list):
+                states.update(s.strip().upper() for s in ops if s)
+            elif isinstance(ops, str):
+                states.update(s.strip().upper() for s in ops.split(",") if s.strip())
+        return states
+
+    def county(self) -> Optional[str]:
+        val = self._data.get("household", {}).get("residence", {}).get("county")
+        return str(val).strip() if val else None
+
+    def is_veteran(self) -> bool:
+        tp = self._data.get("household", {}).get("taxpayer", {})
+        return bool(tp.get("veteran")) if isinstance(tp, dict) else False
+
+    def is_disabled(self) -> bool:
+        tp = self._data.get("household", {}).get("taxpayer", {})
+        return bool(tp.get("disabled")) if isinstance(tp, dict) else False
+
     def has_retirement_distributions(self) -> bool:
         inc = self._data.get("household", {}).get("income_sources", []) or []
         if isinstance(inc, list):
@@ -1565,42 +1591,92 @@ class RulesEngine:
 
     def _rule_pte_election(self, b: dict) -> OpportunityResult:
         base = self._base(b)
-        state = self.f.state()
-        if not state:
-            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
-                "Set household.residence.state to evaluate PTE election applicability.",
-                missing_facts=["household.residence.state"])
-        if state in self._NO_INCOME_TAX_STATES | self._NH_TN_NOTE:
-            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
-                f"{state} has no/minimal income tax — PTE election provides no benefit here.")
-        if state not in self._PTE_STATES:
-            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
-                f"{state} has not enacted a PTE tax election law (as of 2025). Check with your CPA for updates.")
+
         if not self.f.has_self_employment():
             return self._result(base, EligibilityStatus.NOT_APPLICABLE,
                 "PTE election requires pass-through business income (S Corp, partnership, or multi-member LLC).")
+
+        residence = self.f.state()
+        nexus_states = self.f.business_nexus_states()
+        no_tax = self._NO_INCOME_TAX_STATES | self._NH_TN_NOTE
+
+        # Determine which nexus states have an active PTE election and a meaningful income tax
+        pte_nexus = {s for s in nexus_states if s in self._PTE_STATES and s not in no_tax}
+
+        # Warn when incorporation state differs from operating states (DE/WY shell is common)
         biz = self.f.first_business()
-        net_profit = _to_float(biz.get("financials", {}).get("net_profit_loss"))
-        agi = self.f.estimated_agi()
-        if net_profit <= 0:
+        formation = (biz.get("formation_state") or "").strip().upper()
+        formation_note = ""
+        if formation and formation not in nexus_states:
+            formation_note = (
+                f" Note: {formation} is the formation state but does not appear in your operating "
+                "states — PTE elections apply where the business earns income, not where it was formed."
+            )
+
+        if not residence and not nexus_states - {residence}:
             return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
-                f"{state} has an active PTE election — but business net profit is not recorded.",
+                "Set household.residence.state and add operating_states to each business to evaluate "
+                "PTE election applicability across all nexus states.",
+                missing_facts=["household.residence.state", "businesses.operating_states"])
+
+        if not pte_nexus:
+            # Check if we simply don't have operating_states recorded yet
+            has_ops = any(biz.get("operating_states") for biz in self.f.businesses())
+            if not has_ops and residence and residence not in self._PTE_STATES:
+                return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                    f"Residence state {residence} has not enacted a PTE election. "
+                    "If this business operates in other states, add them as operating_states — "
+                    "you may have a PTE opportunity in a nexus state." + formation_note,
+                    missing_facts=["businesses.operating_states"])
+            states_str = ", ".join(sorted(nexus_states)) if nexus_states else "your states"
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                f"None of your nexus states ({states_str}) have enacted a PTE election as of 2025."
+                + formation_note)
+
+        agi = self.f.estimated_agi()
+        net_profit = _to_float(biz.get("financials", {}).get("net_profit_loss"))
+
+        if net_profit <= 0:
+            states_str = ", ".join(sorted(pte_nexus))
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                f"PTE election available in: {states_str}. Business net profit not yet recorded." + formation_note,
                 missing_facts=["businesses.financials.net_profit_loss"],
-                next_steps=["Enter business net profit in businesses.yaml to evaluate PTE savings"])
+                next_steps=["Enter business net profit to evaluate PTE tax savings"])
+
+        # Surface all qualifying nexus states, leading with residence
+        if residence in pte_nexus:
+            primary = residence
+            other_pte = sorted(pte_nexus - {residence})
+        else:
+            primary = sorted(pte_nexus)[0]
+            other_pte = sorted(pte_nexus - {primary})
+
+        multi_note = (f" Additional PTE elections also available in: {', '.join(other_pte)}." if other_pte else "")
+        non_res_note = (
+            f" (You reside in {residence} which has no PTE election, but your business has nexus in {primary}.)"
+            if residence and residence not in pte_nexus else ""
+        )
+
         if agi and agi < 150_000:
             return self._result(base, EligibilityStatus.ELIGIBLE_IF_CHANGED,
-                f"{state} PTE election available, but at AGI ${agi:,.0f} the SALT cap likely isn't your binding "
-                "constraint. PTE elections produce the most benefit when state income tax exceeds $10,000.",
-                next_steps=["Consult CPA — may still be worth electing depending on state tax liability"])
+                f"PTE election available in {primary}.{non_res_note}{multi_note}{formation_note} "
+                f"At AGI ${agi:,.0f} the SALT cap may not be your binding constraint — "
+                "PTE elections produce the most benefit when state income tax exceeds $10,000.",
+                next_steps=["Consult CPA to model net federal benefit vs. state credit limitations"])
+
+        steps = [
+            f"Contact your CPA to model net federal benefit for each state: {', '.join(sorted(pte_nexus))}",
+            f"File the PTE election on the entity return (most states: by March 15)",
+            "Get shareholder/partner consent if S Corp or multi-member LLC",
+            "CA: pay estimated PTE tax by June 15 or risk losing the deduction",
+        ]
+        if other_pte:
+            steps.append(f"File separate PTE elections in each nexus state: {', '.join(other_pte)}")
         return self._result(base, EligibilityStatus.ELIGIBLE_NOW,
-            f"{state} PTE election available. Your pass-through business can pay state income tax at the entity "
-            "level and deduct it federally, bypassing the $10,000 SALT cap.",
-            next_steps=[
-                f"Contact your CPA to model net federal benefit: federal deduction gained minus any state credit limitations",
-                f"File the {state} PTE election on the entity return (check state deadline — many require by March 15)",
-                "Get shareholder/partner consent if S Corp or multi-member LLC",
-                "Pay estimated PTE tax by mid-year if required (CA requires June 15 payment)",
-            ])
+            f"PTE election available in {primary}.{non_res_note}{multi_note}{formation_note} "
+            "Your pass-through business can pay state income tax at the entity level and deduct it "
+            "federally, bypassing the $10,000 SALT cap.",
+            next_steps=steps)
 
     def _rule_state_529_deduction(self, b: dict) -> OpportunityResult:
         base = self._base(b)
@@ -1750,6 +1826,475 @@ class RulesEngine:
             ])
 
 
+    # ── County Benefits ───────────────────────────────────────────────────
+
+    def _rule_county_homestead_exemption(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        pr = self.f.primary_residence()
+        if not pr:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "County homestead exemption applies to a primary residence — no primary residence recorded.")
+        county = self.f.county()
+        state = self.f.state()
+        location = f"{county} County, {state}" if county and state else (state or "your county")
+        steps = [
+            f"Search '{location} homestead exemption application' to find the county assessor portal",
+            "Gather deed/mortgage statement + government ID showing current address",
+            "File before the county deadline (most states: March 1)",
+            "Confirm you also have the state-level exemption — both layers are required separately",
+        ]
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"You own a primary residence and likely qualify for {location}'s county homestead "
+            "exemption. Most counties administer their own exemption on top of the state exemption, "
+            "but it is not automatic — you must apply with the county assessor.",
+            missing_facts=[] if county else ["household.residence.county"],
+            next_steps=steps)
+
+    def _rule_county_senior_property_tax_freeze(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        age = self.f.taxpayer_age()
+        pr = self.f.primary_residence()
+        if not pr:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Senior property tax freeze requires owning a primary residence.")
+        if age is not None and age < 60:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                f"Senior property tax freeze requires age 65+ (current age: {age}). "
+                "Return to this once you approach that threshold.")
+        if age is not None and 60 <= age < 65:
+            return self._result(base, EligibilityStatus.FUTURE_OPPORTUNITY,
+                f"Age {age} — most county senior freeze programs require age 65. "
+                "Plan to apply as soon as you qualify to lock in the current assessed value.",
+                next_steps=["Note the county assessor deadline for the year you turn 65"])
+        county = self.f.county()
+        state = self.f.state()
+        location = f"{county} County, {state}" if county and state else (state or "your county")
+        age_str = f"age {age}" if age else "your age"
+        steps = [
+            f"Contact {location} assessor to confirm the senior freeze program and income limits",
+            "Gather proof of age (driver's license or birth certificate) and property ownership documents",
+            "File before the county deadline (IL: July 1; TX/FL: April 30; others: typically March 1)",
+            "Renew annually if required — missing a year can reset the frozen value",
+        ]
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"At {age_str} you likely qualify for {location}'s senior property tax assessment freeze. "
+            "This locks your assessed value so your tax bill won't rise even as home values increase — "
+            "potentially saving hundreds to thousands per year in appreciating markets.",
+            missing_facts=[] if (age and county) else (
+                ["household.taxpayer.age"] if not age else ["household.residence.county"]),
+            next_steps=steps)
+
+    def _rule_county_veteran_property_tax_exemption(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.is_veteran():
+            taxpayer = self.f._data.get("household", {}).get("taxpayer", {})
+            if taxpayer.get("veteran") is None:
+                return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                    "Veteran status not recorded. If you are an honorably discharged veteran who "
+                    "owns a primary residence, you likely qualify for a county property tax exemption.",
+                    missing_facts=["household.taxpayer.veteran"])
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "County veteran property tax exemption requires honorably discharged veteran status.")
+        pr = self.f.primary_residence()
+        if not pr:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Veteran status confirmed. This exemption applies when you own a primary residence — "
+                "apply immediately after purchasing a home.",
+                missing_facts=["real_estate.properties (primary_residence)"])
+        county = self.f.county()
+        state = self.f.state()
+        location = f"{county} County, {state}" if county and state else (state or "your county")
+        steps = [
+            f"Contact {location} assessor and request the veteran property tax exemption application",
+            "Bring your DD-214 and any VA disability rating award letter",
+            "Apply for the highest tier your disability rating supports (100% disabled = full exemption in many states)",
+            "TX 100% disabled veterans: full property tax exemption — save $5,000–$15,000+/year",
+        ]
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"As a veteran who owns a primary residence, you qualify for {location}'s "
+            "veteran property tax exemption. The savings range from a modest base exemption for "
+            "any honorably discharged veteran to a full exemption for 100% service-connected disability.",
+            missing_facts=[] if county else ["household.residence.county"],
+            next_steps=steps)
+
+    def _rule_county_disability_property_tax_exemption(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        taxpayer = self.f._data.get("household", {}).get("taxpayer", {})
+        if taxpayer.get("disabled") is None:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Disability status not recorded. If you are permanently and totally disabled and "
+                "own a primary residence, you may qualify for a county property tax exemption.",
+                missing_facts=["household.taxpayer.disabled"])
+        if not self.f.is_disabled():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "County disability property tax exemption requires permanent total disability.")
+        pr = self.f.primary_residence()
+        if not pr:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Disability confirmed. This exemption requires owning a primary residence — "
+                "apply immediately after purchasing a home.",
+                missing_facts=["real_estate.properties (primary_residence)"])
+        county = self.f.county()
+        state = self.f.state()
+        location = f"{county} County, {state}" if county and state else (state or "your county")
+        agi = self.f.estimated_agi()
+        income_note = (f" Income limit may apply (your AGI: ${agi:,.0f})." if agi else
+                       " Some counties impose income limits — verify with the assessor.")
+        steps = [
+            f"Contact {location} assessor and request the disability property tax exemption application",
+            "Provide SSA disability award letter or licensed physician certification",
+            "Ask whether the exemption stacks with the homestead and senior exemptions",
+            "Check if retroactive claims are allowed — some counties accept 1–2 years back",
+        ]
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"As a permanently disabled homeowner you likely qualify for {location}'s "
+            f"disability property tax exemption.{income_note}",
+            missing_facts=[] if county else ["household.residence.county"],
+            next_steps=steps)
+
+    def _rule_county_solar_exemption(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.has_any_real_estate():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "County solar exemption applies to property owners — no real estate recorded.")
+        state = self.f.state()
+        county = self.f.county()
+        location = f"{county} County, {state}" if county and state else (state or "your county")
+        # States with mandatory solar property tax exemptions
+        mandatory_states = {"FL", "TX", "AZ", "CO", "NJ", "NY", "MA", "NC", "MN", "OR", "WA",
+                            "MD", "IN", "KY", "LA", "ME", "MI", "MT", "NE", "NM", "ND", "OH",
+                            "RI", "SC", "VT", "WI"}
+        if state and state in mandatory_states:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                f"{state} mandates that counties exempt the added value of solar installations "
+                "from property tax assessment. If you have or are considering solar panels, "
+                "their value will not increase your property tax bill.",
+                next_steps=[
+                    "Verify your current property tax bill does not include solar panel value",
+                    "In mandatory-exemption states this is typically automatic after installation",
+                    "Stack with the federal 30% Residential Clean Energy Credit (Form 5695)",
+                    "Factor this exemption into your solar ROI calculation before installing",
+                ])
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"Many counties exempt solar and renewable energy installations from property reassessment. "
+            f"Verify whether {location} offers this exemption before or after installing solar panels.",
+            missing_facts=[] if (state and county) else (
+                ["household.residence.state"] if not state else ["household.residence.county"]),
+            next_steps=[
+                f"Search '{location} solar property tax exemption' or call the county assessor",
+                "If available, apply before or immediately after installation",
+                "Stack with federal Form 5695 Residential Clean Energy Credit (30% of system cost)",
+                "Leased solar systems may not qualify — confirm with installer",
+            ])
+
+    def _rule_county_agricultural_use_valuation(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        props = self.f._data.get("real_estate", {}).get("properties", []) or []
+        land_types = {"land", "Land (no structure)"}
+        has_land = any(p.get("property_type") in land_types or
+                       str(p.get("property_type", "")).lower() == "land"
+                       for p in props if isinstance(p, dict))
+        if not has_land and not props:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Agricultural use valuation requires owning land or qualifying acreage — "
+                "no real estate recorded.")
+        if not has_land:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Agricultural use valuation requires a land-type property. "
+                "Residential properties do not qualify unless they include significant acreage.")
+        state = self.f.state()
+        county = self.f.county()
+        location = f"{county} County, {state}" if county and state else (state or "your county")
+        steps = [
+            f"Contact {location} assessor for the agricultural use / greenbelt application",
+            "Document qualifying agricultural activity: farming records, lease to farmer, or wildlife management plan",
+            "TX Wildlife Management: requires a documented WMP — qualifies with 5+ acres and 6+ beehives",
+            "Understand rollback taxes (3–5 years at full rate) before selling or changing land use",
+            "Consult a real estate attorney before any sale of land under ag classification",
+        ]
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"You own land-type property that may qualify for {location}'s agricultural use "
+            "valuation. This assesses land at its agricultural value rather than market value — "
+            "in rapidly appreciating areas the tax savings can be $1,000–$30,000+/year.",
+            missing_facts=[] if county else ["household.residence.county"],
+            next_steps=steps)
+
+
+    # ── Gap Benefits ─────────────────────────────────────────────────────
+
+    def _rule_employer_childcare_credit(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.has_any_business():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "§45F Employer-Provided Childcare Credit requires a business with employees.")
+        biz = self.f.first_business()
+        emp_count = int(biz.get("employees", {}).get("w2_employees_count") or 0)
+        if emp_count == 0:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Has a business — §45F credit is available if you pay for qualified childcare "
+                "facilities or resource/referral services for employees. No W-2 employees recorded yet.",
+                missing_facts=["businesses.employees.w2_employees_count"])
+        childcare = _to_float((biz.get("financials") or {}).get("childcare_expenses"))
+        if childcare == 0:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                f"Business has {emp_count} employee(s) — eligible for §45F credit on childcare "
+                "facility or resource/referral expenses. Record childcare spending to compute credit.",
+                missing_facts=["businesses.financials.childcare_expenses"],
+                next_steps=[
+                    "25% credit on qualified childcare facility expenditures",
+                    "10% credit on childcare resource/referral contracts",
+                    "Maximum credit $150,000/year; file Form 8882",
+                ])
+        credit = min(childcare * 0.25, 150_000)
+        return self._result(base, EligibilityStatus.ELIGIBLE_NOW,
+            f"§45F Childcare Credit: ~${credit:,.0f} (25% of ${childcare:,.0f} childcare expenses).",
+            estimated_value=f"~${credit:,.0f}/year",
+            next_steps=["File Form 8882 with business return", "Attach to Form 3800 (General Business Credit)"])
+
+    def _rule_work_opportunity_tax_credit(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.has_any_business():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Work Opportunity Tax Credit (WOTC) requires a business with employees.")
+        biz = self.f.first_business()
+        emp_count = int(biz.get("employees", {}).get("w2_employees_count") or 0)
+        if emp_count == 0:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Has a business — WOTC is available when you hire from targeted groups "
+                "(veterans, SNAP recipients, ex-felons, long-term unemployed, etc.). "
+                "No W-2 employees recorded yet.",
+                missing_facts=["businesses.employees.w2_employees_count"])
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"Business has {emp_count} employee(s). WOTC credit ($2,400–$9,600/qualifying hire) "
+            "is available when hiring from WOTC target groups. Requires IRS Form 8850 "
+            "filed with state workforce agency within 28 days of hire.",
+            missing_facts=["businesses.employees.wotc_hires"],
+            next_steps=[
+                "Add Form 8850 pre-screening to all new-hire onboarding",
+                "Target groups: veterans, SNAP/TANF recipients, ex-felons, long-term unemployed",
+                "Disabled veteran = up to $9,600 credit per hire",
+                "File Form 5884 with business return",
+            ])
+
+    def _rule_net_unrealized_appreciation(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        has_w2 = self.f.has_w2_income()
+        has_dist = self.f.has_retirement_distributions()
+        if not has_w2 and not has_dist:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "NUA strategy applies to employees with employer stock in a 401k/profit-sharing plan.")
+        ret = self.f._data.get("retirement", {}) or {}
+        employer_plans = ret.get("employer_plans", {}) or {}
+        has_401k = bool(employer_plans.get("traditional_401k") or employer_plans.get("profit_sharing"))
+        if not has_401k and not has_dist:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Has W-2 income — if your 401k or profit-sharing plan holds employer stock with "
+                "significant appreciation, the NUA strategy can save 20–37% in taxes vs. rollover.",
+                missing_facts=["retirement.employer_plans.traditional_401k"],
+                next_steps=[
+                    "Ask your plan administrator for the cost basis of employer stock in your plan",
+                    "Compare NUA tax cost vs. rollover with your CPA before distributing",
+                    "NUA is only available as a lump-sum distribution — cannot split across years",
+                ])
+        nua_amount = _to_float((employer_plans.get("traditional_401k") or {}).get("employer_stock_nua"))
+        if nua_amount > 0:
+            savings_estimate = nua_amount * 0.20
+            return self._result(base, EligibilityStatus.ELIGIBLE_NOW,
+                f"NUA strategy available — ${nua_amount:,.0f} of employer stock appreciation "
+                f"could be taxed at LTCG rates (~${savings_estimate:,.0f} potential savings vs. ordinary income).",
+                estimated_value=f"~${savings_estimate:,.0f}+ lifetime savings (20% × NUA)",
+                next_steps=[
+                    "Work with CPA to model NUA vs. IRA rollover — NUA wins when appreciation is large",
+                    "Lump-sum distribution must occur in one tax year",
+                    "Depreciation recapture taxed in year of distribution regardless",
+                ])
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            "Has retirement plan — if plan holds appreciated employer stock, NUA strategy may apply. "
+            "Record employer stock NUA amount to calculate potential savings.",
+            missing_facts=["retirement.employer_plans.traditional_401k.employer_stock_nua"])
+
+    def _rule_installment_sale(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.has_any_real_estate() and not self.f.has_any_business():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Installment sale method applies to sellers of real estate or business property.")
+        props = self.f._data.get("real_estate", {}).get("properties", []) or []
+        selling = [p for p in props if isinstance(p, dict) and
+                   str(p.get("status", "")).lower() in ("for_sale", "pending_sale", "selling", "sold")]
+        if selling:
+            return self._result(base, EligibilityStatus.ELIGIBLE_NOW,
+                "Property marked for sale — installment method available to spread capital gains "
+                "across payment years. Discuss seller-financing terms with buyer and CPA.",
+                estimated_value="Varies — can save $5,000–$100,000+ depending on gain size and brackets",
+                next_steps=[
+                    "Negotiate installment payments in purchase agreement",
+                    "Get a promissory note secured by the property",
+                    "File Form 6252 with each year's return; depreciation recapture due in sale year",
+                ])
+        appreciated = [p for p in props if isinstance(p, dict) and
+                       _to_float(p.get("current_value")) > _to_float(p.get("purchase_price"))]
+        if appreciated:
+            return self._result(base, EligibilityStatus.ELIGIBLE_IF_CHANGED,
+                f"Has {len(appreciated)} appreciated propert(ies) — if you sell with seller financing, "
+                "the installment method spreads capital gains across payment years, keeping income in lower brackets.",
+                changes_needed=["Negotiate seller financing terms when selling real estate or business"],
+                next_steps=[
+                    "Model tax under lump-sum vs. 3–5 year installment schedule with CPA",
+                    "Depreciation recapture is taxed in year of sale regardless",
+                    "File Form 6252 every year payments are received",
+                ])
+        if self.f.has_any_business():
+            return self._result(base, EligibilityStatus.ELIGIBLE_IF_CHANGED,
+                "Has a business — installment sale method available if you sell the business "
+                "and negotiate seller financing with the buyer.",
+                changes_needed=["Negotiate installment terms in business sale agreement"],
+                next_steps=["Model tax impact with CPA before agreeing to sale terms"])
+        return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+            "No appreciated real estate or business property identified for potential sale.")
+
+    def _rule_excess_fica_refund(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        w2s = self.f._data.get("income", {}).get("w2_employment", []) or []
+        if len(w2s) < 2:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Excess FICA refund requires wages from two or more employers in the same year.")
+        ss_wage_base = 176_100
+        ss_max = round(ss_wage_base * 0.062, 2)  # $10,918.20 for 2025
+        total_wages = sum(_to_float(w.get("wages")) for w in w2s)
+        total_ss_withheld = sum(_to_float(w.get("social_security_withheld") or
+                                          w.get("ss_withheld") or
+                                          (min(_to_float(w.get("wages")), ss_wage_base) * 0.062))
+                                for w in w2s)
+        if total_wages <= ss_wage_base:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                f"Combined wages ${total_wages:,.0f} do not exceed the SS wage base "
+                f"(${ss_wage_base:,}) — no excess withholding.")
+        excess = round(max(0, total_ss_withheld - ss_max), 2)
+        if excess <= 0:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                f"Combined wages ${total_wages:,.0f} exceed SS wage base — check each W-2 Box 4 "
+                "for actual SS withheld. Record ss_withheld on each W-2 to compute exact refund.",
+                missing_facts=["income.w2_employment[*].social_security_withheld"])
+        return self._result(base, EligibilityStatus.ELIGIBLE_NOW,
+            f"Excess Social Security withholding: ~${excess:,.0f} refundable. "
+            f"Total SS withheld ${total_ss_withheld:,.0f} exceeds 2025 max of ${ss_max:,.0f}.",
+            estimated_value=f"${excess:,.0f} refundable credit",
+            next_steps=[
+                "Claim on Schedule 3, Line 11 of Form 1040",
+                "Verify Box 4 on each W-2 — sum must exceed $10,918.20 to have excess",
+                "This is a refundable credit — paid even if you owe no other tax",
+            ])
+
+    def _rule_ichra_qsehra(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.has_any_business():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "ICHRA/QSEHRA requires a business with employees.")
+        biz = self.f.first_business()
+        emp_count = int(biz.get("employees", {}).get("w2_employees_count") or 0)
+        if emp_count == 0:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Has a business — ICHRA/QSEHRA allows tax-free health reimbursements to employees "
+                "as an alternative to group health insurance. No W-2 employees recorded yet.",
+                missing_facts=["businesses.employees.w2_employees_count"])
+        healthcare = self.f._data.get("healthcare", {}) or {}
+        has_group_plan = healthcare.get("employer_group_plan") is True
+        hra_type = "ICHRA" if emp_count >= 50 else "QSEHRA"
+        annual_limit = "no dollar limit" if emp_count >= 50 else "$6,350/single, $12,800/family (2025)"
+        if has_group_plan and emp_count < 50:
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "QSEHRA requires that the employer not offer a group health plan to same employees. "
+                "Consider ICHRA if you want to offer both a group plan and an HRA to different classes.")
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"{hra_type} allows you to reimburse {emp_count} employee(s) tax-free for individual "
+            f"health insurance premiums ({annual_limit}). Deductible as a business expense.",
+            missing_facts=["businesses.healthcare.hra_established"],
+            next_steps=[
+                f"Establish {hra_type} plan document before December 31 for next year's coverage",
+                "Notify eligible employees 90 days before plan year begins",
+                "Use a third-party HRA administrator (PeopleKeep, Take Command) for compliance",
+                "Employees must maintain qualifying individual coverage to receive reimbursements",
+            ])
+
+    def _rule_conservation_easement(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        if not self.f.has_any_real_estate():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "Conservation easement deduction requires ownership of qualifying real property.")
+        props = self.f._data.get("real_estate", {}).get("properties", []) or []
+        qualifying_types = {"land", "farm", "ranch", "rural", "undeveloped", "agricultural",
+                            "timberland", "wetland", "open_space"}
+        qualifying = [p for p in props if isinstance(p, dict) and
+                      any(qt in str(p.get("property_type", "")).lower() or
+                          qt in str(p.get("description", "")).lower()
+                          for qt in qualifying_types)]
+        if not qualifying:
+            return self._result(base, EligibilityStatus.ELIGIBLE_IF_CHANGED,
+                "Has real estate — conservation easement deduction (§170(h)) requires land with "
+                "conservation potential (farm, ranch, undeveloped land, habitat, scenic corridor). "
+                "No qualifying land type identified in your data.",
+                changes_needed=["Own land with qualifying conservation purpose"],
+                next_steps=[
+                    "CAUTION: Only pursue with a reputable land trust — not a promoter",
+                    "Syndicated easements are IRS listed transactions with heavy penalties",
+                ])
+        agi = self.f.estimated_agi()
+        agi_limit = agi * 0.50 if agi else None
+        land_value = sum(_to_float(p.get("current_value")) for p in qualifying)
+        easement_estimate = land_value * 0.40 if land_value else 0
+        msg = (f"Has {len(qualifying)} qualifying land parcel(s) (estimated value ${land_value:,.0f}). "
+               f"Conservation easement could yield ~${easement_estimate:,.0f} deduction "
+               f"(~40% of land value estimate).")
+        if agi_limit:
+            msg += f" Annual deduction limit: ${agi_limit:,.0f} (50% of AGI) with 15-year carryforward."
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE, msg,
+            estimated_value=f"~${easement_estimate:,.0f} deduction (50% AGI/year + 15-yr carryforward)",
+            next_steps=[
+                "Consult with a reputable land trust — NOT a promoter offering 4:1+ deduction ratios",
+                "Get a qualified appraisal from a certified appraiser (not the promoter's appraiser)",
+                "Deed must be recorded by December 31; appraisal complete before return due date",
+                "Review with CPA and attorney — high IRS audit rate on this deduction",
+            ])
+
+    def _rule_qlac(self, b: dict) -> OpportunityResult:
+        base = self._base(b)
+        ret = self.f._data.get("retirement", {}) or {}
+        ira = (ret.get("individual_retirement_accounts") or {})
+        trad_ira = ira.get("traditional_ira") or {}
+        ira_balance = _to_float(trad_ira.get("balance"))
+        employer_plans = ret.get("employer_plans") or {}
+        plan_balance = sum(
+            _to_float((employer_plans.get(k) or {}).get("balance"))
+            for k in ("traditional_401k", "403b", "457b")
+        )
+        total_balance = ira_balance + plan_balance
+        age = self.f.taxpayer_age()
+        if total_balance == 0 and not self.f.has_retirement_contributions():
+            return self._result(base, EligibilityStatus.NOT_APPLICABLE,
+                "QLAC requires a Traditional IRA, 401k, 403b, or 457b account balance.")
+        if age and age < 50:
+            return self._result(base, EligibilityStatus.FUTURE_OPPORTUNITY,
+                f"QLAC is most valuable near or in retirement. At age {age}, focus on "
+                "maximizing contributions first. Revisit at age 60+.",
+                next_steps=["Maximize IRA/401k contributions now to grow the balance that funds a QLAC later"])
+        qlac_limit = min(total_balance * 0.25 if total_balance else 135_000, 135_000)
+        if total_balance == 0:
+            return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+                "Has retirement contributions — record IRA/401k balances to calculate QLAC purchase limit.",
+                missing_facts=["retirement.individual_retirement_accounts.traditional_ira.balance"])
+        return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
+            f"Retirement balance ${total_balance:,.0f} — QLAC purchase limit: ${qlac_limit:,.0f} "
+            "(lesser of 25% of balance or $135,000). Excludes QLAC amount from RMD calculations "
+            "until payments begin (max age 85).",
+            estimated_value=f"${qlac_limit:,.0f} excluded from RMDs; deferred income until age 72–85",
+            next_steps=[
+                "Compare QLAC payouts from multiple insurers (Fidelity, New York Life, MassMutual)",
+                "Model RMD reduction vs. Roth conversion — often Roth conversion is the better first step",
+                "Purchase by December 31 to exclude from that year's RMD calculation",
+                "SECURE 2.0: 25% limit now applies to aggregate balance across all accounts",
+            ])
+
+
 # ── Benefit Library ───────────────────────────────────────────────────────
 
 class BenefitLibrary:
@@ -1759,7 +2304,7 @@ class BenefitLibrary:
 
     # Only directories listed here are scanned for benefit records.
     # future_law/, archive/, and other non-benefit dirs are ignored by default.
-    BENEFIT_DIRS = ["federal", "state"]
+    BENEFIT_DIRS = ["federal", "state", "county"]
 
     def _load(self):
         lib_dir = ROOT / "tax_library"

@@ -1,0 +1,80 @@
+id: net-unrealized-appreciation
+name: Net Unrealized Appreciation (NUA) — §402(e)(4)
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "402(e)(4)"
+  irs_publication: "575"
+  form_instruction: "Instructions for Form 1099-R"
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  When employer stock is distributed from a qualified retirement plan (401k, profit-sharing,
+  ESOP) as part of a lump-sum distribution, the Net Unrealized Appreciation — the difference
+  between the plan's cost basis in the stock and its fair market value at distribution —
+  is not taxed as ordinary income. Instead, NUA is deferred until the stock is sold and
+  then taxed at long-term capital gains rates (0/15/20%), regardless of holding period.
+  Only the plan's cost basis is taxed as ordinary income at distribution. For highly
+  appreciated employer stock, NUA can save 20–37% in taxes compared to a rollover.
+
+estimated_value:
+  typical_range: "$10,000 – $500,000+ lifetime depending on appreciation and tax bracket"
+  calculation_basis: "(NUA amount) × (ordinary rate − LTCG rate); often 20–37 percentage points"
+  depends_on: [employer_stock_basis, current_fmv, ordinary_tax_rate, ltcg_rate]
+
+eligibility_rules:
+  - rule: "Must be a lump-sum distribution from a qualified plan (all plan assets in the same year)"
+  - rule: "Triggering events: separation from service, reaching age 59½, death, disability"
+  - rule: "Employer stock must be distributed in-kind (not sold within the plan)"
+  - rule: "NUA = FMV at distribution minus plan's cost basis (shown on 1099-R Box 6)"
+  - rule: "Only employer stock qualifies; mutual funds and other plan assets do not"
+  - rule: "Available with 401k, profit-sharing, pension, ESOP plans that held employer stock"
+
+phaseouts:
+  - rule: "No income phaseout"
+  - rule: "NUA held < 1 year after distribution: still taxed at LTCG rates (not short-term)"
+  - rule: "Additional appreciation after distribution taxed at STCG or LTCG based on actual holding period"
+
+required_user_facts:
+  - fact: "income.retirement_distributions"
+  - fact: "household.taxpayer.age"
+
+required_documents:
+  - document: "Form 1099-R (Box 6 shows NUA amount if plan administrator computed it)"
+  - document: "Plan administrator statement of cost basis for employer stock"
+  - document: "Brokerage statement after in-kind distribution"
+
+required_forms:
+  - form: "Form 1040 Line 5b (taxable retirement distributions — ordinary income portion)"
+  - form: "Schedule D (LTCG when employer stock is eventually sold)"
+
+deadlines:
+  - deadline: "Must take lump-sum distribution in a single tax year; cannot split across years"
+  - deadline: "Sell employer stock whenever advantageous — no deadline after distribution"
+
+stacking_rules:
+  compatible_with: [backdoor-roth-ira, capital-gains-harvesting]
+  conflicts_with:
+    - rule: "Cannot roll NUA stock into an IRA and preserve NUA treatment (rollover eliminates NUA)"
+
+risk_level: medium
+
+planning_notes: |
+  - NUA is worthwhile when employer stock has appreciated significantly AND your ordinary
+    rate is much higher than your LTCG rate
+  - If stock has not appreciated much, rolling over to an IRA may be better
+  - Work with a CPA to compare NUA vs. rollover before triggering distribution
+  - Net Unrealized Appreciation box (Box 6) on Form 1099-R confirms NUA treatment
+  - Consider state income tax — some states do not recognize NUA treatment
+  - Can do partial NUA: take employer stock in-kind, roll other assets to IRA
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

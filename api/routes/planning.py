@@ -115,6 +115,31 @@ DEADLINE_MAP: dict[str, dict] = {
         "action": "Establish qualifying employer retirement plan",
         "extendable": True,
     },
+    # ── New gap benefits ──────────────────────────────────────────────────────
+    "federal-employer-childcare-credit": {
+        "date": "12-31",
+        "action": "Place qualified childcare facility in service or sign resource/referral contract",
+    },
+    "federal-work-opportunity-tax-credit": {
+        "date": "12-31",
+        "action": "File Form 8850 with state workforce agency within 28 days of each qualifying hire",
+    },
+    "federal-ichra-qsehra": {
+        "date": "12-31",
+        "action": "Establish ICHRA or QSEHRA plan document for next plan year",
+    },
+    "federal-conservation-easement": {
+        "date": "12-31",
+        "action": "Record conservation easement deed by December 31",
+    },
+    "federal-qlac": {
+        "date": "12-31",
+        "action": "Purchase QLAC contract to exclude from current-year RMD calculation",
+    },
+    "federal-installment-sale": {
+        "date": "12-31",
+        "action": "Close installment sale transaction and record promissory note",
+    },
 }
 
 _ACTIONABLE = {

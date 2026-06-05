@@ -1,0 +1,93 @@
+# County Eligibility Rules Registry
+# Evaluated by RulesEngine._rule_* methods in scan_opportunities.py.
+# County rules gate on: primary residence ownership, taxpayer profile (age/veteran/disabled),
+# and household.residence.county (if available). Since county-level rules are hyper-local,
+# most rules return NEARLY_ELIGIBLE when the taxpayer profile qualifies, prompting the
+# user to verify with their specific county assessor.
+
+rules:
+
+  - benefit_id: county-homestead-exemption
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: owns_primary_residence
+        path: real_estate.properties
+        description: "Owns a primary residence"
+    nearly_eligible_conditions:
+      - "owns primary residence but county not specified — verify with county assessor"
+
+  - benefit_id: county-senior-property-tax-freeze
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: age_65_plus
+        path: household.taxpayer.age
+        operator: greater_than
+        value: 64
+        description: "Taxpayer or spouse is age 65 or older"
+      - id: owns_primary_residence
+        path: real_estate.properties
+        description: "Owns a primary residence"
+    nearly_eligible_conditions:
+      - "age 65+ and owns primary residence but county not specified"
+    disqualifying_conditions:
+      - id: under_65
+        description: "Taxpayer under age 65 — must reach qualifying age"
+
+  - benefit_id: county-veteran-property-tax-exemption
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: is_veteran
+        path: household.taxpayer.veteran
+        operator: is_true
+        description: "Taxpayer is an honorably discharged veteran"
+      - id: owns_primary_residence
+        path: real_estate.properties
+        description: "Owns a primary residence"
+    nearly_eligible_conditions:
+      - "is veteran and owns primary residence but county not specified"
+    disqualifying_conditions:
+      - id: not_veteran
+        description: "Taxpayer is not a veteran"
+
+  - benefit_id: county-disability-property-tax-exemption
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: is_disabled
+        path: household.taxpayer.disabled
+        operator: is_true
+        description: "Taxpayer is permanently and totally disabled"
+      - id: owns_primary_residence
+        path: real_estate.properties
+        description: "Owns a primary residence"
+    nearly_eligible_conditions:
+      - "is disabled and owns primary residence but county not specified"
+    disqualifying_conditions:
+      - id: not_disabled
+        description: "Taxpayer is not disabled"
+
+  - benefit_id: county-solar-exemption
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: owns_property
+        path: real_estate.properties
+        description: "Owns real property"
+    nearly_eligible_conditions:
+      - "owns property — verify if solar installed and county exemption applies"
+
+  - benefit_id: county-agricultural-use-valuation
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: owns_land
+        path: real_estate.properties
+        description: "Owns land or property of 5+ acres (land type)"
+    nearly_eligible_conditions:
+      - "owns land-type property — verify agricultural activity and county program"
+    disqualifying_conditions:
+      - id: no_land
+        description: "No land or qualifying acreage in property records"
