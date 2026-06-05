@@ -1,0 +1,82 @@
+id: conservation-easement
+name: Conservation Easement Deduction — §170(h)
+category: real_estate
+jurisdiction: federal
+
+authority:
+  irc_section: "170(h)"
+  irs_publication: "561"
+  form_instruction: "Instructions for Form 8283"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  A landowner who donates a perpetual restriction on land development to a qualified
+  conservation organization (land trust) may deduct the appraised fair market value of the
+  restriction. Deduction = appraised value of the easement (often 30–60% of unencumbered
+  land value). Annual deduction limit: 50% of AGI (100% for qualified farmers/ranchers),
+  with 15-year carryforward. Bona fide easements on qualifying land with genuine
+  conservation purpose are legitimate. Syndicated conservation easements (promoted as
+  tax shelters) are listed IRS transactions subject to heavy penalties.
+
+estimated_value:
+  typical_range: "$50,000 – $1M+ lifetime deduction for owners of qualifying land"
+  calculation_basis: "Qualified appraisal of restriction value; limited to 50% AGI/year + 15-year carryforward"
+  depends_on: [land_value, development_potential, appraisal, agi]
+
+eligibility_rules:
+  - rule: "Must own qualifying real property (land, not buildings primarily)"
+  - rule: "Donation must be to a qualified organization (501(c)(3) land trust, government entity)"
+  - rule: "Easement must be perpetual and serve a qualifying conservation purpose"
+  - rule: "Qualifying purposes: habitat, scenic, open space, historic preservation, public recreation"
+  - rule: "Must obtain a qualified appraisal by a qualified appraiser (Form 8283 Section B)"
+  - rule: "Deduction limited to 50% of AGI per year; 100% for farmers/ranchers if property is used in farming"
+  - rule: "15-year carryforward for unused deduction"
+
+phaseouts:
+  - rule: "No phaseout — limited only by 50% of AGI annually"
+  - rule: "Syndicated easements are listed transactions — avoid promoters offering 4:1+ deduction ratios"
+
+required_user_facts:
+  - fact: "real_estate.properties"
+  - fact: "household.estimated_agi"
+
+required_documents:
+  - document: "Qualified appraisal by qualified appraiser (must be completed no earlier than 60 days before donation)"
+  - document: "Deed of conservation easement recorded with county"
+  - document: "Donee acknowledgment from qualified organization"
+  - document: "Baseline documentation report (photos, surveys, habitat description)"
+
+required_forms:
+  - form: "Form 8283 Section B (Noncash Charitable Contributions > $500)"
+  - form: "Schedule A Line 12 (noncash charitable contributions)"
+
+deadlines:
+  - deadline: "Deed must be recorded by December 31 of the tax year for the deduction"
+  - deadline: "Qualified appraisal must be dated no earlier than 60 days before and no later than return due date"
+
+stacking_rules:
+  compatible_with: [charitable-contribution-deduction, installment-sale]
+  conflicts_with:
+    - rule: "Cannot claim easement deduction if donation was via a syndicated shelter with inflated appraisal"
+
+risk_level: high
+
+planning_notes: |
+  - Legitimate easements on family farmland, ranch, or undeveloped land are well-established
+  - AVOID promoter-driven syndicated easements — IRS has issued dozens of penalties, criminal
+    referrals, and legislation (SECURE 2.0 §605) limiting syndicated partnership easements
+  - A legitimate easement should reflect genuine conservation purpose, not a deduction target
+  - Use a reputable land trust (Nature Conservancy affiliates, local land trusts) not a promoter
+  - The deduction ratio on legitimate easements is typically 1:1 to 3:1, not the 4:1+ ratios
+    promoted by syndicates
+  - State income tax benefits (additional deduction or credit) available in some states
+
+review_required:
+  cpa: true
+  attorney: true
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

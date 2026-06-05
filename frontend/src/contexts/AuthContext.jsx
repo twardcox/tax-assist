@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../api";
+import { TOKEN_KEY } from "../constants";
 
 const AuthContext = createContext(null);
-
-const TOKEN_KEY = "utbis_token";
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);

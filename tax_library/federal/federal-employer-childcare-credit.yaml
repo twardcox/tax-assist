@@ -1,0 +1,74 @@
+id: employer-childcare-credit
+name: Employer-Provided Childcare Credit (§45F)
+category: business
+jurisdiction: federal
+
+authority:
+  irc_section: "45F"
+  irs_publication: null
+  form_instruction: "Instructions for Form 8882"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Employers who pay for qualified childcare facilities or childcare resource/referral
+  services for employees receive a federal tax credit. Credit = 25% of qualified childcare
+  facility expenditures + 10% of qualified childcare resource/referral expenditures.
+  Maximum credit is $150,000 per year. Unused credit carries forward 20 years.
+  The credit reduces the employer's deductible childcare expenses dollar-for-dollar.
+
+estimated_value:
+  typical_range: "$5,000 – $150,000/year depending on childcare spending"
+  calculation_basis: "25% of facility costs + 10% of referral costs; max $150,000/year"
+  depends_on: [childcare_facility_costs, referral_costs, employee_count]
+
+eligibility_rules:
+  - rule: "Must be a business (any entity type)"
+  - rule: "Must pay or incur qualified childcare facility expenditures or resource/referral costs"
+  - rule: "Qualified childcare facility: principal use is providing childcare, meets state licensing"
+  - rule: "Resource/referral: contracts with childcare referral/information services for employees"
+  - rule: "Maximum credit: $150,000 per year"
+  - rule: "Credit reduces otherwise deductible expenses"
+
+phaseouts:
+  - rule: "No income phaseout — available to employers of any size"
+  - rule: "Recapture required if facility ceases qualifying use within 10 years"
+
+required_user_facts:
+  - fact: "businesses.businesses[0].entity_type"
+  - fact: "businesses.businesses[0].employees.w2_employees_count"
+
+required_documents:
+  - document: "Childcare facility lease/ownership documents"
+  - document: "Receipts for childcare facility operating expenses"
+  - document: "Contracts with childcare resource/referral providers"
+
+required_forms:
+  - form: "Form 8882 (Credit for Employer-Provided Childcare Facilities and Services)"
+  - form: "Form 3800 (General Business Credit) — attach Form 8882"
+
+deadlines:
+  - deadline: "Facility must be in service by December 31 of the tax year"
+  - deadline: "File Form 8882 with business return"
+
+stacking_rules:
+  compatible_with: [small-employer-retirement-startup-credit, work-opportunity-tax-credit]
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - On-site childcare center qualifies; employer-contracted facility also qualifies
+  - Even reimbursing employees for childcare referral services (e.g., backup care programs
+    like Bright Horizons) generates the 10% referral credit
+  - SECURE 2.0 (2022) increased the maximum credit to $150,000 for tax years after 2022
+  - The credit reduces the deduction for childcare expenses (not a free add-on)
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

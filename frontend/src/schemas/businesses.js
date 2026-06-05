@@ -64,8 +64,16 @@ export const schema = {
               label: "Formation State",
               type: "text",
               placeholder: "TX",
-              description: "State where the entity was formed.",
+              description: "State where the entity was legally formed (Articles of Organization/Incorporation). This is often different from where the business actually operates — a DE LLC that only does business in TX still owes no DE income tax.",
               source: "Your Articles of Organization/Incorporation.",
+            },
+            {
+              key: "operating_states",
+              label: "Operating States",
+              type: "text",
+              placeholder: "TX, CA, NY",
+              description: "States where this business earns income, has employees, or maintains a physical presence (tax nexus). Used to evaluate state PTE elections and multi-state tax obligations. The formation state (e.g., DE) is often NOT an operating state. Separate multiple states with commas.",
+              source: "States where you file a business or personal state return attributable to this business's activity. Ask your CPA if unsure.",
             },
             {
               key: "industry",

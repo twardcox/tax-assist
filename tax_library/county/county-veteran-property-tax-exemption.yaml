@@ -1,0 +1,97 @@
+id: county-veteran-property-tax-exemption
+name: County Veteran Property Tax Exemption
+category: real_estate
+jurisdiction: county
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "State veteran property tax statutes administered at the county level — nearly universal; amounts and disability-rating requirements vary"
+
+status: active
+
+benefit_type: exemption
+
+summary: |
+  Almost every state grants veterans a property tax exemption on their primary residence,
+  administered through the county assessor. Amounts range from a modest flat reduction
+  ($1,000–$5,000 off assessed value) for any honorably discharged veteran to a 100% property
+  tax exemption for veterans with a 100% service-connected disability rating. Many veterans
+  are unaware of the full exemption available or have not applied at the county level.
+  Surviving spouses of qualifying veterans may also be eligible.
+
+estimated_value:
+  typical_range: "$100 – Full property tax exemption ($5,000–$15,000+/year for 100% disabled)"
+  calculation_basis: "County millage rate × exemption amount; 100% disabled = full exemption in many states"
+  depends_on:
+    - household.taxpayer.veteran
+    - household.residence.state
+    - household.residence.county
+    - real_estate.properties (primary_residence)
+    - veteran disability rating (not currently tracked)
+
+eligibility_rules:
+  - rule: "Must be an honorably discharged veteran (DD-214 required)"
+    required_fact: "household.taxpayer.veteran"
+  - rule: "Must own and occupy a primary residence"
+    required_fact: "real_estate.properties (primary_residence type)"
+  - rule: "Disability rating determines exemption tier — 10%, 50%, 70%, 100% ratings unlock progressively larger exemptions"
+    required_fact: "veteran disability rating (VA award letter)"
+  - rule: "Surviving spouses of 100% disabled veterans may qualify for full exemption in many states"
+    required_fact: null
+
+required_user_facts:
+  - fact: "household.taxpayer.veteran (true)"
+  - fact: "household.residence.state"
+  - fact: "household.residence.county"
+  - fact: "real_estate.properties (primary_residence present)"
+
+required_documents:
+  - document: "DD-214 Certificate of Release or Discharge from Active Duty"
+  - document: "VA disability rating award letter (if claiming disability tier)"
+  - document: "County veteran property tax exemption application"
+
+required_forms:
+  - form: "County veteran exemption application (varies — search '[county] veteran property tax exemption')"
+
+deadlines:
+  - deadline: "Most states: March 1 – April 1 of the tax year"
+  - deadline: "TX: April 30"
+  - deadline: "FL: March 1"
+  - deadline: "CA: February 15 for claim-year exemption; late claims accepted at reduced benefit"
+
+phaseouts: []
+
+stacking_rules:
+  compatible_with:
+    - county-homestead-exemption
+    - state-homestead-exemption
+    - county-senior-property-tax-freeze
+    - county-disability-property-tax-exemption
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Zero risk — government-administered exemption for eligible veterans.
+  Providing false disability ratings to obtain a higher tier is fraud and must be avoided.
+
+planning_notes: |
+  - Apply even if you have no disability rating — most states provide a base exemption for any honorably discharged veteran
+  - If you have a VA disability rating, apply for the highest tier you qualify for
+  - TX: 100% disabled veterans receive a full property tax exemption on their primary residence (saves $5,000–$15,000+/year in most counties)
+  - FL: 100% disabled or totally and permanently disabled veterans receive full homestead exemption
+  - CA: Disabled Veterans' Exemption is up to $161,083 off assessed value (2024)
+  - Surviving spouse: verify eligibility — in many states the exemption transfers if spouse does not remarry
+
+qualification_pathways:
+  - "Any veteran owning a primary residence: apply at county assessor with DD-214"
+  - "Veteran with VA disability rating: apply for enhanced tier with VA award letter"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

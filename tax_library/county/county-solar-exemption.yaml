@@ -1,0 +1,94 @@
+id: county-solar-exemption
+name: County Solar / Renewable Energy Property Tax Exemption
+category: real_estate
+jurisdiction: county
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "State solar property tax exemption statutes (mandatory or permissive) implemented at county level — active in FL, TX, AZ, CO, NJ, NY, MA, NC, MN, OR, WA, and 20+ others"
+
+status: active
+
+benefit_type: exemption
+
+summary: |
+  More than 30 states mandate or permit counties to exempt the added value of solar, wind,
+  or other renewable energy installations from property tax assessment. This means adding
+  solar panels (often $15,000–$40,000 installed) does not increase your property tax bill
+  even though it increases your home's value. In high-rate counties, this exemption alone
+  can be worth $300–$1,500/year and significantly improves the solar ROI calculation.
+  The exemption is typically automatic in mandatory-exemption states but may require an
+  application in permissive states.
+
+estimated_value:
+  typical_range: "$150 – $1,500+/year (varies with system size, county rate, and home value)"
+  calculation_basis: "County millage rate × added value of solar system (typically $12,000–$35,000 for residential)"
+  depends_on:
+    - household.residence.state
+    - household.residence.county
+    - real_estate.properties (primary_residence with solar installed)
+
+eligibility_rules:
+  - rule: "Must own a property with a solar PV, solar thermal, wind, or geothermal system installed"
+    required_fact: "real_estate.properties (primary_residence with solar/renewable)"
+  - rule: "Property must be in a state that mandates or permits the exemption"
+    required_fact: "household.residence.state"
+  - rule: "Some counties require a separate application or permit documentation"
+    required_fact: "household.residence.county"
+  - rule: "System must have been permitted and inspected by local building department"
+    required_fact: null
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "household.residence.county"
+  - fact: "real_estate.properties (primary_residence present)"
+
+required_documents:
+  - document: "Building permit and final inspection certificate for the solar installation"
+  - document: "Installer invoice or contract showing system cost and specifications"
+  - document: "County exemption application (in permissive states)"
+
+required_forms:
+  - form: "County renewable energy exemption application (varies — search '[county] solar property tax exemption')"
+
+deadlines:
+  - deadline: "Mandatory-exemption states: automatic on next assessment cycle after installation"
+  - deadline: "Permissive states: typically by March 1 – April 1 of the tax year; check with county"
+  - deadline: "File within the same year as installation to avoid missing a full year of savings"
+
+phaseouts: []
+
+stacking_rules:
+  compatible_with:
+    - county-homestead-exemption
+    - state-homestead-exemption
+    - residential-clean-energy-credit
+    - 25c-energy-home-improvement
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Zero risk — government-administered property tax exemption.
+  In mandatory-exemption states no action is required; the assessor excludes solar value automatically.
+
+planning_notes: |
+  - Factor this exemption into your solar ROI calculation before deciding whether to install
+  - Mandatory-exemption states (FL, TX, AZ, CO, NJ, NY, MA, NC, MN, OR): no application needed
+  - Permissive states: file with county assessor — call ahead to confirm process and deadline
+  - Stacks with the federal 30% Residential Clean Energy Credit (Form 5695) and any state credits
+  - If already installed, verify the exemption is reflected on your current property tax bill
+  - Leased solar systems may not qualify — check if the lease agreement transfers exemption rights
+
+qualification_pathways:
+  - "Primary homeowner installing solar or renewable energy: verify exemption is active in your county"
+  - "Planning a solar install: confirm exemption before purchase to include in ROI model"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

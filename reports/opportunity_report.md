@@ -1,9 +1,9 @@
 # UTBIS Opportunity Report
 
-**Generated:** 2026-06-04 15:21  
+**Generated:** 2026-06-05 13:16  
 **Tax Year:** 2025  
-**Benefits Evaluated:** 44  
-**Opportunities Found:** 26  
+**Benefits Evaluated:** 58  
+**Opportunities Found:** 36  
 
 ---
 
@@ -212,6 +212,21 @@ Homeowner qualifies for 30% credit on solar panels, battery storage, wind, or ge
 - Check state and utility rebates that stack on top of federal credit
 
 ---
+### Employer-Provided Childcare Credit (§45F)
+- **Status:** `nearly_eligible`
+- **Category:** business
+- **Estimated Value:** $5,000 – $150,000/year depending on childcare spending
+- **Risk Level:** low
+- **Forms:** Form 8882 (Credit for Employer-Provided Childcare Facilities and Services), Form 3800 (General Business Credit) — attach Form 8882
+- **CPA Review:** recommended
+
+Has a business — §45F credit is available if you pay for qualified childcare facilities or resource/referral services for employees. No W-2 employees recorded yet.
+
+
+**Missing Information:**
+- `businesses.employees.w2_employees_count`
+
+---
 ### Clean Vehicle Credit (EV Tax Credit)
 - **Status:** `nearly_eligible`
 - **Category:** energy
@@ -243,6 +258,36 @@ Not confirmed on HDHP. Switching to a qualifying HDHP unlocks the HSA triple tax
 **Changes Needed:**
 - Switch to a High Deductible Health Plan (min deductible $1,650 self / $3,300 family for 2025)
 - Open HSA account at Fidelity (no fees) after HDHP enrollment
+
+---
+### ICHRA / QSEHRA — Individual Health Reimbursement Arrangement
+- **Status:** `nearly_eligible`
+- **Category:** healthcare
+- **Estimated Value:** $2,000 – $12,800/employee/year in tax-free health reimbursements
+- **Risk Level:** low
+- **Forms:** Form W-2 Box 12 Code FF (QSEHRA reimbursements — employer reports), Form 8962 (employees claiming PTC must reduce by QSEHRA amount)
+- **CPA Review:** recommended
+
+Has a business — ICHRA/QSEHRA allows tax-free health reimbursements to employees as an alternative to group health insurance. No W-2 employees recorded yet.
+
+
+**Missing Information:**
+- `businesses.employees.w2_employees_count`
+
+---
+### Net Unrealized Appreciation (NUA) — §402(e)(4)
+- **Status:** `nearly_eligible`
+- **Category:** retirement
+- **Estimated Value:** $10,000 – $500,000+ lifetime depending on appreciation and tax bracket
+- **Risk Level:** medium
+- **Forms:** Form 1040 Line 5b (taxable retirement distributions — ordinary income portion), Schedule D (LTCG when employer stock is eventually sold)
+- **CPA Review:** recommended
+
+Has retirement plan — if plan holds appreciated employer stock, NUA strategy may apply. Record employer stock NUA amount to calculate potential savings.
+
+
+**Missing Information:**
+- `retirement.employer_plans.traditional_401k.employer_stock_nua`
 
 ---
 ### Section 179 Immediate Expensing
@@ -311,6 +356,70 @@ Solo 401(k) not yet established. Must be set up by December 31 to contribute for
 - Employer profit-sharing contribution can be made up to October 15
 
 ---
+### Work Opportunity Tax Credit (WOTC) — §51
+- **Status:** `nearly_eligible`
+- **Category:** business
+- **Estimated Value:** $2,400 – $9,600 per qualifying hire; more for disabled veterans
+- **Risk Level:** low
+- **Forms:** Form 5884 (Work Opportunity Credit), Form 3800 (General Business Credit) — attach Form 5884, Form 8850 (Pre-Screening Notice — filed with state agency, not IRS)
+
+Has a business — WOTC is available when you hire from targeted groups (veterans, SNAP recipients, ex-felons, long-term unemployed, etc.). No W-2 employees recorded yet.
+
+
+**Missing Information:**
+- `businesses.employees.w2_employees_count`
+
+---
+### State Pass-Through Entity (PTE) Tax Election
+- **Status:** `nearly_eligible`
+- **Category:** business_deduction
+- **Estimated Value:** $3,000 – $50,000+/year
+- **Risk Level:** moderate
+- **Forms:** CA Form 3893 (PTE Elective Tax Payment Voucher), NY IT-204-LL / IT-653, NJ PTE-100 / PTE-150, Federal Schedule E / K-1 (entity-level tax flows through)
+- **CPA Review:** recommended
+
+Residence state TX has not enacted a PTE election. If this business operates in other states, add them as operating_states — you may have a PTE opportunity in a nexus state.
+
+
+**Missing Information:**
+- `businesses.businesses[*].operating_states`
+
+---
+### County Homestead Property Tax Exemption
+- **Status:** `nearly_eligible`
+- **Category:** real_estate
+- **Estimated Value:** $50 – $500+/year
+- **Risk Level:** low
+- **Forms:** County homestead exemption application (varies by county — search '[county] homestead exemption application')
+
+You own a primary residence and likely qualify for TX's county homestead exemption. Most counties administer their own exemption on top of the state exemption, but it is not automatic — you must apply with the county assessor.
+
+**Next Steps:**
+- Search 'TX homestead exemption application' to find the county assessor portal
+- Gather deed/mortgage statement + government ID showing current address
+- File before the county deadline (most states: March 1)
+- Confirm you also have the state-level exemption — both layers are required separately
+
+**Missing Information:**
+- `household.residence.county`
+
+---
+### County Solar / Renewable Energy Property Tax Exemption
+- **Status:** `nearly_eligible`
+- **Category:** real_estate
+- **Estimated Value:** $150 – $1,500+/year (varies with system size, county rate, and home value)
+- **Risk Level:** low
+- **Forms:** County renewable energy exemption application (varies — search '[county] solar property tax exemption')
+
+TX mandates that counties exempt the added value of solar installations from property tax assessment. If you have or are considering solar panels, their value will not increase your property tax bill.
+
+**Next Steps:**
+- Verify your current property tax bill does not include solar panel value
+- In mandatory-exemption states this is typically automatic after installation
+- Stack with the federal 30% Residential Clean Energy Credit (Form 5695)
+- Factor this exemption into your solar ROI calculation before installing
+
+---
 
 ## Eligible If You Make Changes
 
@@ -368,6 +477,41 @@ Not currently itemizing — charitable deduction only applies when itemizing.
 - Consider bunching 2-3 years of giving via a Donor-Advised Fund
 
 ---
+### Conservation Easement Deduction — §170(h)
+- **Status:** `eligible_if_changed`
+- **Category:** real_estate
+- **Estimated Value:** $50,000 – $1M+ lifetime deduction for owners of qualifying land
+- **Risk Level:** high
+- **Forms:** Form 8283 Section B (Noncash Charitable Contributions > $500), Schedule A Line 12 (noncash charitable contributions)
+- **CPA Review:** recommended
+
+Has real estate — conservation easement deduction (§170(h)) requires land with conservation potential (farm, ranch, undeveloped land, habitat, scenic corridor). No qualifying land type identified in your data.
+
+**Next Steps:**
+- CAUTION: Only pursue with a reputable land trust — not a promoter
+- Syndicated easements are IRS listed transactions with heavy penalties
+
+**Changes Needed:**
+- Own land with qualifying conservation purpose
+
+---
+### Installment Sale Method — §453
+- **Status:** `eligible_if_changed`
+- **Category:** real_estate
+- **Estimated Value:** $5,000 – $100,000+ in lifetime tax savings from bracket spreading
+- **Risk Level:** low
+- **Forms:** Form 6252 (Installment Sale Income) — filed every year payments are received, Schedule D (capital gain summary)
+- **CPA Review:** recommended
+
+Has a business — installment sale method available if you sell the business and negotiate seller financing with the buyer.
+
+**Next Steps:**
+- Model tax impact with CPA before agreeing to sale terms
+
+**Changes Needed:**
+- Negotiate installment terms in business sale agreement
+
+---
 ### Mortgage Interest Deduction
 - **Status:** `eligible_if_changed`
 - **Category:** individual_deduction
@@ -413,6 +557,20 @@ Business is profitable (net $21,500). NOL carryforward becomes relevant in any f
 
 **Next Steps:**
 - Review prior returns — any year with net loss may have created an unused NOL carryforward
+
+---
+### Qualified Longevity Annuity Contract (QLAC) — §401(a)(9)
+- **Status:** `future_opportunity`
+- **Category:** retirement
+- **Estimated Value:** $2,000 – $20,000/year in deferred RMDs and reduced current tax
+- **Risk Level:** low
+- **Forms:** No special form — excluded from RMD balance calculation automatically, Form 1040 Line 5b (when annuity payments begin, taxed as ordinary income)
+- **CPA Review:** recommended
+
+QLAC is most valuable near or in retirement. At age 42, focus on maximizing contributions first. Revisit at age 60+.
+
+**Next Steps:**
+- Maximize IRA/401k contributions now to grow the balance that funds a QLAC later
 
 ---
 ### Qualified Small Business Stock Exclusion (§1202)
