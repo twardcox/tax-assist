@@ -1040,7 +1040,7 @@ def _get_businesses_dict(hid: int) -> dict:
                 "owner_draws": b.get("owner_draws"),
                 "retirement_plan_type": b.get("retirement_plan_type"),
                 "formation_state": b.get("formation_state"),
-                "operating_states": [s for s in (b.get("operating_states") or "").split(",") if s],
+                "operating_states": ", ".join([s for s in (b.get("operating_states") or "").split(",") if s]),
                 "depreciation": {
                     "assets": [
                         {"description": a.get("description"),
