@@ -1322,13 +1322,13 @@ def upsert_document(user_id: str, file_id: str, filename: str,
     with _conn() as c:
         c.execute("""
             INSERT INTO documents (id, user_id, filename, category, confidence,
-                                   content, size, note, uploaded_at)
-            VALUES (?,?,?,?,?,?,?,?,?)
+                                   content, size, note, uploaded_at, subdir, path)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(id) DO UPDATE SET
                 category=excluded.category, confidence=excluded.confidence,
                 content=excluded.content, size=excluded.size, note=excluded.note
         """, (file_id, user_id, filename, category, confidence,
-              content, size, note, _now()))
+              content, size, note, _now(), "", ""))
 
 
 def get_documents_for_user(user_id: str) -> list[dict]:
