@@ -1938,7 +1938,7 @@ class RulesEngine:
                 missing_facts=["real_estate.properties (primary_residence)"])
         county = self.f.county()
         state = self.f.state()
-        location = f"{county} County, {state}" if county and state else (state or "your county")
+        location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))
         agi = self.f.estimated_agi()
         income_note = (f" Income limit may apply (your AGI: ${agi:,.0f})." if agi else
                        " Some counties impose income limits — verify with the assessor.")
