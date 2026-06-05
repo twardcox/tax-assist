@@ -140,4 +140,31 @@ export const api = {
     req(`/reports/tax-forms?tax_year=${taxYear}`, { method: "POST" }),
   getTaxFormsStatus: (jobId) => req(`/reports/tax-forms/${jobId}`),
   downloadTaxFormsUrl: (jobId) => `${BASE}/reports/tax-forms/${jobId}/download`,
+
+  // Preview — returns a Blob (PDF bytes) for embedding in an iframe
+  previewTaxFormPdf: async (taxYear = 2025) => {
+    const token = getToken();
+    const res = await fetch(`${BASE}/tax-forms/preview-pdf?tax_year=${taxYear}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      window.location.href = "/login";
+      throw new Error("Session expired");
+    }
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(`${res.status}: ${text}`);
+    }
+    return res.blob();
+  },
+
+  // Filing details (campaign fund, direct deposit, designee)
+  getFilingDetails: (taxYear = 2025) => req(`/filing-details?tax_year=${taxYear}`),
+  saveFilingDetails: (taxYear = 2025, data) =>
+    req(`/filing-details?tax_year=${taxYear}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
 };

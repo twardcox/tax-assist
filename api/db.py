@@ -384,6 +384,35 @@ _MIGRATIONS = [
     # Business nexus
     "ALTER TABLE businesses ADD COLUMN formation_state TEXT",
     "ALTER TABLE businesses ADD COLUMN operating_states TEXT",  # comma-separated state codes
+    # City/ZIP (were in schema but never persisted)
+    "ALTER TABLE households ADD COLUMN city TEXT",
+    "ALTER TABLE households ADD COLUMN zip_code TEXT",
+    # Taxpayer identity (1040 filer info)
+    "ALTER TABLE households ADD COLUMN taxpayer_first_name TEXT",
+    "ALTER TABLE households ADD COLUMN taxpayer_last_name TEXT",
+    "ALTER TABLE households ADD COLUMN taxpayer_ssn TEXT",
+    "ALTER TABLE households ADD COLUMN spouse_first_name TEXT",
+    "ALTER TABLE households ADD COLUMN spouse_last_name TEXT",
+    "ALTER TABLE households ADD COLUMN spouse_ssn TEXT",
+    "ALTER TABLE households ADD COLUMN spouse_dob TEXT",
+    "ALTER TABLE households ADD COLUMN street_address TEXT",
+    "ALTER TABLE households ADD COLUMN digital_assets INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN prior_year_agi REAL",
+    "ALTER TABLE households ADD COLUMN estimated_tax_payments REAL DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN other_withholding REAL DEFAULT 0",
+    # Filing details (1040 administrative — campaign fund, direct deposit, designee)
+    "ALTER TABLE households ADD COLUMN pec_fund_taxpayer INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN pec_fund_spouse INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN direct_deposit_routing TEXT",
+    "ALTER TABLE households ADD COLUMN direct_deposit_account TEXT",
+    "ALTER TABLE households ADD COLUMN direct_deposit_type TEXT",
+    "ALTER TABLE households ADD COLUMN allow_third_party INTEGER DEFAULT 0",
+    "ALTER TABLE households ADD COLUMN designee_name TEXT",
+    "ALTER TABLE households ADD COLUMN designee_phone TEXT",
+    "ALTER TABLE households ADD COLUMN designee_pin TEXT",
+    # Dependent identity
+    "ALTER TABLE dependents ADD COLUMN ssn TEXT",
+    "ALTER TABLE dependents ADD COLUMN date_of_birth TEXT",
 ]
 
 # Indexes created after migrations (some reference columns added via ALTER TABLE)
@@ -503,29 +532,48 @@ def _get_or_create_household_id(user_id: str, tax_year: int) -> int:
 def _save_household_from_dict(user_id: str, tax_year: int, d: dict) -> None:
     now = _now()
     spouse = d.get("spouse") or {}
-    deps_raw = d.get("dependents") or {}
     taxpayer = d.get("taxpayer") or {}
     residence = d.get("residence") or {}
+    payments = d.get("payments") or {}
 
     with _conn() as c:
         c.execute("""
             INSERT INTO households
-                (user_id, tax_year, filing_status, estimated_agi, state, county,
+                (user_id, tax_year, filing_status, estimated_agi, prior_year_agi, state, county,
+                 city, zip_code, street_address,
+                 taxpayer_first_name, taxpayer_last_name, taxpayer_ssn,
                  taxpayer_age, taxpayer_dob, taxpayer_veteran, taxpayer_disabled,
                  taxpayer_blind, taxpayer_active_military,
+                 spouse_first_name, spouse_last_name, spouse_ssn, spouse_dob,
+                 digital_assets,
+                 estimated_tax_payments, other_withholding,
                  itemizing_deductions, has_electric_vehicle, updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ON CONFLICT(user_id, tax_year) DO UPDATE SET
                 filing_status=excluded.filing_status,
                 estimated_agi=excluded.estimated_agi,
+                prior_year_agi=excluded.prior_year_agi,
                 state=excluded.state,
                 county=excluded.county,
+                city=excluded.city,
+                zip_code=excluded.zip_code,
+                street_address=excluded.street_address,
+                taxpayer_first_name=excluded.taxpayer_first_name,
+                taxpayer_last_name=excluded.taxpayer_last_name,
+                taxpayer_ssn=excluded.taxpayer_ssn,
                 taxpayer_age=excluded.taxpayer_age,
                 taxpayer_dob=excluded.taxpayer_dob,
                 taxpayer_veteran=excluded.taxpayer_veteran,
                 taxpayer_disabled=excluded.taxpayer_disabled,
                 taxpayer_blind=excluded.taxpayer_blind,
                 taxpayer_active_military=excluded.taxpayer_active_military,
+                spouse_first_name=excluded.spouse_first_name,
+                spouse_last_name=excluded.spouse_last_name,
+                spouse_ssn=excluded.spouse_ssn,
+                spouse_dob=excluded.spouse_dob,
+                digital_assets=excluded.digital_assets,
+                estimated_tax_payments=excluded.estimated_tax_payments,
+                other_withholding=excluded.other_withholding,
                 itemizing_deductions=excluded.itemizing_deductions,
                 has_electric_vehicle=excluded.has_electric_vehicle,
                 updated_at=excluded.updated_at
@@ -533,14 +581,28 @@ def _save_household_from_dict(user_id: str, tax_year: int, d: dict) -> None:
             user_id, tax_year,
             d.get("filing_status"),
             d.get("estimated_agi"),
+            d.get("prior_year_agi"),
             residence.get("state") or d.get("state"),
             residence.get("county") or d.get("county"),
+            residence.get("city") or d.get("city"),
+            residence.get("zip") or d.get("zip"),
+            residence.get("street_address") or d.get("street_address"),
+            taxpayer.get("first_name"),
+            taxpayer.get("last_name"),
+            taxpayer.get("ssn"),
             taxpayer.get("age") or d.get("taxpayer_age"),
             taxpayer.get("dob") or d.get("taxpayer_dob"),
             _to_int_flag(taxpayer.get("veteran")),
             _to_int_flag(taxpayer.get("disabled")),
             _to_int_flag(taxpayer.get("blind")),
             _to_int_flag(taxpayer.get("active_military")),
+            spouse.get("first_name"),
+            spouse.get("last_name"),
+            spouse.get("ssn"),
+            spouse.get("dob"),
+            1 if d.get("digital_assets") else 0,
+            payments.get("estimated_tax_payments") or d.get("estimated_tax_payments"),
+            payments.get("other_withholding") or d.get("other_withholding"),
             _to_int_flag(d.get("itemizing_deductions")),
             _to_int_flag(d.get("has_electric_vehicle")),
             now,
@@ -859,12 +921,13 @@ def _save_dependents_from_dict(hid: int, d: dict) -> None:
             care = dep.get("care_expenses") or {}
             c.execute("""
                 INSERT INTO dependents
-                (household_id,name,relationship,age_at_year_end,months_in_home,
+                (household_id,name,relationship,ssn,date_of_birth,age_at_year_end,months_in_home,
                  ssn_obtained,full_time_student,disability,school_level,
                  tuition_paid,daycare_cost,after_school_cost,summer_camp_cost)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 hid, dep.get("name"), dep.get("relationship"),
+                dep.get("ssn"), dep.get("date_of_birth"),
                 dep.get("age_at_year_end"), dep.get("months_in_home", 12),
                 1 if dep.get("ssn_obtained") else 0,
                 1 if dep.get("full_time_student") else 0,
@@ -908,8 +971,19 @@ def _get_household_dict(user_id: str, tax_year: int) -> dict:
     return {
         "filing_status": hh.get("filing_status"),
         "estimated_agi": hh.get("estimated_agi"),
-        "residence": {"state": hh.get("state"), "county": hh.get("county")},
+        "prior_year_agi": hh.get("prior_year_agi"),
+        "digital_assets": bool(hh.get("digital_assets")),
+        "residence": {
+            "state": hh.get("state"),
+            "county": hh.get("county"),
+            "city": hh.get("city"),
+            "zip": hh.get("zip_code"),
+            "street_address": hh.get("street_address"),
+        },
         "taxpayer": {
+            "first_name": hh.get("taxpayer_first_name"),
+            "last_name": hh.get("taxpayer_last_name"),
+            "ssn": hh.get("taxpayer_ssn"),
             "age": hh.get("taxpayer_age"),
             "dob": hh.get("taxpayer_dob"),
             "veteran": _from_int_flag(hh.get("taxpayer_veteran")),
@@ -923,7 +997,24 @@ def _get_household_dict(user_id: str, tax_year: int) -> dict:
             "present": bool(spouse.get("present")) if spouse else False,
             "age": spouse.get("age") if spouse else None,
             "employed_in_business": bool(spouse.get("employed_in_business")) if spouse else False,
-        } if spouse else {"present": False},
+            "first_name": hh.get("spouse_first_name"),
+            "last_name": hh.get("spouse_last_name"),
+            "ssn": hh.get("spouse_ssn"),
+            "dob": hh.get("spouse_dob"),
+        } if spouse else {
+            "present": False,
+            "first_name": hh.get("spouse_first_name"),
+            "last_name": hh.get("spouse_last_name"),
+            "ssn": hh.get("spouse_ssn"),
+            "dob": hh.get("spouse_dob"),
+        },
+        "payments": {
+            "estimated_tax_payments": hh.get("estimated_tax_payments"),
+            "other_withholding": hh.get("other_withholding"),
+        },
+        # Expose top-level for TaxCalculator compatibility
+        "estimated_tax_payments": hh.get("estimated_tax_payments"),
+        "other_withholding": hh.get("other_withholding"),
     }
 
 
@@ -1203,6 +1294,7 @@ def _get_dependents_dict(hid: int) -> dict:
         "dependents": [
             {
                 "name": d.get("name"), "relationship": d.get("relationship"),
+                "ssn": d.get("ssn"), "date_of_birth": d.get("date_of_birth"),
                 "age_at_year_end": d.get("age_at_year_end"),
                 "months_in_home": d.get("months_in_home", 12),
                 "ssn_obtained": bool(d.get("ssn_obtained")),
@@ -1301,6 +1393,60 @@ def get_all_user_data(user_id: str, tax_year: int) -> dict:
         "healthcare":  _get_healthcare_dict(hid),
         "dependents":  dep_dict,
         "goals":       _get_goals_dict(hid),
+    }
+
+
+def save_filing_details(user_id: str, tax_year: int, data: dict) -> None:
+    """Save return-specific filing details (campaign fund, direct deposit, designee)."""
+    now = _now()
+    with _conn() as c:
+        c.execute(
+            "INSERT OR IGNORE INTO households (user_id, tax_year, updated_at) VALUES (?,?,?)",
+            (user_id, tax_year, now),
+        )
+        c.execute("""
+            UPDATE households SET
+                pec_fund_taxpayer=?, pec_fund_spouse=?,
+                direct_deposit_routing=?, direct_deposit_account=?, direct_deposit_type=?,
+                allow_third_party=?, designee_name=?, designee_phone=?, designee_pin=?,
+                updated_at=?
+            WHERE user_id=? AND tax_year=?
+        """, (
+            1 if data.get("pec_fund_taxpayer") else 0,
+            1 if data.get("pec_fund_spouse") else 0,
+            data.get("direct_deposit_routing"),
+            data.get("direct_deposit_account"),
+            data.get("direct_deposit_type"),
+            1 if data.get("allow_third_party") else 0,
+            data.get("designee_name"),
+            data.get("designee_phone"),
+            data.get("designee_pin"),
+            now, user_id, tax_year,
+        ))
+
+
+def get_filing_details(user_id: str, tax_year: int) -> dict:
+    """Return return-specific filing details for the given user/year."""
+    with _conn() as c:
+        hh = _row(c.execute(
+            "SELECT pec_fund_taxpayer, pec_fund_spouse, direct_deposit_routing,"
+            " direct_deposit_account, direct_deposit_type, allow_third_party,"
+            " designee_name, designee_phone, designee_pin"
+            " FROM households WHERE user_id=? AND tax_year=?",
+            (user_id, tax_year),
+        ).fetchone())
+    if not hh:
+        return {}
+    return {
+        "pec_fund_taxpayer":     bool(hh.get("pec_fund_taxpayer")),
+        "pec_fund_spouse":       bool(hh.get("pec_fund_spouse")),
+        "direct_deposit_routing": hh.get("direct_deposit_routing"),
+        "direct_deposit_account": hh.get("direct_deposit_account"),
+        "direct_deposit_type":   hh.get("direct_deposit_type"),
+        "allow_third_party":     bool(hh.get("allow_third_party")),
+        "designee_name":         hh.get("designee_name"),
+        "designee_phone":        hh.get("designee_phone"),
+        "designee_pin":          hh.get("designee_pin"),
     }
 
 

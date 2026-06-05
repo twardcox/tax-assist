@@ -1,9 +1,9 @@
 # UTBIS Opportunity Report
 
-**Generated:** 2026-06-05 13:16  
+**Generated:** 2026-06-05 14:44  
 **Tax Year:** 2025  
 **Benefits Evaluated:** 58  
-**Opportunities Found:** 36  
+**Opportunities Found:** 37  
 
 ---
 
@@ -59,6 +59,20 @@ Business vehicle: 8,400 miles × $0.67 = ~$5,628 (standard mileage).
 - If vehicle GVWR > 6,000 lbs: evaluate Section 179 deduction
 
 ---
+### Charitable Contribution Deduction
+- **Status:** `eligible_now`
+- **Category:** individual_deduction
+- **Estimated Value:** $500 – $50,000+/year depending on giving levels
+- **Risk Level:** low
+- **Forms:** Schedule A (itemized deduction reporting), Form 8283 (non-cash charitable contributions over $500)
+
+Charitable contribution deduction available (itemizing confirmed).
+
+**Next Steps:**
+- Donate appreciated stock directly instead of cash — avoid capital gains AND get full FMV deduction
+- Document all contributions — written acknowledgment required for gifts over $250
+
+---
 ### Child and Dependent Care Credit (CDCC)
 - **Status:** `eligible_now`
 - **Category:** individual_credit
@@ -86,6 +100,20 @@ Child Tax Credit: 2 qualifying child(ren) × $2,000 = ~$4,000.
 **Next Steps:**
 - Report on Schedule 8812
 - Up to $1,700 per child is refundable (ACTC)
+
+---
+### Mortgage Interest Deduction
+- **Status:** `eligible_now`
+- **Category:** individual_deduction
+- **Estimated Value:** ~$17,800/year deduction
+- **Risk Level:** low
+- **Forms:** Schedule A (Itemized Deductions)
+
+Mortgage interest ~$17,800 deductible if itemizing.
+
+**Next Steps:**
+- Collect Form 1098 from lender
+- Report on Schedule A
 
 ---
 ### Qualified Opportunity Zone Investment
@@ -120,6 +148,21 @@ QBI deduction available — estimated 20% of ~$21,500 net profit.
 - Model home office and retirement contribution impact on QBI
 
 ---
+### State and Local Tax Deduction (SALT)
+- **Status:** `eligible_now`
+- **Category:** individual_deduction
+- **Estimated Value:** Up to $10,000/year
+- **Risk Level:** low
+- **Forms:** Schedule A (Itemized Deductions)
+- **CPA Review:** recommended
+
+SALT deduction available (capped at $10,000). Property tax: $8,200/year. Evaluate state PTE tax election to bypass the SALT cap on pass-through income.
+
+**Next Steps:**
+- Report state income tax + property tax on Schedule A (combined cap $10,000)
+- If self-employed in high-tax state: ask CPA about Pass-Through Entity (PTE) tax election
+
+---
 ### Section 121 Primary Residence Gain Exclusion
 - **Status:** `eligible_now`
 - **Category:** real_estate
@@ -142,7 +185,7 @@ Section 121 exclusion available — up to $500,000 gain excluded on home sale. E
 - **Risk Level:** low
 - **Forms:** County homestead exemption application (varies by county)
 
-Homestead exemption already applied in TX. If you have a spouse, senior, or veteran status, check for enhanced exemptions.
+Homestead exemption already applied in WA. If you have a spouse, senior, or veteran status, check for enhanced exemptions.
 
 **Next Steps:**
 - Verify the exemption amount on your property tax statement
@@ -155,7 +198,7 @@ Homestead exemption already applied in TX. If you have a spouse, senior, or vete
 - **Estimated Value:** $2,000 – $30,000+/year depending on income and prior-state comparison
 - **Risk Level:** low
 
-TX has no broad-based state income tax — you owe $0 in state income tax on wages, self-employment income, and most other income.
+WA has no broad-based state income tax — you owe $0 in state income tax on wages, self-employment income, and most other income.
 
 **Next Steps:**
 - Ensure your domicile is established in your state (driver's license, voter registration, bank address)
@@ -378,7 +421,7 @@ Has a business — WOTC is available when you hire from targeted groups (veteran
 - **Forms:** CA Form 3893 (PTE Elective Tax Payment Voucher), NY IT-204-LL / IT-653, NJ PTE-100 / PTE-150, Federal Schedule E / K-1 (entity-level tax flows through)
 - **CPA Review:** recommended
 
-Residence state TX has not enacted a PTE election. If this business operates in other states, add them as operating_states — you may have a PTE opportunity in a nexus state.
+Residence state WA has not enacted a PTE election. If this business operates in other states, add them as operating_states — you may have a PTE opportunity in a nexus state.
 
 
 **Missing Information:**
@@ -392,16 +435,13 @@ Residence state TX has not enacted a PTE election. If this business operates in 
 - **Risk Level:** low
 - **Forms:** County homestead exemption application (varies by county — search '[county] homestead exemption application')
 
-You own a primary residence and likely qualify for TX's county homestead exemption. Most counties administer their own exemption on top of the state exemption, but it is not automatic — you must apply with the county assessor.
+You own a primary residence and likely qualify for United States County, WA's county homestead exemption. Most counties administer their own exemption on top of the state exemption, but it is not automatic — you must apply with the county assessor.
 
 **Next Steps:**
-- Search 'TX homestead exemption application' to find the county assessor portal
+- Search 'United States County, WA homestead exemption application' to find the county assessor portal
 - Gather deed/mortgage statement + government ID showing current address
 - File before the county deadline (most states: March 1)
 - Confirm you also have the state-level exemption — both layers are required separately
-
-**Missing Information:**
-- `household.residence.county`
 
 ---
 ### County Solar / Renewable Energy Property Tax Exemption
@@ -411,7 +451,7 @@ You own a primary residence and likely qualify for TX's county homestead exempti
 - **Risk Level:** low
 - **Forms:** County renewable energy exemption application (varies — search '[county] solar property tax exemption')
 
-TX mandates that counties exempt the added value of solar installations from property tax assessment. If you have or are considering solar panels, their value will not increase your property tax bill.
+WA mandates that counties exempt the added value of solar installations from property tax assessment. If you have or are considering solar panels, their value will not increase your property tax bill.
 
 **Next Steps:**
 - Verify your current property tax bill does not include solar panel value
@@ -461,22 +501,6 @@ Augusta Rule available — rent your home to your business for up to 14 days/yea
 - Keep total rental days at 14 or fewer — the 15th day eliminates the exclusion
 
 ---
-### Charitable Contribution Deduction
-- **Status:** `eligible_if_changed`
-- **Category:** individual_deduction
-- **Estimated Value:** $500 – $50,000+/year depending on giving levels
-- **Risk Level:** low
-- **Forms:** Schedule A (itemized deduction reporting), Form 8283 (non-cash charitable contributions over $500)
-
-Not currently itemizing — charitable deduction only applies when itemizing.
-
-
-**Changes Needed:**
-- Calculate total itemized deductions (mortgage interest + SALT + charitable)
-- If total exceeds standard deduction ($30,000 MFJ / $15,000 Single), itemize
-- Consider bunching 2-3 years of giving via a Donor-Advised Fund
-
----
 ### Conservation Easement Deduction — §170(h)
 - **Status:** `eligible_if_changed`
 - **Category:** real_estate
@@ -510,20 +534,6 @@ Has a business — installment sale method available if you sell the business an
 
 **Changes Needed:**
 - Negotiate installment terms in business sale agreement
-
----
-### Mortgage Interest Deduction
-- **Status:** `eligible_if_changed`
-- **Category:** individual_deduction
-- **Estimated Value:** $3,000 – $25,000+/year
-- **Risk Level:** low
-- **Forms:** Schedule A (Itemized Deductions)
-
-Has mortgage interest but not itemizing — deduction only applies when itemizing.
-
-
-**Changes Needed:**
-- Calculate if total itemized deductions exceed standard deduction
 
 ---
 ### S Corporation Election (SE Tax Reduction)

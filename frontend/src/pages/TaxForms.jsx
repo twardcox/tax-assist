@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "../api";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -148,8 +148,9 @@ function Form1040View({ c, fs }) {
       <Line line="24" label="TOTAL TAX" value={c.total_tax} bold highlight="total" />
 
       <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wide">Payments</div>
-      <Line line="25" label="Federal income tax withheld (W-2)" value={c.w2_withholding} highlight="payment" />
-      <Line line="26" label="Estimated tax payments" value={c.estimated_tax_payments} highlight="payment" />
+      <Line line="25a" label="Federal income tax withheld (W-2)" value={c.w2_withholding} highlight="payment" />
+      <Line line="25b" label="Federal income tax withheld (1099s & other)" value={c.other_withholding} highlight="payment" indent />
+      <Line line="26"  label="Estimated tax payments" value={c.estimated_tax_payments} highlight="payment" />
       <Divider />
       <Line line="33" label="TOTAL PAYMENTS" value={c.total_payments} bold highlight="payment" />
       <Divider />
@@ -417,13 +418,259 @@ function DownloadWidget({ taxYear }) {
   );
 }
 
+// ── Filing Details Widget ─────────────────────────────────────────────────────
+
+const EMPTY_FILING = {
+  pec_fund_taxpayer: false,
+  pec_fund_spouse: false,
+  direct_deposit_routing: "",
+  direct_deposit_account: "",
+  direct_deposit_type: "checking",
+  allow_third_party: false,
+  designee_name: "",
+  designee_phone: "",
+  designee_pin: "",
+};
+
+function FilingDetailsWidget({ taxYear }) {
+  const [data,    setData]    = useState(EMPTY_FILING);
+  const [open,    setOpen]    = useState(false);
+  const [saving,  setSaving]  = useState(false);
+  const [saved,   setSaved]   = useState(false);
+  const [error,   setError]   = useState(null);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (!open || loadedRef.current) return;
+    loadedRef.current = true;
+    api.getFilingDetails(taxYear).then((d) => {
+      if (d && Object.keys(d).length) {
+        setData({ ...EMPTY_FILING, ...d });
+      }
+    }).catch(() => {});
+  }, [open, taxYear]);
+
+  function set(key, val) {
+    setData((prev) => ({ ...prev, [key]: val }));
+    setSaved(false);
+  }
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      await api.saveFilingDetails(taxYear, data);
+      setSaved(true);
+    } catch (e) {
+      setError(e.message || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="border border-gray-700 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-900 hover:bg-gray-800 transition-colors text-left"
+      >
+        <span className="text-xs font-semibold text-gray-300">Filing Details</span>
+        <span className="text-gray-500 text-xs">{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div className="p-3 bg-gray-900/40 flex flex-col gap-3 text-xs">
+          <p className="text-[10px] text-gray-500 leading-tight">
+            Return-specific fields printed on Form 1040: campaign fund, direct deposit, and third-party designee.
+          </p>
+
+          {/* Presidential Election Campaign Fund */}
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mb-1">
+              Presidential Campaign Fund ($3)
+            </p>
+            <label className="flex items-center gap-2 cursor-pointer mb-1">
+              <input
+                type="checkbox"
+                checked={!!data.pec_fund_taxpayer}
+                onChange={(e) => set("pec_fund_taxpayer", e.target.checked)}
+                className="accent-blue-500"
+              />
+              <span className="text-gray-300">You</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!data.pec_fund_spouse}
+                onChange={(e) => set("pec_fund_spouse", e.target.checked)}
+                className="accent-blue-500"
+              />
+              <span className="text-gray-300">Spouse</span>
+            </label>
+          </div>
+
+          {/* Direct Deposit */}
+          <div>
+            <p className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold mb-1">
+              Direct Deposit (refund)
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <input
+                type="text"
+                placeholder="Routing number (9 digits)"
+                value={data.direct_deposit_routing || ""}
+                onChange={(e) => set("direct_deposit_routing", e.target.value)}
+                maxLength={9}
+                className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 placeholder-gray-600 font-mono"
+              />
+              <input
+                type="text"
+                placeholder="Account number"
+                value={data.direct_deposit_account || ""}
+                onChange={(e) => set("direct_deposit_account", e.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 placeholder-gray-600 font-mono"
+              />
+              <div className="flex gap-3">
+                {["checking", "savings"].map((t) => (
+                  <label key={t} className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="dd_type"
+                      value={t}
+                      checked={data.direct_deposit_type === t}
+                      onChange={() => set("direct_deposit_type", t)}
+                      className="accent-blue-500"
+                    />
+                    <span className="text-gray-300 capitalize">{t}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Third-Party Designee */}
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer mb-1.5">
+              <input
+                type="checkbox"
+                checked={!!data.allow_third_party}
+                onChange={(e) => set("allow_third_party", e.target.checked)}
+                className="accent-blue-500"
+              />
+              <span className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">
+                Allow Third-Party Designee
+              </span>
+            </label>
+            {data.allow_third_party && (
+              <div className="flex flex-col gap-1.5 pl-4">
+                <input
+                  type="text"
+                  placeholder="Designee name"
+                  value={data.designee_name || ""}
+                  onChange={(e) => set("designee_name", e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 placeholder-gray-600"
+                />
+                <input
+                  type="text"
+                  placeholder="Phone number"
+                  value={data.designee_phone || ""}
+                  onChange={(e) => set("designee_phone", e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 placeholder-gray-600"
+                />
+                <input
+                  type="text"
+                  placeholder="5-digit PIN"
+                  value={data.designee_pin || ""}
+                  onChange={(e) => set("designee_pin", e.target.value)}
+                  maxLength={5}
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs text-gray-200 placeholder-gray-600 font-mono"
+                />
+              </div>
+            )}
+          </div>
+
+          {error && <p className="text-[10px] text-red-400">{error}</p>}
+
+          <button
+            onClick={save}
+            disabled={saving}
+            className="w-full bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white px-2 py-1.5 rounded text-xs font-semibold transition-colors"
+          >
+            {saving ? "Saving…" : saved ? "Saved ✓" : "Save Filing Details"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PDF viewer ────────────────────────────────────────────────────────────────
+
+function PdfViewer({ taxYear }) {
+  const [blobUrl,  setBlobUrl]  = useState(null);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState(null);
+
+  function load() {
+    setLoading(true);
+    setError(null);
+    setBlobUrl(null);
+    api.previewTaxFormPdf(taxYear)
+      .then((blob) => setBlobUrl(URL.createObjectURL(blob)))
+      .catch((e) => setError(e.message || "Could not load PDF"))
+      .finally(() => setLoading(false));
+  }
+
+  // Load on mount (each new pdfKey causes a remount)
+  useEffect(() => { load(); }, []);
+
+  // Revoke blob URL on unmount to free memory
+  useEffect(() => () => { if (blobUrl) URL.revokeObjectURL(blobUrl); }, [blobUrl]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500">
+        <div className="w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full animate-spin" />
+        <p className="text-sm">Loading Form 1040…</p>
+        <p className="text-xs text-gray-600">Fetching from IRS if not cached — up to 10 s on first load.</p>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-3 text-red-400 text-sm">
+        <p>{error}</p>
+        <button
+          onClick={load}
+          className="text-xs text-gray-500 hover:text-gray-300 underline"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+  if (!blobUrl) return null;
+  return (
+    <iframe
+      src={blobUrl}
+      title="Form 1040 Preview"
+      className="w-full h-full rounded border border-gray-800"
+      style={{ minHeight: 0 }}
+    />
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function TaxForms() {
   const [taxYear]   = useState(2025);
+  const [tab,       setTab]       = useState("lines"); // "lines" | "form"
   const [loading,   setLoading]   = useState(false);
   const [result,    setResult]    = useState(null);
   const [error,     setError]     = useState(null);
+  // Ref to the PdfViewer so we can trigger a reload when recompute is clicked
+  const pdfReloadKey = useRef(0);
+  const [pdfKey,    setPdfKey]    = useState(0);
 
   const compute = useCallback(async () => {
     setLoading(true);
@@ -431,6 +678,9 @@ export default function TaxForms() {
     try {
       const data = await api.computeTaxForms(taxYear);
       setResult(data);
+      // Invalidate any cached PDF so it re-fetches with new numbers
+      pdfReloadKey.current += 1;
+      setPdfKey(pdfReloadKey.current);
     } catch (e) {
       setError(e.message || "Computation failed");
     } finally {
@@ -445,8 +695,10 @@ export default function TaxForms() {
     <div className="flex gap-6 h-[calc(100vh-140px)]">
 
       {/* ── Left: form review ─────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto pr-1">
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex-1 flex flex-col min-h-0">
+
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-3 flex-shrink-0">
           <div>
             <h1 className="text-lg font-semibold text-white">Federal Tax Forms</h1>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -463,7 +715,7 @@ export default function TaxForms() {
         </div>
 
         {error && (
-          <div className="border border-red-800 bg-red-900/20 rounded-lg p-4 mb-4 text-sm text-red-400">
+          <div className="border border-red-800 bg-red-900/20 rounded-lg p-4 mb-3 text-sm text-red-400 flex-shrink-0">
             {error}
           </div>
         )}
@@ -486,7 +738,26 @@ export default function TaxForms() {
         )}
 
         {result && !loading && (
-          <div>
+          <>
+            {/* Tab switcher */}
+            <div className="flex gap-1 mb-3 flex-shrink-0 border-b border-gray-800 pb-0">
+              {[["lines", "Line Items"], ["form", "Form 1040"]].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setTab(key)}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-t transition-colors
+                    ${tab === key
+                      ? "bg-gray-800 text-white border border-b-gray-800 border-gray-700 -mb-px"
+                      : "text-gray-500 hover:text-gray-300"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Line Items tab */}
+            {tab === "lines" && (
+          <div className="overflow-y-auto flex-1 pr-1">
             <Form1040View c={c} fs={fs} />
             <ScheduleAView c={c} />
             <ScheduleBView c={c} />
@@ -509,6 +780,15 @@ export default function TaxForms() {
               </ul>
             </div>
           </div>
+            )}
+
+            {/* Form 1040 tab — embedded filled IRS PDF */}
+            {tab === "form" && (
+              <div className="flex-1 min-h-0">
+                <PdfViewer key={pdfKey} taxYear={taxYear} />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -518,6 +798,7 @@ export default function TaxForms() {
           <SummaryCard c={c} fs={fs} taxYear={taxYear} />
         )}
         <DownloadWidget taxYear={taxYear} />
+        <FilingDetailsWidget taxYear={taxYear} />
         <div className="border border-gray-800 rounded-lg p-3 text-xs text-gray-600 leading-relaxed">
           <p className="font-semibold text-gray-500 mb-1">What's in the ZIP</p>
           <ul className="space-y-1 list-disc list-inside">

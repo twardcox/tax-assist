@@ -23,7 +23,7 @@ from typing import Optional
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from api.db import init_db, get_all_user_data, get_user_by_id  # noqa: E402
+from api.db import init_db, get_all_user_data, get_user_by_id, get_filing_details  # noqa: E402
 
 FORM_CACHE = ROOT / "state" / "form_cache"
 PKG_DIR    = ROOT / "state" / "tax_form_packages"
@@ -568,11 +568,12 @@ class TaxCalculator:
     def _payments(self):
         c = self.c
         hh = self.data.get("household", {}) or {}
+        payments = hh.get("payments") or {}
         c["w2_withholding"]         = c["federal_withheld"]
-        c["estimated_tax_payments"] = _f(hh.get("estimated_tax_payments"))
-        c["other_payments"]         = 0.0
+        c["estimated_tax_payments"] = _f(hh.get("estimated_tax_payments") or payments.get("estimated_tax_payments"))
+        c["other_withholding"]      = _f(hh.get("other_withholding") or payments.get("other_withholding"))
         c["total_payments"] = (
-            c["w2_withholding"] + c["estimated_tax_payments"] + c["other_payments"]
+            c["w2_withholding"] + c["estimated_tax_payments"] + c["other_withholding"]
         )
 
     # ── BALANCE ───────────────────────────────────────────────────────────────
@@ -669,20 +670,32 @@ def _discover_fields(pdf_bytes: bytes) -> dict:
 
 def _fill_pdf(pdf_bytes: bytes, field_values: dict) -> bytes:
     """
-    Fill AcroForm fields in a PDF. Silently skips unknown field names.
-    Returns the updated PDF bytes.
+    Fill an IRS AcroForm/XFA PDF using PyMuPDF.
+    field_values keys are the LEAF field names (e.g. 'f1_47[0]').
+    PyMuPDF matches on the full qualified name suffix, avoiding the
+    short-name ambiguity that plagued the old pypdf approach.
     """
-    from pypdf import PdfReader, PdfWriter
-    reader = PdfReader(io.BytesIO(pdf_bytes))
-    writer = PdfWriter()
-    writer.append(reader)
-    for page in writer.pages:
-        try:
-            writer.update_page_form_field_values(page, field_values)
-        except Exception:
-            pass
+    import fitz  # PyMuPDF
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    for page in doc:
+        for widget in page.widgets():
+            # leaf name = last segment of the fully-qualified XFA path
+            leaf = widget.field_name.split(".")[-1]
+            if leaf not in field_values:
+                continue
+            val = field_values[leaf]
+            if val is None or val == "":
+                continue
+            wtype = widget.field_type_string
+            if wtype == "Text":
+                widget.field_value = str(val)
+                widget.update()
+            elif wtype in ("CheckBox", "RadioButton"):
+                # "Yes"/"On" selects, anything else deselects
+                widget.field_value = val if val in ("Yes", "On") else "Off"
+                widget.update()
     out = io.BytesIO()
-    writer.write(out)
+    doc.save(out, garbage=4, deflate=True)
     return out.getvalue()
 
 
@@ -691,66 +704,205 @@ def _fill_pdf(pdf_bytes: bytes, field_values: dict) -> bytes:
 # mapping stays accurate across annual PDF revisions.
 
 def _build_1040_fields(c: dict, data: dict) -> dict:
-    """Map computed tax values to Form 1040 field names (discovered at runtime)."""
-    hh = data.get("household", {}) or {}
-    tp = hh.get("taxpayer", {}) or {}
-    sp = hh.get("spouse", {}) or {}
+    """
+    Map computed values to 2025 IRS Form 1040 AcroForm field names.
+
+    Field-to-line mapping verified from the PDF's own XFA template
+    (semantic label names: Ln1a, Ln2b, Ln25a, etc.) combined with
+    PyMuPDF coordinate analysis to confirm physical positions.
+
+    Page 1 layout (y = pixels from top in PyMuPDF screen coords):
+      y≈48  f1_01  Taxpayer first name + initial
+            f1_02  Taxpayer last name
+            f1_03  Taxpayer SSN (narrow field, full value stored)
+      y≈60  f1_04  Spouse first name + initial  (MFJ/MFS)
+            f1_05-07  Taxpayer DECEASED date MM/DD/YYYY  ← do NOT fill
+            f1_08-10  Spouse DECEASED date MM/DD/YYYY   ← do NOT fill
+      y≈72  f1_11  MFS/HOH text field (qualifying child or MFS spouse name)
+      y≈94  f1_14-16  Additional filing-status text fields (leave blank)
+      y≈118 f1_17-19  More header text fields (leave blank)
+      y≈142 f1_20  Home address    f1_21  Apt. no
+      y≈166 f1_22  City   f1_23  State   f1_24  ZIP
+      y≈190 f1_25-27  Foreign address (blank)
+      y≈240 f1_28  MFS spouse's full name  (label: MarriedSeparately)
+      y≈309 f1_31-46  Dependents table (4 rows × 4 cols)
+      y≈450 f1_47  Ln1a  → f1_75  Ln11a  Income through AGI
+
+    Page 2 (XFA label → field):
+      Ln11b→f2_01  Ln12e→f2_02  Ln13a→f2_03  Ln13b→f2_04  Ln14→f2_05
+      Ln15→f2_06   Ln16→f2_08   Ln17→f2_09   Ln18→f2_10   Ln19→f2_11
+      Ln20→f2_12   Ln21→f2_13   Ln22→f2_14   Ln23→f2_15   Ln24→f2_16
+      Ln25a→f2_17  Ln25b→f2_18  Ln25c→f2_19  Ln25d→f2_20  Ln26→f2_21
+      Ln27a→f2_23  Ln28→f2_24   Ln29→f2_25   Ln30→f2_26   Ln31→f2_27
+      Ln32→f2_28   Ln33→f2_29   Ln34→f2_30   Ln35a→f2_31
+      routing→f2_32  account→f2_33
+      Ln36→f2_34   Ln37→f2_35   Ln38→f2_36
+      DesigneeName→f2_37  Phone→f2_38  PIN→f2_39
+    """
+    hh   = data.get("household", {}) or {}
+    tp   = hh.get("taxpayer", {}) or {}
+    sp   = hh.get("spouse", {}) or {}
+    res  = hh.get("residence", {}) or {}
+    deps = (data.get("dependents", {}) or {}).get("dependents") or []
 
     def m(val) -> str:
         return _fmt(val) if val else ""
 
-    return {
-        # Taxpayer identity
-        "f1_01[0]": tp.get("first_name", ""),
-        "f1_02[0]": tp.get("last_name", ""),
-        "f1_04[0]": tp.get("ssn", ""),
-        "f1_05[0]": sp.get("first_name", "") if sp.get("present") else "",
-        "f1_06[0]": sp.get("last_name", "") if sp.get("present") else "",
-        "f1_07[0]": sp.get("ssn", "") if sp.get("present") else "",
-        # Address
-        "f1_08[0]": hh.get("residence", {}).get("street", "") if isinstance(hh.get("residence"), dict) else "",
-        "f1_10[0]": hh.get("residence", {}).get("city", "") if isinstance(hh.get("residence"), dict) else "",
-        "f1_11[0]": hh.get("residence", {}).get("state", "") if isinstance(hh.get("residence"), dict) else "",
-        "f1_12[0]": hh.get("residence", {}).get("zip", "") if isinstance(hh.get("residence"), dict) else "",
-        # Filing status (checkboxes — "On" selects)
-        "c1_1[0]": "On" if c.get("_fs") == "single" else "Off",
-        "c1_2[0]": "On" if c.get("_fs") == "married_filing_jointly" else "Off",
-        "c1_3[0]": "On" if c.get("_fs") == "married_filing_separately" else "Off",
-        "c1_4[0]": "On" if c.get("_fs") == "head_of_household" else "Off",
-        "c1_5[0]": "On" if c.get("_fs") == "qualifying_surviving_spouse" else "Off",
-        # Income (Page 1)
-        "f1_25[0]": m(c.get("wages")),
-        "f1_27[0]": m(c.get("taxable_interest")),
-        "f1_28[0]": m(c.get("qualified_dividends")),
-        "f1_29[0]": m(c.get("ordinary_dividends")),
-        "f1_30[0]": m(c.get("ira_gross")),
-        "f1_31[0]": m(c.get("ira_taxable")),
-        "f1_32[0]": m(c.get("pension_gross")),
-        "f1_33[0]": m(c.get("pension_taxable")),
-        "f1_34[0]": m(c.get("ss_gross")),
-        "f1_35[0]": m(c.get("ss_taxable")),
-        "f1_36[0]": m(c.get("capital_gains_net")),
-        "f1_37[0]": m(c.get("schedule1_additional")),
-        "f1_38[0]": m(c.get("total_income")),
-        # Deductions / AGI (Page 2)
-        "f2_02[0]": m(c.get("total_adjustments")),
-        "f2_04[0]": m(c.get("agi")),
-        "f2_05[0]": m(c.get("deduction")),
-        "f2_06[0]": m(c.get("qbi_deduction")),
-        "f2_07[0]": m(c.get("taxable_income")),
-        "f2_08[0]": m(c.get("income_tax_before_credits")),
-        "f2_14[0]": m(c.get("total_credits")),
-        "f2_15[0]": m(c.get("income_tax_after_credits")),
-        "f2_16[0]": m(c.get("se_tax")),
-        "f2_23[0]": m(c.get("total_tax")),
-        # Payments
-        "f2_25[0]": m(c.get("w2_withholding")),
-        "f2_27[0]": m(c.get("estimated_tax_payments")),
-        "f2_32[0]": m(c.get("total_payments")),
-        # Refund / amount owed
-        "f2_34[0]": m(c.get("refund")),
-        "f2_38[0]": m(c.get("amount_owed")),
+    fs    = c.get("_fs", "")
+    joint = bool(sp.get("present")) and fs == "married_filing_jointly"
+    mfs   = fs == "married_filing_separately"
+    hoh   = fs == "head_of_household"
+
+    fields: dict = {}
+
+    # ── PAGE 1 — Identity ───────────────────────────────────────────────────────
+
+    fields["f1_01[0]"] = tp.get("first_name", "")   # Taxpayer first name + initial
+    fields["f1_02[0]"] = tp.get("last_name", "")    # Taxpayer last name
+    fields["f1_03[0]"] = tp.get("ssn", "")          # Taxpayer SSN (narrow field)
+
+    # Spouse first name — MFJ or MFS both show a spouse name on row 2
+    fields["f1_04[0]"] = sp.get("first_name", "") if (joint or mfs) else ""
+
+    # f1_05-f1_10 are DECEASED DATE boxes (MM/DD/YYYY × 2) — leave blank
+
+    # Filing-status text fields
+    if mfs:
+        # "Married filing separately — enter spouse's full name here"
+        sp_full = " ".join(filter(None, [sp.get("first_name"), sp.get("last_name")]))
+        fields["f1_28[0]"] = sp_full       # label: MarriedSeparately (y≈240)
+    if hoh:
+        # "If qualifying person is a child but not your dependent, enter name"
+        fields["f1_11[0]"] = ""            # leave blank (we don't track this)
+
+    # ── PAGE 1 — Filing status checkboxes ───────────────────────────────────────
+
+    fs_map = {
+        "c1_1[0]": "single",
+        "c1_2[0]": "married_filing_jointly",
+        "c1_3[0]": "married_filing_separately",
+        "c1_4[0]": "head_of_household",
+        "c1_5[0]": "qualifying_surviving_spouse",
     }
+    for key, val in fs_map.items():
+        fields[key] = "Yes" if fs == val else "Off"
+
+    # Digital assets — c1_6=Yes answer, c1_7=No answer
+    if hh.get("digital_assets"):
+        fields["c1_6[0]"] = "Yes";  fields["c1_7[0]"] = "Off"
+    else:
+        fields["c1_6[0]"] = "Off";  fields["c1_7[0]"] = "Yes"
+
+    # ── PAGE 1 — Address ────────────────────────────────────────────────────────
+
+    fields["f1_20[0]"] = res.get("street_address", "")  # Home address
+    # f1_21 = Apt. no — not separately tracked, leave blank
+    fields["f1_22[0]"] = res.get("city", "")
+    fields["f1_23[0]"] = res.get("state", "")
+    fields["f1_24[0]"] = res.get("zip", "")
+    # f1_25-27 = foreign address fields — leave blank
+
+    # ── PAGE 1 — Dependents table (4 rows × first/last/SSN/relationship) ───────
+
+    dep_rows = [
+        ("f1_31[0]", "f1_32[0]", "f1_33[0]", "f1_34[0]"),
+        ("f1_35[0]", "f1_36[0]", "f1_37[0]", "f1_38[0]"),
+        ("f1_39[0]", "f1_40[0]", "f1_41[0]", "f1_42[0]"),
+        ("f1_43[0]", "f1_44[0]", "f1_45[0]", "f1_46[0]"),
+    ]
+    for i, (fn, ln, ssn_f, rel) in enumerate(dep_rows):
+        if i < len(deps):
+            d = deps[i]
+            name_parts = ((d.get("name") or "")).strip().split(None, 1)
+            fields[fn]    = name_parts[0] if name_parts else ""
+            fields[ln]    = name_parts[1] if len(name_parts) > 1 else ""
+            fields[ssn_f] = d.get("ssn", "")
+            fields[rel]   = (d.get("relationship") or "").replace("_", " ").title()
+
+    # ── PAGE 1 — Income (XFA labels confirmed: Ln1a → f1_47 … Ln11a → f1_75) ──
+
+    fields["f1_47[0]"] = m(c.get("wages"))                # Ln1a  W-2 wages
+    fields["f1_57[0]"] = m(c.get("wages"))                # Ln1z  Total wages (= 1a for most)
+    fields["f1_58[0]"] = ""                               # Ln2a  Tax-exempt interest (blank)
+    fields["f1_59[0]"] = m(c.get("taxable_interest"))     # Ln2b  Taxable interest
+    fields["f1_60[0]"] = m(c.get("qualified_dividends"))  # Ln3a  Qualified dividends
+    fields["f1_61[0]"] = m(c.get("ordinary_dividends"))   # Ln3b  Ordinary dividends
+    fields["f1_62[0]"] = m(c.get("ira_gross"))            # Ln4a  IRA gross
+    fields["f1_63[0]"] = m(c.get("ira_taxable"))          # Ln4b  IRA taxable
+    fields["f1_65[0]"] = m(c.get("pension_gross"))        # Ln5a  Pensions & annuities gross
+    fields["f1_66[0]"] = m(c.get("pension_taxable"))      # Ln5b  Pensions taxable
+    fields["f1_68[0]"] = m(c.get("ss_gross"))             # Ln6a  Social security gross
+    fields["f1_69[0]"] = m(c.get("ss_taxable"))           # Ln6b  Social security taxable
+    fields["f1_70[0]"] = m(c.get("capital_gains_net"))    # Ln7a  Capital gains
+    fields["f1_72[0]"] = m(c.get("schedule1_additional")) # Ln8   Additional income (Sch 1)
+    fields["f1_73[0]"] = m(c.get("total_income"))         # Ln9   Total income
+    fields["f1_74[0]"] = m(c.get("total_adjustments"))    # Ln10  Adjustments to income
+    fields["f1_75[0]"] = m(c.get("agi"))                  # Ln11a AGI
+
+    # ── PAGE 2 — Tax and deductions (XFA confirmed) ─────────────────────────────
+
+    fields["f2_01[0]"] = m(c.get("agi"))                  # Ln11b  AGI (carry-over)
+
+    # Standard deduction extra checkboxes
+    dob  = tp.get("dob") or ""
+    sdob = (sp.get("dob") or "") if (joint or mfs) else ""
+    fields["c2_5[0]"] = "Yes" if (dob  and dob  < "1961-01-02") else "Off"
+    fields["c2_6[0]"] = "Yes" if (sdob and sdob < "1961-01-02") else "Off"
+    fields["c2_7[0]"] = "Yes" if tp.get("blind") else "Off"
+    fields["c2_8[0]"] = "Yes" if (sp.get("blind") if (joint or mfs) else False) else "Off"
+
+    deduction     = c.get("itemized") if not c.get("using_standard", True) else c.get("standard_deduction")
+    total_deduct  = (deduction or 0) + (c.get("qbi_deduction") or 0)
+
+    fields["f2_02[0]"] = m(deduction)                          # Ln12e Standard or itemized
+    fields["f2_03[0]"] = m(c.get("qbi_deduction"))             # Ln13a QBI deduction
+    # f2_04 = Ln13b (additional deductions from Sch 1-A) — not tracked
+    fields["f2_05[0]"] = m(total_deduct)                       # Ln14  Total deductions
+    fields["f2_06[0]"] = m(c.get("taxable_income"))            # Ln15  Taxable income
+    fields["f2_08[0]"] = m(c.get("income_tax_before_credits")) # Ln16  Tax
+    # f2_09 = Ln17 (Sch 2 line 3 additional tax) — zero for standard returns
+    fields["f2_10[0]"] = m(c.get("income_tax_before_credits")) # Ln18  Lines 16+17
+    fields["f2_11[0]"] = m(c.get("total_credits"))             # Ln19  Credits from Sch 8812
+    # f2_12 = Ln20 (Sch 3 line 8) — zero for standard returns
+    fields["f2_13[0]"] = m(c.get("total_credits"))             # Ln21  Total credits
+    fields["f2_14[0]"] = m(c.get("income_tax_after_credits"))  # Ln22  Tax after credits
+    fields["f2_15[0]"] = m(c.get("se_tax"))                    # Ln23  Other taxes (SE tax)
+    fields["f2_16[0]"] = m(c.get("total_tax"))                 # Ln24  Total tax
+
+    # ── PAGE 2 — Payments (XFA confirmed: f2_28=Ln32, f2_29=Ln33, etc.) ────────
+
+    total_withholding = (c.get("w2_withholding") or 0) + (c.get("other_withholding") or 0)
+
+    fields["f2_17[0]"] = m(c.get("w2_withholding"))            # Ln25a W-2 withholding
+    fields["f2_18[0]"] = m(c.get("other_withholding"))         # Ln25b 1099/other withholding
+    # f2_19 = Ln25c (other forms) — leave blank
+    fields["f2_20[0]"] = m(total_withholding)                  # Ln25d Total withholding
+    fields["f2_21[0]"] = m(c.get("estimated_tax_payments"))    # Ln26  Estimated payments
+    # f2_22 = former-spouse SSN instruction text field (skip)
+    # f2_23 = Ln27a EIC, f2_24 = Ln28 ACTC, f2_25 = Ln29 AOC (not computed)
+    # f2_26 = Ln30 refundable adoption, f2_27 = Ln31 Sch 3 line 15 (not computed)
+    fields["f2_28[0]"] = ""                                    # Ln32  Other refundable credits total
+    fields["f2_29[0]"] = m(c.get("total_payments"))            # Ln33  TOTAL PAYMENTS
+    fields["f2_30[0]"] = m(c.get("refund") or 0)              # Ln34  Amount overpaid
+    fields["f2_31[0]"] = m(c.get("refund"))                    # Ln35a Refund amount
+
+    # Direct deposit (y≈504/516, confirmed by PyMuPDF coordinate analysis)
+    fields["f2_32[0]"] = c.get("_routing", "")                # Ln35b Routing number
+    fields["f2_33[0]"] = c.get("_account", "")                # Ln35d Account number
+    # c2_16 = Line 35c checking/savings radio
+    fields["c2_16[0]"] = "Yes" if c.get("_dd_type") == "checking" else "Off"
+    fields["c2_16[1]"] = "Yes" if c.get("_dd_type") == "savings"  else "Off"
+
+    fields["f2_34[0]"] = ""                                    # Ln36  Applied to 2026 est tax
+    fields["f2_35[0]"] = m(c.get("amount_owed"))               # Ln37  Amount owed
+    fields["f2_36[0]"] = ""                                    # Ln38  Penalty (not computed)
+
+    # Third-party designee (y≈594, label: DesigneesName / PhoneNo / PersonalIdentificationNo)
+    fields["f2_37[0]"] = c.get("_designee_name", "")
+    fields["f2_38[0]"] = c.get("_designee_phone", "")
+    fields["f2_39[0]"] = c.get("_designee_pin", "")
+
+    return fields
 
 
 def _build_sch_se_fields(c: dict) -> dict:
@@ -852,8 +1004,28 @@ def _build_summary_pdf(c: dict, data: dict, tax_year: int, display_name: str) ->
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1e3a5f")))
     story.append(Spacer(1, 0.15*inch))
 
+    tp = hh.get("taxpayer") or {}
+    sp = hh.get("spouse") or {}
+    tp_name = " ".join(filter(None, [tp.get("first_name"), tp.get("last_name")])) or display_name or "Taxpayer"
+    sp_name = " ".join(filter(None, [sp.get("first_name"), sp.get("last_name")]))
+    tp_ssn  = tp.get("ssn") or ""
+    sp_ssn  = sp.get("ssn") or ""
+    res     = hh.get("residence") or {}
+    address_parts = filter(None, [
+        res.get("street_address"),
+        res.get("city"),
+        res.get("state"),
+        res.get("zip"),
+    ])
+    address_str = ", ".join(address_parts) or "—"
+
     meta_data = [
-        ["Prepared For:", display_name or "Taxpayer"],
+        ["Taxpayer:",      tp_name + (f"  SSN: {tp_ssn}" if tp_ssn else "")],
+    ]
+    if sp_name or sp_ssn:
+        meta_data.append(["Spouse:",   sp_name + (f"  SSN: {sp_ssn}" if sp_ssn else "")])
+    meta_data += [
+        ["Address:",       address_str],
         ["Filing Status:", (c.get("_fs") or hh.get("filing_status") or "—").replace("_", " ").title()],
         ["Tax Year:",      str(tax_year)],
         ["Generated:",     datetime.now().strftime("%B %d, %Y at %I:%M %p")],
@@ -998,12 +1170,13 @@ def _build_summary_pdf(c: dict, data: dict, tax_year: int, display_name: str) ->
     story.append(Spacer(1, 0.1*inch))
     story.append(Paragraph("PAYMENTS & BALANCE DUE", h2))
     payment_rows = [
-        ["25", "Federal income tax withheld (W-2)",                          _fmt(c.get("w2_withholding"))],
-        ["26", "Estimated tax payments",                                      _fmt(c.get("estimated_tax_payments"))],
-        ["33", "TOTAL PAYMENTS",                                              _fmt(c.get("total_payments"))],
-        ["34", "REFUND" if c.get("refund") else "Amount owed",
-                                                                             ("+" if c.get("refund") else "−") +
-                                                                              _fmt(c.get("refund") or c.get("amount_owed"))],
+        ["25a", "Federal income tax withheld (W-2)",                          _fmt(c.get("w2_withholding"))],
+        ["25b", "Federal income tax withheld (1099s / other)",                _fmt(c.get("other_withholding"))],
+        ["26",  "Estimated tax payments",                                      _fmt(c.get("estimated_tax_payments"))],
+        ["33",  "TOTAL PAYMENTS",                                              _fmt(c.get("total_payments"))],
+        ["34",  "REFUND" if c.get("refund") else "Amount owed",
+                                                                              ("+" if c.get("refund") else "−") +
+                                                                               _fmt(c.get("refund") or c.get("amount_owed"))],
     ]
     story.append(_section_table(payment_rows))
 
@@ -1199,6 +1372,38 @@ def _build_summary_pdf(c: dict, data: dict, tax_year: int, display_name: str) ->
 
 # ── Compute-only helper (no PDF generation, instant) ─────────────────────────
 
+def generate_preview_pdf(user_id: str, tax_year: int) -> bytes:
+    """
+    Return a filled Form 1040 PDF as bytes.
+    Uses the cached IRS base form if available (~instant); downloads on first call (~10 s).
+    Raises ValueError if the IRS PDF cannot be fetched.
+    """
+    init_db()
+    data = get_all_user_data(user_id, tax_year)
+
+    calc = TaxCalculator(data, tax_year)
+    c    = calc.compute()
+    c["_fs"]   = calc._fs()
+    c["p_ctc"] = _params(tax_year)["child_tax_credit"]
+
+    fd = get_filing_details(user_id, tax_year)
+    c["_routing"]        = fd.get("direct_deposit_routing", "")
+    c["_account"]        = fd.get("direct_deposit_account", "")
+    c["_dd_type"]        = fd.get("direct_deposit_type", "")
+    c["_designee_name"]  = fd.get("designee_name", "") if fd.get("allow_third_party") else ""
+    c["_designee_phone"] = fd.get("designee_phone", "") if fd.get("allow_third_party") else ""
+    c["_designee_pin"]   = fd.get("designee_pin", "") if fd.get("allow_third_party") else ""
+
+    fields    = _build_1040_fields(c, data)
+    pdf_bytes = _fetch_irs_pdf("f1040")
+    if not pdf_bytes:
+        raise ValueError(
+            "Could not retrieve Form 1040 from IRS. "
+            "Check your internet connection or generate the full ZIP first to populate the cache."
+        )
+    return _fill_pdf(pdf_bytes, fields)
+
+
 def compute_tax_figures(user_id: str, tax_year: int) -> dict:
     """
     Run TaxCalculator against the DB and return the full computed dict.
@@ -1266,6 +1471,15 @@ class FormPackageGenerator:
         fs   = calc._fs()
         c["_fs"]   = fs
         c["p_ctc"] = _params(self.tax_year)["child_tax_credit"]
+
+        # Inject filing details (direct deposit, designee) for PDF field filling
+        fd = get_filing_details(self.user_id, self.tax_year)
+        c["_routing"]        = fd.get("direct_deposit_routing", "")
+        c["_account"]        = fd.get("direct_deposit_account", "")
+        c["_dd_type"]        = fd.get("direct_deposit_type", "")
+        c["_designee_name"]  = fd.get("designee_name", "") if fd.get("allow_third_party") else ""
+        c["_designee_phone"] = fd.get("designee_phone", "") if fd.get("allow_third_party") else ""
+        c["_designee_pin"]   = fd.get("designee_pin", "") if fd.get("allow_third_party") else ""
 
         _log("Generating data summary PDF…")
         summary_bytes = _build_summary_pdf(c, data, self.tax_year, display_name)

@@ -16,10 +16,25 @@ export const schema = {
           fields: [
             {
               key: "name",
-              label: "Name",
+              label: "Full Name",
               type: "text",
-              description: "The dependent's full name.",
-              source: "Their name as it appears on their Social Security card.",
+              description: "The dependent's full name as it appears on their Social Security card.",
+              source: "Their Social Security card.",
+            },
+            {
+              key: "ssn",
+              label: "Social Security Number",
+              type: "text",
+              placeholder: "XXX-XX-XXXX",
+              description: "The dependent's SSN is required to claim the Child Tax Credit, EITC, and other dependent-based credits. Stored locally only.",
+              source: "Their Social Security card. Apply at ssa.gov if not yet obtained.",
+            },
+            {
+              key: "date_of_birth",
+              label: "Date of Birth",
+              type: "date",
+              description: "Their exact date of birth. Used to verify age for qualifying child status and credit eligibility.",
+              source: "Birth certificate.",
             },
             {
               key: "relationship",
@@ -52,10 +67,10 @@ export const schema = {
             },
             {
               key: "ssn_obtained",
-              label: "SSN Obtained",
+              label: "SSN Confirmed",
               type: "boolean",
-              description: "Whether you have a valid Social Security Number for this dependent. Required to claim Child Tax Credit, EITC, and other dependent credits.",
-              source: "Their Social Security card. Apply at ssa.gov if not yet obtained.",
+              description: "Confirms you have a valid Social Security card for this dependent. Enter the actual SSN in the field above.",
+              source: "Their Social Security card.",
             },
             {
               key: "income_this_year",
