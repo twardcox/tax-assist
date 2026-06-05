@@ -1905,7 +1905,7 @@ class RulesEngine:
                 missing_facts=["real_estate.properties (primary_residence)"])
         county = self.f.county()
         state = self.f.state()
-        location = f"{county} County, {state}" if county and state else (state or "your county")
+        location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))
         steps = [
             f"Contact {location} assessor and request the veteran property tax exemption application",
             "Bring your DD-214 and any VA disability rating award letter",
