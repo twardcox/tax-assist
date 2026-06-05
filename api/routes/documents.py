@@ -100,7 +100,11 @@ def upload_document(file: UploadFile = File(...),
             content = compressed
             safe = Path(safe).stem + ".jpg"
             suffix = ".jpg"
-    uid = current_user["id"] if current_user else ""
+        elif suffix in {".heic", ".tiff"}:
+            raise HTTPException(
+                415,
+                "HEIC/TIFF images must be converted to JPG/PNG/PDF before upload (image could not be decoded).",
+            )
     fid = _file_id(uid, safe, content)
 
     info = classify_filename(safe, size=len(content))
