@@ -2006,7 +2006,7 @@ class RulesEngine:
                 "Residential properties do not qualify unless they include significant acreage.")
         state = self.f.state()
         county = self.f.county()
-        location = f"{county} County, {state}" if county and state else (state or "your county")
+        location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))
         steps = [
             f"Contact {location} assessor for the agricultural use / greenbelt application",
             "Document qualifying agricultural activity: farming records, lease to farmer, or wildlife management plan",
