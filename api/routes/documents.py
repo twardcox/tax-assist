@@ -7,7 +7,10 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import io
+
 import yaml
+from PIL import Image
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, File
 
 ROOT = Path(__file__).parent.parent.parent
@@ -32,6 +35,25 @@ _extract_jobs: dict[str, dict] = {}
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".heic", ".tiff", ".csv"}
 
 TAX_YEAR = 2025
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
+
+
+_IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".heic", ".tiff"}
+_MAX_DIMENSION = 1800
+_JPEG_QUALITY = 85
+
+
+def _compress_image(content: bytes) -> bytes:
+    try:
+        img = Image.open(io.BytesIO(content))
+        img = img.convert("RGB")
+        if max(img.size) > _MAX_DIMENSION:
+            img.thumbnail((_MAX_DIMENSION, _MAX_DIMENSION), Image.Resampling.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=_JPEG_QUALITY, optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return content  # fall back to original if Pillow can't read it
 
 
 def _safe_name(name: str) -> str:
@@ -39,8 +61,8 @@ def _safe_name(name: str) -> str:
     return name[:200]
 
 
-def _file_id(name: str) -> str:
-    return hashlib.md5(name.encode()).hexdigest()[:12]
+def _file_id(user_id: str, name: str) -> str:
+    return hashlib.md5(f"{user_id}:{name}".encode()).hexdigest()[:12]
 
 
 def _normalize(doc: dict) -> dict:
@@ -67,8 +89,13 @@ def upload_document(file: UploadFile = File(...),
         raise HTTPException(400, f"File type '{suffix}' not allowed.")
 
     safe = _safe_name(file.filename)
-    content = file.file.read()
-    fid = _file_id(safe)
+    content = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(413, "File exceeds the 20 MB upload limit.")
+    if suffix in _IMAGE_SUFFIXES:
+        content = _compress_image(content)
+    uid = current_user["id"] if current_user else ""
+    fid = _file_id(uid, safe)
 
     info = classify_filename(safe, size=len(content))
     info["file_id"] = fid

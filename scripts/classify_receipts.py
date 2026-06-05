@@ -21,6 +21,8 @@ from enum import Enum
 
 ROOT = Path(__file__).parent.parent
 
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
+
 # ── Benefit IDs from tax_library/ ─────────────────────────────────────────────
 # These are the exact IDs the scanner uses. The AI picks from this list.
 BENEFIT_IDS = [
@@ -444,7 +446,7 @@ def extract_with_ai(file_path: Path) -> dict:
             }
 
         response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=CLAUDE_MODEL,
             max_tokens=2048,
             messages=[{"role": "user", "content": content}],
         )
@@ -467,6 +469,19 @@ def extract_with_ai(file_path: Path) -> dict:
             "benefit_ids": [], "deductible_pct": 1.0,
         }
 
+    except _anthropic.APIStatusError as exc:
+        if exc.status_code in (400, 404):
+            notes = (
+                f"Model '{CLAUDE_MODEL}' was rejected by the API. "
+                "Set the CLAUDE_MODEL environment variable to a valid model ID."
+            )
+        else:
+            notes = "Extraction failed — see error."
+        return {
+            "error": str(exc), "suggested_updates": [],
+            "confidence": "low", "notes": notes,
+            "benefit_ids": [], "deductible_pct": 1.0,
+        }
     except Exception as exc:
         return {
             "error": str(exc), "suggested_updates": [],
@@ -541,7 +556,7 @@ def extract_with_ai_bytes(content: bytes, filename: str) -> dict:
             }
 
         response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
+            model=CLAUDE_MODEL,
             max_tokens=2048,
             messages=[{"role": "user", "content": msg_content}],
         )
@@ -563,6 +578,19 @@ def extract_with_ai_bytes(content: bytes, filename: str) -> dict:
             "benefit_ids": [], "deductible_pct": 1.0,
         }
 
+    except _anthropic.APIStatusError as exc:
+        if exc.status_code in (400, 404):
+            notes = (
+                f"Model '{CLAUDE_MODEL}' was rejected by the API. "
+                "Set the CLAUDE_MODEL environment variable to a valid model ID."
+            )
+        else:
+            notes = "Extraction failed — see error."
+        return {
+            "error": str(exc), "suggested_updates": [],
+            "confidence": "low", "notes": notes,
+            "benefit_ids": [], "deductible_pct": 1.0,
+        }
     except Exception as exc:
         return {
             "error": str(exc), "suggested_updates": [],

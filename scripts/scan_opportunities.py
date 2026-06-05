@@ -1617,7 +1617,7 @@ class RulesEngine:
             return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
                 "Set household.residence.state and add operating_states to each business to evaluate "
                 "PTE election applicability across all nexus states.",
-                missing_facts=["household.residence.state", "businesses.operating_states"])
+                missing_facts=["household.residence.state", "businesses.nexus.operating_states"])
 
         if not pte_nexus:
             # Check if we simply don't have operating_states recorded yet
@@ -1627,7 +1627,7 @@ class RulesEngine:
                     f"Residence state {residence} has not enacted a PTE election. "
                     "If this business operates in other states, add them as operating_states — "
                     "you may have a PTE opportunity in a nexus state." + formation_note,
-                    missing_facts=["businesses.operating_states"])
+                    missing_facts=["businesses.nexus.operating_states"])
             states_str = ", ".join(sorted(nexus_states)) if nexus_states else "your states"
             return self._result(base, EligibilityStatus.NOT_APPLICABLE,
                 f"None of your nexus states ({states_str}) have enacted a PTE election as of 2025."
@@ -2106,7 +2106,9 @@ class RulesEngine:
                 next_steps=[
                     "Work with CPA to model NUA vs. IRA rollover — NUA wins when appreciation is large",
                     "Lump-sum distribution must occur in one tax year",
-                    "Depreciation recapture taxed in year of distribution regardless",
+                    "Cost basis of employer stock is taxed as ordinary income in the year of distribution",
+                    "NUA (appreciation through distribution date) is taxed at LTCG rates upon sale — regardless of post-distribution holding period",
+                    "Appreciation after the distribution date follows actual holding period: LTCG if held >1 year, STCG if sold sooner",
                 ])
         return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
             "Has retirement plan — if plan holds appreciated employer stock, NUA strategy may apply. "

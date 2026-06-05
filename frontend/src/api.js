@@ -103,7 +103,11 @@ export const api = {
       method: "POST",
       body: form,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
-    }).then((r) => r.ok ? r.json() : r.text().then((t) => { throw new Error(t); }));
+    }).then((r) => r.ok ? r.json() : r.text().then((t) => {
+        let msg = t;
+        try { const j = JSON.parse(t); msg = j.detail ?? t; } catch (_) {}
+        throw new Error(msg);
+      }));
   },
   listDocuments: () => req("/documents"),
   deleteDocument: (fileId) => req(`/documents/${fileId}`, { method: "DELETE" }),
