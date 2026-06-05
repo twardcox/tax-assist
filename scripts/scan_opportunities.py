@@ -1961,7 +1961,7 @@ class RulesEngine:
                 "County solar exemption applies to property owners — no real estate recorded.")
         state = self.f.state()
         county = self.f.county()
-        location = f"{county} County, {state}" if county and state else (state or "your county")
+        location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))
         # States with mandatory solar property tax exemptions
         mandatory_states = {"FL", "TX", "AZ", "CO", "NJ", "NY", "MA", "NC", "MN", "OR", "WA",
                             "MD", "IN", "KY", "LA", "ME", "MI", "MT", "NE", "NM", "ND", "OH",
