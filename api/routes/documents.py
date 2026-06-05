@@ -48,11 +48,14 @@ _JPEG_QUALITY = 85
 
 def _compress_image(content: bytes) -> bytes | None:
     """Returns JPEG bytes on success, None if Pillow cannot decode the source."""
+    if Image is None:
+        return None
     try:
         img = Image.open(io.BytesIO(content))
         img = img.convert("RGB")
         if max(img.size) > _MAX_DIMENSION:
-            img.thumbnail((_MAX_DIMENSION, _MAX_DIMENSION), Image.Resampling.LANCZOS)
+            resample = getattr(getattr(Image, "Resampling", Image), "LANCZOS", getattr(Image, "LANCZOS", 1))
+            img.thumbnail((_MAX_DIMENSION, _MAX_DIMENSION), resample)
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=_JPEG_QUALITY, optimize=True)
         return buf.getvalue()
