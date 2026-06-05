@@ -1870,7 +1870,7 @@ class RulesEngine:
                 next_steps=["Note the county assessor deadline for the year you turn 65"])
         county = self.f.county()
         state = self.f.state()
-        location = f"{county} County, {state}" if county and state else (state or "your county")
+        location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))
         age_str = f"age {age}" if age else "your age"
         steps = [
             f"Contact {location} assessor to confirm the senior freeze program and income limits",
