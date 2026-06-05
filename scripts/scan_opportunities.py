@@ -1838,7 +1838,7 @@ class RulesEngine:
                 "County homestead exemption applies to a primary residence — no primary residence recorded.")
         county = self.f.county()
         state = self.f.state()
-        location = f"{county} County, {state}" if county and state else (state or "your county")
+        location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))
         steps = [
             f"Search '{location} homestead exemption application' to find the county assessor portal",
             "Gather deed/mortgage statement + government ID showing current address",
