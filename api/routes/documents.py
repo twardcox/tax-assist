@@ -10,7 +10,10 @@ from typing import Any
 import io
 
 import yaml
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:  # Pillow optional; uploads/extraction can still work without compression
+    Image = None
 from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, File
 
 ROOT = Path(__file__).parent.parent.parent
