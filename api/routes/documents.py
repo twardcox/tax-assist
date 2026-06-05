@@ -105,6 +105,7 @@ def upload_document(file: UploadFile = File(...),
                 415,
                 "HEIC/TIFF images must be converted to JPG/PNG/PDF before upload (image could not be decoded).",
             )
+    uid = current_user["id"] if current_user else ""
     fid = _file_id(uid, safe, content)
 
     info = classify_filename(safe, size=len(content))
@@ -253,7 +254,7 @@ def apply_extraction(body: Any = Body(...),
             skipped.append(label)
             continue
 
-        if operation == "add" and isinstance(raw_value, (int, float)) and raw_value > 0:
+        if operation == "add" and isinstance(raw_value, (int, float)):
             value = round(raw_value * deductible_pct, 2)
         else:
             value = raw_value

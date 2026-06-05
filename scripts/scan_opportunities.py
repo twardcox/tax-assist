@@ -1637,7 +1637,7 @@ class RulesEngine:
         profits = [
             _to_float((b.get("financials") or {}).get("net_profit_loss")) for b in self.f.businesses()
         ]
-        net_profit = max(profits) if profits else 0.0
+        net_profit = sum(profits) if profits else 0.0
         if net_profit <= 0:
             states_str = ", ".join(sorted(pte_nexus))
             return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
@@ -1956,9 +1956,10 @@ class RulesEngine:
 
     def _rule_county_solar_exemption(self, b: dict) -> OpportunityResult:
         base = self._base(b)
-        if not self.f.has_any_real_estate():
+        pr = self.f.primary_residence()
+        if not pr:
             return self._result(base, EligibilityStatus.NOT_APPLICABLE,
-                "County solar exemption applies to property owners — no real estate recorded.")
+                "County solar exemption applies to homeowners — no primary residence recorded.")
         state = self.f.state()
         county = self.f.county()
         location = f"{county} County, {state}" if county and state else (f"{county} County" if county else (state or "your county"))

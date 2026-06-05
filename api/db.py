@@ -487,13 +487,15 @@ def _get_household_id(user_id: str, tax_year: int) -> int | None:
 
 
 def _get_or_create_household_id(user_id: str, tax_year: int) -> int:
-    hid = _get_household_id(user_id, tax_year)
-    if hid is not None:
-        return hid
     with _conn() as c:
-        c.execute("INSERT INTO households (user_id, tax_year, updated_at) VALUES (?,?,?)",
-                  (user_id, tax_year, _now()))
-        return c.execute("SELECT last_insert_rowid()").fetchone()[0]
+        c.execute(
+            "INSERT OR IGNORE INTO households (user_id, tax_year, updated_at) VALUES (?,?,?)",
+            (user_id, tax_year, _now()),
+        )
+        return c.execute(
+            "SELECT id FROM households WHERE user_id=? AND tax_year=?",
+            (user_id, tax_year),
+        ).fetchone()["id"]
 
 
 # ── Section save helpers (private) ─────────────────────────────────────────────
@@ -540,7 +542,7 @@ def _save_household_from_dict(user_id: str, tax_year: int, d: dict) -> None:
             _to_int_flag(taxpayer.get("blind")),
             _to_int_flag(taxpayer.get("active_military")),
             _to_int_flag(d.get("itemizing_deductions")),
-            1 if d.get("has_electric_vehicle") else 0,
+            _to_int_flag(d.get("has_electric_vehicle")),
             now,
         ))
         hid = c.execute("SELECT id FROM households WHERE user_id=? AND tax_year=?",
@@ -916,7 +918,7 @@ def _get_household_dict(user_id: str, tax_year: int) -> dict:
             "active_military": _from_int_flag(hh.get("taxpayer_active_military")),
         },
         "itemizing_deductions": _from_int_flag(hh.get("itemizing_deductions")),
-        "has_electric_vehicle": bool(hh.get("has_electric_vehicle")),
+        "has_electric_vehicle": _from_int_flag(hh.get("has_electric_vehicle")),
         "spouse": {
             "present": bool(spouse.get("present")) if spouse else False,
             "age": spouse.get("age") if spouse else None,
