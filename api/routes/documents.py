@@ -64,7 +64,7 @@ def _safe_name(name: str) -> str:
 
 def _file_id(user_id: str, name: str, content: bytes) -> str:
     digest = hashlib.sha256(content).hexdigest()[:16]
-    return hashlib.md5(f"{user_id}:{name}:{digest}".encode()).hexdigest()[:12]
+    return hashlib.sha256(f"{user_id}:{name}:{digest}".encode()).hexdigest()[:12]
 
 
 def _normalize(doc: dict) -> dict:
