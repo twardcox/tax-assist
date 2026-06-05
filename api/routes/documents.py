@@ -94,6 +94,8 @@ def upload_document(file: UploadFile = File(...),
         raise HTTPException(413, "File exceeds the 20 MB upload limit.")
     if suffix in _IMAGE_SUFFIXES:
         content = _compress_image(content)
+        safe = Path(safe).stem + ".jpg"
+        suffix = ".jpg"
     uid = current_user["id"] if current_user else ""
     fid = _file_id(uid, safe)
 

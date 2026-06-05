@@ -10,7 +10,7 @@
 
 **Library:** 58 benefits (46 federal + 6 state + 6 county) · **Tests:** 63/63 passing
 **Nav pages:** Dashboard · My Data · Scenarios · Documents · Planning · Tax Law · Reports
-**Auth:** JWT self-registration · **DB:** SQLite (25 tables) · **Users:** multi-user, fully isolated
+**Auth:** JWT self-registration · **DB:** SQLite (29 tables) · **Users:** multi-user, fully isolated
 **Documents:** Stored as BLOBs in `documents` table — no filesystem dependency
 
 ### Start the full stack
@@ -54,7 +54,7 @@ JWT_SECRET_KEY=...                # Optional: JWT signing secret (defaults to de
 
 All user data is stored in a normalized relational database. YAML files in `user_data/` are legacy backups only. The `state/` directory is auto-created by `init_db()` on startup — no `.gitkeep` needed.
 
-**25 tables:** `users`, `revoked_tokens`, `households`, `spouses`, `dependents`, `w2_income`, `self_employment_income`, `rental_income`, `investment_income`, `retirement_distributions`, `social_security_income`, `other_income`, `adjustments`, `businesses`, `business_vehicles`, `business_assets`, `properties`, `investment_accounts`, `plans_529`, `employer_retirement_plans`, `ira_accounts`, `self_employed_retirement`, `healthcare`, `goals`, `documents`, `transactions`, `transaction_benefits`, `revoked_tokens`
+**29 tables:** `users`, `revoked_tokens`, `households`, `spouses`, `dependents`, `w2_income`, `self_employment_income`, `rental_income`, `investment_income`, `retirement_distributions`, `social_security_income`, `other_income`, `adjustments`, `businesses`, `business_vehicles`, `business_assets`, `properties`, `investment_accounts`, `plans_529`, `employer_retirement_plans`, `ira_accounts`, `self_employed_retirement`, `healthcare`, `goals`, `documents`, `transactions`, `transaction_benefits`, `revoked_tokens`
 
 **Households extended columns (added via migration):** `county TEXT`, `taxpayer_veteran INTEGER`, `taxpayer_disabled INTEGER`, `taxpayer_blind INTEGER`, `taxpayer_active_military INTEGER`
 
@@ -75,7 +75,7 @@ All user data is stored in a normalized relational database. YAML files in `user
 - `user_id=None` → `_load_from_yaml()` (CLI fallback, reads `user_data/*.yaml`)
 - Public interface (all helper methods) is identical either way — zero rule changes
 
-**`RulesEngine`** — dispatches `benefit.id` (kebab) → `_rule_<id_with_underscores>()`. **58 rules.** All call `self.f.*` helpers; none open files.
+**`RulesEngine`** — dispatches `benefit.id` (kebab) → `_rule_<id_with_underscores>()`. **59 rules.** All call `self.f.*` helpers; none open files.
 
 **`OpportunityScanner(tax_year, facts=None)`** — if `facts` is provided, uses it; else creates `UserFacts(tax_year)`.
 
@@ -316,7 +316,7 @@ npm:    react 19, react-router-dom 6, @tanstack/react-query 5, react-markdown 9,
 ```
 api/
   main.py              — FastAPI app, lifespan startup (init_db + migrate)
-  db.py                — All 25 tables + CRUD + get_all_user_data() + apply_dot_path_to_section()
+  db.py                — All 29 tables + CRUD + get_all_user_data() + apply_dot_path_to_section()
   auth.py              — JWT + bcrypt, get_current_user / get_current_user_optional deps
   migrate.py           — Idempotent YAML→DB import, creates admin@localhost on first run
   routes/
@@ -332,7 +332,7 @@ api/
     reports.py         — CPA packet generation, passes user_id to scanner
 
 scripts/
-  scan_opportunities.py   — UserFacts (DB or YAML), RulesEngine (52 rules), OpportunityScanner
+  scan_opportunities.py   — UserFacts (DB or YAML), RulesEngine (59 rules), OpportunityScanner
   scenario_simulator.py   — ScenarioUserFacts, SCENARIOS dict, apply_overrides, diff_results
   classify_receipts.py    — classify_filename(), extract_with_ai_bytes(), three AI prompts
   generate_cpa_packet.py  — Markdown CPA packet generator
@@ -392,7 +392,7 @@ Read HANDOFF.md at d:\programs\tax-assist.
 Current state:
 - 58 benefits (46 federal + 6 state + 6 county), 63/63 tests passing
 - 7 frontend pages + Login page
-- Full relational SQLite DB (25 tables) — source of truth for all data
+- Full relational SQLite DB (29 tables) — source of truth for all data
 - Document files stored as BLOBs in documents table (no filesystem)
 - Multi-user auth: JWT self-registration, bcrypt passwords, JTI revocation
 - Migration runs automatically on startup (admin@localhost / changeme123)

@@ -1617,7 +1617,7 @@ class RulesEngine:
             return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
                 "Set household.residence.state and add operating_states to each business to evaluate "
                 "PTE election applicability across all nexus states.",
-                missing_facts=["household.residence.state", "businesses.nexus.operating_states"])
+                missing_facts=["household.residence.state", "businesses.businesses[*].operating_states"])
 
         if not pte_nexus:
             # Check if we simply don't have operating_states recorded yet
@@ -1627,7 +1627,7 @@ class RulesEngine:
                     f"Residence state {residence} has not enacted a PTE election. "
                     "If this business operates in other states, add them as operating_states — "
                     "you may have a PTE opportunity in a nexus state." + formation_note,
-                    missing_facts=["businesses.nexus.operating_states"])
+                    missing_facts=["businesses.businesses[*].operating_states"])
             states_str = ", ".join(sorted(nexus_states)) if nexus_states else "your states"
             return self._result(base, EligibilityStatus.NOT_APPLICABLE,
                 f"None of your nexus states ({states_str}) have enacted a PTE election as of 2025."
