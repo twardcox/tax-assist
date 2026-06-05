@@ -1,0 +1,70 @@
+id: excess-fica-refund
+name: Excess FICA Withholding Refund — Schedule 3
+category: income
+jurisdiction: federal
+
+authority:
+  irc_section: "31(b)"
+  irs_publication: "505"
+  form_instruction: "Instructions for Schedule 3 (Form 1040)"
+  state_source: null
+
+status: active
+benefit_type: refundable_credit
+
+summary: |
+  Employees who work for two or more employers in the same year may have excess Social
+  Security tax withheld if their combined wages exceed the Social Security wage base
+  ($176,100 for 2025). Each employer withholds 6.2% on wages up to the wage base —
+  but they don't coordinate with each other. The maximum SS tax for 2025 is $10,918.20.
+  Any excess withheld is claimed as a refundable credit on Schedule 3, Line 11 of Form 1040.
+  Medicare tax (1.45%) has no wage base cap, so no excess Medicare refund applies.
+
+estimated_value:
+  typical_range: "$100 – $10,918/year (up to full SS max for extreme over-withholding)"
+  calculation_basis: "(Total SS withheld across all W-2s) − $10,918.20; excess is refundable"
+  depends_on: [number_of_employers, wages_per_employer, total_wages]
+
+eligibility_rules:
+  - rule: "Must have two or more W-2 employers in the same tax year"
+  - rule: "Combined wages from all employers must exceed the SS wage base ($176,100 for 2025)"
+  - rule: "Total SS tax withheld (Box 4 across all W-2s) must exceed $10,918.20"
+  - rule: "Self-employment Social Security tax is separate — SE tax is not excess withholding"
+  - rule: "No action required: IRS often catches this automatically, but claiming explicitly ensures refund"
+
+phaseouts:
+  - rule: "No phaseout — purely mechanical; excess withheld = refund"
+
+required_user_facts:
+  - fact: "income.w2_employment (multiple employers)"
+
+required_documents:
+  - document: "All W-2 forms showing Box 4 (Social Security tax withheld)"
+
+required_forms:
+  - form: "Schedule 3 Line 11 (Excess Social Security tax withheld)"
+
+deadlines:
+  - deadline: "Claim on annual Form 1040 by April 15 (or extension)"
+  - deadline: "3-year statute of limitations for amended returns (Form 1040-X)"
+
+stacking_rules:
+  compatible_with: []
+  conflicts_with: []
+
+risk_level: low
+
+planning_notes: |
+  - Check Box 4 on each W-2 and add them up — if total > $10,918.20, claim the difference
+  - This is a common, fully legitimate refund that many multi-job taxpayers miss
+  - TurboTax and most software catch this automatically, but DIY filers may miss it
+  - If you had only one employer who over-withheld by mistake, request a correction from
+    employer (not claimable on Schedule 3 — employer must correct via 941-X)
+  - Married filing jointly: each spouse's employers are counted separately
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

@@ -321,10 +321,6 @@ export default function Documents() {
                 <span className="text-xs text-gray-500 w-24">Size</span>
                 <span className="text-xs text-gray-400">{formatBytes(activeFile.size)}</span>
               </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xs text-gray-500 w-24 mt-0.5">Path</span>
-                <span className="text-xs text-gray-500 font-mono break-all">{activeFile.path}</span>
-              </div>
               {activeFile.note && (
                 <div className="p-3 bg-gray-900 border border-gray-800 rounded text-xs text-gray-400">
                   {activeFile.note}

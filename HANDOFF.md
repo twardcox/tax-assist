@@ -8,9 +8,10 @@
 
 ## Current State
 
-**Library:** 44 benefits (38 federal + 6 state) · **Tests:** 63/63 passing
+**Library:** 58 benefits (46 federal + 6 state + 6 county) · **Tests:** 63/63 passing
 **Nav pages:** Dashboard · My Data · Scenarios · Documents · Planning · Tax Law · Reports
-**Auth:** JWT self-registration · **DB:** SQLite (25 tables) · **Users:** multi-user, fully isolated
+**Auth:** JWT self-registration · **DB:** SQLite (29 tables) · **Users:** multi-user, fully isolated
+**Documents:** Stored as BLOBs in `documents` table — no filesystem dependency
 
 ### Start the full stack
 ```powershell
@@ -51,16 +52,21 @@ JWT_SECRET_KEY=...                # Optional: JWT signing secret (defaults to de
 
 ### Data layer: SQLite (`state/transactions.db`)
 
-All user data is stored in a normalized relational database. YAML files in `user_data/` are legacy backups only.
+All user data is stored in a normalized relational database. YAML files in `user_data/` are legacy backups only. The `state/` directory is auto-created by `init_db()` on startup — no `.gitkeep` needed.
 
-**25 tables:** `users`, `revoked_tokens`, `households`, `spouses`, `dependents`, `w2_income`, `self_employment_income`, `rental_income`, `investment_income`, `retirement_distributions`, `social_security_income`, `other_income`, `adjustments`, `businesses`, `business_vehicles`, `business_assets`, `properties`, `investment_accounts`, `plans_529`, `employer_retirement_plans`, `ira_accounts`, `self_employed_retirement`, `healthcare`, `goals`, `documents`, `transactions`, `transaction_benefits`, `revoked_tokens`
+**29 tables:** `users`, `revoked_tokens`, `households`, `spouses`, `dependents`, `w2_income`, `self_employment_income`, `rental_income`, `investment_income`, `retirement_distributions`, `social_security_income`, `other_income`, `adjustments`, `businesses`, `business_vehicles`, `business_assets`, `properties`, `investment_accounts`, `plans_529`, `employer_retirement_plans`, `ira_accounts`, `self_employed_retirement`, `healthcare`, `goals`, `documents`, `transactions`, `transaction_benefits`, `revoked_tokens`
+
+**Households extended columns (added via migration):** `county TEXT`, `taxpayer_veteran INTEGER`, `taxpayer_disabled INTEGER`, `taxpayer_blind INTEGER`, `taxpayer_active_military INTEGER`
 
 **Key DB functions (`api/db.py`):**
-- `init_db()` — creates all tables; safe to call on every startup
+- `init_db()` — creates all tables + runs ALTER TABLE migrations; safe to call on every startup
 - `save_section_data(user_id, tax_year, section, data_dict)` — writes a full section to the correct tables
 - `get_section_data(user_id, tax_year, section) → dict` — reconstructs a section dict from DB
 - `get_all_user_data(user_id, tax_year) → dict` — assembles the full `_data` dict that UserFacts expects
 - `apply_dot_path_to_section(user_id, tax_year, section, dot_path, operation, value)` — AI extraction path
+- `upsert_document(user_id, file_id, filename, category, confidence, content, size, note)` — stores BLOB
+- `get_document_content(user_id, file_id) → (bytes, filename)` — retrieves BLOB for AI extraction
+- `get_documents_for_user(user_id) → list[dict]` — metadata only, no BLOB in list query
 
 ### Scanner pipeline (`scripts/scan_opportunities.py`)
 
@@ -69,7 +75,7 @@ All user data is stored in a normalized relational database. YAML files in `user
 - `user_id=None` → `_load_from_yaml()` (CLI fallback, reads `user_data/*.yaml`)
 - Public interface (all helper methods) is identical either way — zero rule changes
 
-**`RulesEngine`** — dispatches `benefit.id` (kebab) → `_rule_<id_with_underscores>()`. 44 rules. All call `self.f.*` helpers; none open files.
+**`RulesEngine`** — dispatches `benefit.id` (kebab) → `_rule_<id_with_underscores>()`. **59 rules.** All call `self.f.*` helpers; none open files.
 
 **`OpportunityScanner(tax_year, facts=None)`** — if `facts` is provided, uses it; else creates `UserFacts(tax_year)`.
 
@@ -97,7 +103,12 @@ async def lifespan(app):
 
 `api/migrate.py` — idempotent YAML→DB import. Creates `admin@localhost` on first run, imports all YAML sections, assigns orphan transactions.
 
-### Document accounting (`api/routes/documents.py`)
+### Document storage (`api/routes/documents.py`)
+
+Uploaded files are stored as BLOBs in the `documents` table — **no filesystem required**.
+- `documents.content BLOB` — raw file bytes
+- `documents.size INTEGER` — byte count
+- `documents.note TEXT` — classification note
 
 `POST /documents/apply` body:
 ```json
@@ -109,7 +120,7 @@ async def lifespan(app):
 ```
 - Duplicate check: `file_already_applied(user_id, file_id)` blocks re-apply
 - Scales `add` operations by `deductible_pct` before writing
-- Calls `apply_dot_path_to_section()` → DB write (not YAML)
+- Calls `apply_dot_path_to_section()` → DB write
 - Writes a `transactions` ledger record per applied update
 
 ### AI document extraction (`scripts/classify_receipts.py`)
@@ -119,7 +130,17 @@ Three prompt types selected by filename + content:
 - `INCOME_FORM_PROMPT` — W-2, 1099-NEC/INT/DIV/B/R, 1098, K-1, SSA-1099; extracts box values
 - `MILEAGE_PROMPT` — extracts total business miles, computes `total_amount` at IRS rate
 
+Key functions:
+- `classify_filename(filename, size) → dict` — name-only classification, no disk access
+- `extract_with_ai_bytes(content: bytes, filename: str) → dict` — sends BLOB to Claude
+- `extract_with_ai(file_path: Path) → dict` — legacy CLI path (still works)
+
 Model: `claude-haiku-4-5-20251001` (cheap + fast).
+
+### Shared route utilities (`api/routes/utils.py`)
+
+- `serialize_result(result) → dict` — converts OpportunityResult dataclass, extracting `.value` from status enum
+- `count_by_status(results) → dict` — counts results by status string
 
 ### Background job pattern (scan.py, reports.py, documents.py)
 ```python
@@ -134,6 +155,11 @@ def _run_job(job_id, ..., user_id=None):
         _jobs[job_id] = {"status": "error", "error": str(exc)}
 ```
 All background threads receive `user_id` as a parameter (not captured from request context).
+
+### Frontend constants (`frontend/src/constants.js`)
+
+Single source of truth for shared values:
+- `TOKEN_KEY = "utbis_token"` — localStorage key used by both `api.js` and `AuthContext.jsx`
 
 ---
 
@@ -165,10 +191,10 @@ All background threads receive `user_id` as a parameter (not captured from reque
 ### Documents & Ledger
 | Method | Path | Description |
 |---|---|---|
-| POST   | `/documents/upload` | Upload file → classify → store in `documents` table |
-| GET    | `/documents` | List documents for current user |
-| DELETE | `/documents/{file_id}` | Delete file + DB record |
-| POST   | `/documents/{file_id}/extract` | Start AI extraction job |
+| POST   | `/documents/upload` | Upload file → classify → store BLOB in `documents` table |
+| GET    | `/documents` | List documents for current user (no BLOB in response) |
+| DELETE | `/documents/{file_id}` | Delete DB record (no filesystem) |
+| POST   | `/documents/{file_id}/extract` | Start AI extraction (reads BLOB from DB) |
 | GET    | `/documents/extract/{job_id}` | Poll extraction status |
 | POST   | `/documents/apply` | Apply extraction → DB write + ledger record |
 | GET    | `/transactions` | List ledger records (filterable by benefit_id, tax_category) |
@@ -194,39 +220,44 @@ All background threads receive `user_id` as a parameter (not captured from reque
 
 **Pages:** Dashboard, My Data (UserData.jsx), Scenarios, Documents, Planning, TaxLaw, Reports, Login
 
-**Auth flow:** `AuthContext.jsx` → stores JWT in `localStorage` under key `utbis_token` → `ProtectedRoute.jsx` redirects to `/login` if missing → 401 response auto-clears token and redirects.
+**Auth flow:** `AuthContext.jsx` → stores JWT in `localStorage` under key `utbis_token` (from `constants.js`) → `ProtectedRoute.jsx` redirects to `/login` if missing → 401 response auto-clears token and redirects.
 
 **My Data** saves via `api.updateSection(section, formStateObject)` → `PUT /user-data/{section}` body `{data: {...}}` → `save_section_data()` → DB tables. No YAML serialization on the frontend.
 
-**Documents** — after AI extraction, shows `benefit_ids[]` as violet badges, `form_line`, EIN (income forms), and a `deductible_pct` slider (0–100%). Apply All sends the `meta` envelope to `/documents/apply`.
+**Documents** — no filesystem. Files stored as DB BLOBs. After AI extraction, shows `benefit_ids[]` as violet badges, `form_line`, EIN (income forms), and a `deductible_pct` slider (0–100%). Apply All sends the `meta` envelope to `/documents/apply`.
 
 ---
 
 ## How to Add a New Benefit
 
-1. Create `tax_library/federal/federal-<name>.yaml` (id, name, category, jurisdiction, authority)
+1. Create `tax_library/{federal|state|county}/<id>.yaml` (id, name, category, jurisdiction, authority)
 2. Add `_rule_<id_with_underscores>(self, b: dict) → OpportunityResult` to `RulesEngine` in `scripts/scan_opportunities.py`
-3. Add entry to `rules/eligibility_rules/federal-rules.yaml` and `forms/federal_forms.yaml`
+3. Add entry to `rules/eligibility_rules/{federal|state|county}-rules.yaml` and `forms/federal_forms.yaml`
 4. Optionally add to `DEADLINE_MAP` in `api/routes/planning.py`
 5. Add benefit ID to `BENEFIT_IDS` list in `scripts/classify_receipts.py` (for AI document association)
+
+**County rules pattern:** gate on `self.f.primary_residence()`, `self.f.is_veteran()`, `self.f.is_disabled()`, `self.f.taxpayer_age()`. Return `NEARLY_ELIGIBLE` with county-specific next steps — we can't enumerate every county's exact program so the rule tells the user what to look up. Use `self.f.county()` and `self.f.state()` to personalize the message.
+
+**PTE election is nexus-aware:** `_rule_pte_election` uses `self.f.business_nexus_states()` (union of `household.residence.state` + all `businesses[].operating_states`) to find qualifying states. A DE-formed LLC operating in CA is correctly evaluated against CA PTE, not DE. `formation_state` triggers a clarifying note when it differs from nexus states. `businesses.operating_states` is stored as comma-separated TEXT in the DB; the getter returns it as a list.
 
 ---
 
 ## Key Design Rules (Do Not Violate)
 
 1. **DB is source of truth** — `user_data/*.yaml` are read-only backups after migration
-2. **No hardcoded user facts** — all user data comes from `get_all_user_data(user_id, tax_year)`
-3. **No fraud recommendations** — legal, documented strategies only
-4. **Risk levels must be conservative** — when in doubt, escalate to `high_review_required`
-5. **All benefit records must cite authority** — IRC section, IRS pub, form instruction, or state statute
-6. **Missing facts → `nearly_eligible`, not `not_applicable`** — flag what's missing
-7. **Scanner must run on blank facts without errors** — all rule methods handle None/empty gracefully
-8. **`BENEFIT_DIRS` is an allow-list** — never rglob all of `tax_library/`; only scan explicit dirs
-9. **State rules gate on `self.f.state()` first** — None → `NEARLY_ELIGIBLE`; wrong state → `NOT_APPLICABLE`
-10. **User confirmation before DB writes** — AI extraction proposes; user clicks Apply
-11. **Never expose `ANTHROPIC_API_KEY`** through API — only expose boolean `ai_available`
-12. **All scanner routes pass `user_id`** — `UserFacts(tax_year, user_id=uid)`; never create scanner without it in API context
-13. **Background threads receive `user_id` as param** — never capture from request context
+2. **Documents are BLOBs** — never write uploaded files to disk; store in `documents.content`
+3. **No hardcoded user facts** — all user data comes from `get_all_user_data(user_id, tax_year)`
+4. **No fraud recommendations** — legal, documented strategies only
+5. **Risk levels must be conservative** — when in doubt, escalate to `high_review_required`
+6. **All benefit records must cite authority** — IRC section, IRS pub, form instruction, or state statute
+7. **Missing facts → `nearly_eligible`, not `not_applicable`** — flag what's missing
+8. **Scanner must run on blank facts without errors** — all rule methods handle None/empty gracefully
+9. **`BENEFIT_DIRS` is an allow-list** — never rglob all of `tax_library/`; only scan explicit dirs
+10. **State rules gate on `self.f.state()` first** — None → `NEARLY_ELIGIBLE`; wrong state → `NOT_APPLICABLE`
+11. **User confirmation before DB writes** — AI extraction proposes; user clicks Apply
+12. **Never expose `ANTHROPIC_API_KEY`** through API — only expose boolean `ai_available`
+13. **All scanner routes pass `user_id`** — `UserFacts(tax_year, user_id=uid)`; never create scanner without it in API context
+14. **Background threads receive `user_id` as param** — never capture from request context
 
 ---
 
@@ -255,7 +286,6 @@ python scripts/scenario_simulator.py --list
 python scripts/scenario_simulator.py --scenario start_llc
 
 python scripts/update_tax_law.py --dry-run --no-ai
-python scripts/classify_receipts.py --file documents/receipts/some.pdf
 ```
 
 **Verify AI features (requires ANTHROPIC_API_KEY):**
@@ -286,14 +316,15 @@ npm:    react 19, react-router-dom 6, @tanstack/react-query 5, react-markdown 9,
 ```
 api/
   main.py              — FastAPI app, lifespan startup (init_db + migrate)
-  db.py                — All 25 tables + CRUD + get_all_user_data() + apply_dot_path_to_section()
+  db.py                — All 29 tables + CRUD + get_all_user_data() + apply_dot_path_to_section()
   auth.py              — JWT + bcrypt, get_current_user / get_current_user_optional deps
   migrate.py           — Idempotent YAML→DB import, creates admin@localhost on first run
   routes/
+    utils.py           — serialize_result(), count_by_status() shared by scan + scenarios
     auth.py            — /auth/register, /login, /logout, /me
     user_data.py       — Serves from DB; accepts {data:{}} or legacy {content:"yaml"}
     scan.py            — Passes user_id to UserFacts; background thread gets user_id param
-    documents.py       — Upload→classify, extract, apply→DB; _apply_dot_path() is pure (no I/O)
+    documents.py       — Upload→BLOB, extract from BLOB, apply→DB; no filesystem I/O
     transactions.py    — Ledger CRUD, all scoped to current user
     reconciliation.py  — Ledger vs. unprocessed doc checklist
     planning.py        — Year-end deadlines, passes user_id to scanner
@@ -301,14 +332,15 @@ api/
     reports.py         — CPA packet generation, passes user_id to scanner
 
 scripts/
-  scan_opportunities.py   — UserFacts (DB or YAML), RulesEngine (44 rules), OpportunityScanner
+  scan_opportunities.py   — UserFacts (DB or YAML), RulesEngine (59 rules), OpportunityScanner
   scenario_simulator.py   — ScenarioUserFacts, SCENARIOS dict, apply_overrides, diff_results
-  classify_receipts.py    — RECEIPT_PROMPT, INCOME_FORM_PROMPT, MILEAGE_PROMPT, extract_with_ai()
+  classify_receipts.py    — classify_filename(), extract_with_ai_bytes(), three AI prompts
   generate_cpa_packet.py  — Markdown CPA packet generator
   update_tax_law.py       — DAWSON Tax Court + 10-state scrapers
   create_test_user.py     — Creates alex.carter@example.com with realistic data
 
 frontend/src/
+  constants.js            — TOKEN_KEY and other shared constants
   App.jsx                 — AuthProvider wrapper, /login public route, ProtectedRoute for rest
   api.js                  — All API calls; injects Bearer token; 401 → clear token + redirect
   contexts/
@@ -329,28 +361,26 @@ frontend/src/
   schemas/                 — 10 form schemas (household, income, businesses, …)
 
 state/
-  transactions.db          — SQLite (all user data + ledger; replaces user_data/*.yaml)
+  transactions.db          — SQLite (all user data + ledger + document BLOBs)
   update_state.json        — Tax law scraper state (DAWSON auth token cache, seen item IDs)
 
 user_data/*.yaml           — Legacy backups (read-only after migration; CLI scanner still reads them)
-tax_library/federal/       — 38 benefit YAML files (id, name, authority, risk_level)
+tax_library/federal/       — 46 benefit YAML files (id, name, authority, risk_level)
 tax_library/state/         — 6 state benefit YAML files
+tax_library/county/        — 6 county benefit YAML files (property tax exemptions)
 ```
 
 ---
 
 ## Known Low-Priority Gaps
 
-| Benefit | IRC / Form | Priority |
-|---|---|---|
-| Employer-Provided Childcare Credit | §45F / Form 8882 | Low |
-| Work Opportunity Tax Credit (WOTC) | §51 / Form 5884 | Low |
-| Net Unrealized Appreciation (NUA) | §402(e)(4) | Low |
-| Installment Sale | §453 / Form 6252 | Low |
-| Excess FICA Withholding Refund | Schedule 3 | Low |
-| ICHRA / QSEHRA | ACA §105 | Low |
-| Conservation Easement | §170(h) | Low |
-| QLAC | §401(a)(9) | Low |
+None — all previously identified gaps have been implemented.
+
+Potential next directions:
+- Additional state benefits (beyond current 6 states)
+- Multi-year tax projection / optimizer
+- Direct IRS e-file integration
+- Mobile-friendly UI pass
 
 ---
 
@@ -360,15 +390,16 @@ tax_library/state/         — 6 state benefit YAML files
 Read HANDOFF.md at d:\programs\tax-assist.
 
 Current state:
-- 44 benefits (38 federal + 6 state), 63/63 tests passing
+- 58 benefits (46 federal + 6 state + 6 county), 63/63 tests passing
 - 7 frontend pages + Login page
-- Full relational SQLite DB (25 tables) replaces YAML as source of truth
+- Full relational SQLite DB (29 tables) — source of truth for all data
+- Document files stored as BLOBs in documents table (no filesystem)
 - Multi-user auth: JWT self-registration, bcrypt passwords, JTI revocation
 - Migration runs automatically on startup (admin@localhost / changeme123)
 - Test user: alex.carter@example.com / TestUser123! (10 eligible benefits)
-- Epic 2 accounting: transaction ledger, benefit_ids on extractions, deductibility %,
-  income form schemas (W-2/1099/1098), duplicate detection, reconciliation endpoint
-- Epic 3 DB migration: UserFacts reads from DB when user_id provided, YAML is CLI fallback
+- Shared route utils: api/routes/utils.py (serialize_result, count_by_status)
+- Frontend constants: frontend/src/constants.js (TOKEN_KEY)
+- County tier: 6 county property tax benefits; households table extended with county, taxpayer_veteran, taxpayer_disabled, taxpayer_blind, taxpayer_active_military columns
 
 Load .env before starting:
   Get-Content .env | ForEach-Object { if ($_ -match '^([^#=]+)=(.*)$') { [System.Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim()) } }

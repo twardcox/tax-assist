@@ -443,3 +443,99 @@ rules:
         if_missing: return_nearly_eligible
     nearly_eligible_conditions:
       - "has rental property but purchase price not provided"
+
+  - benefit_id: employer-childcare-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_business
+        path: has_business_fn
+        description: "Taxpayer has a business"
+      - id: has_employees
+        path: businesses.businesses[0].employees.w2_employees_count
+        operator: greater_than
+        value: 0
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has business but no employees or no childcare expenses recorded"
+
+  - benefit_id: work-opportunity-tax-credit
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_business
+        path: has_business_fn
+      - id: has_employees
+        path: businesses.businesses[0].employees.w2_employees_count
+        operator: greater_than
+        value: 0
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has employees but no WOTC target group hires recorded"
+
+  - benefit_id: net-unrealized-appreciation
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_w2_or_distributions
+        path: has_w2_fn
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has W-2 income but no employer stock NUA amount recorded"
+
+  - benefit_id: installment-sale
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_real_estate_or_business
+        path: real_estate.properties
+        operator: exists
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has real estate but no property marked for sale"
+
+  - benefit_id: excess-fica-refund
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_multiple_w2s
+        path: income.w2_employment
+        operator: exists
+    nearly_eligible_conditions:
+      - "has multiple W-2s but SS withheld amounts not recorded"
+
+  - benefit_id: ichra-qsehra
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_business
+        path: has_business_fn
+      - id: has_employees
+        path: businesses.businesses[0].employees.w2_employees_count
+        operator: greater_than
+        value: 0
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has business with employees but HRA not yet established"
+
+  - benefit_id: conservation-easement
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_real_estate
+        path: real_estate.properties
+        operator: exists
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has real estate but property type not identified as qualifying land"
+
+  - benefit_id: qlac
+    version: "1.0"
+    effective_years: "all"
+    required_conditions:
+      - id: has_traditional_ira_or_401k
+        path: retirement.individual_retirement_accounts.traditional_ira.balance
+        operator: exists
+        if_missing: return_nearly_eligible
+    nearly_eligible_conditions:
+      - "has retirement accounts but balance not recorded"

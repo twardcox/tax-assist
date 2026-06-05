@@ -1,0 +1,90 @@
+id: county-homestead-exemption
+name: County Homestead Property Tax Exemption
+category: real_estate
+jurisdiction: county
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "County property appraiser / assessor offices — applies in virtually every US county; amount and application process vary"
+
+status: active
+
+benefit_type: exemption
+
+summary: |
+  In addition to any state-level homestead exemption, most counties administer their own
+  layer of property tax relief for primary-residence homeowners. Many taxpayers miss this
+  because they assume the state exemption was automatic or they failed to file the initial
+  application with the county assessor. The county exemption can eliminate $50–$500+/year
+  in property taxes depending on local millage rates and exemption amounts.
+
+estimated_value:
+  typical_range: "$50 – $500+/year"
+  calculation_basis: "County millage rate × county exemption amount (varies widely)"
+  depends_on:
+    - household.residence.state
+    - household.residence.county
+    - real_estate.properties (primary_residence)
+
+eligibility_rules:
+  - rule: "Must own and occupy a primary residence as of the county's qualifying date (usually Jan 1)"
+    required_fact: "real_estate.properties (primary_residence type)"
+  - rule: "Must apply with the county property appraiser or tax assessor — not automatic"
+    required_fact: "household.residence.county"
+  - rule: "Application deadline is typically March 1 in most states; varies by county"
+    required_fact: null
+
+required_user_facts:
+  - fact: "household.residence.state"
+  - fact: "household.residence.county"
+  - fact: "real_estate.properties (primary_residence present)"
+
+required_documents:
+  - document: "Deed or mortgage statement showing ownership"
+  - document: "Government-issued ID with current address"
+  - document: "County homestead exemption application (filed once; renewable annually in some counties)"
+
+required_forms:
+  - form: "County homestead exemption application (varies by county — search '[county] homestead exemption application')"
+
+deadlines:
+  - deadline: "Most states: March 1 of the tax year (FL, TX, GA, NC)"
+  - deadline: "IL: October 1 of the levy year"
+  - deadline: "CA: No recurring application required after initial filing"
+
+phaseouts: []
+
+stacking_rules:
+  compatible_with:
+    - state-homestead-exemption
+    - mortgage-interest-deduction
+    - salt-deduction
+    - county-senior-property-tax-freeze
+    - county-veteran-property-tax-exemption
+    - county-disability-property-tax-exemption
+  conflicts_with:
+    - none
+
+risk_level: low
+
+risk_notes: |
+  Zero risk — government-administered property tax reduction. The only downside is failing to
+  apply by the deadline, which means waiting until the following year.
+
+planning_notes: |
+  - Apply immediately after purchasing a new primary residence — do not wait for a reminder
+  - Search "[your county] homestead exemption" for the county assessor's online portal
+  - Many counties now allow online applications; some require in-person filing
+  - If recently married or widowed, re-check whether your filing status affects the exemption amount
+  - Ask the assessor about enhanced exemptions for seniors, veterans, and disabled taxpayers
+
+qualification_pathways:
+  - "Owns and occupies a primary residence: file with county assessor before deadline"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

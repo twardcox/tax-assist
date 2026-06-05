@@ -1,0 +1,99 @@
+id: county-agricultural-use-valuation
+name: County Agricultural / Greenbelt Use Valuation
+category: real_estate
+jurisdiction: county
+
+authority:
+  irc_section: null
+  irs_publication: null
+  state_source: "State agricultural use / greenbelt / open-space valuation statutes administered at county level — available in all 50 states; requirements vary widely"
+
+status: active
+
+benefit_type: exemption
+
+summary: |
+  Every state allows qualifying agricultural land, timber, or open-space property to be
+  assessed at its "use value" rather than market value for property tax purposes. In areas
+  where land values have appreciated dramatically, this can reduce the assessed value by
+  50–95%, saving thousands of dollars per year. Common programs include agricultural use
+  (active farming, ranching, timber, beekeeping), wildlife management, and conservation
+  easements. Minimum acreage and agricultural activity requirements apply, and the
+  classification must be applied for and renewed with the county assessor.
+
+estimated_value:
+  typical_range: "$1,000 – $30,000+/year (highest in rapidly appreciating rural markets)"
+  calculation_basis: "County millage rate × (market value − agricultural use value); use value often 5–50% of market value"
+  depends_on:
+    - real_estate.properties (land or large acreage property)
+    - household.residence.county
+    - actual agricultural activity on the property
+
+eligibility_rules:
+  - rule: "Property must be primarily used for agriculture, timber, ranching, beekeeping, or wildlife management"
+    required_fact: "real_estate.properties (land type or qualifying acreage)"
+  - rule: "Minimum acreage requirements vary by state (typically 5–10 acres for most programs)"
+    required_fact: "real_estate.properties (acreage or land type)"
+  - rule: "Agricultural activity must be genuine and ongoing — typically measured by income or intensity of use"
+    required_fact: null
+  - rule: "Must apply with county assessor; most programs require annual renewal"
+    required_fact: "household.residence.county"
+  - rule: "Rollback taxes apply if the classification is changed — typically 3–5 years of back taxes at full rate"
+    required_fact: null
+
+required_user_facts:
+  - fact: "real_estate.properties (land or large acreage property)"
+  - fact: "household.residence.state"
+  - fact: "household.residence.county"
+
+required_documents:
+  - document: "Agricultural use exemption application (county assessor)"
+  - document: "Evidence of agricultural activity (sales receipts, production records, lease to farmer)"
+  - document: "Survey or plat showing total acreage"
+
+required_forms:
+  - form: "County agricultural use / greenbelt / open-space application (varies by state)"
+
+deadlines:
+  - deadline: "TX: April 30 (Ag-use or Wildlife Management application)"
+  - deadline: "FL: March 1 (agricultural classification)"
+  - deadline: "GA: April 1"
+  - deadline: "Most states: before January 1 – April 1 of the tax year; contact county assessor"
+
+phaseouts: []
+
+stacking_rules:
+  compatible_with:
+    - county-homestead-exemption
+    - state-homestead-exemption
+    - real-estate-depreciation
+    - cost-segregation
+  conflicts_with:
+    - county-solar-exemption  # Solar installations on classified ag land may trigger review
+
+risk_level: medium
+
+risk_notes: |
+  Moderate planning risk: if the ag classification is removed (sale, change of use, or failure
+  to maintain agricultural activity), rollback taxes of 3–5 years at full market rate become
+  due immediately. Ensure activity requirements are maintained and consult a local real estate
+  attorney before selling classified land.
+
+planning_notes: |
+  - TX Wildlife Management is a popular alternative to traditional ag use — requires a documented WMP
+  - Beekeeping qualifies in TX with as few as 5 acres and a minimum of 6 hives
+  - Timber production qualifies in many southeastern states (GA, FL, AL, MS, NC) on 10+ acres
+  - If leasing land to a farmer, get a signed lease to evidence agricultural use
+  - Understand rollback taxes before selling — factor them into any sale negotiation
+  - Some counties allow partial classification if only a portion of the parcel is in ag use
+
+qualification_pathways:
+  - "Owns 5+ acres used for farming, ranching, timber, or beekeeping: apply at county assessor"
+  - "TX landowner: consider Wildlife Management Plan as lower-barrier ag alternative"
+
+review_required:
+  cpa: false
+  attorney: true  # Rollback tax risk on disposition warrants attorney review before any sale
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

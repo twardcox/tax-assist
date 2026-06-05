@@ -236,3 +236,42 @@ forms:
     deadline: "April 15 (or extension)"
     related_benefits:
       - small-employer-retirement-startup-credit
+
+  - form_number: "Form 8882"
+    form_name: "Credit for Employer-Provided Childcare Facilities and Services"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8882"
+    instructions_link: "https://www.irs.gov/instructions/i8882"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - employer-childcare-credit
+
+  - form_number: "Form 5884"
+    form_name: "Work Opportunity Credit"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-5884"
+    instructions_link: "https://www.irs.gov/instructions/i5884"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - work-opportunity-tax-credit
+    notes: "Form 8850 must be filed with state workforce agency within 28 days of hire — not with IRS."
+
+  - form_number: "Form 6252"
+    form_name: "Installment Sale Income"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-6252"
+    instructions_link: "https://www.irs.gov/instructions/i6252"
+    deadline: "April 15 each year payments are received (or extension)"
+    related_benefits:
+      - installment-sale
+
+  - form_number: "Form 8283"
+    form_name: "Noncash Charitable Contributions"
+    jurisdiction: federal
+    official_link: "https://www.irs.gov/forms-pubs/about-form-8283"
+    instructions_link: "https://www.irs.gov/instructions/i8283"
+    deadline: "April 15 (or extension)"
+    related_benefits:
+      - conservation-easement
+      - charitable-contribution-deduction
+    notes: "Section B required for conservation easements and other noncash contributions > $5,000."

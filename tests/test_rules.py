@@ -34,9 +34,13 @@ def make_facts(**overrides) -> UserFacts:
     facts.has_dependents.return_value = overrides.get("has_dependents", False)
     facts.filing_status.return_value = overrides.get("filing_status", None)
     facts.estimated_agi.return_value = overrides.get("estimated_agi", None)
-    # Derive first_business from _data so rule methods that call self.f.first_business() work
-    businesses = facts._data.get("businesses", {}).get("businesses", [])
-    facts.first_business.return_value = businesses[0] if businesses else {}
+    # Support both _data-based and direct businesses_list override
+    biz_from_data = facts._data.get("businesses", {}).get("businesses", [])
+    biz_list = overrides.get("businesses_list", biz_from_data)
+    facts.first_business.return_value = biz_list[0] if biz_list else {}
+    facts.businesses.return_value = biz_list
+    facts.state.return_value = overrides.get("state", None)
+    facts.business_nexus_states.return_value = overrides.get("business_nexus_states", set())
     return facts
 
 
@@ -156,3 +160,175 @@ class TestGenericEvaluation:
         result = engine.evaluate(benefit)
         assert result.benefit_name == "Test Benefit"
         assert result.benefit_id == "test-benefit"
+
+
+PTE_BENEFIT = {
+    "id": "pte-election",
+    "name": "Pass-Through Entity (PTE) Election",
+    "category": "deduction",
+    "jurisdiction": "state",
+    "risk_level": "low",
+    "required_forms": [],
+    "required_documents": [],
+    "review_required": {},
+}
+
+
+class TestPteElectionRule:
+    """Tests for _rule_pte_election covering representative scenarios."""
+
+    def test_not_applicable_when_no_self_employment(self):
+        facts = make_facts(has_self_employment=False)
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.NOT_APPLICABLE
+
+    def test_nearly_eligible_when_no_state_and_no_operating_states(self):
+        facts = make_facts(
+            has_self_employment=True,
+            state=None,
+            business_nexus_states=set(),
+            businesses_list=[],
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.NEARLY_ELIGIBLE
+        assert "household.residence.state" in result.missing_facts
+        assert "businesses.businesses[*].operating_states" in result.missing_facts
+
+    def test_nearly_eligible_when_residence_in_non_pte_state_and_no_ops(self):
+        # HI is not in _PTE_STATES, prompts user to add operating_states
+        facts = make_facts(
+            has_self_employment=True,
+            state="HI",
+            business_nexus_states={"HI"},
+            businesses_list=[{}],
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.NEARLY_ELIGIBLE
+        assert "businesses.businesses[*].operating_states" in result.missing_facts
+
+    def test_not_applicable_when_all_nexus_states_are_no_income_tax(self):
+        # TX and FL have no income tax — no PTE nexus possible
+        facts = make_facts(
+            has_self_employment=True,
+            state="TX",
+            business_nexus_states={"TX", "FL"},
+            businesses_list=[{"operating_states": ["FL"]}],
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.NOT_APPLICABLE
+
+    def test_nearly_eligible_when_pte_state_but_no_profit_recorded(self):
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA"},
+            businesses_list=[{}],
+            estimated_agi=200_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.NEARLY_ELIGIBLE
+        assert "businesses.financials.net_profit_loss" in result.missing_facts
+
+    def test_eligible_if_changed_when_agi_below_threshold(self):
+        # AGI < 150k → SALT cap may not be binding
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA"},
+            businesses_list=[{"financials": {"net_profit_loss": 50_000}}],
+            estimated_agi=100_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.ELIGIBLE_IF_CHANGED
+        assert "CA" in result.message
+
+    def test_eligible_now_when_agi_at_or_above_threshold(self):
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA"},
+            businesses_list=[{"financials": {"net_profit_loss": 200_000}}],
+            estimated_agi=250_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.ELIGIBLE_NOW
+        assert "CA" in result.message
+
+    def test_eligible_now_residence_is_primary_in_multi_state_nexus(self):
+        # Residence CA (PTE) + operating in NY (PTE); CA should be primary
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA", "NY"},
+            businesses_list=[{
+                "financials": {"net_profit_loss": 100_000},
+                "operating_states": ["NY"],
+            }],
+            estimated_agi=200_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.ELIGIBLE_NOW
+        assert "CA" in result.message
+        assert "NY" in result.message
+
+    def test_eligible_now_non_residence_pte_state_includes_note(self):
+        # Residence TX (no income tax); operating in CA — CA is the only PTE nexus
+        facts = make_facts(
+            has_self_employment=True,
+            state="TX",
+            business_nexus_states={"TX", "CA"},
+            businesses_list=[{
+                "financials": {"net_profit_loss": 100_000},
+                "operating_states": ["CA"],
+            }],
+            estimated_agi=200_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.ELIGIBLE_NOW
+        assert "CA" in result.message
+        # Note should mention that residence (TX) has no PTE election
+        assert "TX" in result.message
+
+    def test_eligible_now_formation_state_mismatch_includes_note(self):
+        # Formation state DE not in nexus states → formation_note appears
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA"},
+            businesses_list=[{
+                "formation_state": "DE",
+                "financials": {"net_profit_loss": 100_000},
+            }],
+            estimated_agi=200_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        assert result.status == EligibilityStatus.ELIGIBLE_NOW
+        assert "DE" in result.message
+
+    def test_profit_summed_across_all_businesses(self):
+        # First business has $0 profit, second has positive profit → sum > 0 → not NEARLY_ELIGIBLE
+        facts = make_facts(
+            has_self_employment=True,
+            state="CA",
+            business_nexus_states={"CA"},
+            businesses_list=[
+                {"financials": {"net_profit_loss": 0}},
+                {"financials": {"net_profit_loss": 80_000}},
+            ],
+            estimated_agi=200_000,
+        )
+        engine = RulesEngine(facts)
+        result = engine._rule_pte_election(PTE_BENEFIT)
+        # Combined profit is positive → should not be NEARLY_ELIGIBLE for missing profit
+        assert result.status != EligibilityStatus.NEARLY_ELIGIBLE
+        assert "businesses.financials.net_profit_loss" not in (result.missing_facts or [])

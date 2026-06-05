@@ -1,0 +1,80 @@
+id: qlac
+name: Qualified Longevity Annuity Contract (QLAC) — §401(a)(9)
+category: retirement
+jurisdiction: federal
+
+authority:
+  irc_section: "401(a)(9)"
+  irs_publication: "590-B"
+  form_instruction: "Treasury Regulation §1.401(a)(9)-5; IRS Notice 2014-66 as updated by SECURE 2.0"
+  state_source: null
+
+status: active
+benefit_type: deferral
+
+summary: |
+  A QLAC is a deferred income annuity purchased from a qualified retirement account
+  (Traditional IRA, 401k, 403b, 457b) that provides guaranteed monthly income beginning
+  at a future age up to 85. The QLAC purchase amount is excluded from the account balance
+  used to calculate Required Minimum Distributions (RMDs), effectively deferring income
+  recognition until payments begin. 2025 limit: the lesser of 25% of the account balance
+  or $135,000 (adjusted for inflation under SECURE 2.0). Payments begin by age 85 at the latest.
+
+estimated_value:
+  typical_range: "$2,000 – $20,000/year in deferred RMDs and reduced current tax"
+  calculation_basis: "RMD reduction × marginal rate × deferral years; longevity insurance value"
+  depends_on: [ira_balance, age, rmd_bracket, payment_start_age]
+
+eligibility_rules:
+  - rule: "Must own a Traditional IRA, 401k, 403b, or 457b (Roth accounts do not have RMDs — QLACs not needed)"
+  - rule: "2025 purchase limit: lesser of 25% of aggregate IRA/plan balance or $135,000"
+  - rule: "Payments must begin by age 85"
+  - rule: "Contract must be designated as a QLAC by the issuing insurance company"
+  - rule: "No cash surrender value, commutation rights, or death benefit features that exceed investment"
+  - rule: "SECURE 2.0 (2022): eliminated the 25%-per-account limit (now 25% of aggregate balance)"
+
+phaseouts:
+  - rule: "Dollar limit of $135,000 across all IRAs and plans (aggregated)"
+  - rule: "Cannot purchase QLAC from Roth IRA (no RMD requirement for Roth)"
+
+required_user_facts:
+  - fact: "retirement.individual_retirement_accounts.traditional_ira.balance"
+  - fact: "household.taxpayer.age"
+
+required_documents:
+  - document: "QLAC contract from insurance company"
+  - document: "IRA or plan statement showing current balance"
+  - document: "Form 1099-R (when annuity payments begin)"
+
+required_forms:
+  - form: "No special form — excluded from RMD balance calculation automatically"
+  - form: "Form 1040 Line 5b (when annuity payments begin, taxed as ordinary income)"
+
+deadlines:
+  - deadline: "Purchase by December 31 to exclude from that year's RMD calculation"
+  - deadline: "Payments must begin by April 1 following the year you turn 85"
+
+stacking_rules:
+  compatible_with: [backdoor-roth-ira, nol-carryforward, savers-credit]
+  conflicts_with:
+    - rule: "Cannot fund QLAC from Roth IRA — Roths have no RMDs during owner's lifetime"
+
+risk_level: low
+
+planning_notes: |
+  - Best for retirees or near-retirees who have enough other assets to cover near-term
+    expenses and want to insure against outliving their money (longevity risk)
+  - QLAC serves two purposes: (1) reduce current RMDs and deferred income tax, and
+    (2) guaranteed income for life starting at advanced age
+  - Shop multiple insurance carriers — payout rates vary significantly
+  - Inflation riders are available but reduce initial payout
+  - SECURE 2.0 made QLACs more attractive by removing the per-account limit restriction
+  - For most taxpayers, maximizing Roth conversions in lower-bracket years is a better
+    first step than a QLAC; consider both together
+
+review_required:
+  cpa: true
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01
