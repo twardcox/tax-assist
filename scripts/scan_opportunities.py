@@ -1634,8 +1634,10 @@ class RulesEngine:
                 + formation_note)
 
         agi = self.f.estimated_agi()
-        net_profit = _to_float(biz.get("financials", {}).get("net_profit_loss"))
-
+        profits = [
+            _to_float((b.get("financials") or {}).get("net_profit_loss")) for b in self.f.businesses()
+        ]
+        net_profit = max(profits) if profits else 0.0
         if net_profit <= 0:
             states_str = ", ".join(sorted(pte_nexus))
             return self._result(base, EligibilityStatus.NEARLY_ELIGIBLE,
