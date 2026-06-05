@@ -43,7 +43,8 @@ _MAX_DIMENSION = 1800
 _JPEG_QUALITY = 85
 
 
-def _compress_image(content: bytes) -> bytes:
+def _compress_image(content: bytes) -> bytes | None:
+    """Returns JPEG bytes on success, None if Pillow cannot decode the source."""
     try:
         img = Image.open(io.BytesIO(content))
         img = img.convert("RGB")
@@ -53,7 +54,7 @@ def _compress_image(content: bytes) -> bytes:
         img.save(buf, format="JPEG", quality=_JPEG_QUALITY, optimize=True)
         return buf.getvalue()
     except Exception:
-        return content  # fall back to original if Pillow can't read it
+        return None
 
 
 def _safe_name(name: str) -> str:
@@ -61,8 +62,9 @@ def _safe_name(name: str) -> str:
     return name[:200]
 
 
-def _file_id(user_id: str, name: str) -> str:
-    return hashlib.md5(f"{user_id}:{name}".encode()).hexdigest()[:12]
+def _file_id(user_id: str, name: str, content: bytes) -> str:
+    digest = hashlib.sha256(content).hexdigest()[:16]
+    return hashlib.md5(f"{user_id}:{name}:{digest}".encode()).hexdigest()[:12]
 
 
 def _normalize(doc: dict) -> dict:
@@ -93,11 +95,13 @@ def upload_document(file: UploadFile = File(...),
     if len(content) > MAX_UPLOAD_BYTES:
         raise HTTPException(413, "File exceeds the 20 MB upload limit.")
     if suffix in _IMAGE_SUFFIXES:
-        content = _compress_image(content)
-        safe = Path(safe).stem + ".jpg"
-        suffix = ".jpg"
+        compressed = _compress_image(content)
+        if compressed is not None:
+            content = compressed
+            safe = Path(safe).stem + ".jpg"
+            suffix = ".jpg"
     uid = current_user["id"] if current_user else ""
-    fid = _file_id(uid, safe)
+    fid = _file_id(uid, safe, content)
 
     info = classify_filename(safe, size=len(content))
     info["file_id"] = fid
