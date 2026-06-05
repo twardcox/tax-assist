@@ -260,7 +260,7 @@ def apply_extraction(body: Any = Body(...),
             skipped.append(label)
             continue
 
-        if operation == "add" and isinstance(raw_value, (int, float)):
+        if operation == "add" and isinstance(raw_value, (int, float)) and raw_value > 0:
             value = round(raw_value * deductible_pct, 2)
         else:
             value = raw_value
