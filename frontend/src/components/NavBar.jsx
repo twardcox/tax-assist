@@ -10,6 +10,7 @@ const links = [
   { to: "/documents", label: "Documents" },
   { to: "/planning", label: "Planning" },
   { to: "/tax-law", label: "Tax Law" },
+  { to: "/tax-forms", label: "Tax Forms" },
   { to: "/reports", label: "Reports" },
 ];
 

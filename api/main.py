@@ -15,7 +15,7 @@ from api.db import init_db
 from api.migrate import migrate_yaml_if_needed
 from api.routes import (
     auth, config, documents, planning, reconciliation,
-    reports, scan, scenarios, tax_law, transactions, user_data,
+    reports, scan, scenarios, tax_forms, tax_law, transactions, user_data,
 )
 
 
@@ -46,6 +46,7 @@ app.include_router(documents.router,     prefix="/api")
 app.include_router(planning.router,      prefix="/api")
 app.include_router(transactions.router,  prefix="/api")
 app.include_router(reconciliation.router, prefix="/api")
+app.include_router(tax_forms.router,     prefix="/api")
 
 # Serve compiled React build (production)
 DIST = Path(__file__).parent.parent / "frontend" / "dist"

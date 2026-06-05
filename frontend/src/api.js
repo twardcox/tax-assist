@@ -133,4 +133,11 @@ export const api = {
 
   // Reconciliation
   getReconciliation: () => req("/reconciliation"),
+
+  // Tax forms — compute (instant JSON review) + ZIP download (background)
+  computeTaxForms: (taxYear = 2025) => req(`/tax-forms/compute?tax_year=${taxYear}`),
+  generateTaxForms: (taxYear = 2025) =>
+    req(`/reports/tax-forms?tax_year=${taxYear}`, { method: "POST" }),
+  getTaxFormsStatus: (jobId) => req(`/reports/tax-forms/${jobId}`),
+  downloadTaxFormsUrl: (jobId) => `${BASE}/reports/tax-forms/${jobId}/download`,
 };

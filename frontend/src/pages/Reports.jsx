@@ -5,9 +5,9 @@ import { api } from "../api";
 
 export default function Reports() {
   const [activeReport, setActiveReport] = useState(null);
-  const [withAI, setWithAI] = useState(false);
-  const [cpaJobId, setCpaJobId] = useState(null);
-  const [cpaStatus, setCpaStatus] = useState(null);
+  const [withAI, setWithAI]             = useState(false);
+  const [cpaJobId, setCpaJobId]         = useState(null);
+  const [cpaStatus, setCpaStatus]       = useState(null);
 
   const queryClient = useQueryClient();
 

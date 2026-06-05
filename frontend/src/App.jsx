@@ -10,6 +10,7 @@ import TaxLaw from "./pages/TaxLaw";
 import Reports from "./pages/Reports";
 import Documents from "./pages/Documents";
 import Planning from "./pages/Planning";
+import TaxForms from "./pages/TaxForms";
 
 function AppShell() {
   return (
@@ -25,6 +26,7 @@ function AppShell() {
             <Route path="/documents" element={<Documents />} />
             <Route path="/planning" element={<Planning />} />
             <Route path="/tax-law" element={<TaxLaw />} />
+            <Route path="/tax-forms" element={<TaxForms />} />
             <Route path="/reports" element={<Reports />} />
           </Routes>
         </main>
