@@ -999,6 +999,49 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "qlac": (_benefit, facts) => {
+    const totalBalance = facts.qlacEligibleRetirementBalance();
+    const age = facts.taxpayerAge();
+
+    if (totalBalance === 0 && !facts.hasRetirementContributions()) {
+      return {
+        status: "not_applicable",
+        message: "QLAC requires a Traditional IRA, 401k, 403b, or 457b account balance."
+      };
+    }
+
+    if (age && age < 50) {
+      return {
+        status: "future_opportunity",
+        message:
+          `QLAC is most valuable near or in retirement. At age ${age}, focus on maximizing contributions first. Revisit at age 60+.`,
+        next_steps: ["Maximize IRA/401k contributions now to grow the balance that funds a QLAC later"]
+      };
+    }
+
+    const qlacLimit = Math.min(totalBalance > 0 ? totalBalance * 0.25 : 135000, 135000);
+    if (totalBalance === 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has retirement contributions — record IRA/401k balances to calculate QLAC purchase limit.",
+        missing_facts: ["retirement.individual_retirement_accounts.traditional_ira.balance"]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        `Retirement balance $${totalBalance.toLocaleString()} — QLAC purchase limit: $${qlacLimit.toLocaleString()} (lesser of 25% of balance or $135,000). Excludes QLAC amount from RMD calculations until payments begin (max age 85).`,
+      estimated_value: `$${qlacLimit.toLocaleString()} excluded from RMDs; deferred income until age 72-85`,
+      next_steps: [
+        "Compare QLAC payouts from multiple insurers (Fidelity, New York Life, MassMutual)",
+        "Model RMD reduction vs. Roth conversion — often Roth conversion is the better first step",
+        "Purchase by December 31 to exclude from that year's RMD calculation",
+        "SECURE 2.0: 25% limit now applies to aggregate balance across all accounts"
+      ]
+    };
+  },
+
   "foreign-earned-income-exclusion": (_benefit, facts) => {
     if (facts.stateCode()) {
       return {

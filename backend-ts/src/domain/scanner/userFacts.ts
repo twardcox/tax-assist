@@ -573,6 +573,17 @@ export class UserFacts {
     return toNumber(legacyTraditional.balance);
   }
 
+  qlacEligibleRetirementBalance(): number {
+    const retirement = toObject(this.data.retirement);
+    const employerPlans = toObject(retirement.employer_plans);
+    const employerPlanBalance = ["traditional_401k", "403b", "457b"].reduce((sum, key) => {
+      const plan = toObject(employerPlans[key]);
+      return sum + toNumber(plan.balance);
+    }, 0);
+
+    return this.traditionalIraBalance() + employerPlanBalance;
+  }
+
   dependentCareFsaElection(): number {
     const healthcare = toObject(this.data.healthcare);
     const fsa = toObject(toObject(healthcare.flexible_spending_accounts).dependent_care_fsa);

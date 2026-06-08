@@ -1348,6 +1348,65 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the qlac opportunity", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "qlac@example.com",
+        password: "Test1234!",
+        display_name: "QLAC User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          taxpayer: {
+            age: 62
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/retirement",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          employer_plans: {
+            traditional_401k: {
+              employee_contribution_ytd: 5000
+            }
+          }
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const qlac = payload.results.find((r) => r.benefit_id === "qlac");
+    expect(qlac?.status).toBe("nearly_eligible");
+    expect(qlac?.missing_facts).toContain("retirement.individual_retirement_accounts.traditional_ira.balance");
+
+    await app.close();
+  });
+
   test("scan route recognizes the ichra qsehra opportunity", async () => {
     const app = buildApp();
 
