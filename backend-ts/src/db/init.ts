@@ -27,8 +27,31 @@ CREATE TABLE IF NOT EXISTS section_data (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS transactions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  file_id TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  date TEXT,
+  merchant TEXT,
+  total_amount REAL NOT NULL DEFAULT 0,
+  deductible_pct REAL NOT NULL DEFAULT 1,
+  deductible_amount REAL NOT NULL DEFAULT 0,
+  tax_category TEXT,
+  benefit_ids TEXT NOT NULL DEFAULT '[]',
+  form_line TEXT,
+  section TEXT,
+  dot_path TEXT,
+  status TEXT NOT NULL DEFAULT 'applied',
+  applied_at TEXT NOT NULL,
+  label TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_section_data_user_year ON section_data(user_id, tax_year);
+CREATE INDEX IF NOT EXISTS idx_txn_user ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_txn_status ON transactions(user_id, status);
 `;
 
 export function initDb(): void {

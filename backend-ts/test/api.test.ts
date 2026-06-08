@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { buildApp } from "../src/app";
 import { getDb } from "../src/db/client";
+import { initDb } from "../src/db/init";
+import { addTransaction } from "../src/db/transactionsRepo";
 
 beforeEach(() => {
+  initDb();
   const db = getDb();
+  db.exec("DELETE FROM transactions;");
+  db.exec("DELETE FROM section_data;");
   db.exec("DELETE FROM revoked_tokens;");
   db.exec("DELETE FROM users;");
 });
@@ -193,6 +198,138 @@ describe("API baseline", () => {
     const rawPayload = rawReadRes.json() as { section: string; content: string };
     expect(rawPayload.section).toBe("household");
     expect(rawPayload.content).toContain("filing_status");
+
+    await app.close();
+  });
+
+  test("transactions list and summary work with auth and filters", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "txn-user@example.com",
+        password: "Test1234!",
+        display_name: "Txn User"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+
+    const registerPayload = registerRes.json() as { token: string; user_id: string };
+    const token = registerPayload.token;
+    const userId = registerPayload.user_id;
+
+    const firstTxnId = addTransaction({
+      user_id: userId,
+      file_id: "f-1",
+      filename: "receipt-1.jpg",
+      date: "2026-01-01",
+      merchant: "Office Depot",
+      total_amount: 100,
+      deductible_pct: 1,
+      deductible_amount: 100,
+      tax_category: "business_expense",
+      benefit_ids: ["federal-home-office-deduction"],
+      form_line: "Schedule C:18",
+      section: "businesses",
+      dot_path: "expenses.office_supplies",
+      status: "applied",
+      label: "Office supplies"
+    });
+
+    addTransaction({
+      user_id: userId,
+      file_id: "f-2",
+      filename: "receipt-2.jpg",
+      date: "2026-01-02",
+      merchant: "Hospital",
+      total_amount: 50,
+      deductible_pct: 1,
+      deductible_amount: 50,
+      tax_category: "medical",
+      benefit_ids: ["federal-medical-expense-deduction"],
+      form_line: "Schedule A:1",
+      section: "healthcare",
+      dot_path: "medical.out_of_pocket",
+      status: "applied",
+      label: "Medical"
+    });
+
+    const listRes = await app.inject({
+      method: "GET",
+      url: "/api/transactions?tax_category=business_expense",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(listRes.statusCode).toBe(200);
+    const listPayload = listRes.json() as {
+      transactions: Array<Record<string, unknown>>;
+    };
+    expect(listPayload.transactions).toHaveLength(1);
+    expect(listPayload.transactions[0]?.tax_category).toBe("business_expense");
+
+    const summaryRes = await app.inject({
+      method: "GET",
+      url: "/api/transactions/summary",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(summaryRes.statusCode).toBe(200);
+    const summaryPayload = summaryRes.json() as {
+      by_category: Array<Record<string, unknown>>;
+      total_applied: Record<string, unknown>;
+    };
+    expect(summaryPayload.by_category).toHaveLength(2);
+    expect(summaryPayload.total_applied.count).toBe(2);
+    expect(summaryPayload.total_applied.total_deductible).toBe(150);
+
+    const reverseRes = await app.inject({
+      method: "DELETE",
+      url: `/api/transactions/${firstTxnId}`,
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(reverseRes.statusCode).toBe(200);
+    expect(reverseRes.json()).toEqual({ reversed: true, id: firstTxnId });
+
+    const summaryAfterReverseRes = await app.inject({
+      method: "GET",
+      url: "/api/transactions/summary",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(summaryAfterReverseRes.statusCode).toBe(200);
+    const afterPayload = summaryAfterReverseRes.json() as {
+      total_applied: Record<string, unknown>;
+    };
+    expect(afterPayload.total_applied.count).toBe(1);
+    expect(afterPayload.total_applied.total_deductible).toBe(50);
+
+    await app.close();
+  });
+
+  test("transactions endpoints return empty unauthenticated defaults", async () => {
+    const app = buildApp();
+
+    const listRes = await app.inject({ method: "GET", url: "/api/transactions" });
+    expect(listRes.statusCode).toBe(200);
+    expect(listRes.json()).toEqual({ transactions: [] });
+
+    const summaryRes = await app.inject({ method: "GET", url: "/api/transactions/summary" });
+    expect(summaryRes.statusCode).toBe(200);
+    expect(summaryRes.json()).toEqual({
+      by_category: [],
+      total_applied: { count: 0, total_deductible: 0 }
+    });
 
     await app.close();
   });
