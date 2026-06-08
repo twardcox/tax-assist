@@ -1769,6 +1769,66 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "installment-sale": (_benefit, facts) => {
+    if (!facts.hasAnyRealEstate() && facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "Installment sale method applies to sellers of real estate or business property."
+      };
+    }
+
+    const selling = facts.properties().filter((property) => {
+      const status = String(property.status ?? property.sale_status ?? "").toLowerCase();
+      return ["for_sale", "pending_sale", "selling", "sold"].includes(status);
+    });
+    if (selling.length > 0) {
+      return {
+        status: "eligible_now",
+        message:
+          "Property marked for sale — installment method available to spread capital gains across payment years. Discuss seller-financing terms with buyer and CPA.",
+        estimated_value: "Varies — can save $5,000–$100,000+ depending on gain size and brackets",
+        next_steps: [
+          "Negotiate installment payments in purchase agreement",
+          "Get a promissory note secured by the property",
+          "File Form 6252 with each year's return; depreciation recapture due in sale year"
+        ]
+      };
+    }
+
+    const appreciated = facts.properties().filter(
+      (property) => Number((property.acquisition as Record<string, unknown> | undefined)?.current_market_value ?? 0) >
+        Number((property.acquisition as Record<string, unknown> | undefined)?.purchase_price ?? 0)
+    );
+    if (appreciated.length > 0) {
+      return {
+        status: "eligible_if_changed",
+        message:
+          `Has ${appreciated.length} appreciated propert${appreciated.length === 1 ? "y" : "ies"} — if you sell with seller financing, the installment method spreads capital gains across payment years, keeping income in lower brackets.`,
+        changes_needed: ["Negotiate seller financing terms when selling real estate or business"],
+        next_steps: [
+          "Model tax under lump-sum vs. 3–5 year installment schedule with CPA",
+          "Depreciation recapture is taxed in year of sale regardless",
+          "File Form 6252 every year payments are received"
+        ]
+      };
+    }
+
+    if (facts.businesses().length > 0) {
+      return {
+        status: "eligible_if_changed",
+        message:
+          "Has a business — installment sale method available if you sell the business and negotiate seller financing with the buyer.",
+        changes_needed: ["Negotiate installment terms in business sale agreement"],
+        next_steps: ["Model tax impact with CPA before agreeing to sale terms"]
+      };
+    }
+
+    return {
+      status: "not_applicable",
+      message: "No appreciated real estate or business property identified for potential sale."
+    };
+  },
+
   "real-estate-professional-status": (_benefit, facts) => {
     if (!facts.hasRentalProperty()) {
       return {

@@ -1251,6 +1251,56 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the installment sale opportunity", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "installment-sale@example.com",
+        password: "Test1234!",
+        display_name: "Installment Sale User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          properties: [
+            {
+              property_type: "investment_property",
+              acquisition: {
+                purchase_price: 250000,
+                current_market_value: 400000
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const installment = payload.results.find((r) => r.benefit_id === "installment-sale");
+    expect(installment?.status).toBe("eligible_if_changed");
+    expect(installment?.changes_needed).toContain("Negotiate seller financing terms when selling real estate or business");
+
+    await app.close();
+  });
+
   test("scan route recognizes the ichra qsehra opportunity", async () => {
     const app = buildApp();
 
