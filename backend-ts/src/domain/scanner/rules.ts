@@ -524,6 +524,101 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "residential-clean-energy-credit": (_benefit, facts) => {
+    const hasHome = facts.properties().some((p) => ["primary_residence", "second_home"].includes(String(p.property_type ?? "")));
+    if (!hasHome) {
+      return {
+        status: "not_applicable",
+        message: "Residential Clean Energy Credit requires a primary or secondary home you own."
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: "Homeowner may qualify for 30% credit on solar, battery, wind, or geothermal installations.",
+      next_steps: [
+        "Get quotes for qualifying systems and confirm placed-in-service year",
+        "Check state and utility rebates that stack with federal credit",
+        "Use Form 5695 and carry forward unused credit if tax liability is limited"
+      ]
+    };
+  },
+
+  "opportunity-zone-investment": (_benefit, facts) => {
+    const ltcg = facts.longTermCapitalGains();
+    if (ltcg > 0) {
+      return {
+        status: "eligible_now",
+        message: `Recorded long-term gains of ${ltcg.toLocaleString()}. Opportunity Zone investment can defer this gain.`,
+        estimated_value: `Deferred tax on $${ltcg.toLocaleString()} plus potential 10-year appreciation exclusion`,
+        next_steps: [
+          "Identify and invest in a Qualified Opportunity Fund within 180 days of gain recognition",
+          "Plan for deferred-gain recognition deadlines",
+          "Track annual reporting on Form 8997"
+        ]
+      };
+    }
+
+    return {
+      status: "future_opportunity",
+      message: "No realized long-term capital gains found. Opportunity Zone deferral is relevant after gain events.",
+      next_steps: ["Revisit before any planned sale of appreciated assets"]
+    };
+  },
+
+  "capital-gains-harvesting": (_benefit, facts) => {
+    const agi = facts.estimatedAgi();
+    const filingStatus = (facts.filingStatus() ?? "single").toLowerCase();
+    const ltcg = facts.longTermCapitalGains();
+
+    const zeroPctCeiling = {
+      single: 47025,
+      mfj: 94050,
+      married_filing_jointly: 94050,
+      hoh: 63000,
+      head_of_household: 63000,
+      mfs: 47025,
+      married_filing_separately: 47025,
+      qualifying_surviving_spouse: 94050
+    }[filingStatus] ?? 47025;
+
+    if (agi == null) {
+      return {
+        status: "nearly_eligible",
+        message: "Potential 0% long-term capital gains harvesting opportunity. Add AGI to evaluate bracket headroom.",
+        missing_facts: ["household.estimated_agi"]
+      };
+    }
+
+    if (agi >= zeroPctCeiling * 1.15) {
+      return {
+        status: "not_applicable",
+        message: `AGI ${agi.toLocaleString()} is above the 0% LTCG bracket zone for ${filingStatus}.`
+      };
+    }
+
+    const headroom = Math.max(0, zeroPctCeiling - agi);
+    if (ltcg > 0) {
+      return {
+        status: "eligible_now",
+        message: `0% LTCG bracket planning available with ~${headroom.toLocaleString()} headroom and current LTCG ${ltcg.toLocaleString()}.`,
+        estimated_value: `Potentially tax-free harvest of up to $${Math.min(ltcg, headroom).toLocaleString()} of gains`,
+        next_steps: [
+          `Realize up to $${headroom.toLocaleString()} of 12+ month gains this year`,
+          "Rebuy positions if desired (wash sale rule does not apply to gains)",
+          "Model total taxable income to avoid crossing into the 15% bracket"
+        ]
+      };
+    }
+
+    return {
+      status: "eligible_if_changed",
+      message: `You appear in/near the 0% LTCG bracket with ~${headroom.toLocaleString()} headroom, but no long-term gains are recorded.`,
+      missing_facts: ["income.investment_income.long_term_capital_gains"],
+      changes_needed: ["Identify appreciated long-term positions in taxable accounts"]
+    };
+  },
+
   "county-homestead-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
     const county = facts.county();

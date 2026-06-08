@@ -757,7 +757,8 @@ describe("API baseline", () => {
             }
           ],
           investment_income: {
-            interest: 100
+            interest: 100,
+            long_term_capital_gains: 10000
           }
         }
       }
@@ -882,6 +883,15 @@ describe("API baseline", () => {
 
     const sec121 = payload.results.find((r) => r.benefit_id === "section-121-exclusion");
     expect(sec121?.status).toBe("eligible_now");
+
+    const cleanEnergy = payload.results.find((r) => r.benefit_id === "residential-clean-energy-credit");
+    expect(cleanEnergy?.status).toBe("nearly_eligible");
+
+    const oz = payload.results.find((r) => r.benefit_id === "opportunity-zone-investment");
+    expect(oz?.status).toBe("eligible_now");
+
+    const harvesting = payload.results.find((r) => r.benefit_id === "capital-gains-harvesting");
+    expect(harvesting?.status).toBe("eligible_now");
 
     await app.close();
   });

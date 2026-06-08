@@ -298,6 +298,12 @@ export class UserFacts {
       + toNumber(investment.long_term_capital_gains);
   }
 
+  longTermCapitalGains(): number {
+    const income = this.incomeSection();
+    const investment = toObject(income.investment_income);
+    return toNumber(investment.long_term_capital_gains);
+  }
+
   dependentCareFsaElection(): number {
     const healthcare = toObject(this.data.healthcare);
     const fsa = toObject(toObject(healthcare.flexible_spending_accounts).dependent_care_fsa);
