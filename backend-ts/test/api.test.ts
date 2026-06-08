@@ -567,6 +567,29 @@ describe("API baseline", () => {
         data: {
           properties: [
             {
+              property_type: "primary_residence",
+              acquisition: {
+                purchase_price: 220000,
+                current_market_value: 380000
+              },
+              primary_residence: {
+                years_lived_in: 3,
+                used_as_primary_for_2_of_last_5: true
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          properties: [
+            {
               property_type: "rental_residential",
               acquisition: {
                 purchase_price: 400000,
@@ -801,6 +824,29 @@ describe("API baseline", () => {
       }
     });
 
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          properties: [
+            {
+              property_type: "primary_residence",
+              acquisition: {
+                purchase_price: 220000,
+                current_market_value: 380000
+              },
+              primary_residence: {
+                years_lived_in: 3,
+                used_as_primary_for_2_of_last_5: true
+              }
+            }
+          ]
+        }
+      }
+    });
+
     const scanRes = await app.inject({
       method: "POST",
       url: "/api/scan?tax_year=2025",
@@ -827,6 +873,15 @@ describe("API baseline", () => {
 
     const savers = payload.results.find((r) => r.benefit_id === "savers-credit");
     expect(savers?.status).toBe("eligible_now");
+
+    const energy25c = payload.results.find((r) => r.benefit_id === "25c-energy-home-improvement");
+    expect(energy25c?.status).toBe("eligible_now");
+
+    const ev = payload.results.find((r) => r.benefit_id === "clean-vehicle-credit");
+    expect(ev?.status).toBe("nearly_eligible");
+
+    const sec121 = payload.results.find((r) => r.benefit_id === "section-121-exclusion");
+    expect(sec121?.status).toBe("eligible_now");
 
     await app.close();
   });

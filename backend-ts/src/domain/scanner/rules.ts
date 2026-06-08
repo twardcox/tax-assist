@@ -408,6 +408,122 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "25c-energy-home-improvement": (_benefit, facts) => {
+    if (!facts.hasPrimaryResidence() && !facts.hasAnyRealEstate()) {
+      return {
+        status: "not_applicable",
+        message: "Section 25C requires an existing primary residence. No primary residence found."
+      };
+    }
+
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "nearly_eligible",
+        message: "Real estate found but no primary residence classified. Section 25C applies to primary residences.",
+        missing_facts: ["real_estate.properties (property_type: primary_residence)"]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message:
+        "Section 25C credit available: 30% on qualifying home-energy improvements with annual category caps.",
+      estimated_value: "$600-$3,200/year",
+      next_steps: [
+        "Get ENERGY STAR or Section 25C certification from manufacturer",
+        "Track placed-in-service dates and receipts",
+        "Use Form 5695 Part II",
+        "Spread upgrades across years to reuse annual caps"
+      ]
+    };
+  },
+
+  "clean-vehicle-credit": (_benefit, facts) => {
+    const agi = facts.estimatedAgi();
+    const filingStatus = facts.filingStatus() ?? "single";
+    const clips: Record<string, number> = {
+      mfj: 300000,
+      married_filing_jointly: 300000,
+      single: 150000,
+      hoh: 225000,
+      head_of_household: 225000
+    };
+    const clip = clips[filingStatus.toLowerCase()] ?? 150000;
+
+    if (agi && agi > clip) {
+      return {
+        status: "not_applicable",
+        message: `AGI ${agi.toLocaleString()} exceeds clean vehicle credit limit of ${clip.toLocaleString()}.`
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        "Income appears within EV credit limits. Verify VIN/model eligibility and MSRP caps before purchase.",
+      next_steps: [
+        "Check VIN eligibility at fueleconomy.gov",
+        "Use dealer point-of-sale transfer option if available",
+        "Confirm MSRP caps by vehicle class"
+      ]
+    };
+  },
+
+  "section-121-exclusion": (_benefit, facts) => {
+    if (!facts.hasPrimaryResidence()) {
+      if (facts.hasAnyRealEstate()) {
+        return {
+          status: "nearly_eligible",
+          message: "Real estate found but no primary residence identified for Section 121 evaluation.",
+          missing_facts: ["real_estate.properties (primary_residence)"]
+        };
+      }
+
+      return {
+        status: "not_applicable",
+        message: "No primary residence found. Section 121 applies only to sale of primary residence."
+      };
+    }
+
+    const primary = facts.primaryResidenceProperty();
+    const primaryMeta = (primary.primary_residence as Record<string, unknown> | undefined) ?? {};
+    const yearsLived = Number(primaryMeta.years_lived_in ?? 0);
+    if (yearsLived > 0 && yearsLived < 2) {
+      return {
+        status: "eligible_if_changed",
+        message: `Only ${yearsLived} year(s) in home. Need 2 of last 5 years to fully qualify for Section 121.`,
+        changes_needed: ["Delay sale until 2-year occupancy threshold where feasible"]
+      };
+    }
+
+    const acquisition = (primary.acquisition as Record<string, unknown> | undefined) ?? {};
+    const purchase = Number(acquisition.purchase_price ?? 0);
+    const current = Number(acquisition.current_market_value ?? 0);
+    const gain = purchase > 0 && current > 0 ? Math.max(0, current - purchase) : null;
+
+    const filingStatus = facts.filingStatus() ?? "single";
+    const exclusion = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? 500000 : 250000;
+    let message = `Section 121 exclusion available up to ${exclusion.toLocaleString()} of primary-residence gain.`;
+    if (gain !== null) {
+      if (gain > exclusion) {
+        message += ` Estimated gain ${gain.toLocaleString()} exceeds exclusion by ${(gain - exclusion).toLocaleString()}.`;
+      } else {
+        message += ` Estimated gain ${gain.toLocaleString()} is within exclusion.`;
+      }
+    }
+
+    return {
+      status: "eligible_now",
+      message,
+      estimated_value: `Up to $${exclusion.toLocaleString()} gain excluded`,
+      next_steps: [
+        "Track capital improvements to maximize basis",
+        "Document residency/use period",
+        "Model depreciation recapture if any rental use occurred"
+      ]
+    };
+  },
+
   "county-homestead-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
     const county = facts.county();
