@@ -40,7 +40,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Scenarios | scripts/scenario_simulator.py | backend-ts/src/domain/scenarios/* | Backend A | TODO |
 | CPA packet | scripts/generate_cpa_packet.py | backend-ts/src/domain/reports/cpaPacket.ts | Backend B | TODO |
 | Receipt classifier | scripts/classify_receipts.py | backend-ts/src/domain/documents/classifier.ts | Backend B | TODO |
-| Tax law updater | scripts/update_tax_law.py | backend-ts/src/domain/taxLaw/updater.ts | Backend A | TODO |
+| Tax law updater | scripts/update_tax_law.py | backend-ts/src/domain/taxLaw/updater.ts | Backend A | IN_PROGRESS |
 | Tax forms | scripts/generate_tax_forms.py | backend-ts/src/domain/taxForms/* | Backend B | TODO |
 | Test seeder | scripts/create_test_user.py | backend-ts/src/scripts/createTestUser.ts | Backend B | TODO |
 
@@ -58,7 +58,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Eligibility parity | tests/test_eligibility.py | backend-ts/test/eligibility.test.ts | QA/Release | DONE |
 | Rules parity | tests/test_rules.py | backend-ts/test/rules.test.ts | QA/Release | DONE |
 | Forms parity | tests/test_forms.py | backend-ts/test/forms.test.ts | QA/Release | DONE |
-| Tax law parity | tests/test_update_tax_law.py | backend-ts/test/taxLaw.test.ts | QA/Release | TODO |
+| Tax law parity | tests/test_update_tax_law.py | backend-ts/test/taxLaw.test.ts | QA/Release | DONE |
 
 ## Current Sprint Goal
 1. Port remaining rule handlers beyond the implemented subset (home office, QBI, vehicle, real estate, state/county property relief, federal family/education credits, selected energy/home-sale rules, core investment strategy rules, key healthcare/retirement planning rules, core itemized deduction rules, and entity/state strategy rules including S Corp election, Solo 401(k), Section 179, bonus depreciation, 1031, REP, PTE, cost segregation, Augusta, and state 529 planning), while continuing to tighten fact-level accuracy (tax-year-aware asset depreciation logic, S Corp salary sanity checks, and contribution-aware 529 logic including negative-path validation).
