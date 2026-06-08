@@ -1963,4 +1963,59 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("tax law route exposes changes, status, and alert count contracts", async () => {
+    const app = buildApp();
+
+    const changesRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-law/changes?limit=5"
+    });
+    expect(changesRes.statusCode).toBe(200);
+    const changesPayload = changesRes.json() as {
+      changes: Array<Record<string, unknown>>;
+      total: number;
+    };
+    expect(Array.isArray(changesPayload.changes)).toBe(true);
+    expect(typeof changesPayload.total).toBe("number");
+
+    const statusRes = await app.inject({ method: "GET", url: "/api/tax-law/status" });
+    expect(statusRes.statusCode).toBe(200);
+    expect(statusRes.json()).toHaveProperty("running");
+
+    const alertCountRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-law/alert-count?since_days=30"
+    });
+    expect(alertCountRes.statusCode).toBe(200);
+    expect(alertCountRes.json()).toHaveProperty("count");
+    expect(alertCountRes.json()).toHaveProperty("since_days", 30);
+
+    await app.close();
+  });
+
+  test("tax law update validates source and starts background update", async () => {
+    const app = buildApp();
+
+    const badSourceRes = await app.inject({
+      method: "POST",
+      url: "/api/tax-law/update?source=not_real"
+    });
+    expect(badSourceRes.statusCode).toBe(400);
+    expect((badSourceRes.json() as { detail: string }).detail).toContain("Unknown source");
+
+    const triggerRes = await app.inject({
+      method: "POST",
+      url: "/api/tax-law/update?source=irs_news&days=14&dry_run=true"
+    });
+    expect(triggerRes.statusCode).toBe(200);
+    expect(triggerRes.json()).toEqual({
+      status: "started",
+      dry_run: true,
+      days: 14,
+      source: "irs_news"
+    });
+
+    await app.close();
+  });
 });

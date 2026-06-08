@@ -15,6 +15,7 @@ import { registerTransactionsRoutes } from "./routes/transactions";
 import { registerReconciliationRoutes } from "./routes/reconciliation";
 import { registerPlanningRoutes } from "./routes/planning";
 import { registerScanRoutes } from "./routes/scan";
+import { registerTaxLawRoutes } from "./routes/taxLaw";
 
 export function buildApp() {
   ensureRequiredDirectories();
@@ -49,6 +50,7 @@ export function buildApp() {
     await registerReconciliationRoutes(api);
     await registerPlanningRoutes(api);
     await registerScanRoutes(api);
+    await registerTaxLawRoutes(api);
   }, { prefix: "/api" });
 
   if (fs.existsSync(projectPaths.frontendDist)) {
