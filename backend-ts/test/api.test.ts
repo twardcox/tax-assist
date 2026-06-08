@@ -1106,6 +1106,56 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the work opportunity tax credit", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "wotc@example.com",
+        password: "Test1234!",
+        display_name: "WOTC User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/businesses",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          businesses: [
+            {
+              name: "Hiring LLC",
+              entity_type: "llc",
+              employees: {
+                w2_employees_count: 5
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const wotc = payload.results.find((r) => r.benefit_id === "work-opportunity-tax-credit");
+    expect(wotc?.status).toBe("nearly_eligible");
+    expect(wotc?.missing_facts).toContain("businesses.employees.wotc_hires");
+
+    await app.close();
+  });
+
   test("scan route recognizes a no-income-tax state", async () => {
     const app = buildApp();
 

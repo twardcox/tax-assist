@@ -1426,6 +1426,38 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "work-opportunity-tax-credit": (_benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "Work Opportunity Tax Credit (WOTC) requires a business with employees."
+      };
+    }
+
+    const employeeCount = facts.firstBusinessW2EmployeesCount();
+    if (employeeCount === 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Has a business — WOTC is available when you hire from targeted groups (veterans, SNAP recipients, ex-felons, long-term unemployed, etc.). No W-2 employees recorded yet.",
+        missing_facts: ["businesses.employees.w2_employees_count"]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        `Business has ${employeeCount} employee(s). WOTC credit ($2,400–$9,600/qualifying hire) is available when hiring from WOTC target groups. Requires IRS Form 8850 filed with state workforce agency within 28 days of hire.`,
+      missing_facts: ["businesses.employees.wotc_hires"],
+      next_steps: [
+        "Add Form 8850 pre-screening to all new-hire onboarding",
+        "Target groups: veterans, SNAP/TANF recipients, ex-felons, long-term unemployed",
+        "Disabled veteran = up to $9,600 credit per hire",
+        "File Form 5884 with business return"
+      ]
+    };
+  },
+
   "business-vehicle-deduction": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {
