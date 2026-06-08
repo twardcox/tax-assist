@@ -678,6 +678,12 @@ describe("API baseline", () => {
     const vehicle = payload.results.find((r) => r.benefit_id === "business-vehicle-deduction");
     expect(vehicle?.status).toBe("eligible_now");
 
+    const section179 = payload.results.find((r) => r.benefit_id === "section-179-expensing");
+    expect(section179?.status).toBe("nearly_eligible");
+
+    const bonus = payload.results.find((r) => r.benefit_id === "bonus-depreciation");
+    expect(bonus?.status).toBe("nearly_eligible");
+
     const rentalDep = payload.results.find((r) => r.benefit_id === "real-estate-depreciation");
     expect(rentalDep?.status).toBe("eligible_now");
 

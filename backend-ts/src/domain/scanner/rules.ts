@@ -1841,6 +1841,52 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "section-179-expensing": (_benefit, facts) => {
+    if (!facts.hasSelfEmployment()) {
+      return {
+        status: "not_applicable",
+        message: "Section 179 requires an active business."
+      };
+    }
+
+    if (facts.firstBusinessAssetsPlacedInServiceCount() > 0) {
+      return {
+        status: "eligible_now",
+        message: "Business assets were placed in service. Section 179 immediate expensing is available.",
+        next_steps: ["Complete Form 4562", "Apply Section 179 before bonus depreciation on the same assets"]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: "Has a business. Section 179 can apply if equipment or vehicles are purchased and placed in service this year.",
+      missing_facts: ["businesses.depreciation.assets_placed_in_service"],
+      next_steps: [
+        "Record any business assets purchased and placed in service",
+        "Evaluate year-end equipment purchases only if they fit business needs"
+      ]
+    };
+  },
+
+  "bonus-depreciation": (_benefit, facts) => {
+    if (!facts.hasSelfEmployment() && !facts.hasRentalProperty()) {
+      return {
+        status: "not_applicable",
+        message: "Bonus depreciation requires business or rental real-estate activity."
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: "Bonus depreciation may apply on qualifying assets placed in service (modeled at 40% for 2025).",
+      next_steps: [
+        "Identify qualifying asset purchases this year",
+        "Apply Section 179 first and bonus depreciation on remaining basis",
+        "Consider cost segregation for real estate-related acceleration opportunities"
+      ]
+    };
+  },
+
   "hsa-triple-tax-advantage": (_benefit, facts) => {
     const coverage = facts.healthcareCoverage();
     if (coverage === "medicare" || coverage === "medicaid") {

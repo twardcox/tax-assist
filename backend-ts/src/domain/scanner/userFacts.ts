@@ -275,6 +275,13 @@ export class UserFacts {
     return soloA.established === true || soloB.established === true;
   }
 
+  firstBusinessAssetsPlacedInServiceCount(): number {
+    const biz = this.firstBusiness();
+    const depreciation = toObject(biz.depreciation);
+    const assets = depreciation.assets_placed_in_service;
+    return Array.isArray(assets) ? assets.length : 0;
+  }
+
   businessHealthInsurancePremium(): number {
     const biz = this.firstBusiness();
     const healthInsurance = toObject(biz.health_insurance);
