@@ -945,6 +945,99 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "qsbs-exclusion": (_benefit, facts) => {
+    const hasStartup = facts.hasStartupEquity();
+    if (!hasStartup) {
+      if (facts.businesses().length === 0) {
+        return {
+          status: "not_applicable",
+          message:
+            "§1202 QSBS exclusion applies to original-issue C corporation stock from qualified small businesses. No startup equity or business activity recorded."
+        };
+      }
+
+      return {
+        status: "future_opportunity",
+        message:
+          "If you invest in or found a qualifying C corporation startup, §1202 may exclude 100% of gains up to $10M+. Set investments.has_qualified_small_business_stock: true if applicable.",
+        next_steps: [
+          "For startup founders: early exercise of options + §83(b) election starts the 5-year holding period",
+          "Ensure company is a C corp (not LLC or S corp) with assets ≤ $50M at time of investment",
+          "Document original issuance (not secondary purchase) to preserve §1202 eligibility"
+        ]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message:
+        "QSBS (§1202) stock identified. If held 5+ years and all requirements met, up to 100% of gains may be excluded (greater of $10M or 10× basis per issuer per taxpayer).",
+      estimated_value:
+        "100% federal capital gains exclusion on qualifying gains (no upper limit with 10× basis rule)",
+      next_steps: [
+        "Confirm: (1) original issuance from the corporation, (2) C corp status, (3) assets ≤ $50M at issuance, (4) active qualified business (not professional services, finance, hospitality)",
+        "Track exact acquisition date — 5-year holding period must be met before sale",
+        "Consider gifting shares to family members to multiply the per-taxpayer exclusion",
+        "Note: CA and some states do not conform to §1202 — state tax may apply"
+      ]
+    };
+  },
+
+  "net-unrealized-appreciation": (_benefit, facts) => {
+    const hasW2 = facts.hasW2Income();
+    const hasRetirementIncome = facts.hasRetirementIncome();
+
+    if (!hasW2 && !hasRetirementIncome) {
+      return {
+        status: "not_applicable",
+        message: "NUA strategy applies to employees with employer stock in a 401k/profit-sharing plan."
+      };
+    }
+
+    const retirement = facts.data.retirement as Record<string, unknown> | undefined;
+    const employerPlans = (retirement?.employer_plans as Record<string, unknown> | undefined) ?? {};
+    const has401k = Boolean(employerPlans.traditional_401k || employerPlans.profit_sharing);
+
+    if (!has401k && !hasRetirementIncome) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Has W-2 income — if your 401k or profit-sharing plan holds employer stock with significant appreciation, the NUA strategy can save 20–37% in taxes vs. rollover.",
+        missing_facts: ["retirement.employer_plans.traditional_401k"],
+        next_steps: [
+          "Ask your plan administrator for the cost basis of employer stock in your plan",
+          "Compare NUA tax cost vs. rollover with your CPA before distributing",
+          "NUA is only available as a lump-sum distribution — cannot split across years"
+        ]
+      };
+    }
+
+    const nuaAmount = facts.employerStockNuaAmount();
+    if (nuaAmount > 0) {
+      const savingsEstimate = nuaAmount * 0.2;
+      return {
+        status: "eligible_now",
+        message:
+          `NUA strategy available — $${nuaAmount.toLocaleString()} of employer stock appreciation could be taxed at LTCG rates (~$${savingsEstimate.toLocaleString()} potential savings vs. ordinary income).`,
+        estimated_value: `~$${savingsEstimate.toLocaleString()}+ lifetime savings (20% × NUA)`,
+        next_steps: [
+          "Work with CPA to model NUA vs. IRA rollover — NUA wins when appreciation is large",
+          "Lump-sum distribution must occur in one tax year",
+          "Cost basis of employer stock is taxed as ordinary income in the year of distribution",
+          "NUA (appreciation through distribution date) is taxed at LTCG rates upon sale — regardless of post-distribution holding period",
+          "Appreciation after the distribution date follows actual holding period: LTCG if held >1 year, STCG if sold sooner"
+        ]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        "Has retirement plan — if plan holds appreciated employer stock, NUA strategy may apply. Record employer stock NUA amount to calculate potential savings.",
+      missing_facts: ["retirement.employer_plans.traditional_401k.employer_stock_nua"]
+    };
+  },
+
   "backdoor-roth-ira": (_benefit, facts) => {
     const agi = facts.estimatedAgi();
     const filingStatus = facts.filingStatus() ?? "single";
@@ -1113,6 +1206,68 @@ const rules: Record<string, RuleFn> = {
       status: "eligible_now",
       message: "Charitable contribution deduction available (itemizing confirmed).",
       next_steps: nextSteps
+    };
+  },
+
+  "conservation-easement": (_benefit, facts) => {
+    if (!facts.hasAnyRealEstate()) {
+      return {
+        status: "not_applicable",
+        message: "Conservation easement deduction requires ownership of qualifying real property."
+      };
+    }
+
+    const properties = facts.properties();
+    const qualifyingTypes = new Set([
+      "land",
+      "farm",
+      "ranch",
+      "rural",
+      "undeveloped",
+      "agricultural",
+      "timberland",
+      "wetland",
+      "open_space"
+    ]);
+    const qualifying = properties.filter((property) => {
+      const propertyType = String(property.property_type ?? "").toLowerCase();
+      const description = String(property.description ?? "").toLowerCase();
+      return Array.from(qualifyingTypes).some((type) => propertyType.includes(type) || description.includes(type));
+    });
+
+    if (qualifying.length === 0) {
+      return {
+        status: "eligible_if_changed",
+        message:
+          "Has real estate — conservation easement deduction (§170(h)) requires land with conservation potential (farm, ranch, undeveloped land, habitat, scenic corridor). No qualifying land type identified in your data.",
+        changes_needed: ["Own land with qualifying conservation purpose"],
+        next_steps: [
+          "CAUTION: Only pursue with a reputable land trust — not a promoter",
+          "Syndicated easements are IRS listed transactions with heavy penalties"
+        ]
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const agiLimit = agi ? agi * 0.5 : null;
+    const landValue = qualifying.reduce((sum, property) => sum + Number(property.current_value ?? 0), 0);
+    const easementEstimate = landValue * 0.4;
+    let message =
+      `Has ${qualifying.length} qualifying land parcel(s) (estimated value $${landValue.toLocaleString()}). Conservation easement could yield ~$${easementEstimate.toLocaleString()} deduction (~40% of land value estimate).`;
+    if (agiLimit) {
+      message += ` Annual deduction limit: $${agiLimit.toLocaleString()} (50% of AGI) with 15-year carryforward.`;
+    }
+
+    return {
+      status: "nearly_eligible",
+      message,
+      estimated_value: `~$${easementEstimate.toLocaleString()} deduction (50% AGI/year + 15-yr carryforward)`,
+      next_steps: [
+        "Consult with a reputable land trust — NOT a promoter offering 4:1+ deduction ratios",
+        "Get a qualified appraisal from a certified appraiser (not the promoter's appraiser)",
+        "Deed must be recorded by December 31; appraisal complete before return due date",
+        "Review with CPA and attorney — high IRS audit rate on this deduction"
+      ]
     };
   },
 

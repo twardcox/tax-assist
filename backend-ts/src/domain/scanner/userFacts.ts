@@ -468,6 +468,24 @@ export class UserFacts {
     return taxableAccounts.some((account) => toNumber(account.unrealized_gains) > 0);
   }
 
+  hasStartupEquity(): boolean {
+    const investments = toObject(this.data.investments);
+    if (investments.has_qualified_small_business_stock === true) {
+      return true;
+    }
+
+    const taxableAccounts = toObjectArray(investments.taxable_accounts);
+    return taxableAccounts.some((account) => {
+      if (account.has_startup_stock === true) {
+        return true;
+      }
+
+      const holdings = toObject(account.holdings);
+      const individualStocks = holdings.individual_stocks;
+      return Array.isArray(individualStocks) ? individualStocks.length > 0 : individualStocks === true;
+    });
+  }
+
   firstPropertyMortgageInterestPaid(): number {
     const property = this.firstProperty();
     const financing = toObject(property.financing);
@@ -571,6 +589,13 @@ export class UserFacts {
 
     const legacyTraditional = toObject(retirement.traditional_ira);
     return toNumber(legacyTraditional.balance);
+  }
+
+  employerStockNuaAmount(): number {
+    const retirement = toObject(this.data.retirement);
+    const employerPlans = toObject(retirement.employer_plans);
+    const traditional401k = toObject(employerPlans.traditional_401k);
+    return toNumber(traditional401k.employer_stock_nua);
   }
 
   qlacEligibleRetirementBalance(): number {

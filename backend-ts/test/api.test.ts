@@ -1407,6 +1407,174 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the qsbs exclusion opportunity", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "qsbs@example.com",
+        password: "Test1234!",
+        display_name: "QSBS User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/businesses",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          businesses: [
+            {
+              name: "FounderCo",
+              entity_type: "llc"
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const qsbs = payload.results.find((r) => r.benefit_id === "qsbs-exclusion");
+    expect(qsbs?.status).toBe("future_opportunity");
+    expect(qsbs?.message).toContain("Set investments.has_qualified_small_business_stock: true if applicable.");
+
+    await app.close();
+  });
+
+  test("scan route recognizes the conservation easement opportunity", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "easement@example.com",
+        password: "Test1234!",
+        display_name: "Easement User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          properties: [
+            {
+              property_type: "land",
+              description: "Undeveloped scenic corridor",
+              current_value: 500000
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          estimated_agi: 200000
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const easement = payload.results.find((r) => r.benefit_id === "conservation-easement");
+    expect(easement?.status).toBe("nearly_eligible");
+    expect(easement?.message).toContain("Annual deduction limit");
+
+    await app.close();
+  });
+
+  test("scan route recognizes the net unrealized appreciation opportunity", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "nua@example.com",
+        password: "Test1234!",
+        display_name: "NUA User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          w2_employment: [
+            {
+              employer_name: "Employer Inc",
+              wages: 120000
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/retirement",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          employer_plans: {
+            traditional_401k: {
+              employer_stock_nua: 50000
+            }
+          }
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const nua = payload.results.find((r) => r.benefit_id === "net-unrealized-appreciation");
+    expect(nua?.status).toBe("eligible_now");
+    expect(nua?.message).toContain("NUA strategy available");
+
+    await app.close();
+  });
+
   test("scan route recognizes the ichra qsehra opportunity", async () => {
     const app = buildApp();
 
