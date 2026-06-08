@@ -56,7 +56,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 |---|---|---|---|---|
 | API baseline tests | N/A | backend-ts/test/api.test.ts | QA/Release | DONE |
 | Eligibility parity | tests/test_eligibility.py | backend-ts/test/eligibility.test.ts | QA/Release | TODO |
-| Rules parity | tests/test_rules.py | backend-ts/test/rules.test.ts | QA/Release | TODO |
+| Rules parity | tests/test_rules.py | backend-ts/test/rules.test.ts | QA/Release | DONE |
 | Forms parity | tests/test_forms.py | backend-ts/test/forms.test.ts | QA/Release | TODO |
 | Tax law parity | tests/test_update_tax_law.py | backend-ts/test/taxLaw.test.ts | QA/Release | TODO |
 
