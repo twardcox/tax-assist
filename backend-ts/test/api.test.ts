@@ -678,6 +678,15 @@ describe("API baseline", () => {
     const passive = payload.results.find((r) => r.benefit_id === "passive-activity-loss");
     expect(passive?.status).toBe("eligible_now");
 
+    const exchange1031 = payload.results.find((r) => r.benefit_id === "1031-exchange");
+    expect(exchange1031?.status).toBe("eligible_now");
+
+    const rep = payload.results.find((r) => r.benefit_id === "real-estate-professional-status");
+    expect(rep?.status).toBe("future_opportunity");
+
+    const pte = payload.results.find((r) => r.benefit_id === "pte-election");
+    expect(pte?.status).toBe("eligible_if_changed");
+
     const retirementExemption = payload.results.find((r) => r.benefit_id === "state-retirement-income-exemption");
     expect(retirementExemption?.status).toBe("eligible_now");
 

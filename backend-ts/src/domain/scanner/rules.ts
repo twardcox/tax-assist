@@ -16,6 +16,38 @@ type RuleOutput = {
 type RuleFn = (benefit: RawBenefit, facts: UserFacts) => RuleOutput;
 
 const NO_INCOME_TAX_STATES = new Set(["AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"]);
+const PTE_STATES = new Set([
+  "CA",
+  "NY",
+  "NJ",
+  "IL",
+  "MA",
+  "CT",
+  "MD",
+  "VA",
+  "CO",
+  "OR",
+  "GA",
+  "WI",
+  "MN",
+  "NC",
+  "OH",
+  "SC",
+  "AZ",
+  "MI",
+  "PA",
+  "LA",
+  "ID",
+  "RI",
+  "ME",
+  "MO",
+  "VT",
+  "AL",
+  "UT",
+  "NM",
+  "KS",
+  "OK"
+]);
 const RETIREMENT_FRIENDLY_STATES = new Set([
   "AL",
   "AZ",
@@ -1317,6 +1349,176 @@ const rules: Record<string, RuleFn> = {
       ]
     };
   },
+
+  "1031-exchange": (_benefit, facts) => {
+    if (!facts.hasRentalProperty()) {
+      return {
+        status: "not_applicable",
+        message: "1031 exchange applies to investment or business real property only (not primary residence)."
+      };
+    }
+
+    const property = facts.firstProperty();
+    const acquisition = (property.acquisition as Record<string, unknown> | undefined) ?? {};
+    const purchase = Number(acquisition.purchase_price ?? 0);
+    const current = Number(acquisition.current_market_value ?? 0);
+
+    if (purchase <= 0 || current <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has rental property. Confirm current value to assess potential gain for 1031 planning.",
+        missing_facts: ["real_estate.acquisition.purchase_price", "real_estate.acquisition.current_market_value"]
+      };
+    }
+
+    const gain = current - purchase;
+    if (gain <= 0) {
+      return {
+        status: "future_opportunity",
+        message: "No unrealized gain at current values. 1031 planning becomes relevant when selling at a gain.",
+        next_steps: ["Revisit when property has appreciated or before any planned sale"]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Estimated gain of ~${gain.toLocaleString()} on rental property. A 1031 exchange would defer this tax on sale.`,
+      estimated_value: `Deferred tax on ~${gain.toLocaleString()} gain plus depreciation recapture`,
+      next_steps: [
+        "Engage a Qualified Intermediary before listing the property",
+        "Do not receive sale proceeds directly; funds must flow through the intermediary",
+        "Identify replacement property within 45 days of closing",
+        "Close replacement property within 180 days"
+      ]
+    };
+  },
+
+  "real-estate-professional-status": (_benefit, facts) => {
+    if (!facts.hasRentalProperty()) {
+      return {
+        status: "not_applicable",
+        message: "Real Estate Professional status requires rental real estate."
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    if (agi && agi <= 150000) {
+      return {
+        status: "future_opportunity",
+        message: `AGI ${agi.toLocaleString()} is still within the $25,000 rental loss allowance range. REP status becomes more critical above $150,000.`,
+        next_steps: ["Revisit if AGI grows above $150,000"]
+      };
+    }
+
+    return {
+      status: "eligible_if_changed",
+      message: "Real Estate Professional status can unlock unlimited rental loss deductions against ordinary income.",
+      estimated_value: "Depends on suspended losses, potentially $10,000-$200,000+ unlocked",
+      changes_needed: [
+        "Spend more than 750 hours per year in real property activities",
+        "Ensure real estate hours exceed hours in any other profession",
+        "Maintain detailed hourly activity logs throughout the year",
+        "File a material participation statement or aggregation election"
+      ]
+    };
+  },
+
+  "pte-election": (_benefit, facts) => {
+    if (!facts.hasSelfEmployment()) {
+      return {
+        status: "not_applicable",
+        message: "PTE election requires pass-through business income (S Corp, partnership, or multi-member LLC)."
+      };
+    }
+
+    const residence = facts.stateCode();
+    const nexusStates = facts.businessNexusStates();
+    const pteNexus = Array.from(nexusStates).filter((state) => PTE_STATES.has(state) && !NO_INCOME_TAX_STATES.has(state));
+
+    const business = facts.firstBusiness();
+    const formationRaw = business.formation_state;
+    const formation = typeof formationRaw === "string" ? formationRaw.trim().toUpperCase() : "";
+    const formationNote = formation && !nexusStates.has(formation)
+      ? ` Note: ${formation} is the formation state but does not appear in operating states. PTE elections apply where income is earned.`
+      : "";
+
+    if (!residence && nexusStates.size === 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Set residence state and business operating states to evaluate PTE election across nexus states.",
+        missing_facts: ["household.residence.state", "businesses.businesses[*].operating_states"]
+      };
+    }
+
+    if (pteNexus.length === 0) {
+      const hasOperatingStates = facts.businesses().some((biz) => {
+        const operating = biz.operating_states;
+        return (Array.isArray(operating) && operating.length > 0) || (typeof operating === "string" && operating.trim().length > 0);
+      });
+
+      if (!hasOperatingStates && residence && !PTE_STATES.has(residence)) {
+        return {
+          status: "nearly_eligible",
+          message: `Residence state ${residence} has not enacted a PTE election. If this business operates in other states, add operating states to evaluate opportunities.${formationNote}`,
+          missing_facts: ["businesses.businesses[*].operating_states"]
+        };
+      }
+
+      const statesStr = nexusStates.size > 0 ? Array.from(nexusStates).sort().join(", ") : "your states";
+      return {
+        status: "not_applicable",
+        message: `None of your nexus states (${statesStr}) currently have a modeled PTE election opportunity.${formationNote}`
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const netProfit = facts.businesses().reduce((sum, biz) => {
+      const financials = (biz.financials as Record<string, unknown> | undefined) ?? {};
+      return sum + Number(financials.net_profit_loss ?? 0);
+    }, 0);
+
+    if (netProfit <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: `PTE election available in: ${pteNexus.sort().join(", ")}. Business net profit is not yet recorded.${formationNote}`,
+        missing_facts: ["businesses.financials.net_profit_loss"],
+        next_steps: ["Enter business net profit to evaluate PTE tax savings"]
+      };
+    }
+
+    const ordered = pteNexus.sort();
+    const primary = residence && ordered.includes(residence) ? residence : ordered[0];
+    const otherPte = ordered.filter((s) => s !== primary);
+    const multiNote = otherPte.length > 0 ? ` Additional PTE elections also available in: ${otherPte.join(", ")}.` : "";
+    const nonResNote = residence && !ordered.includes(residence)
+      ? ` (You reside in ${residence}, but your business has nexus in ${primary}.)`
+      : "";
+
+    if (agi && agi < 150000) {
+      return {
+        status: "eligible_if_changed",
+        message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} At AGI ${agi.toLocaleString()}, the SALT cap may not be your binding constraint.`,
+        next_steps: ["Consult CPA to model net federal benefit versus state credit limitations"]
+      };
+    }
+
+    const nextSteps = [
+      `Contact your CPA to model net federal benefit for each state: ${ordered.join(", ")}`,
+      "File the PTE election on the entity return (many states: by March 15)",
+      "Get shareholder or partner consent if S Corp or multi-member LLC",
+      "For CA, pay estimated PTE tax by June 15 or risk losing the deduction"
+    ];
+    if (otherPte.length > 0) {
+      nextSteps.push(`File separate PTE elections in each nexus state: ${otherPte.join(", ")}`);
+    }
+
+    return {
+      status: "eligible_now",
+      message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} Entity-level state tax payment can bypass the $10,000 SALT cap at the owner level.`,
+      next_steps: nextSteps
+    };
+  },
+
   "sep-ira-contribution": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {

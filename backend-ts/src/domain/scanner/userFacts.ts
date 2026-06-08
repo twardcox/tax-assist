@@ -123,6 +123,33 @@ export class UserFacts {
     return this.businesses()[0] ?? {};
   }
 
+  businessNexusStates(): Set<string> {
+    const states = new Set<string>();
+    const residence = this.stateCode();
+    if (residence) {
+      states.add(residence);
+    }
+
+    for (const business of this.businesses()) {
+      const operating = business.operating_states;
+      if (Array.isArray(operating)) {
+        for (const entry of operating) {
+          if (typeof entry === "string" && entry.trim()) {
+            states.add(entry.trim().toUpperCase());
+          }
+        }
+      } else if (typeof operating === "string" && operating.trim()) {
+        for (const part of operating.split(",")) {
+          if (part.trim()) {
+            states.add(part.trim().toUpperCase());
+          }
+        }
+      }
+    }
+
+    return states;
+  }
+
   hasAnyRealEstate(): boolean {
     const realEstate = toObject(this.data.real_estate);
     const properties = realEstate.properties;
