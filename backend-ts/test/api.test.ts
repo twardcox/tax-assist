@@ -1050,6 +1050,62 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the small employer retirement startup credit", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "startup-credit@example.com",
+        password: "Test1234!",
+        display_name: "Startup Credit User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/businesses",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          businesses: [
+            {
+              name: "Growth LLC",
+              entity_type: "llc",
+              employees: {
+                w2_employees_count: 3
+              },
+              retirement_plans: {
+                sep_ira: false,
+                simple_ira: false,
+                solo_401k: false,
+                defined_benefit: false
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const credit = payload.results.find((r) => r.benefit_id === "small-employer-retirement-startup-credit");
+    expect(credit?.status).toBe("eligible_now");
+    expect(credit?.message).toContain("§45E applies");
+
+    await app.close();
+  });
+
   test("scan route recognizes a no-income-tax state", async () => {
     const app = buildApp();
 

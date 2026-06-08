@@ -304,6 +304,14 @@ export class UserFacts {
     return toNumber(employees.w2_employees_count);
   }
 
+  firstBusinessHasQualifiedRetirementPlan(): boolean {
+    const biz = this.firstBusiness();
+    const retirementPlans = toObject(biz.retirement_plans);
+    return ["sep_ira", "simple_ira", "solo_401k", "defined_benefit"].some(
+      (key) => retirementPlans[key] === true
+    );
+  }
+
   solo401kEstablished(): boolean {
     const retirement = toObject(this.data.retirement);
     const selfEmployedPlans = toObject(retirement.self_employed_plans);

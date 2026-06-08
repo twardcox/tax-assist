@@ -1324,6 +1324,52 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "small-employer-retirement-startup-credit": (_benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "§45E small employer retirement startup credit requires a business with employees."
+      };
+    }
+
+    const employeeCount = facts.firstBusinessW2EmployeesCount();
+    if (employeeCount === 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Has a business — §45E credit is available when you add employees and set up a new retirement plan. No W-2 employees recorded (solo operators do not qualify for this specific credit).",
+        missing_facts: ["businesses.employees.w2_employees_count"]
+      };
+    }
+
+    if (employeeCount > 100) {
+      return {
+        status: "not_applicable",
+        message: `§45E requires ≤ 100 employees. Business has ${employeeCount} employees.`
+      };
+    }
+
+    if (facts.firstBusinessHasQualifiedRetirementPlan()) {
+      return {
+        status: "not_applicable",
+        message: "Business already has a qualified retirement plan. §45E credit is for new plan establishment only."
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message:
+        `§45E applies — ${employeeCount} employee(s), no existing retirement plan. Credit = 100% of startup costs up to $5,000/year × 3 years ($15,000 total). Set up a 401k, SIMPLE IRA, or SEP-IRA this year.`,
+      estimated_value: "$500 – $5,000/year for 3 years; additional SECURE 2.0 employer contribution credit available",
+      next_steps: [
+        "Engage a plan provider (Fidelity, Vanguard, etc.) — ask about §45E credit eligibility",
+        "401k is preferred: higher contribution limits + employer match options",
+        "Add auto-enrollment to also claim the $500/year SECURE 2.0 auto-enrollment credit",
+        "File Form 8881 with the return for each of the 3 qualifying years"
+      ]
+    };
+  },
+
   "business-vehicle-deduction": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {
