@@ -7,7 +7,8 @@ import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { addTransaction, fileAlreadyApplied } from "../db/transactionsRepo";
 import { applyDotPathToSection } from "../db/sectionRepo";
-import { classifyFilename, inferExtractionFromFilename } from "../domain/documents/classifier";
+import { classifyFilename } from "../domain/documents/classifier";
+import { inferExtractionFromUpload } from "../domain/documents/extraction";
 import {
   deleteDocumentRecord,
   getDocumentContent,
@@ -121,7 +122,7 @@ function buildExtractionResult(filename: string, content: Buffer): Record<string
   const stem = path.basename(filename, path.extname(filename));
   const lower = filename.toLowerCase();
   const classified = classifyFilename(filename, content.length);
-  const inferred = inferExtractionFromFilename(filename, content.length);
+  const inferred = inferExtractionFromUpload(filename, content);
   const totalAmount = Number((content.length / 10).toFixed(2));
 
   return {
