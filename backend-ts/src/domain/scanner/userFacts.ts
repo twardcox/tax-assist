@@ -304,6 +304,51 @@ export class UserFacts {
     return toNumber(investment.long_term_capital_gains);
   }
 
+  householdSize(): number {
+    const hh = toObject(this.data.household);
+    let size = 1;
+    const spouse = toObject(hh.spouse);
+    if (spouse.present === true) {
+      size += 1;
+    }
+
+    const dependentsInHousehold = toObject(hh.dependents);
+    const counted = toNumber(dependentsInHousehold.count);
+    if (counted > 0) {
+      size += counted;
+    } else {
+      size += this.dependents().length;
+    }
+
+    return Math.max(1, size);
+  }
+
+  transferWealthGoal(): boolean | null {
+    const goals = toObject(this.data.goals);
+    const primaryGoals = toObject(goals.primary_goals);
+    const goal = primaryGoals.transfer_wealth_to_heirs ?? goals.transfer_wealth_to_heirs;
+    if (goal === true) {
+      return true;
+    }
+    if (goal === false) {
+      return false;
+    }
+    return null;
+  }
+
+  traditionalIraBalance(): number {
+    const retirement = toObject(this.data.retirement);
+    const individual = toObject(retirement.individual_retirement_accounts);
+    const traditional = toObject(individual.traditional_ira);
+    const accounts = toObjectArray(traditional.accounts);
+    if (accounts.length > 0) {
+      return toNumber(accounts[0].balance);
+    }
+
+    const legacyTraditional = toObject(retirement.traditional_ira);
+    return toNumber(legacyTraditional.balance);
+  }
+
   dependentCareFsaElection(): number {
     const healthcare = toObject(this.data.healthcare);
     const fsa = toObject(toObject(healthcare.flexible_spending_accounts).dependent_care_fsa);

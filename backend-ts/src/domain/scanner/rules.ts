@@ -619,6 +619,161 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "premium-tax-credit": (_benefit, facts) => {
+    const coverage = facts.healthcareCoverage();
+    if (coverage && !["marketplace", "aca", "exchange", "healthcare.gov"].includes(coverage.toLowerCase())) {
+      return {
+        status: "not_applicable",
+        message: `Premium Tax Credit requires ACA marketplace coverage. Coverage '${coverage}' does not qualify.`
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const householdSize = facts.householdSize();
+    const fplBase = 15060 + (householdSize - 1) * 5380;
+    const fpl400 = fplBase * 4;
+
+    if (!coverage) {
+      if (!facts.hasSelfEmployment()) {
+        return {
+          status: "not_applicable",
+          message:
+            "Premium Tax Credit applies to ACA marketplace insurance. No qualifying marketplace coverage was found."
+        };
+      }
+      return {
+        status: "nearly_eligible",
+        message:
+          "Self-employment detected without coverage type. ACA marketplace may provide a Premium Tax Credit.",
+        missing_facts: ["healthcare.coverage_type"]
+      };
+    }
+
+    if (agi == null) {
+      return {
+        status: "nearly_eligible",
+        message: "Marketplace coverage found. Add AGI to calculate Premium Tax Credit amount.",
+        missing_facts: ["household.estimated_agi"]
+      };
+    }
+
+    if (agi < fplBase * 0.99) {
+      return {
+        status: "not_applicable",
+        message:
+          `AGI ${agi.toLocaleString()} appears below 100% FPL (${fplBase.toLocaleString()} for household size ${householdSize}).`
+      };
+    }
+
+    if (agi <= fplBase * 1.5) {
+      return {
+        status: "eligible_now",
+        message:
+          `ACA Premium Tax Credit available. At ~${Math.round((agi / fplBase) * 100)}% FPL, benchmark premium may be near $0.`,
+        estimated_value: "$0 premium for benchmark Silver plan at lower FPL bands",
+        next_steps: ["Reconcile with Form 8962", "Keep Form 1095-A from exchange"]
+      };
+    }
+
+    const capPct = agi < fpl400 ? Math.min(8.5, ((agi / fplBase - 1.5) / 2.5) * 8.5) : 8.5;
+    return {
+      status: "eligible_now",
+      message:
+        `ACA Premium Tax Credit available. Estimated premium cap is ~${capPct.toFixed(1)}% of income at current AGI.`,
+      estimated_value: `Credit equals benchmark premium minus ~$${Math.round((agi * capPct) / 100).toLocaleString()} annual required contribution`,
+      next_steps: ["Use Form 8962 to compute final credit", "Manage year-end MAGI to avoid repayment surprises"]
+    };
+  },
+
+  "backdoor-roth-ira": (_benefit, facts) => {
+    const agi = facts.estimatedAgi();
+    const filingStatus = facts.filingStatus() ?? "single";
+    const rothLimits: Record<string, number> = {
+      mfj: 236000,
+      married_filing_jointly: 236000,
+      single: 150000,
+      hoh: 150000,
+      head_of_household: 150000
+    };
+    const limit = rothLimits[filingStatus.toLowerCase()] ?? 150000;
+
+    if (agi == null) {
+      return {
+        status: "nearly_eligible",
+        message: "AGI is required to determine direct Roth eligibility versus backdoor strategy.",
+        missing_facts: ["household.estimated_agi"]
+      };
+    }
+
+    if (agi <= limit) {
+      return {
+        status: "not_applicable",
+        message:
+          `AGI ${agi.toLocaleString()} is below direct Roth IRA phaseout. Backdoor strategy is not required.`
+      };
+    }
+
+    const traditionalBalance = facts.traditionalIraBalance();
+    if (traditionalBalance > 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          `Backdoor Roth is possible, but pro-rata rule applies with traditional IRA balance of ~${traditionalBalance.toLocaleString()}.`,
+        changes_needed: [
+          "Roll pre-tax traditional IRA balance into an employer 401(k) where possible",
+          "Then execute backdoor Roth conversion on a cleaner basis"
+        ]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message:
+        "Income is above Roth limit and no pre-tax IRA balance is detected. Backdoor Roth process is available.",
+      estimated_value: "$7,000/year ($8,000 if 50+) moved into Roth with long-term tax-free growth",
+      next_steps: [
+        "Make nondeductible traditional IRA contribution",
+        "Convert to Roth promptly",
+        "File Form 8606 each year"
+      ]
+    };
+  },
+
+  "foreign-earned-income-exclusion": (_benefit, facts) => {
+    if (facts.stateCode()) {
+      return {
+        status: "not_applicable",
+        message: "US state residence recorded. FEIE generally applies to taxpayers living/working abroad."
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: "No US state residence recorded. FEIE may apply if foreign residency and tests are met.",
+      missing_facts: ["household.residence.state or foreign country confirmation"]
+    };
+  },
+
+  "annual-gift-tax-exclusion": (_benefit, facts) => {
+    const transferGoal = facts.transferWealthGoal();
+    if (transferGoal === false) {
+      return {
+        status: "not_applicable",
+        message: "Wealth transfer is not currently a stated goal."
+      };
+    }
+
+    return {
+      status: transferGoal ? "eligible_now" : "nearly_eligible",
+      message: "Annual gift tax exclusion can remove $19,000 per recipient ($38,000 MFJ) from taxable estate each year.",
+      estimated_value: "$19,000-$38,000 per recipient per year transferred without gift tax",
+      next_steps: [
+        "Identify intended recipients and year-end transfer plan",
+        "Track gifts and consider 529 superfunding strategy where appropriate"
+      ]
+    };
+  },
+
   "county-homestead-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
     const county = facts.county();

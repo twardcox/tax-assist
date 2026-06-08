@@ -61,6 +61,6 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Tax law parity | tests/test_update_tax_law.py | backend-ts/test/taxLaw.test.ts | QA/Release | TODO |
 
 ## Current Sprint Goal
-1. Port remaining rule handlers beyond the implemented subset (home office, QBI, vehicle, real estate, state/county property relief, federal family/education credits, selected energy/home-sale rules, and core investment strategy rules).
+1. Port remaining rule handlers beyond the implemented subset (home office, QBI, vehicle, real estate, state/county property relief, federal family/education credits, selected energy/home-sale rules, core investment strategy rules, and key healthcare/retirement planning rules).
 2. Expand SQLite schema toward normalized section persistence.
 3. Keep frontend API contract unchanged for migrated routes.

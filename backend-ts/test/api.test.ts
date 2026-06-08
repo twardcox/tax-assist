@@ -893,6 +893,119 @@ describe("API baseline", () => {
     const harvesting = payload.results.find((r) => r.benefit_id === "capital-gains-harvesting");
     expect(harvesting?.status).toBe("eligible_now");
 
+    const premium = payload.results.find((r) => r.benefit_id === "premium-tax-credit");
+    expect(premium?.status).toBe("not_applicable");
+
+    const backdoor = payload.results.find((r) => r.benefit_id === "backdoor-roth-ira");
+    expect(backdoor?.status).toBe("not_applicable");
+
+    const feie = payload.results.find((r) => r.benefit_id === "foreign-earned-income-exclusion");
+    expect(feie?.status).toBe("not_applicable");
+
+    const gift = payload.results.find((r) => r.benefit_id === "annual-gift-tax-exclusion");
+    expect(gift?.status).toBe("nearly_eligible");
+
+    await app.close();
+  });
+
+  test("scan route evaluates premium tax credit and backdoor Roth positive paths", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "ptc-backdoor@example.com",
+        password: "Test1234!",
+        display_name: "PTC Backdoor"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          filing_status: "single",
+          estimated_agi: 200000,
+          residence: {
+            state: "TX",
+            county: "Travis"
+          },
+          taxpayer: { age: 42 }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/healthcare",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          insurance: {
+            coverage_type: "marketplace"
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/retirement",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          individual_retirement_accounts: {
+            traditional_ira: {
+              accounts: [
+                {
+                  balance: 0
+                }
+              ]
+            }
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/goals",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          primary_goals: {
+            transfer_wealth_to_heirs: true
+          }
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+
+    const premium = payload.results.find((r) => r.benefit_id === "premium-tax-credit");
+    expect(premium?.status).toBe("eligible_now");
+
+    const backdoor = payload.results.find((r) => r.benefit_id === "backdoor-roth-ira");
+    expect(backdoor?.status).toBe("eligible_now");
+
+    const gift = payload.results.find((r) => r.benefit_id === "annual-gift-tax-exclusion");
+    expect(gift?.status).toBe("eligible_now");
+
     await app.close();
   });
 
