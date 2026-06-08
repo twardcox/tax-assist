@@ -491,7 +491,7 @@ describe("API baseline", () => {
       payload: {
         data: {
           filing_status: "single",
-          estimated_agi: 180000,
+          estimated_agi: 90000,
           taxpayer: { age: 45 }
         }
       }
@@ -509,6 +509,10 @@ describe("API baseline", () => {
               entity_type: "sole_prop",
               financials: { net_profit_loss: 100000 },
               home_office: { claimed: true, square_footage: 120, home_total_sqft: 2000 },
+              vehicle: {
+                business_vehicle: true,
+                business_miles: 1200
+              },
               health_insurance: {
                 owner_health_insurance_deducted: true,
                 premium_amount: 8400
@@ -551,6 +555,29 @@ describe("API baseline", () => {
       }
     });
 
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              acquisition: {
+                purchase_price: 400000,
+                current_market_value: 520000
+              },
+              financing: {
+                mortgage_interest_paid: 18000,
+                property_tax_paid: 9000
+              }
+            }
+          ]
+        }
+      }
+    });
+
     const scanRes = await app.inject({
       method: "POST",
       url: "/api/scan?tax_year=2025",
@@ -566,6 +593,21 @@ describe("API baseline", () => {
 
     const sep = payload.results.find((r) => r.benefit_id === "sep-ira-contribution");
     expect(sep?.status).toBe("nearly_eligible");
+
+    const homeOffice = payload.results.find((r) => r.benefit_id === "home-office-deduction");
+    expect(homeOffice?.status).toBe("eligible_now");
+
+    const qbi = payload.results.find((r) => r.benefit_id === "qbi-deduction");
+    expect(qbi?.status).toBe("eligible_now");
+
+    const vehicle = payload.results.find((r) => r.benefit_id === "business-vehicle-deduction");
+    expect(vehicle?.status).toBe("eligible_now");
+
+    const rentalDep = payload.results.find((r) => r.benefit_id === "real-estate-depreciation");
+    expect(rentalDep?.status).toBe("eligible_now");
+
+    const passive = payload.results.find((r) => r.benefit_id === "passive-activity-loss");
+    expect(passive?.status).toBe("eligible_now");
 
     const hsa = payload.results.find((r) => r.benefit_id === "hsa-triple-tax-advantage");
     expect(hsa?.status).toBe("eligible_now");

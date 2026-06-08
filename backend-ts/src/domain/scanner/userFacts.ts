@@ -103,6 +103,41 @@ export class UserFacts {
     return this.businesses()[0] ?? {};
   }
 
+  hasAnyRealEstate(): boolean {
+    const realEstate = toObject(this.data.real_estate);
+    const properties = realEstate.properties;
+    return Array.isArray(properties) && properties.length > 0;
+  }
+
+  hasRentalProperty(): boolean {
+    return this.properties().some((property) => {
+      const type = String(property.property_type ?? "");
+      return ["rental_residential", "rental_commercial", "mixed_use"].includes(type);
+    });
+  }
+
+  properties(): Array<Record<string, unknown>> {
+    const realEstate = toObject(this.data.real_estate);
+    const list = realEstate.properties;
+    return Array.isArray(list) ? list.filter((x) => x && typeof x === "object") as Array<Record<string, unknown>> : [];
+  }
+
+  firstProperty(): Record<string, unknown> {
+    return this.properties()[0] ?? {};
+  }
+
+  itemizing(): boolean | null {
+    const hh = toObject(this.data.household);
+    const itemizing = hh.itemizing_deductions;
+    if (itemizing === true) {
+      return true;
+    }
+    if (itemizing === false) {
+      return false;
+    }
+    return null;
+  }
+
   hasSelfEmployment(): boolean {
     const seTypes = new Set([
       "sole_prop",
