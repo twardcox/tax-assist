@@ -10,6 +10,7 @@ import { registerAuthPlugin } from "./plugins/auth";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerHealthRoutes } from "./routes/health";
 import { registerConfigRoutes } from "./routes/config";
+import { registerUserDataRoutes } from "./routes/userData";
 
 export function buildApp() {
   ensureRequiredDirectories();
@@ -39,6 +40,7 @@ export function buildApp() {
     await registerAuthRoutes(api);
     await registerHealthRoutes(api);
     await registerConfigRoutes(api);
+    await registerUserDataRoutes(api);
   }, { prefix: "/api" });
 
   if (fs.existsSync(projectPaths.frontendDist)) {

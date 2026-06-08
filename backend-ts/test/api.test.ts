@@ -104,4 +104,96 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("user-data list and parsed read works without auth", async () => {
+    const app = buildApp();
+
+    const listRes = await app.inject({ method: "GET", url: "/api/user-data" });
+    expect(listRes.statusCode).toBe(200);
+    const listPayload = listRes.json() as { sections: string[] };
+    expect(listPayload.sections).toContain("household");
+    expect(listPayload.sections).not.toContain("documents_index");
+
+    const parsedRes = await app.inject({
+      method: "GET",
+      url: "/api/user-data/household/parsed"
+    });
+    expect(parsedRes.statusCode).toBe(200);
+    const parsedPayload = parsedRes.json() as {
+      section: string;
+      data: Record<string, unknown>;
+    };
+    expect(parsedPayload.section).toBe("household");
+    expect(parsedPayload.data).toBeTypeOf("object");
+
+    await app.close();
+  });
+
+  test("user-data authenticated write then read uses DB-backed section data", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "data-user@example.com",
+        password: "Test1234!",
+        display_name: "Data User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const writeRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          filing_status: "married_filing_jointly",
+          estimated_agi: 180000
+        }
+      }
+    });
+
+    expect(writeRes.statusCode).toBe(200);
+    expect(writeRes.json()).toEqual({ section: "household", saved: true });
+
+    const parsedReadRes = await app.inject({
+      method: "GET",
+      url: "/api/user-data/household/parsed",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(parsedReadRes.statusCode).toBe(200);
+    const parsedPayload = parsedReadRes.json() as {
+      section: string;
+      data: Record<string, unknown>;
+    };
+    expect(parsedPayload.section).toBe("household");
+    expect(parsedPayload.data).toMatchObject({
+      filing_status: "married_filing_jointly",
+      estimated_agi: 180000
+    });
+
+    const rawReadRes = await app.inject({
+      method: "GET",
+      url: "/api/user-data/household",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(rawReadRes.statusCode).toBe(200);
+    const rawPayload = rawReadRes.json() as { section: string; content: string };
+    expect(rawPayload.section).toBe("household");
+    expect(rawPayload.content).toContain("filing_status");
+
+    await app.close();
+  });
 });
