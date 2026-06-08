@@ -1156,6 +1156,67 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the ichra qsehra opportunity", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "ichra-qsehra@example.com",
+        password: "Test1234!",
+        display_name: "ICHRA QSEHRA User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/businesses",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          businesses: [
+            {
+              name: "Benefits LLC",
+              entity_type: "llc",
+              employees: {
+                w2_employees_count: 12
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/healthcare",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          employer_group_plan: false
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const hra = payload.results.find((r) => r.benefit_id === "ichra-qsehra");
+    expect(hra?.status).toBe("nearly_eligible");
+    expect(hra?.message).toContain("QSEHRA allows you to reimburse");
+
+    await app.close();
+  });
+
   test("scan route recognizes a no-income-tax state", async () => {
     const app = buildApp();
 

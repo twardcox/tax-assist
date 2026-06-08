@@ -596,6 +596,48 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "ichra-qsehra": (_benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "ICHRA/QSEHRA requires a business with employees."
+      };
+    }
+
+    const employeeCount = facts.firstBusinessW2EmployeesCount();
+    if (employeeCount === 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Has a business — ICHRA/QSEHRA allows tax-free health reimbursements to employees as an alternative to group health insurance. No W-2 employees recorded yet.",
+        missing_facts: ["businesses.employees.w2_employees_count"]
+      };
+    }
+
+    const hraType = employeeCount >= 50 ? "ICHRA" : "QSEHRA";
+    const annualLimit = employeeCount >= 50 ? "no dollar limit" : "$6,350/single, $12,800/family (2025)";
+    if (employeeCount < 50 && facts.employerGroupPlan()) {
+      return {
+        status: "not_applicable",
+        message:
+          "QSEHRA requires that the employer not offer a group health plan to same employees. Consider ICHRA if you want to offer both a group plan and an HRA to different classes."
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        `${hraType} allows you to reimburse ${employeeCount} employee(s) tax-free for individual health insurance premiums (${annualLimit}). Deductible as a business expense.`,
+      missing_facts: ["businesses.healthcare.hra_established"],
+      next_steps: [
+        `Establish ${hraType} plan document before December 31 for next year's coverage`,
+        "Notify eligible employees 90 days before plan year begins",
+        "Use a third-party HRA administrator (PeopleKeep, Take Command) for compliance",
+        "Employees must maintain qualifying individual coverage to receive reimbursements"
+      ]
+    };
+  },
+
   "section-121-exclusion": (_benefit, facts) => {
     if (!facts.hasPrimaryResidence()) {
       if (facts.hasAnyRealEstate()) {

@@ -279,6 +279,11 @@ export class UserFacts {
     return toNumber(hsa.existing_balance);
   }
 
+  employerGroupPlan(): boolean {
+    const hc = toObject(this.data.healthcare);
+    return hc.employer_group_plan === true;
+  }
+
   hsaInvestmentAccountWithinHsa(): boolean {
     const hc = toObject(this.data.healthcare);
     const hsa = toObject(hc.health_savings_account);
