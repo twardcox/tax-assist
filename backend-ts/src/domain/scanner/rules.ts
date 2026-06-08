@@ -540,6 +540,62 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "state-ev-credit": (_benefit, facts) => {
+    const state = facts.stateCode();
+    if (!state) {
+      return {
+        status: "nearly_eligible",
+        message: "Set household.residence.state to check state EV credit availability.",
+        missing_facts: ["household.residence.state"]
+      };
+    }
+
+    const evCreditStates = new Set(["CA", "CO", "NY", "CT", "MA", "OR", "NJ", "IL", "VT", "ME"]);
+    if (!evCreditStates.has(state)) {
+      return {
+        status: "not_applicable",
+        message: `${state} does not currently offer a broad state EV purchase credit or rebate (as of 2025). The federal §30D credit still applies.`
+      };
+    }
+
+    if (!facts.hasElectricVehicle()) {
+      return {
+        status: "eligible_if_changed",
+        message:
+          `${state} offers a state EV credit that stacks on top of the federal §30D credit. No EV recorded in your data yet.`,
+        changes_needed: ["Purchase or lease a qualifying BEV or PHEV"],
+        next_steps: [
+          `Research ${state}'s current EV program (CA CVRP, CO Form DR 0617, NY Drive Clean Rebate)`,
+          "Stack with federal §30D credit for maximum incentive",
+          "CA: apply for CVRP rebate within 18 months of purchase — funding is limited"
+        ]
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const filingStatus = (facts.filingStatus() ?? "single").toLowerCase();
+    const caLimit = ["single", "hoh", "head_of_household"].includes(filingStatus) ? 135000 : 200000;
+    if (state === "CA" && agi !== null && agi > caLimit) {
+      return {
+        status: "not_applicable",
+        message:
+          `CA CVRP income limit exceeded (AGI ${agi.toLocaleString()} > ${caLimit.toLocaleString()}). The federal §30D credit may still apply — verify MSRP and income limits.`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message:
+        `${state} offers a state EV credit/rebate on top of the federal §30D credit. Apply as soon as possible — some programs (CA CVRP) have limited funding.`,
+      next_steps: [
+        "CA: apply at cleanvehiclerebate.org within 18 months of purchase",
+        "CO: claim on Form DR 0617 with your state return",
+        "NY: claim on Form IT-253 with your state return",
+        "Stack with federal §30D for maximum combined incentive"
+      ]
+    };
+  },
+
   "section-121-exclusion": (_benefit, facts) => {
     if (!facts.hasPrimaryResidence()) {
       if (facts.hasAnyRealEstate()) {

@@ -276,6 +276,20 @@ export class UserFacts {
     return hsa.investment_account_within_hsa === true;
   }
 
+  hasElectricVehicle(): boolean {
+    const hh = toObject(this.data.household);
+    if (hh.has_electric_vehicle === true) {
+      return true;
+    }
+
+    const investments = toObject(this.data.investments);
+    const vehicles = toObjectArray(investments.vehicles);
+    return vehicles.some((vehicle) => {
+      const fuelType = String(vehicle.fuel_type ?? "").trim().toLowerCase();
+      return ["electric", "ev", "bev", "phev"].includes(fuelType);
+    });
+  }
+
   sepIraEstablished(): boolean {
     const retirement = toObject(this.data.retirement);
     const selfEmployedPlans = toObject(retirement.self_employed_plans);

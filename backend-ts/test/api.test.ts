@@ -1154,6 +1154,52 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the state EV credit", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "state-ev@example.com",
+        password: "Test1234!",
+        display_name: "State EV User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          residence: {
+            state: "CA"
+          },
+          estimated_agi: 120000,
+          has_electric_vehicle: true
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const evCredit = payload.results.find((r) => r.benefit_id === "state-ev-credit");
+    expect(evCredit?.status).toBe("eligible_now");
+    expect(evCredit?.message).toContain("CA offers a state EV credit/rebate");
+
+    await app.close();
+  });
+
   test("scan route recognizes bonus depreciation and state 529 contribution positive paths", async () => {
     const app = buildApp();
 
