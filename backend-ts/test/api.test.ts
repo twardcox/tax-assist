@@ -2132,4 +2132,43 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("scenarios route lists scenario contracts and runs a scenario diff", async () => {
+    const app = buildApp();
+
+    const listRes = await app.inject({ method: "GET", url: "/api/scenarios" });
+    expect(listRes.statusCode).toBe(200);
+    const listPayload = listRes.json() as { scenarios: Array<{ key: string; description: string }> };
+    expect(listPayload.scenarios.length).toBeGreaterThan(0);
+    expect(listPayload.scenarios.some((scenario) => scenario.key === "start_llc")).toBe(true);
+
+    const runRes = await app.inject({ method: "POST", url: "/api/scenarios/start_llc?tax_year=2025" });
+    expect(runRes.statusCode).toBe(200);
+    const runPayload = runRes.json() as {
+      scenario: string;
+      description: string;
+      baseline_counts: Record<string, number>;
+      scenario_counts: Record<string, number>;
+      diff: {
+        newly_added: Array<Record<string, unknown>>;
+        improved: Array<Record<string, unknown>>;
+        degraded: Array<Record<string, unknown>>;
+        removed: Array<Record<string, unknown>>;
+      };
+    };
+    expect(runPayload.scenario).toBe("start_llc");
+    expect(runPayload.description.length).toBeGreaterThan(0);
+    expect(typeof runPayload.baseline_counts).toBe("object");
+    expect(typeof runPayload.scenario_counts).toBe("object");
+    expect(runPayload.diff).toHaveProperty("newly_added");
+    expect(runPayload.diff).toHaveProperty("improved");
+    expect(runPayload.diff).toHaveProperty("degraded");
+    expect(runPayload.diff).toHaveProperty("removed");
+
+    const badRes = await app.inject({ method: "POST", url: "/api/scenarios/not_real" });
+    expect(badRes.statusCode).toBe(404);
+    expect((badRes.json() as { detail: string }).detail).toContain("Scenario 'not_real' not found");
+
+    await app.close();
+  });
 });
