@@ -1974,12 +1974,19 @@ const rules: Record<string, RuleFn> = {
 
     const contributed = facts.hsaContributionsYtd();
     const remaining = Math.max(0, limit - contributed);
+    const balance = facts.hsaExistingBalance();
+    const invested = facts.hsaInvestmentAccountWithinHsa();
+    const nextSteps = [`Contribute up to $${remaining.toLocaleString()} more (can contribute until April 15, ${facts.taxYear + 1})`];
+
+    if (!invested && balance > 1000) {
+      nextSteps.push(`Invest HSA balance ($${balance.toLocaleString()}) — don't leave it in cash`);
+    }
 
     return {
       status: "eligible_now",
-      message: `HDHP enrolled. $${remaining.toLocaleString()} of $${limit.toLocaleString()} HSA room remaining.`,
+      message: `HDHP enrolled. HSA contribution available. $${remaining.toLocaleString()} of $${limit.toLocaleString()} limit remaining.`,
       estimated_value: `$${remaining.toLocaleString()} deductible contribution plus tax-free growth`,
-      next_steps: [`Contribute up to $${remaining.toLocaleString()} before filing deadline.`]
+      next_steps: nextSteps
     };
   },
 

@@ -553,6 +553,7 @@ describe("API baseline", () => {
           },
           health_savings_account: {
             contributions_ytd: 1000,
+            existing_balance: 5000,
             investment_account_within_hsa: false
           }
         }
@@ -713,6 +714,7 @@ describe("API baseline", () => {
 
     const hsa = payload.results.find((r) => r.benefit_id === "hsa-triple-tax-advantage");
     expect(hsa?.status).toBe("eligible_now");
+    expect(Array.isArray(hsa?.next_steps) ? hsa?.next_steps : []).toContain("Invest HSA balance ($5,000) — don't leave it in cash");
 
     const health = payload.results.find((r) => r.benefit_id === "self-employed-health-insurance");
     expect(health?.status).toBe("eligible_now");

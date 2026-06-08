@@ -264,6 +264,18 @@ export class UserFacts {
     return toNumber(hsa.contributions_ytd);
   }
 
+  hsaExistingBalance(): number {
+    const hc = toObject(this.data.healthcare);
+    const hsa = toObject(hc.health_savings_account);
+    return toNumber(hsa.existing_balance);
+  }
+
+  hsaInvestmentAccountWithinHsa(): boolean {
+    const hc = toObject(this.data.healthcare);
+    const hsa = toObject(hc.health_savings_account);
+    return hsa.investment_account_within_hsa === true;
+  }
+
   sepIraEstablished(): boolean {
     const retirement = toObject(this.data.retirement);
     const selfEmployedPlans = toObject(retirement.self_employed_plans);
