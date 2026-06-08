@@ -686,6 +686,151 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route evaluates federal family and education credit rules", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "credit-user@example.com",
+        password: "Test1234!",
+        display_name: "Credit User"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          filing_status: "single",
+          estimated_agi: 35000,
+          residence: {
+            state: "PA",
+            county: "Allegheny"
+          },
+          taxpayer: { age: 30 }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          w2_employment: [
+            {
+              employer_name: "Acme",
+              wages: 30000
+            }
+          ],
+          investment_income: {
+            interest: 100
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/dependents",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          dependents: [
+            {
+              name: "Child One",
+              age_at_year_end: 10,
+              ssn_obtained: true,
+              care_expenses: {
+                daycare_cost: 3000,
+                after_school_care_cost: 1000,
+                summer_camp_cost: 500
+              }
+            },
+            {
+              name: "College Student",
+              age_at_year_end: 19,
+              ssn_obtained: true,
+              education: {
+                school_level: "undergraduate",
+                tuition_paid: 6000
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/retirement",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          employer_plans: {
+            traditional_401k: {
+              employee_contribution_ytd: 1000
+            }
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/healthcare",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          flexible_spending_accounts: {
+            dependent_care_fsa: {
+              election_amount: 1000
+            }
+          }
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+
+    const ctc = payload.results.find((r) => r.benefit_id === "child-tax-credit");
+    expect(ctc?.status).toBe("eligible_now");
+
+    const cdcc = payload.results.find((r) => r.benefit_id === "child-dependent-care-credit");
+    expect(cdcc?.status).toBe("eligible_now");
+
+    const eitc = payload.results.find((r) => r.benefit_id === "earned-income-tax-credit");
+    expect(eitc?.status).toBe("eligible_now");
+
+    const aotc = payload.results.find((r) => r.benefit_id === "american-opportunity-credit");
+    expect(aotc?.status).toBe("eligible_now");
+
+    const llc = payload.results.find((r) => r.benefit_id === "lifetime-learning-credit");
+    expect(llc?.status).toBe("nearly_eligible");
+
+    const savers = payload.results.find((r) => r.benefit_id === "savers-credit");
+    expect(savers?.status).toBe("eligible_now");
+
+    await app.close();
+  });
+
   test("scan route recognizes a no-income-tax state", async () => {
     const app = buildApp();
 

@@ -106,6 +106,308 @@ function baseResult(benefit: RawBenefit): Omit<ScanResult, "status" | "message">
 }
 
 const rules: Record<string, RuleFn> = {
+  "child-tax-credit": (_benefit, facts) => {
+    if (!facts.hasDependents()) {
+      return {
+        status: "not_applicable",
+        message: "No dependents recorded. Child Tax Credit requires qualifying children under age 17."
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const filingStatus = facts.filingStatus() ?? "single";
+    const cliff = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? 400000 : 200000;
+
+    const deps = facts.dependents();
+    const qualifying = deps.filter((d) => Number(d.age_at_year_end ?? 99) < 17 && d.ssn_obtained === true);
+    const qualifyingNoSsn = deps.filter((d) => Number(d.age_at_year_end ?? 99) < 17 && d.ssn_obtained !== true);
+
+    if (qualifying.length === 0 && qualifyingNoSsn.length === 0) {
+      return {
+        status: "not_applicable",
+        message: "No qualifying children under 17 found."
+      };
+    }
+
+    if (qualifyingNoSsn.length > 0) {
+      const creditValue = qualifying.length * 2000;
+      return {
+        status: "nearly_eligible",
+        message: `${qualifyingNoSsn.length} child(ren) missing SSN. Credit requires SSN by return due date.`,
+        estimated_value: `~$${creditValue.toLocaleString()}/year if all SSNs are obtained`,
+        next_steps: ["Apply for SSN at the Social Security Administration immediately"]
+      };
+    }
+
+    const baseCredit = qualifying.length * 2000;
+    if (agi && agi > cliff) {
+      const excess = agi - cliff;
+      const reduction = (Math.floor(excess / 1000) + 1) * 50;
+      const remaining = Math.max(0, baseCredit - reduction);
+      if (remaining === 0) {
+        return {
+          status: "not_applicable",
+          message: `AGI $${agi.toLocaleString()} fully phases out Child Tax Credit.`
+        };
+      }
+      return {
+        status: "eligible_now",
+        message: `Child Tax Credit partially available after phaseout: ~${remaining.toLocaleString()} remaining.`,
+        estimated_value: `~$${remaining.toLocaleString()}/year`,
+        phaseout_note: `AGI $${agi.toLocaleString()} is above the ${cliff.toLocaleString()} phaseout threshold`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $2,000.`,
+      estimated_value: `~$${baseCredit.toLocaleString()}/year`,
+      next_steps: ["Report on Schedule 8812", "Up to $1,700 per child may be refundable (ACTC)"]
+    };
+  },
+
+  "child-dependent-care-credit": (_benefit, facts) => {
+    const young = facts.dependents().filter((d) => Number(d.age_at_year_end ?? 99) < 13);
+    if (young.length === 0) {
+      return {
+        status: "not_applicable",
+        message: "Child and Dependent Care Credit requires children under age 13."
+      };
+    }
+
+    const careExpenses = young.reduce((sum, dep) => {
+      const care = (dep.care_expenses as Record<string, unknown> | undefined) ?? {};
+      return sum
+        + Number(care.daycare_cost ?? 0)
+        + Number(care.after_school_care_cost ?? 0)
+        + Number(care.summer_camp_cost ?? 0);
+    }, 0);
+
+    if (careExpenses <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: `Has ${young.length} child(ren) under 13. Record care expenses to calculate CDCC.`,
+        missing_facts: ["dependents.care_expenses"],
+        next_steps: ["Record daycare, after-school, and summer camp costs in dependents data"]
+      };
+    }
+
+    const fsaAmount = facts.dependentCareFsaElection();
+    const cap = young.length >= 2 ? 6000 : 3000;
+    const expenseBase = Math.min(Math.max(0, cap - fsaAmount), careExpenses || cap);
+    const credit = expenseBase * 0.2;
+
+    return {
+      status: "eligible_now",
+      message: `Child and Dependent Care Credit estimated at ~${credit.toLocaleString()} (20% of ${expenseBase.toLocaleString()}).`,
+      estimated_value: `~$${Math.round(credit).toLocaleString()}/year`,
+      next_steps: [
+        "Report on Form 2441",
+        "Collect care provider TIN (EIN or SSN)",
+        `Dependent Care FSA (${fsaAmount.toLocaleString()}) reduces CDCC expense base`
+      ]
+    };
+  },
+
+  "earned-income-tax-credit": (_benefit, facts) => {
+    const agi = facts.estimatedAgi();
+    const filingStatus = facts.filingStatus() ?? "single";
+    const deps = facts.dependents().length;
+    const fsKey = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? "mfj" : "single";
+    const depKey = Math.min(deps, 3);
+
+    const upper: Record<string, number> = {
+      "single-0": 19524,
+      "mfj-0": 26214,
+      "single-1": 46560,
+      "mfj-1": 53502,
+      "single-2": 52952,
+      "mfj-2": 59898,
+      "single-3": 59899,
+      "mfj-3": 66819
+    };
+    const agiLimit = upper[`${fsKey}-${depKey}`] ?? 19524;
+
+    const investmentIncome = facts.totalInvestmentIncome();
+    if (investmentIncome > 11950) {
+      return {
+        status: "not_applicable",
+        message: `Investment income ${investmentIncome.toLocaleString()} exceeds EITC limit ($11,950).`
+      };
+    }
+
+    if (agi && agi > agiLimit) {
+      return {
+        status: "not_applicable",
+        message: `AGI ${agi.toLocaleString()} is above EITC limit of ${agiLimit.toLocaleString()} for ${filingStatus} with ${deps} dependent(s).`
+      };
+    }
+
+    if (!facts.hasSelfEmployment() && !facts.hasW2Income()) {
+      return {
+        status: "not_applicable",
+        message: "No earned income found. EITC requires wages or self-employment income."
+      };
+    }
+
+    const maxCredits: Record<number, number> = { 0: 649, 1: 4328, 2: 7152, 3: 8046 };
+    const credit = maxCredits[depKey] ?? 8046;
+    return {
+      status: "eligible_now",
+      message: `EITC may be available, up to ${credit.toLocaleString()} with ${depKey} qualifying child(ren).`,
+      estimated_value: `Up to $${credit.toLocaleString()}/year (fully refundable)`,
+      next_steps: ["Confirm qualifying child details on Schedule EIC", "Verify all qualifying children have SSNs"]
+    };
+  },
+
+  "american-opportunity-credit": (_benefit, facts) => {
+    const deps = facts.dependents();
+    const collegeDeps = deps.filter((d) => {
+      const education = (d.education as Record<string, unknown> | undefined) ?? {};
+      return education.school_level === "undergraduate" && Number(education.tuition_paid ?? 0) > 0;
+    });
+
+    if (collegeDeps.length === 0 && !facts.hasDependents()) {
+      return {
+        status: "not_applicable",
+        message: "No dependents in undergraduate education with tuition recorded."
+      };
+    }
+
+    if (collegeDeps.length === 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has dependents. Confirm whether any are in first four years of college.",
+        missing_facts: ["dependents.education.school_level", "dependents.education.tuition_paid"]
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const filingStatus = facts.filingStatus() ?? "single";
+    const [lo, hi] = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase())
+      ? [160000, 180000]
+      : [80000, 90000];
+
+    if (agi && agi > hi) {
+      return {
+        status: "not_applicable",
+        message: `AGI ${agi.toLocaleString()} is above AOTC limit of ${hi.toLocaleString()}.`
+      };
+    }
+
+    const phaseout = agi ? `${agi >= hi ? "AGI above phaseout range" : `AGI ${agi.toLocaleString()} is within phaseout planning range`}` : "";
+    const credit = Math.min(collegeDeps.length * 2500, 2500);
+    return {
+      status: "eligible_now",
+      message: `American Opportunity Credit available up to ${credit.toLocaleString()}${phaseout ? `. Note: ${phaseout}` : ""}.`,
+      estimated_value: `Up to $${credit.toLocaleString()}/year ($1,000 refundable)`,
+      next_steps: ["Collect Form 1098-T", "Coordinate with 529 distributions to avoid double-counting expenses"],
+      phaseout_note: agi && agi >= lo ? `AOTC phaseout range: ${lo.toLocaleString()}-${hi.toLocaleString()}` : undefined
+    };
+  },
+
+  "lifetime-learning-credit": (_benefit, facts) => {
+    if (!facts.hasDependents()) {
+      return {
+        status: "not_applicable",
+        message: "No dependents with education expenses recorded."
+      };
+    }
+
+    const agi = facts.estimatedAgi();
+    const filingStatus = facts.filingStatus() ?? "single";
+    const hi = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? 180000 : 90000;
+
+    if (agi && agi > hi) {
+      return {
+        status: "not_applicable",
+        message: `AGI ${agi.toLocaleString()} is above Lifetime Learning Credit limit.`
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: "Lifetime Learning Credit can apply to post-secondary education (including grad/professional programs).",
+      missing_facts: ["dependents.education.tuition_paid"],
+      next_steps: ["Record tuition expenses and collect Form 1098-T"]
+    };
+  },
+
+  "savers-credit": (_benefit, facts) => {
+    const agi = facts.estimatedAgi();
+    const filingStatus = (facts.filingStatus() ?? "single").toLowerCase();
+    const age = facts.taxpayerAge();
+
+    if (age !== null && age < 18) {
+      return {
+        status: "not_applicable",
+        message: "Saver's Credit requires taxpayer to be at least 18 years old."
+      };
+    }
+
+    const ceilings: Record<string, number> = {
+      single: 40500,
+      mfj: 81000,
+      married_filing_jointly: 81000,
+      hoh: 60750,
+      head_of_household: 60750,
+      mfs: 40500,
+      married_filing_separately: 40500,
+      qualifying_surviving_spouse: 81000
+    };
+    const fiftyPct: Record<string, number> = {
+      single: 23500,
+      mfj: 47000,
+      married_filing_jointly: 47000,
+      hoh: 35250,
+      head_of_household: 35250,
+      mfs: 23500,
+      married_filing_separately: 23500,
+      qualifying_surviving_spouse: 47000
+    };
+    const ceiling = ceilings[filingStatus] ?? 40500;
+    const fifty = fiftyPct[filingStatus] ?? 23500;
+
+    if (agi !== null && agi > ceiling) {
+      return {
+        status: "not_applicable",
+        message: `AGI ${agi.toLocaleString()} exceeds Saver's Credit limit (${ceiling.toLocaleString()}).`
+      };
+    }
+
+    const hasContributions = facts.hasRetirementContributions();
+    if (agi !== null) {
+      const rate = agi <= fifty ? "50%" : (agi <= ceiling * 0.63 ? "20%" : "10%");
+      if (hasContributions) {
+        const maxBase = filingStatus.includes("mfj") ? 4000 : 2000;
+        return {
+          status: "eligible_now",
+          message: `Saver's Credit available at ${rate} rate based on AGI ${agi.toLocaleString()}.`,
+          estimated_value: `Up to $${maxBase.toLocaleString()} × ${rate} credit`,
+          next_steps: [
+            "File Form 8880",
+            "Confirm eligible retirement contributions and distribution adjustments on the worksheet"
+          ]
+        };
+      }
+      return {
+        status: "eligible_if_changed",
+        message: `AGI ${agi.toLocaleString()} qualifies for Saver's Credit at ${rate}, but no retirement contributions were found.`,
+        missing_facts: ["retirement contributions"],
+        changes_needed: ["Make IRA or qualified plan contributions this year"],
+        next_steps: ["IRA contributions can generally be made up to filing deadline"]
+      };
+    }
+
+    return {
+      status: hasContributions ? "nearly_eligible" : "nearly_eligible",
+      message: hasContributions
+        ? "Retirement contributions found, but AGI is missing for Saver's Credit evaluation."
+        : "Saver's Credit may apply for moderate-income taxpayers with retirement contributions.",
+      missing_facts: hasContributions ? ["household.estimated_agi"] : ["household.estimated_agi", "retirement contributions"]
+    };
+  },
+
   "county-homestead-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
     const county = facts.county();

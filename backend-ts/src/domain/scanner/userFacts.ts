@@ -43,6 +43,12 @@ function toNumber(value: unknown): number {
   return 0;
 }
 
+function toObjectArray(value: unknown): Array<Record<string, unknown>> {
+  return Array.isArray(value)
+    ? value.filter((x) => x && typeof x === "object") as Array<Record<string, unknown>>
+    : [];
+}
+
 export class UserFacts {
   data: FactsData;
   taxYear: number;
@@ -110,7 +116,7 @@ export class UserFacts {
   businesses(): Array<Record<string, unknown>> {
     const businessesSection = toObject(this.data.businesses);
     const list = businessesSection.businesses;
-    return Array.isArray(list) ? list.filter((x) => x && typeof x === "object") as Array<Record<string, unknown>> : [];
+    return toObjectArray(list);
   }
 
   firstBusiness(): Record<string, unknown> {
@@ -141,7 +147,7 @@ export class UserFacts {
   properties(): Array<Record<string, unknown>> {
     const realEstate = toObject(this.data.real_estate);
     const list = realEstate.properties;
-    return Array.isArray(list) ? list.filter((x) => x && typeof x === "object") as Array<Record<string, unknown>> : [];
+    return toObjectArray(list);
   }
 
   firstProperty(): Record<string, unknown> {
@@ -265,5 +271,69 @@ export class UserFacts {
     const distributions = this.retirementDistributions();
     const retirementTotal = Object.values(distributions).some((value) => toNumber(value) > 0);
     return retirementTotal || this.socialSecurityBenefits() > 0;
+  }
+
+  dependents(): Array<Record<string, unknown>> {
+    const deps = toObject(this.data.dependents);
+    return toObjectArray(deps.dependents);
+  }
+
+  hasDependents(): boolean {
+    return this.dependents().length > 0;
+  }
+
+  hasW2Income(): boolean {
+    const income = this.incomeSection();
+    const w2 = toObjectArray(income.w2_employment);
+    return w2.some((entry) => toNumber(entry.wages) > 0);
+  }
+
+  totalInvestmentIncome(): number {
+    const income = this.incomeSection();
+    const investment = toObject(income.investment_income);
+    return toNumber(investment.qualified_dividends)
+      + toNumber(investment.ordinary_dividends)
+      + toNumber(investment.interest)
+      + toNumber(investment.short_term_capital_gains)
+      + toNumber(investment.long_term_capital_gains);
+  }
+
+  dependentCareFsaElection(): number {
+    const healthcare = toObject(this.data.healthcare);
+    const fsa = toObject(toObject(healthcare.flexible_spending_accounts).dependent_care_fsa);
+    return toNumber(fsa.election_amount);
+  }
+
+  hasRetirementContributions(): boolean {
+    const retirement = toObject(this.data.retirement);
+
+    const employerPlans = toObject(retirement.employer_plans);
+    const employerPlanKeys = ["traditional_401k", "403b", "457b", "simple_ira"];
+    for (const key of employerPlanKeys) {
+      const plan = toObject(employerPlans[key]);
+      if (toNumber(plan.employee_contribution_ytd) > 0 || toNumber(plan.contribution_ytd) > 0) {
+        return true;
+      }
+    }
+
+    const individual = toObject(retirement.individual_retirement_accounts);
+    for (const key of ["traditional_ira", "roth_ira"]) {
+      const acct = toObject(individual[key]);
+      if (toNumber(acct.contributions_ytd) > 0) {
+        return true;
+      }
+    }
+
+    const selfEmployed = toObject(retirement.self_employed_plans);
+    const sep = toObject(selfEmployed.sep_ira);
+    if (toNumber(sep.contributions_ytd) > 0) {
+      return true;
+    }
+    const solo = toObject(selfEmployed.solo_401k);
+    if (toNumber(solo.employee_contributions_ytd) > 0 || toNumber(solo.employer_contributions_ytd) > 0) {
+      return true;
+    }
+
+    return false;
   }
 }
