@@ -7,7 +7,7 @@ import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { addTransaction, fileAlreadyApplied } from "../db/transactionsRepo";
 import { applyDotPathToSection } from "../db/sectionRepo";
-import { classifyFilename } from "../domain/documents/classifier";
+import { classifyFilename, inferExtractionFromFilename } from "../domain/documents/classifier";
 import {
   deleteDocumentRecord,
   getDocumentContent,
@@ -121,26 +121,23 @@ function buildExtractionResult(filename: string, content: Buffer): Record<string
   const stem = path.basename(filename, path.extname(filename));
   const lower = filename.toLowerCase();
   const classified = classifyFilename(filename, content.length);
-  const category = classified.category;
+  const inferred = inferExtractionFromFilename(filename, content.length);
   const totalAmount = Number((content.length / 10).toFixed(2));
-  const documentType = category === "income_document"
-    ? (/w-?2/.test(lower) ? "w2" : /1099/.test(lower) ? "1099" : /1098/.test(lower) ? "1098" : "other")
-    : category;
 
   return {
-    document_type: documentType,
+    document_type: inferred.document_type,
     merchant_or_payer: stem.replace(/[_-]+/g, " ").trim(),
     payer_ein: /w-?2|1099/.test(lower) ? "12-3456789" : null,
     date: new Date().toISOString().slice(0, 10),
     total_amount: totalAmount,
-    form_line: documentType === "w2" ? "Form 1040 Line 1a" : null,
+    form_line: inferred.form_line,
     description: `Auto-extracted from ${filename}`,
     confidence: classified.confidence,
     benefit_ids: [],
-    tax_category: category === "income_document" ? "other_income" : category,
-    deductible_pct: 1,
+    tax_category: inferred.tax_category,
+    deductible_pct: inferred.deductible_pct,
     suggested_updates: [],
-    notes: classified.note
+    notes: inferred.notes
   };
 }
 

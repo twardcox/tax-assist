@@ -234,7 +234,7 @@ describe("API baseline", () => {
           "content-type": "application/json"
         },
         payload: {
-          filename: "office-supplies-subscription.pdf",
+          filename: "office-supplies-receipt.pdf",
           content: "sample receipt data"
         }
       });
@@ -279,7 +279,8 @@ describe("API baseline", () => {
       expect(statusRes.statusCode).toBe(200);
       const statusPayload = statusRes.json() as { status: string; extracted: Record<string, unknown> };
       expect(statusPayload.status).toBe("complete");
-      expect(statusPayload.extracted.document_type).toBe("business_expense");
+      expect(statusPayload.extracted.document_type).toBe("receipt");
+      expect(statusPayload.extracted.tax_category).toBe("business_expense");
 
       const seedSectionRes = await app.inject({
         method: "PUT",
@@ -308,7 +309,7 @@ describe("API baseline", () => {
         payload: {
           meta: {
             file_id: uploaded.file_id,
-            filename: "office-supplies-subscription.pdf",
+            filename: "office-supplies-receipt.pdf",
             date: "2026-01-01",
             merchant: "Office Depot",
             total_amount: 100,
