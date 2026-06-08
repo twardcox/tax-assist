@@ -5,10 +5,12 @@ import { buildApp } from "../src/app";
 import { getDb } from "../src/db/client";
 import { initDb } from "../src/db/init";
 import { addTransaction } from "../src/db/transactionsRepo";
+import { __setDocumentAiExtractionOverrideForTest } from "../src/domain/documents/aiExecutor";
 import { __setTaxLawUpdateRunningForTest } from "../src/routes/taxLaw";
 
 beforeEach(() => {
   initDb();
+  __setDocumentAiExtractionOverrideForTest(null);
   const db = getDb();
   db.exec("DELETE FROM transactions;");
   db.exec("DELETE FROM section_data;");
@@ -209,6 +211,20 @@ describe("API baseline", () => {
   test("documents upload, list, extract, apply, and delete routes work", async () => {
     const previousKey = process.env.ANTHROPIC_API_KEY;
     process.env.ANTHROPIC_API_KEY = "test-key";
+    __setDocumentAiExtractionOverrideForTest(async () => ({
+      document_type: "receipt",
+      merchant_or_payer: "Office Depot",
+      date: "2026-01-01",
+      total_amount: 100,
+      description: "Office supplies receipt",
+      tax_category: "business_expense",
+      deductible_pct: 0.5,
+      benefit_ids: [],
+      form_line: "Schedule C:18",
+      suggested_updates: [],
+      confidence: "medium",
+      notes: "stubbed in API test"
+    }));
 
     const app = buildApp();
 

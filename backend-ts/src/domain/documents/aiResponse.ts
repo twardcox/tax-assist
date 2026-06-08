@@ -81,7 +81,7 @@ export function missingAnthropicPackageResult(): NormalizedAiExtraction {
     error: "anthropic package not installed",
     suggested_updates: [],
     confidence: "low",
-    notes: "Run: npm install anthropic",
+    notes: "Run: npm install @anthropic-ai/sdk",
     benefit_ids: [],
     deductible_pct: 1,
     form_line: null

@@ -8,7 +8,7 @@ import { projectPaths } from "../lib/paths";
 import { addTransaction, fileAlreadyApplied } from "../db/transactionsRepo";
 import { applyDotPathToSection } from "../db/sectionRepo";
 import { classifyFilename } from "../domain/documents/classifier";
-import { inferExtractionFromUpload } from "../domain/documents/extraction";
+import { extractWithAiBytes } from "../domain/documents/aiExecutor";
 import {
   deleteDocumentRecord,
   getDocumentContent,
@@ -118,33 +118,9 @@ async function readUpload(request: FastifyRequest): Promise<{ filename: string; 
   return { filename: safeName(file.filename), content: await file.toBuffer() };
 }
 
-function buildExtractionResult(filename: string, content: Buffer): Record<string, unknown> {
-  const stem = path.basename(filename, path.extname(filename));
-  const lower = filename.toLowerCase();
-  const classified = classifyFilename(filename, content.length);
-  const inferred = inferExtractionFromUpload(filename, content);
-  const totalAmount = Number((content.length / 10).toFixed(2));
-
-  return {
-    document_type: inferred.document_type,
-    merchant_or_payer: stem.replace(/[_-]+/g, " ").trim(),
-    payer_ein: /w-?2|1099/.test(lower) ? "12-3456789" : null,
-    date: new Date().toISOString().slice(0, 10),
-    total_amount: totalAmount,
-    form_line: inferred.form_line,
-    description: `Auto-extracted from ${filename}`,
-    confidence: classified.confidence,
-    benefit_ids: [],
-    tax_category: inferred.tax_category,
-    deductible_pct: inferred.deductible_pct,
-    suggested_updates: [],
-    notes: inferred.notes
-  };
-}
-
-function runExtraction(jobId: string, userId: string, fileId: string, filename: string, content: Buffer): void {
+async function runExtraction(jobId: string, userId: string, fileId: string, filename: string, content: Buffer): Promise<void> {
   try {
-    const extracted = buildExtractionResult(filename, content);
+    const extracted = await extractWithAiBytes(content, filename);
     saveDocumentExtraction(userId, fileId, extracted);
     extractionJobs.set(jobId, { status: "complete", extracted, error: null });
   } catch (error) {
@@ -225,7 +201,9 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
 
     const jobId = crypto.randomUUID();
     extractionJobs.set(jobId, { status: "running", extracted: null, error: null });
-    queueMicrotask(() => runExtraction(jobId, userId, fileId, doc.filename, doc.content as Buffer));
+    queueMicrotask(() => {
+      void runExtraction(jobId, userId, fileId, doc.filename, doc.content as Buffer);
+    });
     return { job_id: jobId };
   });
 
