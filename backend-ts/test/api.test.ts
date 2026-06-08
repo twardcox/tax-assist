@@ -687,6 +687,15 @@ describe("API baseline", () => {
     const pte = payload.results.find((r) => r.benefit_id === "pte-election");
     expect(pte?.status).toBe("eligible_if_changed");
 
+    const costSeg = payload.results.find((r) => r.benefit_id === "cost-segregation");
+    expect(costSeg?.status).toBe("eligible_if_changed");
+
+    const augusta = payload.results.find((r) => r.benefit_id === "augusta-rule");
+    expect(augusta?.status).toBe("eligible_if_changed");
+
+    const state529 = payload.results.find((r) => r.benefit_id === "state-529-deduction");
+    expect(state529?.status).toBe("eligible_if_changed");
+
     const retirementExemption = payload.results.find((r) => r.benefit_id === "state-retirement-income-exemption");
     expect(retirementExemption?.status).toBe("eligible_now");
 

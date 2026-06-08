@@ -48,6 +48,45 @@ const PTE_STATES = new Set([
   "KS",
   "OK"
 ]);
+const STATES_WITH_529_DEDUCTION = new Set([
+  "AL",
+  "AZ",
+  "AR",
+  "CO",
+  "CT",
+  "DC",
+  "GA",
+  "ID",
+  "IL",
+  "IN",
+  "IA",
+  "KS",
+  "LA",
+  "ME",
+  "MD",
+  "MA",
+  "MI",
+  "MN",
+  "MS",
+  "MO",
+  "MT",
+  "NE",
+  "NJ",
+  "NM",
+  "NY",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "RI",
+  "SC",
+  "UT",
+  "VA",
+  "WV",
+  "WI"
+]);
 const RETIREMENT_FRIENDLY_STATES = new Set([
   "AL",
   "AZ",
@@ -1516,6 +1555,133 @@ const rules: Record<string, RuleFn> = {
       status: "eligible_now",
       message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} Entity-level state tax payment can bypass the $10,000 SALT cap at the owner level.`,
       next_steps: nextSteps
+    };
+  },
+
+  "cost-segregation": (_benefit, facts) => {
+    if (!facts.hasRentalProperty()) {
+      return {
+        status: "not_applicable",
+        message: "Cost segregation applies to owned commercial or residential rental property."
+      };
+    }
+
+    const property = facts.firstProperty();
+    const acquisition = (property.acquisition as Record<string, unknown> | undefined) ?? {};
+    const price = Number(acquisition.purchase_price ?? 0);
+
+    if (price <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has rental property but purchase price is not recorded. Needed to assess cost segregation ROI.",
+        missing_facts: ["real_estate.acquisition.purchase_price"]
+      };
+    }
+
+    if (price < 500000) {
+      return {
+        status: "eligible_if_changed",
+        message: `Property value of ~${price.toLocaleString()} may be too low for a cost segregation study to be cost-effective.`,
+        changes_needed: ["Acquire or aggregate higher-value properties where study ROI is clearer (often $1M+)"]
+      };
+    }
+
+    const accelerated = price * 0.25 * 0.4;
+    return {
+      status: "eligible_now",
+      message: `Cost segregation study on a ${price.toLocaleString()} property could generate ~${Math.round(accelerated).toLocaleString()} in accelerated first-year deductions (using 40% bonus assumptions).`,
+      estimated_value: `~$${Math.round(accelerated).toLocaleString()} accelerated deduction`,
+      next_steps: [
+        "Commission a cost segregation study from a qualified engineering firm",
+        "Expect study costs around $5,000-$20,000; evaluate ROI before ordering",
+        "If property was acquired in prior years, consider a lookback study with Form 3115",
+        "Act sooner while bonus depreciation percentages remain higher"
+      ]
+    };
+  },
+
+  "augusta-rule": (_benefit, facts) => {
+    if (!facts.hasSelfEmployment()) {
+      return {
+        status: "not_applicable",
+        message: "Augusta Rule requires a business entity to rent a home from the owner."
+      };
+    }
+
+    const hasEligibleHome = facts.properties().some((property) => {
+      const type = String(property.property_type ?? "");
+      return type === "primary_residence" || type === "second_home";
+    });
+
+    if (!hasEligibleHome) {
+      return {
+        status: "nearly_eligible",
+        message: "Has business activity but no primary residence or second home is recorded.",
+        missing_facts: ["real_estate.properties (primary_residence or second_home)"]
+      };
+    }
+
+    return {
+      status: "eligible_if_changed",
+      message: "Augusta Rule strategy is available: rent your home to your business for up to 14 days per year tax-free.",
+      estimated_value: "$5,000-$25,000/year depending on fair-market daily rent",
+      changes_needed: [
+        "Schedule legitimate business meetings or events at home",
+        "Create a written rental agreement between owner and business",
+        "Invoice and pay fair-market rent from business account to personal account",
+        "Keep rental use to 14 or fewer days in the year"
+      ],
+      next_steps: [
+        "Document meeting purpose, attendees, and agenda",
+        "Keep comparable local rental data to support fair-market pricing"
+      ]
+    };
+  },
+
+  "state-529-deduction": (_benefit, facts) => {
+    const state = facts.stateCode();
+    if (!state) {
+      return {
+        status: "nearly_eligible",
+        message: "Set residence state to check whether a state 529 deduction is available.",
+        missing_facts: ["household.residence.state"]
+      };
+    }
+
+    if (NO_INCOME_TAX_STATES.has(state)) {
+      return {
+        status: "not_applicable",
+        message: `${state} has no income tax, so there is no state 529 deduction (federal tax-free growth still applies).`
+      };
+    }
+
+    if (!STATES_WITH_529_DEDUCTION.has(state)) {
+      return {
+        status: "not_applicable",
+        message: `${state} is not currently in the modeled list of states with a 529 deduction or credit.`
+      };
+    }
+
+    if (!facts.has529Account()) {
+      return {
+        status: "eligible_if_changed",
+        message: `${state} offers a state 529 deduction or credit. Open a home-state 529 account to claim it.`,
+        changes_needed: ["Open and fund a 529 plan aligned with your state's deduction rules"],
+        next_steps: [
+          `Research ${state} 529 plan details and contribution limits`,
+          "Contribute by year-end to maximize current-year state benefit"
+        ]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `${state} offers a state tax benefit for 529 contributions. Additional contributions may increase current-year state savings.`,
+      next_steps: [
+        "Confirm whether your state requires use of the in-state plan",
+        "Check annual state deduction caps per beneficiary",
+        "Keep contribution confirmations for state return support"
+      ]
     };
   },
 

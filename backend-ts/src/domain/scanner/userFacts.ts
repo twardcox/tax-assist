@@ -349,6 +349,16 @@ export class UserFacts {
     return toNumber(financing.property_tax_paid);
   }
 
+  has529Account(): boolean {
+    const investments = toObject(this.data.investments);
+    const plans = toObjectArray(investments["529_plans"]);
+    return plans.some((plan) => {
+      const beneficiary = plan.beneficiary;
+      const balance = toNumber(plan.balance);
+      return (typeof beneficiary === "string" && beneficiary.trim().length > 0) || balance > 0;
+    });
+  }
+
   householdSize(): number {
     const hh = toObject(this.data.household);
     let size = 1;
