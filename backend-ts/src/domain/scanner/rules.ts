@@ -1271,6 +1271,47 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+    "county-agricultural-use-valuation": (_benefit, facts) => {
+      const properties = facts.properties();
+      const hasLand = properties.some((property) => {
+        const propertyType = String(property.property_type ?? "").toLowerCase();
+        return propertyType === "land" || propertyType === "land (no structure)";
+      });
+
+      if (!hasLand && properties.length === 0) {
+        return {
+          status: "not_applicable",
+          message: "Agricultural use valuation requires owning land or qualifying acreage - no real estate recorded."
+        };
+      }
+
+      if (!hasLand) {
+        return {
+          status: "not_applicable",
+          message:
+            "Agricultural use valuation requires a land-type property. Residential properties do not qualify unless they include significant acreage."
+        };
+      }
+
+      const state = facts.stateCode();
+      const county = facts.county();
+      const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
+
+      return {
+        status: "nearly_eligible",
+        message:
+          `You own land-type property that may qualify for ${location}'s agricultural use valuation. This assesses land at its agricultural value rather than market value - in rapidly appreciating areas the tax savings can be $1,000-$30,000+/year.`,
+        missing_facts: county ? [] : ["household.residence.county"],
+        next_steps: [
+          `Contact ${location} assessor for the agricultural use / greenbelt application`,
+          "Document qualifying agricultural activity: farming records, lease to farmer, or wildlife management plan",
+          "TX Wildlife Management: requires a documented WMP - qualifies with 5+ acres and 6+ beehives",
+          "Understand rollback taxes (3-5 years at full rate) before selling or changing land use",
+          "Consult a real estate attorney before any sale of land under ag classification"
+        ]
+      };
+    },
+
   "mortgage-interest-deduction": (_benefit, facts) => {
     const interest = facts.firstPropertyMortgageInterestPaid();
 

@@ -615,6 +615,11 @@ describe("API baseline", () => {
                 used_as_primary_for_2_of_last_5: true,
                 section_121_exclusion_available: true
               }
+            },
+            {
+              property_type: "land",
+              description: "Open pasture land",
+              current_value: 250000
             }
           ]
         }
@@ -663,6 +668,9 @@ describe("API baseline", () => {
 
     const countyHomestead = payload.results.find((r) => r.benefit_id === "county-homestead-exemption");
     expect(countyHomestead?.status).toBe("eligible_now");
+
+    const agUse = payload.results.find((r) => r.benefit_id === "county-agricultural-use-valuation");
+    expect(agUse?.status).toBe("nearly_eligible");
 
     const stateHomestead = payload.results.find((r) => r.benefit_id === "state-homestead-exemption");
     expect(stateHomestead?.status).toBe("eligible_now");
