@@ -1829,6 +1829,47 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "nol-carryforward": (_benefit, facts) => {
+    if (facts.businesses().length === 0 && !facts.hasRentalProperty()) {
+      return {
+        status: "not_applicable",
+        message: "NOL carryforward applies to business or investment losses. No business or rental activity recorded."
+      };
+    }
+
+    const netProfit = facts.businesses().length > 0 ? facts.firstBusinessNetProfit() : 0;
+    if (netProfit < 0) {
+      const loss = Math.abs(netProfit);
+      return {
+        status: "eligible_now",
+        message:
+          `Business net loss of $${loss.toLocaleString()} recorded. This may create an NOL that carries forward indefinitely to offset up to 80% of taxable income in future profitable years.`,
+        estimated_value: `$${loss.toLocaleString()} × future marginal rate (up to 80% of taxable income/year)`,
+        next_steps: [
+          "Compute the NOL using Publication 536 worksheet (deductions exceed income?)",
+          "Document the NOL on your return and track the carryforward balance each year",
+          "The NOL carries forward indefinitely — use it in high-income future years",
+          "Consult CPA: at-risk rules and passive activity rules may limit the NOL before it reaches the return"
+        ]
+      };
+    }
+
+    if (netProfit === 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has business but net profit/loss not recorded — if business had a net loss, an NOL may exist.",
+        missing_facts: ["businesses.financials.net_profit_loss"]
+      };
+    }
+
+    return {
+      status: "future_opportunity",
+      message:
+        `Business is profitable (net $${netProfit.toLocaleString()}). NOL carryforward becomes relevant in any future loss year. Track cumulative NOL balance if prior years had losses.`,
+      next_steps: ["Review prior returns — any year with net loss may have created an unused NOL carryforward"]
+    };
+  },
+
   "real-estate-professional-status": (_benefit, facts) => {
     if (!facts.hasRentalProperty()) {
       return {
