@@ -1871,6 +1871,62 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "529-to-roth-rollover": (_benefit, facts) => {
+    if (!facts.has529Account()) {
+      return {
+        status: "eligible_if_changed",
+        message:
+          "SECURE 2.0 §126: unused 529 funds can roll to the beneficiary's Roth IRA tax-free. No 529 account recorded. Open one now to start the 15-year account age requirement.",
+        changes_needed: ["Open a 529 account — the account must be at least 15 years old before rolling"],
+        next_steps: [
+          "Open a 529 plan today — even a small balance starts the 15-year clock",
+          "Contributions made within the last 5 years cannot be rolled over",
+          "Lifetime limit: $35,000 per beneficiary; annual Roth IRA limit applies"
+        ]
+      };
+    }
+
+    const ageYears = facts.oldest529PlanAgeYears();
+    if (ageYears === null || ageYears < 15) {
+      return {
+        status: "nearly_eligible",
+        message: "529 plan on file, but the account age has not been recorded as 15+ years yet.",
+        missing_facts: ["investments.529_plans.opened_date"],
+        next_steps: ["Confirm the 529 account opening date", "The account must be at least 15 years old before rollover"]
+      };
+    }
+
+    const investments = facts.data.investments;
+    const plans = Array.isArray(investments["529_plans"]) ? investments["529_plans"] : [];
+    const balances = plans
+      .filter((plan) => plan && typeof plan === "object")
+      .map((plan) => Number((plan as Record<string, unknown>).balance ?? 0));
+    const totalBalance = balances.reduce((sum, balance) => sum + balance, 0);
+
+    if (totalBalance > 0) {
+      return {
+        status: "eligible_now",
+        message:
+          `529 account present (total balance ~${totalBalance.toLocaleString()}). If the account is 15+ years old, unused funds can roll to the beneficiary's Roth IRA — up to $7,000/year, $35,000 lifetime.`,
+        estimated_value: "Up to $35,000 in Roth IRA contributions without income limit",
+        next_steps: [
+          "Verify account opening date — must be at least 15 years old",
+          "Contributions made in the last 5 years cannot be rolled over",
+          "Roll up to $7,000/year (2025 Roth IRA limit) into beneficiary's Roth IRA",
+          "Beneficiary must have earned income ≥ the rollover amount",
+          "No income limit applies to this rollover (bypasses normal Roth MAGI limits)"
+        ]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        "529 plan on file but no balance recorded. Once funded (15+ year account), unused funds can roll to Roth IRA.",
+      missing_facts: ["investments.529_plans.balance"]
+    };
+  },
+
   "sep-ira-contribution": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {

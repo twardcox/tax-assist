@@ -1365,4 +1365,55 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("scan route recognizes the 529 to Roth rollover", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "529-rollover@example.com",
+        password: "Test1234!",
+        display_name: "529 Rollover"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/investments",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          "529_plans": [
+            {
+              beneficiary: "Child Rollover",
+              balance: 12000,
+              contributions_this_year: 0,
+              opened_date: "2009-06-15"
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const rollover = payload.results.find((r) => r.benefit_id === "529-to-roth-rollover");
+    expect(rollover?.status).toBe("eligible_now");
+    expect(rollover?.message).toContain("529 account present");
+
+    await app.close();
+  });
 });

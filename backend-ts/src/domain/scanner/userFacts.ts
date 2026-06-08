@@ -74,6 +74,15 @@ function placedInServiceYear(asset: Record<string, unknown>): number | null {
   return null;
 }
 
+function parseDateValue(value: unknown): Date | null {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+
+  const parsed = new Date(value.trim());
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export class UserFacts {
   data: FactsData;
   taxYear: number;
@@ -476,6 +485,32 @@ export class UserFacts {
       ...toObjectArray(investments.education_accounts)
     ];
     return plans.reduce((sum, plan) => sum + toNumber(plan.contributions_this_year), 0);
+  }
+
+  oldest529PlanAgeYears(): number | null {
+    const investments = toObject(this.data.investments);
+    const plans = [
+      ...toObjectArray(investments["529_plans"]),
+      ...toObjectArray(investments.education_accounts)
+    ];
+
+    let oldestOpenedDate: Date | null = null;
+    for (const plan of plans) {
+      const openedDate = parseDateValue(plan.opened_date ?? plan.account_opened_date ?? plan.open_date);
+      if (!openedDate) {
+        continue;
+      }
+      if (!oldestOpenedDate || openedDate < oldestOpenedDate) {
+        oldestOpenedDate = openedDate;
+      }
+    }
+
+    if (!oldestOpenedDate) {
+      return null;
+    }
+
+    const cutoff = new Date(Date.UTC(this.taxYear - 15, 11, 31, 23, 59, 59, 999));
+    return oldestOpenedDate.getTime() <= cutoff.getTime() ? 15 : Math.max(0, this.taxYear - oldestOpenedDate.getUTCFullYear());
   }
 
   householdSize(): number {
