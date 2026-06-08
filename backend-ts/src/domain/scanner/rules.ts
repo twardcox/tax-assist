@@ -1275,6 +1275,14 @@ const rules: Record<string, RuleFn> = {
           next_steps: ["Run payroll and document reasonable compensation before year-end"]
         };
       }
+      if (netProfitExisting > 0 && ownerSalary > 0 && ownerSalary < netProfitExisting * 0.2) {
+        return {
+          status: "nearly_eligible",
+          message: `Business is already an S Corp, but owner W-2 salary (${ownerSalary.toLocaleString()}) may be low relative to net profit (${netProfitExisting.toLocaleString()}).`,
+          changes_needed: ["Review and document reasonable compensation methodology with CPA"],
+          next_steps: ["Adjust payroll prospectively if compensation is below supportable market levels"]
+        };
+      }
       return {
         status: "not_applicable",
         message: "Business is already taxed as an S Corp."
@@ -1873,11 +1881,19 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    if (facts.firstBusinessAssetsPlacedInServiceCount() > 0) {
+    const assetCount = facts.firstBusinessAssetsPlacedInServiceCount();
+    if (assetCount > 0) {
+      const totalCost = facts.firstBusinessAssetsPlacedInServiceTotalCost();
       return {
         status: "eligible_now",
-        message: "Business assets were placed in service. Section 179 immediate expensing is available.",
-        next_steps: ["Complete Form 4562", "Apply Section 179 before bonus depreciation on the same assets"]
+        message: `Business assets were placed in service (${assetCount} item${assetCount === 1 ? "" : "s"}). Section 179 immediate expensing may be available.`,
+        estimated_value: totalCost > 0
+          ? `Up to ~$${Math.round(totalCost).toLocaleString()} immediate deduction (subject to annual limits and taxable income)`
+          : "Immediate deduction may be available, subject to annual limits and taxable income",
+        next_steps: [
+          "Complete Form 4562 and confirm each asset is Section 179 eligible",
+          "Section 179 is income-limited; apply bonus depreciation to remaining basis where appropriate"
+        ]
       };
     }
 

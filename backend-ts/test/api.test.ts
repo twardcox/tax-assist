@@ -1195,4 +1195,69 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("scan route flags 529 account with zero annual contributions as eligible_if_changed", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "529-zero@example.com",
+        password: "Test1234!",
+        display_name: "529 Zero"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          filing_status: "single",
+          estimated_agi: 90000,
+          residence: {
+            state: "PA",
+            county: "Allegheny"
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/investments",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          "529_plans": [
+            {
+              beneficiary: "Child Zero",
+              balance: 10000,
+              contributions_this_year: 0
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const state529 = payload.results.find((r) => r.benefit_id === "state-529-deduction");
+    expect(state529?.status).toBe("eligible_if_changed");
+
+    await app.close();
+  });
 });
