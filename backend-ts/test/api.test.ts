@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { buildApp } from "../src/app";
 import { getDb } from "../src/db/client";
 import { initDb } from "../src/db/init";
@@ -2059,6 +2061,73 @@ describe("API baseline", () => {
       });
     } finally {
       __setTaxLawUpdateRunningForTest(false);
+    }
+
+    await app.close();
+  });
+
+  test("reports route lists markdown reports and fetches report content", async () => {
+    const app = buildApp();
+
+    const listRes = await app.inject({ method: "GET", url: "/api/reports" });
+    expect(listRes.statusCode).toBe(200);
+    const listPayload = listRes.json() as { reports: Array<{ name: string }> };
+    expect(listPayload.reports.length).toBeGreaterThan(0);
+
+    const reportName = listPayload.reports[0]?.name;
+    expect(reportName).toMatch(/\.md$/);
+
+    if (reportName) {
+      const getRes = await app.inject({ method: "GET", url: `/api/reports/${reportName}` });
+      expect(getRes.statusCode).toBe(200);
+      const getPayload = getRes.json() as { name: string; content: string };
+      expect(getPayload.name).toBe(reportName);
+      expect(getPayload.content.length).toBeGreaterThan(0);
+    }
+
+    await app.close();
+  });
+
+  test("reports cpa packet job completes and exposes status", async () => {
+    const app = buildApp();
+
+    const triggerRes = await app.inject({
+      method: "POST",
+      url: "/api/reports/cpa-packet?tax_year=2025&with_ai=true"
+    });
+    expect(triggerRes.statusCode).toBe(200);
+    const triggerPayload = triggerRes.json() as { job_id: string };
+    expect(triggerPayload.job_id).toBeTruthy();
+
+    const statusRes = await app.inject({
+      method: "GET",
+      url: `/api/reports/cpa-packet/${triggerPayload.job_id}`
+    });
+    expect(statusRes.statusCode).toBe(200);
+    const statusPayload = statusRes.json() as { status: string; report_name: string | null; error: string | null };
+    expect(statusPayload.status === "running" || statusPayload.status === "complete").toBe(true);
+
+    if (statusPayload.status !== "complete") {
+      const completeRes = await app.inject({
+        method: "GET",
+        url: `/api/reports/cpa-packet/${triggerPayload.job_id}`
+      });
+      expect(completeRes.statusCode).toBe(200);
+    }
+
+    const finalStatusRes = await app.inject({
+      method: "GET",
+      url: `/api/reports/cpa-packet/${triggerPayload.job_id}`
+    });
+    const finalStatus = finalStatusRes.json() as { status: string; report_name: string | null };
+    expect(finalStatus.status).toBe("complete");
+    expect(finalStatus.report_name).toMatch(/^cpa_packet_.*\.md$/);
+
+    if (finalStatus.report_name) {
+      const reportPath = path.join(process.cwd(), "..", "reports", finalStatus.report_name);
+      if (fs.existsSync(reportPath)) {
+        fs.unlinkSync(reportPath);
+      }
     }
 
     await app.close();

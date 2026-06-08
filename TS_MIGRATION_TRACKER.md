@@ -28,7 +28,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Planning | api/routes/planning.py | backend-ts/src/routes/planning.ts | Backend B | IN_PROGRESS |
 | Scan | api/routes/scan.py | backend-ts/src/routes/scan.ts | Backend A | IN_PROGRESS |
 | Scenarios | api/routes/scenarios.py | backend-ts/src/routes/scenarios.ts | Backend A | TODO |
-| Reports | api/routes/reports.py | backend-ts/src/routes/reports.ts | Backend B | TODO |
+| Reports | api/routes/reports.py | backend-ts/src/routes/reports.ts | Backend B | DONE |
 | Documents | api/routes/documents.py | backend-ts/src/routes/documents.ts | Backend B | TODO |
 | Tax forms | api/routes/tax_forms.py | backend-ts/src/routes/taxForms.ts | Backend B | TODO |
 | Tax law | api/routes/tax_law.py | backend-ts/src/routes/taxLaw.ts | Backend A | DONE |
@@ -38,7 +38,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 |---|---|---|---|---|
 | Scanner | scripts/scan_opportunities.py | backend-ts/src/domain/scanner/* | Backend A | IN_PROGRESS |
 | Scenarios | scripts/scenario_simulator.py | backend-ts/src/domain/scenarios/* | Backend A | TODO |
-| CPA packet | scripts/generate_cpa_packet.py | backend-ts/src/domain/reports/cpaPacket.ts | Backend B | TODO |
+| CPA packet | scripts/generate_cpa_packet.py | backend-ts/src/domain/reports/cpaPacket.ts | Backend B | IN_PROGRESS |
 | Receipt classifier | scripts/classify_receipts.py | backend-ts/src/domain/documents/classifier.ts | Backend B | TODO |
 | Tax law updater | scripts/update_tax_law.py | backend-ts/src/domain/taxLaw/updater.ts | Backend A | IN_PROGRESS |
 | Tax forms | scripts/generate_tax_forms.py | backend-ts/src/domain/taxForms/* | Backend B | TODO |
