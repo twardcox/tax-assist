@@ -49,6 +49,31 @@ function toObjectArray(value: unknown): Array<Record<string, unknown>> {
     : [];
 }
 
+function placedInServiceYear(asset: Record<string, unknown>): number | null {
+  const yearValue = asset.placed_in_service_year ?? asset.year ?? asset.tax_year;
+  if (typeof yearValue === "number" && Number.isFinite(yearValue)) {
+    return yearValue;
+  }
+  if (typeof yearValue === "string" && yearValue.trim()) {
+    const parsedYear = Number(yearValue.trim());
+    if (Number.isFinite(parsedYear)) {
+      return parsedYear;
+    }
+  }
+
+  const dateValue = asset.placed_in_service_date ?? asset.placed_in_service ?? asset.service_date;
+  if (typeof dateValue === "string" && dateValue.trim()) {
+    const dateText = dateValue.trim();
+    const yearText = dateText.slice(0, 4);
+    const parsedYear = Number(yearText);
+    if (Number.isFinite(parsedYear)) {
+      return parsedYear;
+    }
+  }
+
+  return null;
+}
+
 export class UserFacts {
   data: FactsData;
   taxYear: number;
@@ -276,10 +301,17 @@ export class UserFacts {
   }
 
   firstBusinessAssetsPlacedInServiceCount(): number {
+    return this.firstBusinessAssetsPlacedInServiceCountForTaxYear();
+  }
+
+  firstBusinessAssetsPlacedInServiceCountForTaxYear(): number {
     const biz = this.firstBusiness();
     const depreciation = toObject(biz.depreciation);
-    const assets = depreciation.assets_placed_in_service;
-    return Array.isArray(assets) ? assets.length : 0;
+    const assets = toObjectArray(depreciation.assets_placed_in_service);
+    return assets.filter((asset) => {
+      const year = placedInServiceYear(asset);
+      return year === null || year === this.taxYear;
+    }).length;
   }
 
   firstBusinessAssetsPlacedInServiceTotalCost(): number {
@@ -287,6 +319,10 @@ export class UserFacts {
     const depreciation = toObject(biz.depreciation);
     const assets = toObjectArray(depreciation.assets_placed_in_service);
     return assets.reduce((sum, asset) => {
+      const year = placedInServiceYear(asset);
+      if (year !== null && year !== this.taxYear) {
+        return sum;
+      }
       const cost = toNumber(asset.cost ?? asset.purchase_price ?? asset.basis ?? asset.amount);
       return sum + cost;
     }, 0);

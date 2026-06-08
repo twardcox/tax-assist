@@ -1148,7 +1148,8 @@ describe("API baseline", () => {
                 assets_placed_in_service: [
                   {
                     name: "Equipment",
-                    cost: 25000
+                    cost: 25000,
+                    placed_in_service_date: "2025-09-15"
                   }
                 ]
               }
