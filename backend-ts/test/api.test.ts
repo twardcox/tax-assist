@@ -437,4 +437,50 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("scan route returns dashboard-compatible payload", async () => {
+    const app = buildApp();
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025"
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as Record<string, unknown>;
+    expect(payload).toHaveProperty("tax_year", 2025);
+    expect(payload).toHaveProperty("total");
+    expect(payload).toHaveProperty("counts");
+    expect(payload).toHaveProperty("results");
+
+    const results = payload.results as Array<Record<string, unknown>>;
+    expect(Array.isArray(results)).toBe(true);
+    if (results.length > 0) {
+      expect(results[0]).toHaveProperty("benefit_name");
+      expect(results[0]).toHaveProperty("status");
+      expect(results[0]).toHaveProperty("category");
+      expect(results[0]).toHaveProperty("jurisdiction");
+    }
+
+    await app.close();
+  });
+
+  test("ai analysis endpoint returns 503 when anthropic key is absent", async () => {
+    const app = buildApp();
+
+    const aiRes = await app.inject({
+      method: "POST",
+      url: "/api/scan/ai-analysis?tax_year=2025&mode=opportunities"
+    });
+
+    if (aiRes.statusCode === 503) {
+      expect(aiRes.json()).toEqual({ detail: "ANTHROPIC_API_KEY is not set" });
+    } else {
+      // If key exists in local env, endpoint should still succeed with job creation.
+      expect(aiRes.statusCode).toBe(200);
+      expect(aiRes.json()).toHaveProperty("job_id");
+    }
+
+    await app.close();
+  });
 });
