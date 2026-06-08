@@ -32,3 +32,55 @@ export function getSectionData(userId: string, taxYear: number, section: string)
     return {};
   }
 }
+
+function assignPath(target: Record<string, unknown>, dotPath: string, operation: string, value: unknown): boolean {
+  const parts = dotPath.split(".").filter(Boolean);
+  if (parts.length === 0) {
+    return false;
+  }
+
+  let current: unknown = target;
+  for (const part of parts.slice(0, -1)) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) {
+      return false;
+    }
+
+    const obj = current as Record<string, unknown>;
+    if (!(part in obj) || obj[part] == null || typeof obj[part] !== "object") {
+      obj[part] = {};
+    }
+    current = obj[part];
+  }
+
+  const last = parts[parts.length - 1];
+  if (!current || typeof current !== "object" || Array.isArray(current)) {
+    return false;
+  }
+
+  const obj = current as Record<string, unknown>;
+  if (operation === "add") {
+    obj[last] = Number(obj[last] ?? 0) + Number(value ?? 0);
+  } else {
+    obj[last] = value;
+  }
+
+  return true;
+}
+
+export function applyDotPathToSection(
+  userId: string,
+  taxYear: number,
+  section: string,
+  dotPath: string,
+  operation: string,
+  value: unknown
+): boolean {
+  const data = getSectionData(userId, taxYear, section);
+  const updated = { ...data };
+  if (!assignPath(updated, dotPath, operation, value)) {
+    return false;
+  }
+
+  saveSectionData(userId, taxYear, section, updated);
+  return true;
+}

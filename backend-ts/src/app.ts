@@ -15,6 +15,7 @@ import { registerTransactionsRoutes } from "./routes/transactions";
 import { registerReconciliationRoutes } from "./routes/reconciliation";
 import { registerPlanningRoutes } from "./routes/planning";
 import { registerScanRoutes } from "./routes/scan";
+import { registerDocumentsRoutes } from "./routes/documents";
 import { registerTaxLawRoutes } from "./routes/taxLaw";
 import { registerReportsRoutes } from "./routes/reports";
 import { registerScenariosRoutes } from "./routes/scenarios";
@@ -53,6 +54,7 @@ export function buildApp() {
     await registerReconciliationRoutes(api);
     await registerPlanningRoutes(api);
     await registerScanRoutes(api);
+    await registerDocumentsRoutes(api);
     await registerTaxLawRoutes(api);
     await registerReportsRoutes(api);
     await registerScenariosRoutes(api);

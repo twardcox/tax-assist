@@ -166,3 +166,12 @@ export function reverseTransaction(txnId: string, userId: string): boolean {
 
   return result.changes > 0;
 }
+
+export function fileAlreadyApplied(userId: string, fileId: string): boolean {
+  const db = getDb();
+  const row = db.prepare(
+    "SELECT 1 AS found FROM transactions WHERE user_id = ? AND file_id = ? LIMIT 1"
+  ).get(userId, fileId) as { found?: number } | undefined;
+
+  return Boolean(row?.found);
+}

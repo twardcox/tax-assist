@@ -12,6 +12,7 @@ beforeEach(() => {
   const db = getDb();
   db.exec("DELETE FROM transactions;");
   db.exec("DELETE FROM section_data;");
+  db.exec("DELETE FROM documents;");
   db.exec("DELETE FROM revoked_tokens;");
   db.exec("DELETE FROM users;");
 });
@@ -203,6 +204,166 @@ describe("API baseline", () => {
     expect(rawPayload.content).toContain("filing_status");
 
     await app.close();
+  });
+
+  test("documents upload, list, extract, apply, and delete routes work", async () => {
+    const previousKey = process.env.ANTHROPIC_API_KEY;
+    process.env.ANTHROPIC_API_KEY = "test-key";
+
+    const app = buildApp();
+
+    try {
+      const registerRes = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: {
+          email: "doc-user@example.com",
+          password: "Test1234!",
+          display_name: "Doc User"
+        }
+      });
+
+      expect(registerRes.statusCode).toBe(201);
+      const token = (registerRes.json() as { token: string }).token;
+
+      const uploadRes = await app.inject({
+        method: "POST",
+        url: "/api/documents/upload",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json"
+        },
+        payload: {
+          filename: "office-receipt.pdf",
+          content: "sample receipt data"
+        }
+      });
+
+      expect(uploadRes.statusCode).toBe(200);
+      const uploaded = uploadRes.json() as { file_id: string; category: string; confidence: string };
+      expect(uploaded.category).toBe("business_expense");
+      expect(uploaded.confidence).toBe("medium");
+
+      const listRes = await app.inject({
+        method: "GET",
+        url: "/api/documents",
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      expect(listRes.statusCode).toBe(200);
+      const listPayload = listRes.json() as { files: Array<Record<string, unknown>> };
+      expect(listPayload.files).toHaveLength(1);
+      expect(listPayload.files[0]?.file_id).toBe(uploaded.file_id);
+
+      const extractRes = await app.inject({
+        method: "POST",
+        url: `/api/documents/${uploaded.file_id}/extract`,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      expect(extractRes.statusCode).toBe(200);
+      const extractPayload = extractRes.json() as { job_id: string };
+      expect(extractPayload.job_id).toBeTypeOf("string");
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const statusRes = await app.inject({
+        method: "GET",
+        url: `/api/documents/extract/${extractPayload.job_id}`
+      });
+
+      expect(statusRes.statusCode).toBe(200);
+      const statusPayload = statusRes.json() as { status: string; extracted: Record<string, unknown> };
+      expect(statusPayload.status).toBe("complete");
+      expect(statusPayload.extracted.document_type).toBe("business_expense");
+
+      const seedSectionRes = await app.inject({
+        method: "PUT",
+        url: "/api/user-data/household",
+        headers: {
+          authorization: `Bearer ${token}`
+        },
+        payload: {
+          data: {
+            expenses: {
+              office_supplies: 0
+            }
+          }
+        }
+      });
+
+      expect(seedSectionRes.statusCode).toBe(200);
+
+      const applyRes = await app.inject({
+        method: "POST",
+        url: "/api/documents/apply",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json"
+        },
+        payload: {
+          meta: {
+            file_id: uploaded.file_id,
+            filename: "office-receipt.pdf",
+            date: "2026-01-01",
+            merchant: "Office Depot",
+            total_amount: 100,
+            deductible_pct: 0.5,
+            tax_category: "business_expense",
+            benefit_ids: [],
+            form_line: "Schedule C:18"
+          },
+          updates: [
+            {
+              label: "Office supplies",
+              section: "household",
+              dot_path: "expenses.office_supplies",
+              operation: "add",
+              value: 100
+            }
+          ]
+        }
+      });
+
+      expect(applyRes.statusCode).toBe(200);
+      const applyPayload = applyRes.json() as { duplicate: boolean; applied: string[] };
+      expect(applyPayload.duplicate).toBe(false);
+      expect(applyPayload.applied).toContain("Office supplies");
+
+      const parsedRes = await app.inject({
+        method: "GET",
+        url: "/api/user-data/household/parsed",
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      expect(parsedRes.statusCode).toBe(200);
+      const parsedPayload = parsedRes.json() as { data: Record<string, unknown> };
+      expect(parsedPayload.data).toMatchObject({
+        expenses: {
+          office_supplies: 50
+        }
+      });
+
+      const deleteRes = await app.inject({
+        method: "DELETE",
+        url: `/api/documents/${uploaded.file_id}`,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      expect(deleteRes.statusCode).toBe(200);
+      expect(deleteRes.json()).toEqual({ deleted: true, file_id: uploaded.file_id });
+    } finally {
+      process.env.ANTHROPIC_API_KEY = previousKey;
+      await app.close();
+    }
   });
 
   test("transactions list and summary work with auth and filters", async () => {

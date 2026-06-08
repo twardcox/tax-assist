@@ -29,7 +29,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Scan | api/routes/scan.py | backend-ts/src/routes/scan.ts | Backend A | IN_PROGRESS |
 | Scenarios | api/routes/scenarios.py | backend-ts/src/routes/scenarios.ts | Backend A | DONE |
 | Reports | api/routes/reports.py | backend-ts/src/routes/reports.ts | Backend B | DONE |
-| Documents | api/routes/documents.py | backend-ts/src/routes/documents.ts | Backend B | TODO |
+| Documents | api/routes/documents.py | backend-ts/src/routes/documents.ts | Backend B | DONE |
 | Tax forms | api/routes/tax_forms.py | backend-ts/src/routes/taxForms.ts | Backend B | DONE |
 | Tax law | api/routes/tax_law.py | backend-ts/src/routes/taxLaw.ts | Backend A | DONE |
 

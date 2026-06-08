@@ -48,10 +48,29 @@ CREATE TABLE IF NOT EXISTS transactions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS documents (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  filename TEXT NOT NULL,
+  subdir TEXT NOT NULL,
+  path TEXT NOT NULL,
+  category TEXT,
+  confidence TEXT,
+  document_type TEXT,
+  note TEXT,
+  size INTEGER NOT NULL DEFAULT 0,
+  extracted INTEGER NOT NULL DEFAULT 0,
+  extraction_json TEXT,
+  content BLOB,
+  uploaded_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_section_data_user_year ON section_data(user_id, tax_year);
 CREATE INDEX IF NOT EXISTS idx_txn_user ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_txn_status ON transactions(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_documents_user ON documents(user_id, uploaded_at);
 `;
 
 export function initDb(): void {
