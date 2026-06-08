@@ -6,11 +6,13 @@ import { getDb } from "../src/db/client";
 import { initDb } from "../src/db/init";
 import { addTransaction } from "../src/db/transactionsRepo";
 import { __setDocumentAiExtractionOverrideForTest } from "../src/domain/documents/aiExecutor";
+import { __setScanAiNarrativeOverrideForTest } from "../src/domain/scanner/aiAdvisor";
 import { __setTaxLawUpdateRunningForTest } from "../src/routes/taxLaw";
 
 beforeEach(() => {
   initDb();
   __setDocumentAiExtractionOverrideForTest(null);
+  __setScanAiNarrativeOverrideForTest(null);
   const db = getDb();
   db.exec("DELETE FROM transactions;");
   db.exec("DELETE FROM section_data;");
@@ -937,6 +939,48 @@ describe("API baseline", () => {
     }
 
     await app.close();
+  });
+
+  test("ai analysis endpoint creates and completes report job with override", async () => {
+    const previousKey = process.env.ANTHROPIC_API_KEY;
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    __setScanAiNarrativeOverrideForTest(async (_scan, taxYear, mode) =>
+      `Override narrative for tax year ${taxYear} in ${mode} mode.`
+    );
+
+    const app = buildApp();
+
+    try {
+      const triggerRes = await app.inject({
+        method: "POST",
+        url: "/api/scan/ai-analysis?tax_year=2025&mode=both"
+      });
+
+      expect(triggerRes.statusCode).toBe(200);
+      const triggerPayload = triggerRes.json() as { job_id: string };
+      expect(typeof triggerPayload.job_id).toBe("string");
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const statusRes = await app.inject({
+        method: "GET",
+        url: `/api/scan/ai-analysis/${triggerPayload.job_id}`
+      });
+
+      expect(statusRes.statusCode).toBe(200);
+      const statusPayload = statusRes.json() as {
+        status: string;
+        report_name: string | null;
+        error: string | null;
+      };
+      expect(statusPayload.status).toBe("complete");
+      expect(statusPayload.report_name).toContain("ai_analysis_");
+      expect(statusPayload.report_name).toContain(".md");
+      expect(statusPayload.error).toBeNull();
+    } finally {
+      process.env.ANTHROPIC_API_KEY = previousKey;
+      await app.close();
+    }
   });
 
   test("scan route evaluates federal family and education credit rules", async () => {

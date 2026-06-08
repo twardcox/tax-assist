@@ -2,10 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { env } from "../config/env";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { runScan } from "../domain/scanner/scan";
+import { generateScanAiNarrative, type ScanAiMode } from "../domain/scanner/aiAdvisor";
 import { writeOpportunityReport } from "../domain/scanner/report";
 
 type JobState = {
@@ -16,25 +16,12 @@ type JobState = {
 
 const aiJobs = new Map<string, JobState>();
 
-function buildLocalAiReportMarkdown(taxYear: number, mode: string, userId?: string | null) {
-  const scan = runScan(taxYear, userId);
-  const counts = Object.entries(scan.counts)
-    .map(([status, count]) => `- ${status}: ${count}`)
-    .join("\n");
+function nowStamp(): string {
+  return new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+}
 
-  return [
-    `# AI Analysis - Tax Year ${taxYear}`,
-    "",
-    `Mode: ${mode}`,
-    "",
-    "This interim TypeScript backend build does not yet include full LLM analysis parity.",
-    "The summary below is generated from current scan outputs and preserves report workflow compatibility.",
-    "",
-    "## Status Summary",
-    "",
-    counts,
-    ""
-  ].join("\n");
+function nowPretty(): string {
+  return new Date().toISOString().slice(0, 16).replace("T", " ");
 }
 
 export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
@@ -53,23 +40,34 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
   app.post("/scan/ai-analysis", { preHandler: app.authenticateOptional }, async (request) => {
     const query = request.query as { tax_year?: string | number; mode?: string };
     const taxYear = Number(query.tax_year ?? 2025);
-    const mode = query.mode ?? "opportunities";
+    const mode = (query.mode ?? "opportunities") as ScanAiMode;
     const userId = request.currentUser?.id ?? null;
 
-    if (!env.ANTHROPIC_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       throw new AppError(503, "ANTHROPIC_API_KEY is not set");
+    }
+
+    if (!["opportunities", "gaps", "both"].includes(mode)) {
+      throw new AppError(400, "mode must be opportunities, gaps, or both");
     }
 
     const jobId = crypto.randomUUID();
     aiJobs.set(jobId, { status: "running", report_name: null, error: null });
 
-    queueMicrotask(() => {
+    queueMicrotask(async () => {
       try {
-        const timestamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+        const scan = runScan(taxYear, userId);
+        const analysis = await generateScanAiNarrative(scan, taxYear, mode);
+
+        const timestamp = nowStamp();
         const reportName = `ai_analysis_${timestamp}.md`;
         const reportPath = path.join(projectPaths.reports, reportName);
         fs.mkdirSync(projectPaths.reports, { recursive: true });
-        fs.writeFileSync(reportPath, buildLocalAiReportMarkdown(taxYear, mode, userId), "utf8");
+        fs.writeFileSync(
+          reportPath,
+          `# AI Analysis - Tax Year ${taxYear}\n\n*Generated ${nowPretty()}*\n\n---\n\n${analysis}\n`,
+          "utf8"
+        );
         aiJobs.set(jobId, { status: "complete", report_name: reportName, error: null });
       } catch (error) {
         aiJobs.set(jobId, {
