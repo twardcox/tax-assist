@@ -7,6 +7,7 @@ import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { addTransaction, fileAlreadyApplied } from "../db/transactionsRepo";
 import { applyDotPathToSection } from "../db/sectionRepo";
+import { classifyFilename } from "../domain/documents/classifier";
 import {
   deleteDocumentRecord,
   getDocumentContent,
@@ -47,29 +48,6 @@ function safeName(name: string): string {
 function fileId(userId: string, filename: string, content: Buffer): string {
   const digest = crypto.createHash("sha256").update(content).digest("hex").slice(0, 16);
   return crypto.createHash("sha256").update(`${userId}:${filename}:${digest}`).digest("hex").slice(0, 12);
-}
-
-function classifyFilename(filename: string): { category: string; confidence: string; note: string } {
-  const lower = filename.toLowerCase();
-  if (/(w-?2|w2|paystub)/.test(lower)) {
-    return { category: "w2_income", confidence: "high", note: "Auto-classified from filename" };
-  }
-  if (/(1099-int|interest)/.test(lower)) {
-    return { category: "interest_income", confidence: "high", note: "Auto-classified from filename" };
-  }
-  if (/(1099-div|dividend)/.test(lower)) {
-    return { category: "dividend_income", confidence: "high", note: "Auto-classified from filename" };
-  }
-  if (/(receipt|invoice|expense)/.test(lower)) {
-    return { category: "business_expense", confidence: "medium", note: "Likely deductible business expense" };
-  }
-  if (/(rent|lease|tenant)/.test(lower)) {
-    return { category: "rental_expense", confidence: "medium", note: "Likely rental property document" };
-  }
-  if (/(medical|hsa|insurance)/.test(lower)) {
-    return { category: "medical", confidence: "medium", note: "Likely healthcare-related document" };
-  }
-  return { category: "needs_review", confidence: "low", note: "Needs manual review" };
 }
 
 function normalizeDocument(row: ReturnType<typeof getDocumentsForUser>[number]): Record<string, unknown> {
@@ -142,22 +120,27 @@ async function readUpload(request: FastifyRequest): Promise<{ filename: string; 
 function buildExtractionResult(filename: string, content: Buffer): Record<string, unknown> {
   const stem = path.basename(filename, path.extname(filename));
   const lower = filename.toLowerCase();
-  const category = classifyFilename(filename).category;
+  const classified = classifyFilename(filename, content.length);
+  const category = classified.category;
   const totalAmount = Number((content.length / 10).toFixed(2));
+  const documentType = category === "income_document"
+    ? (/w-?2/.test(lower) ? "w2" : /1099/.test(lower) ? "1099" : /1098/.test(lower) ? "1098" : "other")
+    : category;
 
   return {
-    document_type: category,
+    document_type: documentType,
     merchant_or_payer: stem.replace(/[_-]+/g, " ").trim(),
     payer_ein: /w-?2|1099/.test(lower) ? "12-3456789" : null,
     date: new Date().toISOString().slice(0, 10),
     total_amount: totalAmount,
-    form_line: category === "w2_income" ? "W-2:1" : null,
+    form_line: documentType === "w2" ? "Form 1040 Line 1a" : null,
     description: `Auto-extracted from ${filename}`,
-    confidence: "medium",
+    confidence: classified.confidence,
     benefit_ids: [],
-    tax_category: category,
+    tax_category: category === "income_document" ? "other_income" : category,
     deductible_pct: 1,
-    suggested_updates: []
+    suggested_updates: [],
+    notes: classified.note
   };
 }
 
@@ -185,7 +168,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
 
     const userId = request.currentUser?.id ?? "";
     const id = fileId(userId, uploaded.filename, uploaded.content);
-    const info = classifyFilename(uploaded.filename);
+    const info = classifyFilename(uploaded.filename, uploaded.content.length);
 
     if (request.currentUser) {
       upsertDocument(request.currentUser.id, id, uploaded.filename, uploaded.content, info);

@@ -234,7 +234,7 @@ describe("API baseline", () => {
           "content-type": "application/json"
         },
         payload: {
-          filename: "office-receipt.pdf",
+          filename: "office-supplies-subscription.pdf",
           content: "sample receipt data"
         }
       });
@@ -308,7 +308,7 @@ describe("API baseline", () => {
         payload: {
           meta: {
             file_id: uploaded.file_id,
-            filename: "office-receipt.pdf",
+            filename: "office-supplies-subscription.pdf",
             date: "2026-01-01",
             merchant: "Office Depot",
             total_amount: 100,
