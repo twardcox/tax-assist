@@ -304,6 +304,24 @@ export class UserFacts {
     return toNumber(investment.long_term_capital_gains);
   }
 
+  hasAppreciatedTaxableStock(): boolean {
+    const investments = toObject(this.data.investments);
+    const taxableAccounts = toObjectArray(investments.taxable_accounts);
+    return taxableAccounts.some((account) => toNumber(account.unrealized_gains) > 0);
+  }
+
+  firstPropertyMortgageInterestPaid(): number {
+    const property = this.firstProperty();
+    const financing = toObject(property.financing);
+    return toNumber(financing.mortgage_interest_paid);
+  }
+
+  firstPropertyPropertyTaxPaid(): number {
+    const property = this.firstProperty();
+    const financing = toObject(property.financing);
+    return toNumber(financing.property_tax_paid);
+  }
+
   householdSize(): number {
     const hh = toObject(this.data.household);
     let size = 1;

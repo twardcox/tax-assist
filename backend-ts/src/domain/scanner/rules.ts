@@ -774,6 +774,118 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "charitable-contribution-deduction": (_benefit, facts) => {
+    const itemizing = facts.itemizing();
+
+    if (itemizing === false) {
+      return {
+        status: "eligible_if_changed",
+        message: "Not currently itemizing. Charitable deduction only applies when itemizing.",
+        changes_needed: [
+          "Calculate total itemized deductions (mortgage interest + SALT + charitable)",
+          "If total exceeds standard deduction ($30,000 MFJ / $15,000 Single), itemize",
+          "Consider bunching 2-3 years of giving via a Donor-Advised Fund"
+        ]
+      };
+    }
+
+    if (itemizing === null) {
+      return {
+        status: "nearly_eligible",
+        message: "Itemization status not confirmed. Charitable deduction is valuable if itemizing.",
+        missing_facts: ["household.itemizing_deductions"],
+        next_steps: ["Compare total itemized deductions to standard deduction amount"]
+      };
+    }
+
+    const hasAppreciatedStock = facts.hasAppreciatedTaxableStock();
+    const nextSteps = ["Document all contributions. Written acknowledgment required for gifts over $250."];
+    if (hasAppreciatedStock) {
+      nextSteps.unshift(
+        "Donate appreciated stock directly instead of cash to avoid capital gains and potentially deduct full FMV"
+      );
+    }
+
+    return {
+      status: "eligible_now",
+      message: "Charitable contribution deduction available (itemizing confirmed).",
+      next_steps: nextSteps
+    };
+  },
+
+  "mortgage-interest-deduction": (_benefit, facts) => {
+    const interest = facts.firstPropertyMortgageInterestPaid();
+
+    if (interest <= 0 && !facts.hasAnyRealEstate()) {
+      return {
+        status: "not_applicable",
+        message: "No real estate or mortgage interest recorded."
+      };
+    }
+
+    const itemizing = facts.itemizing();
+    if (itemizing === false) {
+      return {
+        status: "eligible_if_changed",
+        message: "Has mortgage interest but not itemizing. Deduction only applies when itemizing.",
+        changes_needed: ["Calculate if total itemized deductions exceed standard deduction"]
+      };
+    }
+
+    if (interest > 0) {
+      return {
+        status: "eligible_now",
+        message: `Mortgage interest of ~${interest.toLocaleString()} is deductible if itemizing.`,
+        estimated_value: `~$${interest.toLocaleString()}/year deduction`,
+        next_steps: ["Collect Form 1098 from lender", "Report on Schedule A"]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: "Has real estate but mortgage interest amount is not recorded.",
+      missing_facts: ["real_estate.financing.mortgage_interest_paid"]
+    };
+  },
+
+  "salt-deduction": (_benefit, facts) => {
+    const itemizing = facts.itemizing();
+
+    if (itemizing === false) {
+      return {
+        status: "not_applicable",
+        message: "Not itemizing. SALT deduction only applies when itemizing."
+      };
+    }
+
+    if (itemizing === null) {
+      return {
+        status: "nearly_eligible",
+        message: "Itemization status not confirmed. SALT deduction (up to $10,000) is available if itemizing.",
+        missing_facts: ["household.itemizing_deductions"]
+      };
+    }
+
+    const propertyTax = facts.firstPropertyPropertyTaxPaid();
+    let message = "SALT deduction available (capped at $10,000).";
+    if (propertyTax > 0) {
+      message += ` Property tax: $${propertyTax.toLocaleString()}/year.`;
+    }
+    if (facts.hasSelfEmployment()) {
+      message += " Evaluate state PTE tax election to bypass the SALT cap on pass-through income.";
+    }
+
+    return {
+      status: "eligible_now",
+      message,
+      estimated_value: "Up to $10,000/year",
+      next_steps: [
+        "Report state income tax + property tax on Schedule A (combined cap $10,000)",
+        "If self-employed in high-tax state, ask CPA about Pass-Through Entity (PTE) tax election"
+      ]
+    };
+  },
+
   "county-homestead-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
     const county = facts.county();

@@ -905,6 +905,15 @@ describe("API baseline", () => {
     const gift = payload.results.find((r) => r.benefit_id === "annual-gift-tax-exclusion");
     expect(gift?.status).toBe("nearly_eligible");
 
+    const charitable = payload.results.find((r) => r.benefit_id === "charitable-contribution-deduction");
+    expect(charitable?.status).toBe("nearly_eligible");
+
+    const mortgage = payload.results.find((r) => r.benefit_id === "mortgage-interest-deduction");
+    expect(mortgage?.status).toBe("nearly_eligible");
+
+    const salt = payload.results.find((r) => r.benefit_id === "salt-deduction");
+    expect(salt?.status).toBe("nearly_eligible");
+
     await app.close();
   });
 
