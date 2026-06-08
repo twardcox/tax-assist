@@ -465,6 +465,117 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route evaluates real benefit rules for seeded YAML facts", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;");
+    db.exec("DELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "scanner-user@example.com",
+        password: "Test1234!",
+        display_name: "Scanner User"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string; user_id: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          filing_status: "single",
+          estimated_agi: 180000,
+          taxpayer: { age: 45 }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/businesses",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          businesses: [
+            {
+              name: "Solo Consulting",
+              entity_type: "sole_prop",
+              financials: { net_profit_loss: 100000 },
+              home_office: { claimed: true, square_footage: 120, home_total_sqft: 2000 },
+              health_insurance: {
+                owner_health_insurance_deducted: true,
+                premium_amount: 8400
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/retirement",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          self_employed_plans: {
+            sep_ira: { established: false, contributions_ytd: 0 }
+          }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/healthcare",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          insurance: {
+            coverage_type: "self_purchased",
+            hdhp_enrolled: true,
+            hdhp_coverage_level: "self"
+          },
+          health_savings_account: {
+            contributions_ytd: 1000,
+            investment_account_within_hsa: false
+          }
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const ids = payload.results.map((r) => String(r.benefit_id));
+    expect(ids).toContain("sep-ira-contribution");
+    expect(ids).toContain("hsa-triple-tax-advantage");
+    expect(ids).toContain("self-employed-health-insurance");
+
+    const sep = payload.results.find((r) => r.benefit_id === "sep-ira-contribution");
+    expect(sep?.status).toBe("nearly_eligible");
+
+    const hsa = payload.results.find((r) => r.benefit_id === "hsa-triple-tax-advantage");
+    expect(hsa?.status).toBe("eligible_now");
+
+    const health = payload.results.find((r) => r.benefit_id === "self-employed-health-insurance");
+    expect(health?.status).toBe("eligible_now");
+
+    await app.close();
+  });
+
   test("ai analysis endpoint returns 503 when anthropic key is absent", async () => {
     const app = buildApp();
 

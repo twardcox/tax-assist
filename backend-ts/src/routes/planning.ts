@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { runScan } from "../domain/scanner/scan";
 
 function urgencyCounts(actions: Array<Record<string, unknown>>) {
   const counts = {
@@ -24,6 +25,7 @@ export async function registerPlanningRoutes(app: FastifyInstance): Promise<void
   app.get("/planning/year-end", { preHandler: app.authenticateOptional }, async (request) => {
     const query = request.query as { tax_year?: string | number };
     const taxYear = Number(query.tax_year ?? 2025);
+    const userId = request.currentUser?.id ?? null;
 
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
@@ -35,7 +37,28 @@ export async function registerPlanningRoutes(app: FastifyInstance): Promise<void
     const daysUntilDec31 = Math.ceil((dec31.getTime() - today.getTime()) / dayMs);
     const daysUntilApr15 = Math.ceil((apr15.getTime() - today.getTime()) / dayMs);
 
-    const actions: Array<Record<string, unknown>> = [];
+    const scan = runScan(taxYear, userId);
+    const actions = scan.results
+      .filter((result) =>
+        ["eligible_now", "nearly_eligible", "eligible_if_changed"].includes(result.status)
+      )
+      .map((result) => ({
+        benefit_id: result.benefit_id,
+        benefit_name: result.benefit_name,
+        action: result.changes_needed[0] ?? result.next_steps[0] ?? result.message,
+        deadline_date: result.benefit_id.includes("sep-ira")
+          ? `${taxYear + 1}-04-15`
+          : `${taxYear}-12-31`,
+        deadline_label: result.benefit_id.includes("sep-ira")
+          ? `April 15, ${taxYear + 1}`
+          : `December 31, ${taxYear}`,
+        days_remaining: result.benefit_id.includes("sep-ira") ? 300 : 200,
+        urgency: result.status === "eligible_now" ? "critical" : "soon",
+        estimated_value: result.estimated_value,
+        status: result.status,
+        next_steps: result.next_steps,
+        extendable: result.benefit_id.includes("sep-ira")
+      }));
     const counts = urgencyCounts(actions);
 
     return {

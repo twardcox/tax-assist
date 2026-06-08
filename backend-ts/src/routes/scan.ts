@@ -16,8 +16,8 @@ type JobState = {
 
 const aiJobs = new Map<string, JobState>();
 
-function buildLocalAiReportMarkdown(taxYear: number, mode: string) {
-  const scan = runScan(taxYear);
+function buildLocalAiReportMarkdown(taxYear: number, mode: string, userId?: string | null) {
+  const scan = runScan(taxYear, userId);
   const counts = Object.entries(scan.counts)
     .map(([status, count]) => `- ${status}: ${count}`)
     .join("\n");
@@ -41,8 +41,9 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
   app.post("/scan", { preHandler: app.authenticateOptional }, async (request) => {
     const query = request.query as { tax_year?: string | number };
     const taxYear = Number(query.tax_year ?? 2025);
+    const userId = request.currentUser?.id ?? null;
 
-    const scan = runScan(taxYear);
+    const scan = runScan(taxYear, userId);
     if (process.env.VITEST !== "true") {
       writeOpportunityReport(scan);
     }
@@ -53,6 +54,7 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
     const query = request.query as { tax_year?: string | number; mode?: string };
     const taxYear = Number(query.tax_year ?? 2025);
     const mode = query.mode ?? "opportunities";
+    const userId = request.currentUser?.id ?? null;
 
     if (!env.ANTHROPIC_API_KEY) {
       throw new AppError(503, "ANTHROPIC_API_KEY is not set");
@@ -67,7 +69,7 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
         const reportName = `ai_analysis_${timestamp}.md`;
         const reportPath = path.join(projectPaths.reports, reportName);
         fs.mkdirSync(projectPaths.reports, { recursive: true });
-        fs.writeFileSync(reportPath, buildLocalAiReportMarkdown(taxYear, mode), "utf8");
+        fs.writeFileSync(reportPath, buildLocalAiReportMarkdown(taxYear, mode, userId), "utf8");
         aiJobs.set(jobId, { status: "complete", report_name: reportName, error: null });
       } catch (error) {
         aiJobs.set(jobId, {
