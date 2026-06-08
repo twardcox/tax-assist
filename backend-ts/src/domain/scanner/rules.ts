@@ -1265,6 +1265,16 @@ const rules: Record<string, RuleFn> = {
     const biz = facts.firstBusiness();
     const entity = String(biz.entity_type ?? "");
     if (entity === "s_corp") {
+      const ownerSalary = facts.firstBusinessOwnerW2Salary();
+      const netProfitExisting = facts.firstBusinessNetProfit();
+      if (netProfitExisting > 0 && ownerSalary <= 0) {
+        return {
+          status: "nearly_eligible",
+          message: "Business is already an S Corp, but owner W-2 salary is not recorded. Reasonable compensation support is important.",
+          missing_facts: ["businesses.employees.owner_w2_salary"],
+          next_steps: ["Run payroll and document reasonable compensation before year-end"]
+        };
+      }
       return {
         status: "not_applicable",
         message: "Business is already taxed as an S Corp."
@@ -1726,9 +1736,23 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
+    const contributions = facts.total529ContributionsThisYear();
+    if (contributions <= 0) {
+      return {
+        status: "eligible_if_changed",
+        message: `${state} 529 account is present, but no current-year contribution is recorded for state deduction/credit benefit.`,
+        missing_facts: ["investments.529_plans[*].contributions_this_year"],
+        changes_needed: ["Make and record current-year 529 contributions before year-end"],
+        next_steps: [
+          `Check ${state} annual deduction or credit limits per beneficiary`,
+          "Keep contribution confirmations for state return support"
+        ]
+      };
+    }
+
     return {
       status: "eligible_now",
-      message: `${state} offers a state tax benefit for 529 contributions. Additional contributions may increase current-year state savings.`,
+      message: `${state} offers a state tax benefit for 529 contributions, and ${contributions.toLocaleString()} is recorded this year.`,
       next_steps: [
         "Confirm whether your state requires use of the in-state plan",
         "Check annual state deduction caps per beneficiary",
@@ -1873,6 +1897,22 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "not_applicable",
         message: "Bonus depreciation requires business or rental real-estate activity."
+      };
+    }
+
+    const assetCount = facts.firstBusinessAssetsPlacedInServiceCount();
+    if (facts.hasSelfEmployment() && assetCount > 0) {
+      const totalCost = facts.firstBusinessAssetsPlacedInServiceTotalCost();
+      const estimatedBonus = Math.round(totalCost * 0.4);
+      return {
+        status: "eligible_now",
+        message: `Qualifying business assets were placed in service (${assetCount} item${assetCount === 1 ? "" : "s"}). Bonus depreciation can generally apply at the modeled 40% 2025 rate.`,
+        estimated_value: totalCost > 0 ? `~$${estimatedBonus.toLocaleString()} first-year bonus deduction` : "40% first-year bonus deduction on qualifying basis",
+        next_steps: [
+          "Classify assets by recovery life and confirm bonus eligibility on Form 4562",
+          "Apply Section 179 first where optimal, then bonus on remaining basis",
+          "Review state conformity because many states decouple from federal bonus rules"
+        ]
       };
     }
 

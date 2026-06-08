@@ -282,6 +282,22 @@ export class UserFacts {
     return Array.isArray(assets) ? assets.length : 0;
   }
 
+  firstBusinessAssetsPlacedInServiceTotalCost(): number {
+    const biz = this.firstBusiness();
+    const depreciation = toObject(biz.depreciation);
+    const assets = toObjectArray(depreciation.assets_placed_in_service);
+    return assets.reduce((sum, asset) => {
+      const cost = toNumber(asset.cost ?? asset.purchase_price ?? asset.basis ?? asset.amount);
+      return sum + cost;
+    }, 0);
+  }
+
+  firstBusinessOwnerW2Salary(): number {
+    const biz = this.firstBusiness();
+    const employees = toObject(biz.employees);
+    return toNumber(employees.owner_w2_salary);
+  }
+
   businessHealthInsurancePremium(): number {
     const biz = this.firstBusiness();
     const healthInsurance = toObject(biz.health_insurance);
@@ -372,12 +388,24 @@ export class UserFacts {
 
   has529Account(): boolean {
     const investments = toObject(this.data.investments);
-    const plans = toObjectArray(investments["529_plans"]);
+    const plans = [
+      ...toObjectArray(investments["529_plans"]),
+      ...toObjectArray(investments.education_accounts)
+    ];
     return plans.some((plan) => {
       const beneficiary = plan.beneficiary;
       const balance = toNumber(plan.balance);
       return (typeof beneficiary === "string" && beneficiary.trim().length > 0) || balance > 0;
     });
+  }
+
+  total529ContributionsThisYear(): number {
+    const investments = toObject(this.data.investments);
+    const plans = [
+      ...toObjectArray(investments["529_plans"]),
+      ...toObjectArray(investments.education_accounts)
+    ];
+    return plans.reduce((sum, plan) => sum + toNumber(plan.contributions_this_year), 0);
   }
 
   householdSize(): number {

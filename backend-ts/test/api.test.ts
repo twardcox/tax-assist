@@ -1095,4 +1095,104 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("scan route recognizes bonus depreciation and state 529 contribution positive paths", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "bonus-529@example.com",
+        password: "Test1234!",
+        display_name: "Bonus 529"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          filing_status: "single",
+          estimated_agi: 120000,
+          residence: {
+            state: "PA",
+            county: "Allegheny"
+          },
+          taxpayer: { age: 41 }
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/businesses",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          businesses: [
+            {
+              name: "Bonus Corp",
+              entity_type: "sole_prop",
+              financials: {
+                net_profit_loss: 90000
+              },
+              depreciation: {
+                assets_placed_in_service: [
+                  {
+                    name: "Equipment",
+                    cost: 25000
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/investments",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          "529_plans": [
+            {
+              beneficiary: "Child One",
+              balance: 5000,
+              contributions_this_year: 3000
+            }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+
+    const section179 = payload.results.find((r) => r.benefit_id === "section-179-expensing");
+    expect(section179?.status).toBe("eligible_now");
+
+    const bonus = payload.results.find((r) => r.benefit_id === "bonus-depreciation");
+    expect(bonus?.status).toBe("eligible_now");
+
+    const state529 = payload.results.find((r) => r.benefit_id === "state-529-deduction");
+    expect(state529?.status).toBe("eligible_now");
+
+    await app.close();
+  });
 });
