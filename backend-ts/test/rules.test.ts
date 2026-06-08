@@ -105,4 +105,86 @@ describe("rules parity", () => {
     expect(result.status).toBe("eligible_now");
     expect(result.message).toContain("CA");
   });
+
+  test("state retirement exemption is not applicable without retirement income", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-retirement-income-exemption",
+        name: "State Retirement Income Exemption",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "PA"
+          }
+        },
+        income: {
+          retirement_distributions: {},
+          social_security: { gross_benefits: 0 }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("state retirement exemption recognizes full-exempt states", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-retirement-income-exemption",
+        name: "State Retirement Income Exemption",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "PA"
+          }
+        },
+        income: {
+          retirement_distributions: { ira: 25000 },
+          social_security: { gross_benefits: 12000 }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("exempts ALL retirement income");
+  });
+
+  test("no-income-tax-state handles NH as minimal-income-tax state", () => {
+    const result = evaluateBenefit(
+      {
+        id: "no-income-tax-state",
+        name: "No Income Tax State",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "NH"
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("taxes only interest and dividend income");
+  });
 });

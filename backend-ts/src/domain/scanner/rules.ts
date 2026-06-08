@@ -15,7 +15,8 @@ type RuleOutput = {
 
 type RuleFn = (benefit: RawBenefit, facts: UserFacts) => RuleOutput;
 
-const NO_INCOME_TAX_STATES = new Set(["AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"]);
+const NO_INCOME_TAX_STATES = new Set(["AK", "FL", "NV", "SD", "TX", "WA", "WY"]);
+const MINIMAL_INCOME_TAX_STATES = new Set(["NH", "TN"]);
 const PTE_STATES = new Set([
   "CA",
   "NY",
@@ -87,26 +88,39 @@ const STATES_WITH_529_DEDUCTION = new Set([
   "WV",
   "WI"
 ]);
-const RETIREMENT_FRIENDLY_STATES = new Set([
-  "AL",
-  "AZ",
-  "GA",
+const RETIREMENT_EXEMPT_STATES = new Set([
   "IL",
-  "IN",
-  "IA",
-  "KY",
-  "LA",
-  "MI",
   "MS",
-  "NC",
+  "PA",
+  "AL",
+  "FL",
+  "TX",
+  "NV",
+  "WA",
+  "WY",
+  "AK",
+  "SD",
+  "TN",
+  "NH",
+  "NY",
+  "CO",
+  "VA",
+  "GA",
+  "SC",
+  "MD",
   "ND",
   "OH",
+  "MI",
+  "WI",
+  "MO",
+  "IA",
+  "KS",
   "OK",
-  "OR",
-  "PA",
-  "SC",
-  "VA",
-  "WV"
+  "AR",
+  "LA",
+  "KY",
+  "WV",
+  "HI"
 ]);
 
 function listField(raw: unknown, key: string): string[] {
@@ -1622,48 +1636,69 @@ const rules: Record<string, RuleFn> = {
 
   "state-retirement-income-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
-    if (!facts.hasRetirementIncome()) {
-      return {
-        status: "nearly_eligible",
-        message: "No retirement or Social Security income found yet. This exemption only helps if you have retirement income.",
-        missing_facts: ["income.retirement_distributions", "income.social_security.gross_benefits"]
-      };
-    }
-
     if (!state) {
       return {
         status: "nearly_eligible",
-        message: "Retirement income exists, but state of residence is missing for exemption lookup.",
+        message: "Set household.residence.state to check if your state exempts retirement income.",
         missing_facts: ["household.residence.state"]
       };
     }
 
-    if (NO_INCOME_TAX_STATES.has(state)) {
+    const hasRetirementDistributions = Object.values(facts.retirementDistributions()).some((value) => Number(value ?? 0) > 0);
+    const hasSocialSecurity = facts.socialSecurityBenefits() > 0;
+
+    if (!hasRetirementDistributions && !hasSocialSecurity) {
       return {
         status: "not_applicable",
-        message: `${state} has no state income tax, so a retirement-income subtraction is not needed.`
+        message:
+          "No retirement income sources found. This benefit applies to taxpayers with Social Security, pension, or IRA/401(k) distributions."
       };
     }
 
-    if (RETIREMENT_FRIENDLY_STATES.has(state)) {
+    if (NO_INCOME_TAX_STATES.has(state) || MINIMAL_INCOME_TAX_STATES.has(state)) {
+      return {
+        status: "not_applicable",
+        message: `${state} has no/minimal income tax - retirement income is not taxed at the state level regardless.`
+      };
+    }
+
+    if (!RETIREMENT_EXEMPT_STATES.has(state)) {
+      return {
+        status: "not_applicable",
+        message:
+          `${state} does not provide a broad retirement income exemption (as of 2025). Verify with your state's department of revenue.`
+      };
+    }
+
+    const incomeType: string[] = [];
+    if (hasSocialSecurity) {
+      incomeType.push("Social Security");
+    }
+    if (hasRetirementDistributions) {
+      incomeType.push("retirement distributions");
+    }
+    const incomeDescription = incomeType.join(" and ");
+
+    if (["IL", "MS", "PA", "AL"].includes(state)) {
       return {
         status: "eligible_now",
-        message: `Retirement income in ${state} should qualify for a state retirement-income exemption or subtraction.`,
-        estimated_value: "Potentially hundreds to thousands per year depending on the state",
+        message:
+          `${state} exempts ALL retirement income (${incomeDescription}) from state income tax - this is one of the most taxpayer-friendly retirement income rules in the country.`,
         next_steps: [
-          "Review state-specific retirement subtraction worksheets",
-          "Check whether Social Security, pension, and IRA distributions are treated differently",
-          "Coordinate Roth conversion timing with state retirement tax rules"
+          "Confirm exemption applies to your income type on the state return",
+          "PA: exempts IRAs, 401(k)s, SS, and pension income - ensure it's claimed on PA-40"
         ]
       };
     }
 
     return {
-      status: "nearly_eligible",
-      message: `Retirement income exists, but ${state} is not yet in the modeled exemption list.`,
-      changes_needed: [
-        "Verify the exact retirement subtraction rules for your state",
-        "Check whether public pensions, private pensions, and IRA distributions are treated differently"
+      status: "eligible_now",
+      message:
+        `${state} provides a partial exemption or deduction for ${incomeDescription}. Verify the specific exemption amounts on the state return.`,
+      next_steps: [
+        "Review your state's retirement income worksheet on the state return",
+        "Confirm whether SS income, pension income, and IRA distributions each qualify separately",
+        "Consider consulting a CPA if retirement income exceeds the exemption threshold"
       ]
     };
   },
@@ -1682,12 +1717,22 @@ const rules: Record<string, RuleFn> = {
     if (NO_INCOME_TAX_STATES.has(state)) {
       return {
         status: "eligible_now",
-        message: `${state} has no state income tax. Ordinary wage, business, and retirement income are generally not taxed at the state level.`,
-        estimated_value: "Potentially significant annual state tax savings",
+        message: `${state} has no broad-based state income tax - you owe $0 in state income tax on wages, self-employment income, and most other income.`,
         next_steps: [
-          "Confirm whether any local or specialty taxes still apply",
-          "Review residency rules if you recently moved",
-          "Check whether capital gains or special-source income still has any state treatment"
+          "Ensure your domicile is established in your state (driver's license, voter registration, bank address)",
+          "Part-year residents: confirm no tax owed to prior state for the portion of year lived there",
+          "Community property states (TX, NV, WA): review federal planning interactions with your CPA"
+        ]
+      };
+    }
+
+    if (MINIMAL_INCOME_TAX_STATES.has(state)) {
+      return {
+        status: "eligible_now",
+        message:
+          `${state} taxes only interest and dividend income (very narrow). Wages, self-employment, and capital gains are not taxed at the state level.`,
+        next_steps: [
+          "Confirm investment income - only interest/dividends taxed in NH (through 2024)"
         ]
       };
     }
@@ -2281,7 +2326,8 @@ const rules: Record<string, RuleFn> = {
 
     const residence = facts.stateCode();
     const nexusStates = facts.businessNexusStates();
-    const pteNexus = Array.from(nexusStates).filter((state) => PTE_STATES.has(state) && !NO_INCOME_TAX_STATES.has(state));
+    const pteNexus = Array.from(nexusStates)
+      .filter((state) => PTE_STATES.has(state) && !NO_INCOME_TAX_STATES.has(state) && !MINIMAL_INCOME_TAX_STATES.has(state));
 
     const business = facts.firstBusiness();
     const formationRaw = business.formation_state;
