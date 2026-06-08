@@ -437,9 +437,13 @@ export class UserFacts {
   }
 
   hasW2Income(): boolean {
-    const income = this.incomeSection();
-    const w2 = toObjectArray(income.w2_employment);
+    const w2 = this.w2EmploymentEntries();
     return w2.some((entry) => toNumber(entry.wages) > 0);
+  }
+
+  w2EmploymentEntries(): Array<Record<string, unknown>> {
+    const income = this.incomeSection();
+    return toObjectArray(income.w2_employment);
   }
 
   totalInvestmentIncome(): number {

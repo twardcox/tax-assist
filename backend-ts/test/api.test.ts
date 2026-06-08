@@ -1206,6 +1206,51 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("scan route recognizes the excess fica refund", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "fica-refund@example.com",
+        password: "Test1234!",
+        display_name: "FICA Refund User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        data: {
+          w2_employment: [
+            { employer_name: "Alpha Inc", wages: 120000, social_security_withheld: 3000 },
+            { employer_name: "Beta LLC", wages: 130000, social_security_withheld: 3000 }
+          ]
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const fica = payload.results.find((r) => r.benefit_id === "excess-fica-refund");
+    expect(fica?.status).toBe("nearly_eligible");
+    expect(fica?.missing_facts).toContain("income.w2_employment[*].social_security_withheld");
+
+    await app.close();
+  });
+
   test("scan route recognizes the ichra qsehra opportunity", async () => {
     const app = buildApp();
 

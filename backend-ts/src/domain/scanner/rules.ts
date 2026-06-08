@@ -331,6 +331,56 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "excess-fica-refund": (_benefit, facts) => {
+    const w2s = facts.w2EmploymentEntries();
+    if (w2s.length < 2) {
+      return {
+        status: "not_applicable",
+        message: "Excess FICA refund requires wages from two or more employers in the same year."
+      };
+    }
+
+    const ssWageBase = 176100;
+    const ssMax = Math.round(ssWageBase * 0.062 * 100) / 100;
+    const totalWages = w2s.reduce((sum, entry) => sum + Number(entry.wages ?? 0), 0);
+    const totalSsWithheld = w2s.reduce((sum, entry) => {
+      const wages = Number(entry.wages ?? 0);
+      const fallbackWithheld = Math.min(wages, ssWageBase) * 0.062;
+      const rawWithheld = entry.social_security_withheld ?? entry.ss_withheld;
+      const withheld = rawWithheld ? Number(rawWithheld) : fallbackWithheld;
+      return sum + withheld;
+    }, 0);
+
+    if (totalWages <= ssWageBase) {
+      return {
+        status: "not_applicable",
+        message: `Combined wages $${totalWages.toLocaleString()} do not exceed the SS wage base ($${ssWageBase.toLocaleString()}) — no excess withholding.`
+      };
+    }
+
+    const excess = Math.max(0, Math.round((totalSsWithheld - ssMax) * 100) / 100);
+    if (excess <= 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          `Combined wages $${totalWages.toLocaleString()} exceed SS wage base — check each W-2 Box 4 for actual SS withheld. Record ss_withheld on each W-2 to compute exact refund.`,
+        missing_facts: ["income.w2_employment[*].social_security_withheld"]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message:
+        `Excess Social Security withholding: ~$${excess.toLocaleString()} refundable. Total SS withheld $${totalSsWithheld.toLocaleString()} exceeds 2025 max of $${ssMax.toLocaleString()}.`,
+      estimated_value: `$${excess.toLocaleString()} refundable credit`,
+      next_steps: [
+        "Claim on Schedule 3, Line 11 of Form 1040",
+        "Verify Box 4 on each W-2 — sum must exceed $10,918.20 to have excess",
+        "This is a refundable credit — paid even if you owe no other tax"
+      ]
+    };
+  },
+
   "american-opportunity-credit": (_benefit, facts) => {
     const deps = facts.dependents();
     const collegeDeps = deps.filter((d) => {
