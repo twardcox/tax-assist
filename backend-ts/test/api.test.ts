@@ -2171,4 +2171,119 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("tax forms route saves filing details and returns computed summaries", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "tax-forms-user@example.com",
+        password: "Test1234!",
+        display_name: "Tax Forms User"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const saveRes = await app.inject({
+      method: "PUT",
+      url: "/api/filing-details?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        pec_fund_taxpayer: true,
+        pec_fund_spouse: false,
+        direct_deposit_routing: "111000025",
+        direct_deposit_account: "123456789",
+        direct_deposit_type: "checking",
+        allow_third_party: true,
+        designee_name: "Tax Preparer",
+        designee_phone: "555-123-4567",
+        designee_pin: "4321"
+      }
+    });
+    expect(saveRes.statusCode).toBe(200);
+    expect(saveRes.json()).toEqual({ ok: true });
+
+    const getRes = await app.inject({
+      method: "GET",
+      url: "/api/filing-details?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(getRes.statusCode).toBe(200);
+    expect(getRes.json()).toMatchObject({
+      pec_fund_taxpayer: true,
+      pec_fund_spouse: false,
+      direct_deposit_routing: "111000025",
+      direct_deposit_account: "123456789",
+      direct_deposit_type: "checking",
+      allow_third_party: true,
+      designee_name: "Tax Preparer",
+      designee_phone: "555-123-4567",
+      designee_pin: "4321"
+    });
+
+    const computeRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-forms/compute?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(computeRes.statusCode).toBe(200);
+    const computePayload = computeRes.json() as {
+      tax_year: number;
+      filing_details: Record<string, unknown>;
+      summary: Record<string, unknown>;
+    };
+    expect(computePayload.tax_year).toBe(2025);
+    expect(computePayload.filing_details).toHaveProperty("pec_fund_taxpayer", true);
+    expect(computePayload.summary).toHaveProperty("counts");
+
+    const previewRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-forms/preview-pdf?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(previewRes.statusCode).toBe(200);
+    expect(previewRes.headers["content-type"]).toContain("application/pdf");
+
+    const jobRes = await app.inject({
+      method: "POST",
+      url: "/api/reports/tax-forms?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(jobRes.statusCode).toBe(200);
+    const jobPayload = jobRes.json() as { job_id: string };
+    expect(jobPayload.job_id).toBeTruthy();
+
+    const statusRes = await app.inject({
+      method: "GET",
+      url: `/api/reports/tax-forms/${jobPayload.job_id}`
+    });
+    expect(statusRes.statusCode).toBe(200);
+    const statusPayload = statusRes.json() as { status: string; zip_name: string | null };
+    expect(statusPayload.status).toBe("complete");
+    expect(statusPayload.zip_name).toMatch(/\.zip$/);
+
+    const downloadRes = await app.inject({
+      method: "GET",
+      url: `/api/reports/tax-forms/${jobPayload.job_id}/download`
+    });
+    expect(downloadRes.statusCode).toBe(200);
+    expect(downloadRes.headers["content-type"]).toContain("application/zip");
+
+    await app.close();
+  });
+
+  test("tax forms route rejects unauthenticated access", async () => {
+    const app = buildApp();
+
+    const getRes = await app.inject({ method: "GET", url: "/api/filing-details?tax_year=2025" });
+    expect(getRes.statusCode).toBe(401);
+
+    const postRes = await app.inject({ method: "POST", url: "/api/reports/tax-forms?tax_year=2025" });
+    expect(postRes.statusCode).toBe(401);
+
+    await app.close();
+  });
 });

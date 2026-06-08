@@ -18,6 +18,7 @@ import { registerScanRoutes } from "./routes/scan";
 import { registerTaxLawRoutes } from "./routes/taxLaw";
 import { registerReportsRoutes } from "./routes/reports";
 import { registerScenariosRoutes } from "./routes/scenarios";
+import { registerTaxFormsRoutes } from "./routes/taxForms";
 
 export function buildApp() {
   ensureRequiredDirectories();
@@ -55,6 +56,7 @@ export function buildApp() {
     await registerTaxLawRoutes(api);
     await registerReportsRoutes(api);
     await registerScenariosRoutes(api);
+    await registerTaxFormsRoutes(api);
   }, { prefix: "/api" });
 
   if (fs.existsSync(projectPaths.frontendDist)) {
