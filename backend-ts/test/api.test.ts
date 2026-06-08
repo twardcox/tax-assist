@@ -3,6 +3,7 @@ import { buildApp } from "../src/app";
 import { getDb } from "../src/db/client";
 import { initDb } from "../src/db/init";
 import { addTransaction } from "../src/db/transactionsRepo";
+import { __setTaxLawUpdateRunningForTest } from "../src/routes/taxLaw";
 
 beforeEach(() => {
   initDb();
@@ -2015,6 +2016,50 @@ describe("API baseline", () => {
       days: 14,
       source: "irs_news"
     });
+
+    await app.close();
+  });
+
+  test("tax law route rejects invalid bounds and surfaces already running state", async () => {
+    const app = buildApp();
+
+    const invalidLimitRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-law/changes?limit=0"
+    });
+    expect(invalidLimitRes.statusCode).toBe(400);
+    expect((invalidLimitRes.json() as { detail: string }).detail).toContain("limit must be between 1 and 100");
+
+    const invalidDaysRes = await app.inject({
+      method: "POST",
+      url: "/api/tax-law/update?days=0"
+    });
+    expect(invalidDaysRes.statusCode).toBe(400);
+    expect((invalidDaysRes.json() as { detail: string }).detail).toContain("days must be between 1 and 365");
+
+    const invalidSinceDaysRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-law/alert-count?since_days=0"
+    });
+    expect(invalidSinceDaysRes.statusCode).toBe(400);
+    expect((invalidSinceDaysRes.json() as { detail: string }).detail).toContain("since_days must be between 1 and 365");
+
+    __setTaxLawUpdateRunningForTest(true);
+    try {
+      const alreadyRunningRes = await app.inject({
+        method: "POST",
+        url: "/api/tax-law/update?source=irs_news&days=14&dry_run=true"
+      });
+      expect(alreadyRunningRes.statusCode).toBe(200);
+      expect(alreadyRunningRes.json()).toEqual({
+        status: "already_running",
+        dry_run: true,
+        days: 14,
+        source: "irs_news"
+      });
+    } finally {
+      __setTaxLawUpdateRunningForTest(false);
+    }
 
     await app.close();
   });

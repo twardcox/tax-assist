@@ -28,6 +28,14 @@ const KNOWN_SOURCES = new Set([
 
 let updateRunning = false;
 
+export function __setTaxLawUpdateRunningForTest(value: boolean): void {
+  updateRunning = value;
+}
+
+export function __getTaxLawUpdateRunningForTest(): boolean {
+  return updateRunning;
+}
+
 function parseInteger(value: unknown, fallback: number): number {
   const parsed = Number(value ?? fallback);
   return Number.isFinite(parsed) ? parsed : fallback;
