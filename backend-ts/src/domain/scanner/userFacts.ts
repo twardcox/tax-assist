@@ -87,6 +87,20 @@ export class UserFacts {
     return typeof status === "string" ? status : null;
   }
 
+  stateCode(): string | null {
+    const hh = toObject(this.data.household);
+    const residence = toObject(hh.residence);
+    const state = residence.state;
+    return typeof state === "string" && state.trim() ? state.trim().toUpperCase() : null;
+  }
+
+  county(): string | null {
+    const hh = toObject(this.data.household);
+    const residence = toObject(hh.residence);
+    const county = residence.county;
+    return typeof county === "string" && county.trim() ? county.trim() : null;
+  }
+
   estimatedAgi(): number | null {
     const hh = toObject(this.data.household);
     const agi = toNumber(hh.estimated_agi);
@@ -107,6 +121,14 @@ export class UserFacts {
     const realEstate = toObject(this.data.real_estate);
     const properties = realEstate.properties;
     return Array.isArray(properties) && properties.length > 0;
+  }
+
+  primaryResidenceProperty(): Record<string, unknown> {
+    return this.properties().find((property) => String(property.property_type ?? "") === "primary_residence") ?? {};
+  }
+
+  hasPrimaryResidence(): boolean {
+    return Object.keys(this.primaryResidenceProperty()).length > 0;
   }
 
   hasRentalProperty(): boolean {
@@ -222,5 +244,26 @@ export class UserFacts {
     const biz = this.firstBusiness();
     const healthInsurance = toObject(biz.health_insurance);
     return healthInsurance.owner_health_insurance_deducted === true;
+  }
+
+  incomeSection(): Record<string, unknown> {
+    return toObject(this.data.income);
+  }
+
+  retirementDistributions(): Record<string, unknown> {
+    const income = this.incomeSection();
+    return toObject(income.retirement_distributions);
+  }
+
+  socialSecurityBenefits(): number {
+    const income = this.incomeSection();
+    const socialSecurity = toObject(income.social_security);
+    return toNumber(socialSecurity.gross_benefits);
+  }
+
+  hasRetirementIncome(): boolean {
+    const distributions = this.retirementDistributions();
+    const retirementTotal = Object.values(distributions).some((value) => toNumber(value) > 0);
+    return retirementTotal || this.socialSecurityBenefits() > 0;
   }
 }

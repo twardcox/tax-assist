@@ -492,6 +492,10 @@ describe("API baseline", () => {
         data: {
           filing_status: "single",
           estimated_agi: 90000,
+          residence: {
+            state: "PA",
+            county: "Allegheny"
+          },
           taxpayer: { age: 45 }
         }
       }
@@ -572,8 +576,41 @@ describe("API baseline", () => {
                 mortgage_interest_paid: 18000,
                 property_tax_paid: 9000
               }
+            },
+            {
+              property_type: "primary_residence",
+              acquisition: {
+                purchase_price: 280000,
+                current_market_value: 340000
+              },
+              financing: {
+                property_tax_paid: 4200
+              },
+              primary_residence: {
+                years_lived_in: 7,
+                used_as_primary_for_2_of_last_5: true,
+                section_121_exclusion_available: true
+              }
             }
           ]
+        }
+      }
+    });
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          retirement_distributions: {
+            traditional_ira: 12000,
+            pension: 0,
+            "401k": 0
+          },
+          social_security: {
+            gross_benefits: 18000
+          }
         }
       }
     });
@@ -597,6 +634,15 @@ describe("API baseline", () => {
     const homeOffice = payload.results.find((r) => r.benefit_id === "home-office-deduction");
     expect(homeOffice?.status).toBe("eligible_now");
 
+    const countyHomestead = payload.results.find((r) => r.benefit_id === "county-homestead-exemption");
+    expect(countyHomestead?.status).toBe("eligible_now");
+
+    const stateHomestead = payload.results.find((r) => r.benefit_id === "state-homestead-exemption");
+    expect(stateHomestead?.status).toBe("eligible_now");
+
+    const seniorFreeze = payload.results.find((r) => r.benefit_id === "county-senior-property-tax-freeze");
+    expect(seniorFreeze?.status).toBe("not_applicable");
+
     const qbi = payload.results.find((r) => r.benefit_id === "qbi-deduction");
     expect(qbi?.status).toBe("eligible_now");
 
@@ -608,6 +654,9 @@ describe("API baseline", () => {
 
     const passive = payload.results.find((r) => r.benefit_id === "passive-activity-loss");
     expect(passive?.status).toBe("eligible_now");
+
+    const retirementExemption = payload.results.find((r) => r.benefit_id === "state-retirement-income-exemption");
+    expect(retirementExemption?.status).toBe("eligible_now");
 
     const hsa = payload.results.find((r) => r.benefit_id === "hsa-triple-tax-advantage");
     expect(hsa?.status).toBe("eligible_now");
@@ -633,6 +682,54 @@ describe("API baseline", () => {
       expect(aiRes.statusCode).toBe(200);
       expect(aiRes.json()).toHaveProperty("job_id");
     }
+
+    await app.close();
+  });
+
+  test("scan route recognizes a no-income-tax state", async () => {
+    const app = buildApp();
+
+    const db = getDb();
+    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "tax-free-state@example.com",
+        password: "Test1234!",
+        display_name: "Tax Free State"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const tokenPayload = registerRes.json() as { token: string };
+
+    await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: { authorization: `Bearer ${tokenPayload.token}` },
+      payload: {
+        data: {
+          filing_status: "single",
+          residence: {
+            state: "TX",
+            county: "Travis"
+          },
+          taxpayer: { age: 39 }
+        }
+      }
+    });
+
+    const scanRes = await app.inject({
+      method: "POST",
+      url: "/api/scan?tax_year=2025",
+      headers: { authorization: `Bearer ${tokenPayload.token}` }
+    });
+
+    expect(scanRes.statusCode).toBe(200);
+    const payload = scanRes.json() as { results: Array<Record<string, unknown>> };
+    const noTax = payload.results.find((r) => r.benefit_id === "no-income-tax-state");
+    expect(noTax?.status).toBe("eligible_now");
 
     await app.close();
   });

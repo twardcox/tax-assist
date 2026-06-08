@@ -15,6 +15,29 @@ type RuleOutput = {
 
 type RuleFn = (benefit: RawBenefit, facts: UserFacts) => RuleOutput;
 
+const NO_INCOME_TAX_STATES = new Set(["AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"]);
+const RETIREMENT_FRIENDLY_STATES = new Set([
+  "AL",
+  "AZ",
+  "GA",
+  "IL",
+  "IN",
+  "IA",
+  "KY",
+  "LA",
+  "MI",
+  "MS",
+  "NC",
+  "ND",
+  "OH",
+  "OK",
+  "OR",
+  "PA",
+  "SC",
+  "VA",
+  "WV"
+]);
+
 function listField(raw: unknown, key: string): string[] {
   if (!Array.isArray(raw)) {
     return [];
@@ -83,6 +106,187 @@ function baseResult(benefit: RawBenefit): Omit<ScanResult, "status" | "message">
 }
 
 const rules: Record<string, RuleFn> = {
+  "county-homestead-exemption": (_benefit, facts) => {
+    const state = facts.stateCode();
+    const county = facts.county();
+
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "nearly_eligible",
+        message: "Primary residence not found. County homestead exemption requires an owner-occupied home.",
+        missing_facts: ["real_estate.properties (primary_residence present)", "household.residence.county"]
+      };
+    }
+
+    if (!state || !county) {
+      return {
+        status: "nearly_eligible",
+        message: "Primary residence found, but state/county info is incomplete for the county exemption.",
+        missing_facts: ["household.residence.state", "household.residence.county"]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Primary residence in ${county}, ${state} should qualify for a county homestead exemption.`,
+      estimated_value: "Typically $50–$500+/year depending on county millage",
+      next_steps: [
+        "File with the county assessor/property appraiser",
+        "Confirm the county deadline for the current tax year",
+        "Keep a copy of the deed and ID showing the address"
+      ]
+    };
+  },
+
+  "county-senior-property-tax-freeze": (_benefit, facts) => {
+    const age = facts.taxpayerAge();
+    const state = facts.stateCode();
+    const county = facts.county();
+
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "nearly_eligible",
+        message: "Primary residence not found. Senior freeze applies only to owner-occupied homes.",
+        missing_facts: ["real_estate.properties (primary_residence present)"]
+      };
+    }
+
+    if (age == null) {
+      return {
+        status: "nearly_eligible",
+        message: "Primary residence found, but taxpayer age is missing. Senior freeze generally starts at 65.",
+        missing_facts: ["household.taxpayer.age"]
+      };
+    }
+
+    if (age < 65) {
+      return {
+        status: "not_applicable",
+        message: `Taxpayer age ${age} is below the usual 65+ senior freeze threshold.`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Age ${age} with a primary residence${state && county ? ` in ${county}, ${state}` : ""} can qualify for a senior property tax freeze.`,
+      estimated_value: "Potentially hundreds to thousands per year in appreciating markets",
+      next_steps: [
+        "Apply with the county assessor as soon as you qualify",
+        "Verify whether an income cap applies in your county",
+        "Keep proof of age and ownership handy for the application"
+      ]
+    };
+  },
+
+  "state-homestead-exemption": (_benefit, facts) => {
+    const state = facts.stateCode();
+
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "nearly_eligible",
+        message: "Primary residence not found. State homestead exemptions apply only to owner-occupied homes.",
+        missing_facts: ["real_estate.properties (primary_residence present)"]
+      };
+    }
+
+    if (!state) {
+      return {
+        status: "nearly_eligible",
+        message: "Primary residence found, but household.state is missing for the state homestead exemption.",
+        missing_facts: ["household.residence.state"]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Primary residence in ${state} should qualify for a state homestead exemption.`,
+      estimated_value: "Typically $200–$2,000+/year depending on the state and locality",
+      next_steps: [
+        "File the county/appraiser homestead application",
+        "Confirm whether your state requires an annual filing",
+        "Check for senior, veteran, or disability add-ons"
+      ]
+    };
+  },
+
+  "state-retirement-income-exemption": (_benefit, facts) => {
+    const state = facts.stateCode();
+    if (!facts.hasRetirementIncome()) {
+      return {
+        status: "nearly_eligible",
+        message: "No retirement or Social Security income found yet. This exemption only helps if you have retirement income.",
+        missing_facts: ["income.retirement_distributions", "income.social_security.gross_benefits"]
+      };
+    }
+
+    if (!state) {
+      return {
+        status: "nearly_eligible",
+        message: "Retirement income exists, but state of residence is missing for exemption lookup.",
+        missing_facts: ["household.residence.state"]
+      };
+    }
+
+    if (NO_INCOME_TAX_STATES.has(state)) {
+      return {
+        status: "not_applicable",
+        message: `${state} has no state income tax, so a retirement-income subtraction is not needed.`
+      };
+    }
+
+    if (RETIREMENT_FRIENDLY_STATES.has(state)) {
+      return {
+        status: "eligible_now",
+        message: `Retirement income in ${state} should qualify for a state retirement-income exemption or subtraction.`,
+        estimated_value: "Potentially hundreds to thousands per year depending on the state",
+        next_steps: [
+          "Review state-specific retirement subtraction worksheets",
+          "Check whether Social Security, pension, and IRA distributions are treated differently",
+          "Coordinate Roth conversion timing with state retirement tax rules"
+        ]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: `Retirement income exists, but ${state} is not yet in the modeled exemption list.`,
+      changes_needed: [
+        "Verify the exact retirement subtraction rules for your state",
+        "Check whether public pensions, private pensions, and IRA distributions are treated differently"
+      ]
+    };
+  },
+
+  "no-income-tax-state": (_benefit, facts) => {
+    const state = facts.stateCode();
+
+    if (!state) {
+      return {
+        status: "nearly_eligible",
+        message: "State of residence is missing, so no-income-tax-state cannot be evaluated.",
+        missing_facts: ["household.residence.state"]
+      };
+    }
+
+    if (NO_INCOME_TAX_STATES.has(state)) {
+      return {
+        status: "eligible_now",
+        message: `${state} has no state income tax. Ordinary wage, business, and retirement income are generally not taxed at the state level.`,
+        estimated_value: "Potentially significant annual state tax savings",
+        next_steps: [
+          "Confirm whether any local or specialty taxes still apply",
+          "Review residency rules if you recently moved",
+          "Check whether capital gains or special-source income still has any state treatment"
+        ]
+      };
+    }
+
+    return {
+      status: "not_applicable",
+      message: `${state} is not a no-income-tax state.`
+    };
+  },
+
   "home-office-deduction": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {
