@@ -1254,6 +1254,58 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "s-corp-election": (_benefit, facts) => {
+    if (!facts.hasSelfEmployment()) {
+      return {
+        status: "not_applicable",
+        message: "S Corp election requires an existing business entity with self-employment income."
+      };
+    }
+
+    const biz = facts.firstBusiness();
+    const entity = String(biz.entity_type ?? "");
+    if (entity === "s_corp") {
+      return {
+        status: "not_applicable",
+        message: "Business is already taxed as an S Corp."
+      };
+    }
+
+    const netProfit = facts.firstBusinessNetProfit();
+    if (netProfit <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has business activity but no net profit is recorded. S Corp savings depend on profit level.",
+        missing_facts: ["businesses.financials.net_profit_loss"]
+      };
+    }
+
+    if (netProfit < 40000) {
+      return {
+        status: "eligible_if_changed",
+        message: `Net profit of ~${netProfit.toLocaleString()} may be too low for S Corp payroll overhead to produce net savings.`,
+        changes_needed: [
+          "Grow net profit above ~$50,000 where S Corp economics are usually stronger",
+          "Model self-employment tax savings versus payroll/admin costs"
+        ]
+      };
+    }
+
+    const seSavings = (netProfit * 0.9235 - Math.min(netProfit * 0.4, 60000)) * 0.153;
+    return {
+      status: "eligible_if_changed",
+      message: `S Corp election could save about ${Math.round(seSavings).toLocaleString()} per year in self-employment taxes at current profit levels.`,
+      estimated_value: `~$${Math.round(seSavings).toLocaleString()}/year`,
+      changes_needed: [
+        "File Form 2553 by March 15 (or use late election relief if needed)",
+        "Set up payroll with reasonable W-2 compensation",
+        "Maintain business bank and corporate records",
+        "Use a payroll provider and account for annual admin costs"
+      ],
+      next_steps: ["Review state-level S Corp taxes and fees with CPA before electing"]
+    };
+  },
+
   "business-vehicle-deduction": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {
@@ -1735,6 +1787,57 @@ const rules: Record<string, RuleFn> = {
     return {
       status: "not_applicable",
       message: "SEP-IRA appears fully funded for the year."
+    };
+  },
+
+  "solo-401k": (_benefit, facts) => {
+    if (!facts.hasSelfEmployment()) {
+      return {
+        status: "not_applicable",
+        message: "Solo 401(k) requires self-employment with no full-time W-2 employees (other than spouse)."
+      };
+    }
+
+    const employeeCount = facts.firstBusinessW2EmployeesCount();
+    if (employeeCount > 0) {
+      return {
+        status: "not_applicable",
+        message: "Solo 401(k) is generally unavailable when the business has W-2 employees (other than spouse).",
+        changes_needed: ["Consider SIMPLE IRA or Safe Harbor 401(k) options for businesses with employees"]
+      };
+    }
+
+    const netProfit = facts.firstBusinessNetProfit();
+    const age = facts.taxpayerAge();
+    const employeeLimit = age !== null && age >= 50 ? 31000 : 23500;
+    const maxEmployer = Math.min(netProfit * 0.9235 * 0.25, 70000 - employeeLimit);
+    const maxTotal = Math.min(
+      employeeLimit + Math.max(0, maxEmployer),
+      age !== null && age >= 50 ? 77500 : 70000
+    );
+
+    if (!facts.solo401kEstablished()) {
+      return {
+        status: "nearly_eligible",
+        message: `Solo 401(k) is not yet established. It must be set up by December 31 to contribute for the tax year.`,
+        estimated_value: netProfit > 0 ? `Up to $${Math.round(maxTotal).toLocaleString()} in combined contributions` : "Depends on net profit",
+        next_steps: [
+          "Open a Solo 401(k) plan before year-end",
+          "Elect employee deferrals by December 31",
+          "Fund employer contribution by filing deadline (with extension)"
+        ]
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Solo 401(k) is established. Estimated max combined contribution is ~${Math.round(maxTotal).toLocaleString()}.`,
+      estimated_value: `Up to $${Math.round(maxTotal).toLocaleString()} tax-deferred`,
+      next_steps: [
+        `Employee deferral up to ${employeeLimit.toLocaleString()} must be elected by December 31`,
+        `Employer contribution up to ${Math.max(0, Math.round(maxEmployer)).toLocaleString()} can generally be funded by filing deadline`,
+        "Evaluate Roth Solo 401(k) option if available"
+      ]
     };
   },
 

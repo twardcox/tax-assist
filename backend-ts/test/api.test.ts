@@ -654,6 +654,9 @@ describe("API baseline", () => {
     const sep = payload.results.find((r) => r.benefit_id === "sep-ira-contribution");
     expect(sep?.status).toBe("nearly_eligible");
 
+    const solo401k = payload.results.find((r) => r.benefit_id === "solo-401k");
+    expect(solo401k?.status).toBe("nearly_eligible");
+
     const homeOffice = payload.results.find((r) => r.benefit_id === "home-office-deduction");
     expect(homeOffice?.status).toBe("eligible_now");
 
@@ -668,6 +671,9 @@ describe("API baseline", () => {
 
     const qbi = payload.results.find((r) => r.benefit_id === "qbi-deduction");
     expect(qbi?.status).toBe("eligible_now");
+
+    const sCorp = payload.results.find((r) => r.benefit_id === "s-corp-election");
+    expect(sCorp?.status).toBe("eligible_if_changed");
 
     const vehicle = payload.results.find((r) => r.benefit_id === "business-vehicle-deduction");
     expect(vehicle?.status).toBe("eligible_now");

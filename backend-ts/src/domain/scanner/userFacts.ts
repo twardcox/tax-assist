@@ -261,6 +261,20 @@ export class UserFacts {
     return toNumber(financials.net_profit_loss);
   }
 
+  firstBusinessW2EmployeesCount(): number {
+    const biz = this.firstBusiness();
+    const employees = toObject(biz.employees);
+    return toNumber(employees.w2_employees_count);
+  }
+
+  solo401kEstablished(): boolean {
+    const retirement = toObject(this.data.retirement);
+    const selfEmployedPlans = toObject(retirement.self_employed_plans);
+    const soloA = toObject(selfEmployedPlans.solo_401k);
+    const soloB = toObject(retirement.solo_401k);
+    return soloA.established === true || soloB.established === true;
+  }
+
   businessHealthInsurancePremium(): number {
     const biz = this.firstBusiness();
     const healthInsurance = toObject(biz.health_insurance);
