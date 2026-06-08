@@ -603,7 +603,6 @@ const rules: Record<string, RuleFn> = {
         message: "ICHRA/QSEHRA requires a business with employees."
       };
     }
-
     const employeeCount = facts.firstBusinessW2EmployeesCount();
     if (employeeCount === 0) {
       return {
@@ -635,6 +634,48 @@ const rules: Record<string, RuleFn> = {
         "Use a third-party HRA administrator (PeopleKeep, Take Command) for compliance",
         "Employees must maintain qualifying individual coverage to receive reimbursements"
       ]
+    };
+  },
+
+  "employer-childcare-credit": (_benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "§45F Employer-Provided Childcare Credit requires a business with employees."
+      };
+    }
+
+    const employeeCount = facts.firstBusinessW2EmployeesCount();
+    if (employeeCount === 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Has a business — §45F credit is available if you pay for qualified childcare facilities or resource/referral services for employees. No W-2 employees recorded yet.",
+        missing_facts: ["businesses.employees.w2_employees_count"]
+      };
+    }
+
+    const childcareExpenses = facts.firstBusinessChildcareExpenses();
+    if (childcareExpenses === 0) {
+      return {
+        status: "nearly_eligible",
+        message:
+          `Business has ${employeeCount} employee(s) — eligible for §45F credit on childcare facility or resource/referral expenses. Record childcare spending to compute credit.`,
+        missing_facts: ["businesses.financials.childcare_expenses"],
+        next_steps: [
+          "25% credit on qualified childcare facility expenditures",
+          "10% credit on childcare resource/referral contracts",
+          "Maximum credit $150,000/year; file Form 8882"
+        ]
+      };
+    }
+
+    const credit = Math.min(childcareExpenses * 0.25, 150000);
+    return {
+      status: "eligible_now",
+      message: `§45F Childcare Credit: ~$${credit.toLocaleString()} (25% of $${childcareExpenses.toLocaleString()} childcare expenses).`,
+      estimated_value: `~$${credit.toLocaleString()}/year`,
+      next_steps: ["File Form 8882 with business return", "Attach to Form 3800 (General Business Credit)"]
     };
   },
 
