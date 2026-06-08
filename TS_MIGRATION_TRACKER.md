@@ -24,8 +24,8 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Auth | api/routes/auth.py, api/auth.py | backend-ts/src/routes/auth.ts | Backend A | DONE |
 | User data | api/routes/user_data.py | backend-ts/src/routes/userData.ts | Backend A | DONE |
 | Transactions | api/routes/transactions.py | backend-ts/src/routes/transactions.ts | Backend B | DONE |
-| Reconciliation | api/routes/reconciliation.py | backend-ts/src/routes/reconciliation.ts | Backend B | TODO |
-| Planning | api/routes/planning.py | backend-ts/src/routes/planning.ts | Backend B | TODO |
+| Reconciliation | api/routes/reconciliation.py | backend-ts/src/routes/reconciliation.ts | Backend B | DONE |
+| Planning | api/routes/planning.py | backend-ts/src/routes/planning.ts | Backend B | IN_PROGRESS |
 | Scan | api/routes/scan.py | backend-ts/src/routes/scan.ts | Backend A | TODO |
 | Scenarios | api/routes/scenarios.py | backend-ts/src/routes/scenarios.ts | Backend A | TODO |
 | Reports | api/routes/reports.py | backend-ts/src/routes/reports.ts | Backend B | TODO |
@@ -61,6 +61,6 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Tax law parity | tests/test_update_tax_law.py | backend-ts/test/taxLaw.test.ts | QA/Release | TODO |
 
 ## Current Sprint Goal
-1. Implement reconciliation and planning routes with contract tests.
+1. Replace planning interim implementation with scanner-backed action generation.
 2. Expand SQLite schema toward normalized section persistence.
 3. Keep frontend API contract unchanged for migrated routes.

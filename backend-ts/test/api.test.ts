@@ -333,4 +333,108 @@ describe("API baseline", () => {
 
     await app.close();
   });
+
+  test("reconciliation combines ledger summary and unprocessed income documents", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "recon-user@example.com",
+        password: "Test1234!",
+        display_name: "Recon User"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const payload = registerRes.json() as { token: string; user_id: string };
+
+    addTransaction({
+      user_id: payload.user_id,
+      file_id: "doc-a",
+      filename: "w2.pdf",
+      date: "2026-01-03",
+      merchant: "Employer",
+      total_amount: 1,
+      deductible_pct: 1,
+      deductible_amount: 1,
+      tax_category: "income_reconciliation",
+      benefit_ids: ["federal-american-opportunity-credit"],
+      form_line: "W2:1",
+      section: "income",
+      dot_path: "w2[0].wages",
+      status: "applied",
+      label: "W2 import"
+    });
+
+    const writeDocsIndexRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/documents_index",
+      headers: {
+        authorization: `Bearer ${payload.token}`
+      },
+      payload: {
+        data: {
+          income_documents: {
+            w2_forms: [{ employer: "Acme Corp", processed: false }],
+            form_1099_int: { processed: false }
+          }
+        }
+      }
+    });
+    expect(writeDocsIndexRes.statusCode).toBe(200);
+
+    const reconRes = await app.inject({
+      method: "GET",
+      url: "/api/reconciliation",
+      headers: {
+        authorization: `Bearer ${payload.token}`
+      }
+    });
+
+    expect(reconRes.statusCode).toBe(200);
+    const reconPayload = reconRes.json() as Record<string, unknown>;
+    expect(reconPayload.total_transactions).toBe(1);
+    expect(reconPayload.total_deductible_in_ledger).toBe(1);
+    expect(reconPayload).toHaveProperty("ledger_by_category");
+
+    const unprocessed = reconPayload.unprocessed_income_documents as Array<Record<string, string>>;
+    expect(unprocessed).toEqual(
+      expect.arrayContaining([
+        { form: "W-2", detail: "Acme Corp" },
+        { form: "1099-INT", detail: "not uploaded" }
+      ])
+    );
+
+    await app.close();
+  });
+
+  test("planning route returns contract-compatible payload shape", async () => {
+    const app = buildApp();
+
+    const planRes = await app.inject({
+      method: "GET",
+      url: "/api/planning/year-end?tax_year=2025"
+    });
+
+    expect(planRes.statusCode).toBe(200);
+    const payload = planRes.json() as Record<string, unknown>;
+    expect(payload).toHaveProperty("tax_year", 2025);
+    expect(payload).toHaveProperty("today");
+    expect(payload).toHaveProperty("days_until_dec_31");
+    expect(payload).toHaveProperty("days_until_apr_15");
+    expect(payload).toHaveProperty("actions");
+    expect(payload).toHaveProperty("summary");
+
+    const summary = payload.summary as Record<string, unknown>;
+    expect(summary).toHaveProperty("total");
+    expect(summary).toHaveProperty("overdue");
+    expect(summary).toHaveProperty("critical");
+    expect(summary).toHaveProperty("soon");
+    expect(summary).toHaveProperty("normal");
+    expect(summary).toHaveProperty("dec_31_count");
+    expect(summary).toHaveProperty("apr_15_count");
+
+    await app.close();
+  });
 });
