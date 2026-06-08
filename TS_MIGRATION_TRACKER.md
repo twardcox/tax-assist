@@ -25,7 +25,7 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | User data | api/routes/user_data.py | backend-ts/src/routes/userData.ts | Backend A | DONE |
 | Transactions | api/routes/transactions.py | backend-ts/src/routes/transactions.ts | Backend B | DONE |
 | Reconciliation | api/routes/reconciliation.py | backend-ts/src/routes/reconciliation.ts | Backend B | DONE |
-| Planning | api/routes/planning.py | backend-ts/src/routes/planning.ts | Backend B | IN_PROGRESS |
+| Planning | api/routes/planning.py | backend-ts/src/routes/planning.ts | Backend B | DONE |
 | Scan | api/routes/scan.py | backend-ts/src/routes/scan.ts | Backend A | IN_PROGRESS |
 | Scenarios | api/routes/scenarios.py | backend-ts/src/routes/scenarios.ts | Backend A | DONE |
 | Reports | api/routes/reports.py | backend-ts/src/routes/reports.ts | Backend B | DONE |
