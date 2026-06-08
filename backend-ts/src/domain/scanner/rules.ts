@@ -1417,6 +1417,138 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "county-veteran-property-tax-exemption": (_benefit, facts) => {
+    const veteran = facts.taxpayerVeteranStatus();
+    if (veteran == null) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Veteran status not recorded. If you are an honorably discharged veteran who owns a primary residence, you likely qualify for a county property tax exemption.",
+        missing_facts: ["household.taxpayer.veteran"]
+      };
+    }
+
+    if (!veteran) {
+      return {
+        status: "not_applicable",
+        message: "County veteran property tax exemption requires honorably discharged veteran status."
+      };
+    }
+
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Veteran status confirmed. This exemption applies when you own a primary residence — apply immediately after purchasing a home.",
+        missing_facts: ["real_estate.properties (primary_residence)"]
+      };
+    }
+
+    const state = facts.stateCode();
+    const county = facts.county();
+    const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
+
+    return {
+      status: "nearly_eligible",
+      message:
+        `As a veteran who owns a primary residence, you qualify for ${location}'s veteran property tax exemption. The savings range from a modest base exemption for any honorably discharged veteran to a full exemption for 100% service-connected disability.`,
+      missing_facts: county ? [] : ["household.residence.county"],
+      next_steps: [
+        `Contact ${location} assessor and request the veteran property tax exemption application`,
+        "Bring your DD-214 and any VA disability rating award letter",
+        "Apply for the highest tier your disability rating supports (100% disabled = full exemption in many states)",
+        "TX 100% disabled veterans: full property tax exemption - save $5,000-$15,000+/year"
+      ]
+    };
+  },
+
+  "county-disability-property-tax-exemption": (_benefit, facts) => {
+    const disability = facts.taxpayerDisabilityStatus();
+    if (disability == null) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Disability status not recorded. If you are permanently and totally disabled and own a primary residence, you may qualify for a county property tax exemption.",
+        missing_facts: ["household.taxpayer.disabled"]
+      };
+    }
+
+    if (!disability) {
+      return {
+        status: "not_applicable",
+        message: "County disability property tax exemption requires permanent total disability."
+      };
+    }
+
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "nearly_eligible",
+        message:
+          "Disability confirmed. This exemption requires owning a primary residence — apply immediately after purchasing a home.",
+        missing_facts: ["real_estate.properties (primary_residence)"]
+      };
+    }
+
+    const county = facts.county();
+    const state = facts.stateCode();
+    const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
+    const agi = facts.estimatedAgi();
+    const incomeNote = agi ? ` Income limit may apply (your AGI: $${agi.toLocaleString()}).` : " Some counties impose income limits - verify with the assessor.";
+
+    return {
+      status: "nearly_eligible",
+      message: `As a permanently disabled homeowner you likely qualify for ${location}'s disability property tax exemption.${incomeNote}`,
+      missing_facts: county ? [] : ["household.residence.county"],
+      next_steps: [
+        `Contact ${location} assessor and request the disability property tax exemption application`,
+        "Provide SSA disability award letter or licensed physician certification",
+        "Ask whether the exemption stacks with the homestead and senior exemptions",
+        "Check if retroactive claims are allowed - some counties accept 1-2 years back"
+      ]
+    };
+  },
+
+  "county-solar-exemption": (_benefit, facts) => {
+    if (!facts.hasPrimaryResidence()) {
+      return {
+        status: "not_applicable",
+        message: "County solar exemption applies to homeowners - no primary residence recorded."
+      };
+    }
+
+    const state = facts.stateCode();
+    const county = facts.county();
+    const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
+    const mandatoryStates = new Set(["FL", "TX", "AZ", "CO", "NJ", "NY", "MA", "NC", "MN", "OR", "WA", "MD", "IN", "KY", "LA", "ME", "MI", "MT", "NE", "NM", "ND", "OH", "RI", "SC", "VT", "WI"]);
+
+    if (state && mandatoryStates.has(state)) {
+      return {
+        status: "nearly_eligible",
+        message:
+          `${state} mandates that counties exempt the added value of solar installations from property tax assessment. If you have or are considering solar panels, their value will not increase your property tax bill.`,
+        next_steps: [
+          "Verify your current property tax bill does not include solar panel value",
+          "In mandatory-exemption states this is typically automatic after installation",
+          "Stack with the federal 30% Residential Clean Energy Credit (Form 5695)",
+          "Factor this exemption into your solar ROI calculation before installing"
+        ]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        `Many counties exempt solar and renewable energy installations from property reassessment. Verify whether ${location} offers this exemption before or after installing solar panels.`,
+      missing_facts: [] as string[] | undefined,
+      next_steps: [
+        `Search '${location} solar property tax exemption' or call the county assessor`,
+        "If available, apply before or immediately after installation",
+        "Stack with federal Form 5695 Residential Clean Energy Credit (30% of system cost)",
+        "Leased solar systems may not qualify - confirm with installer"
+      ]
+    };
+  },
+
   "county-senior-property-tax-freeze": (_benefit, facts) => {
     const age = facts.taxpayerAge();
     const state = facts.stateCode();

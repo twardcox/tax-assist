@@ -246,6 +246,30 @@ export class UserFacts {
     return age > 0 ? age : null;
   }
 
+  taxpayerVeteranStatus(): boolean | null {
+    const hh = toObject(this.data.household);
+    const taxpayer = toObject(hh.taxpayer);
+    if (taxpayer.veteran === true) {
+      return true;
+    }
+    if (taxpayer.veteran === false) {
+      return false;
+    }
+    return null;
+  }
+
+  taxpayerDisabilityStatus(): boolean | null {
+    const hh = toObject(this.data.household);
+    const taxpayer = toObject(hh.taxpayer);
+    if (taxpayer.disabled === true) {
+      return true;
+    }
+    if (taxpayer.disabled === false) {
+      return false;
+    }
+    return null;
+  }
+
   healthcareCoverage(): string | null {
     const hc = toObject(this.data.healthcare);
     const insurance = toObject(hc.insurance);

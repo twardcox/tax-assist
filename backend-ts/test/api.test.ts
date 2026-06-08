@@ -496,7 +496,7 @@ describe("API baseline", () => {
             state: "PA",
             county: "Allegheny"
           },
-          taxpayer: { age: 45 }
+          taxpayer: { age: 45, veteran: true, disabled: true }
         }
       }
     });
@@ -671,6 +671,15 @@ describe("API baseline", () => {
 
     const agUse = payload.results.find((r) => r.benefit_id === "county-agricultural-use-valuation");
     expect(agUse?.status).toBe("nearly_eligible");
+
+    const veteran = payload.results.find((r) => r.benefit_id === "county-veteran-property-tax-exemption");
+    expect(veteran?.status).toBe("nearly_eligible");
+
+    const disability = payload.results.find((r) => r.benefit_id === "county-disability-property-tax-exemption");
+    expect(disability?.status).toBe("nearly_eligible");
+
+    const solar = payload.results.find((r) => r.benefit_id === "county-solar-exemption");
+    expect(solar?.status).toBe("nearly_eligible");
 
     const stateHomestead = payload.results.find((r) => r.benefit_id === "state-homestead-exemption");
     expect(stateHomestead?.status).toBe("eligible_now");
