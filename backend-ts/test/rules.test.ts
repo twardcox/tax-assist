@@ -722,4 +722,66 @@ describe("rules parity", () => {
     expect(result.message).toContain("Retirement balance");
     expect(result.message).toContain("80,000");
   });
+
+  test("american opportunity credit includes phaseout note text when AGI is in range", () => {
+    const result = evaluateBenefit(
+      {
+        id: "american-opportunity-credit",
+        name: "American Opportunity Credit",
+        category: "education_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 85000
+        },
+        dependents: {
+          dependents: [
+            {
+              education: {
+                school_level: "undergraduate",
+                tuition_paid: 12000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("American Opportunity Credit: up to $");
+    expect(result.phaseout_note).toContain("AGI 85,000 is within phaseout planning range");
+  });
+
+  test("savers credit above AGI ceiling uses Python-style disqualification wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "savers-credit",
+        name: "Saver's Credit",
+        category: "retirement_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 50000,
+          taxpayer: {
+            age: 35
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("No credit available above this income level");
+  });
 });

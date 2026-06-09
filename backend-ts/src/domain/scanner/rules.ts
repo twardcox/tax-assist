@@ -437,10 +437,10 @@ const rules: Record<string, RuleFn> = {
     const credit = Math.min(collegeDeps.length * 2500, 2500);
     return {
       status: "eligible_now",
-      message: `American Opportunity Credit available up to ${credit.toLocaleString()}${phaseout ? `. Note: ${phaseout}` : ""}.`,
+      message: `American Opportunity Credit: up to $${credit.toLocaleString()} for college tuition expenses.${phaseout ? ` Note: ${phaseout}` : ""}`,
       estimated_value: `Up to $${credit.toLocaleString()}/year ($1,000 refundable)`,
-      next_steps: ["Collect Form 1098-T", "Coordinate with 529 distributions to avoid double-counting expenses"],
-      phaseout_note: agi && agi >= lo ? `AOTC phaseout range: ${lo.toLocaleString()}-${hi.toLocaleString()}` : undefined
+      next_steps: ["Collect Form 1098-T from school", "Coordinate with 529 distributions (cannot double-count)"],
+      phaseout_note: agi && agi >= lo ? phaseout : undefined
     };
   },
 
@@ -509,7 +509,7 @@ const rules: Record<string, RuleFn> = {
     if (agi !== null && agi > ceiling) {
       return {
         status: "not_applicable",
-        message: `AGI ${agi.toLocaleString()} exceeds Saver's Credit limit (${ceiling.toLocaleString()}).`
+        message: `AGI $${agi.toLocaleString()} exceeds the Saver's Credit limit for ${filingStatus} filers ($${ceiling.toLocaleString()}). No credit available above this income level.`
       };
     }
 
@@ -541,7 +541,7 @@ const rules: Record<string, RuleFn> = {
       status: hasContributions ? "nearly_eligible" : "nearly_eligible",
       message: hasContributions
         ? "Retirement contributions found, but AGI is missing for Saver's Credit evaluation."
-        : "Saver's Credit may apply for moderate-income taxpayers with retirement contributions.",
+        : "Saver's Credit available for moderate-income taxpayers with retirement contributions. Enter AGI to evaluate.",
       missing_facts: hasContributions ? ["household.estimated_agi"] : ["household.estimated_agi", "retirement contributions"]
     };
   },
