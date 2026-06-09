@@ -2312,20 +2312,20 @@ const rules: Record<string, RuleFn> = {
     if (agi && agi <= 150000) {
       return {
         status: "future_opportunity",
-        message: `AGI ${agi.toLocaleString()} is still within the $25,000 rental loss allowance range. REP status becomes more critical above $150,000.`,
+        message: `AGI ${agi.toLocaleString()} still within $25,000 rental loss allowance range — REP status becomes more critical above $150,000.`,
         next_steps: ["Revisit if AGI grows above $150,000"]
       };
     }
 
     return {
       status: "eligible_if_changed",
-      message: "Real Estate Professional status can unlock unlimited rental loss deductions against ordinary income.",
-      estimated_value: "Depends on suspended losses, potentially $10,000-$200,000+ unlocked",
+      message: "Real Estate Professional status would unlock unlimited rental loss deductions against ordinary income.",
+      estimated_value: "Depends on suspended losses — potentially $10,000–$200,000+ unlocked",
       changes_needed: [
         "Spend more than 750 hours per year in real property activities",
         "Ensure real estate hours exceed hours in any other profession",
         "Maintain detailed hourly activity logs throughout the year",
-        "File a material participation statement or aggregation election"
+        "File material participation statement or aggregation election"
       ]
     };
   },

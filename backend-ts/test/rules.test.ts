@@ -898,6 +898,72 @@ describe("rules parity", () => {
     expect(result.message).toContain("80,000");
   });
 
+  test("real estate professional status future-opportunity branch uses Python AGI wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "real-estate-professional-status",
+        name: "Real Estate Professional Status",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 120000
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("future_opportunity");
+    expect(result.message).toContain("still within $25,000 rental loss allowance range");
+    expect(result.message).toContain("above $150,000");
+  });
+
+  test("real estate professional status eligible-if-changed branch uses Python checklist wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "real-estate-professional-status",
+        name: "Real Estate Professional Status",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 180000
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("would unlock unlimited rental loss deductions");
+    expect(result.estimated_value).toContain("Depends on suspended losses");
+    expect(result.estimated_value).toContain("$10,000–$200,000+");
+    expect(result.changes_needed).toContain("File material participation statement or aggregation election");
+  });
+
   test("american opportunity credit includes phaseout note text when AGI is in range", () => {
     const result = evaluateBenefit(
       {
