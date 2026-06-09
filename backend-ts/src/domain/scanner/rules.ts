@@ -2568,16 +2568,6 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const ageYears = facts.oldest529PlanAgeYears();
-    if (ageYears === null || ageYears < 15) {
-      return {
-        status: "nearly_eligible",
-        message: "529 plan on file, but the account age has not been recorded as 15+ years yet.",
-        missing_facts: ["investments.529_plans.opened_date"],
-        next_steps: ["Confirm the 529 account opening date", "The account must be at least 15 years old before rollover"]
-      };
-    }
-
     const investments = facts.data.investments;
     const plans = Array.isArray(investments["529_plans"]) ? investments["529_plans"] : [];
     const balances = plans

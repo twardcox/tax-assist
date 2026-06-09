@@ -1371,6 +1371,63 @@ describe("rules parity", () => {
     expect(result.next_steps).toContain("Act in 2025 or 2026 — bonus depreciation drops to 20% in 2026, 0% in 2027");
   });
 
+  test("529-to-roth rollover returns eligible now with funded account even without opened date", () => {
+    const result = evaluateBenefit(
+      {
+        id: "529-to-roth-rollover",
+        name: "529 to Roth Rollover",
+        category: "education_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        investments: {
+          "529_plans": [
+            {
+              balance: 12000
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("total balance ~12,000");
+    expect(result.next_steps).toContain("Verify account opening date — must be at least 15 years old");
+  });
+
+  test("529-to-roth rollover stays nearly eligible when account exists but no balance is recorded", () => {
+    const result = evaluateBenefit(
+      {
+        id: "529-to-roth-rollover",
+        name: "529 to Roth Rollover",
+        category: "education_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        investments: {
+          "529_plans": [
+            {
+              beneficiary: "Child",
+              opened_date: "2020-01-01"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("no balance recorded");
+    expect(result.missing_facts).toContain("investments.529_plans.balance");
+  });
+
   test("sep ira unestablished branch includes Python October 15 and custodian guidance", () => {
     const result = evaluateBenefit(
       {
