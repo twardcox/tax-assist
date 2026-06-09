@@ -588,18 +588,18 @@ const rules: Record<string, RuleFn> = {
     if (agi && agi > clip) {
       return {
         status: "not_applicable",
-        message: `AGI ${agi.toLocaleString()} exceeds clean vehicle credit limit of ${clip.toLocaleString()}.`
+        message: `AGI $${agi.toLocaleString()} exceeds income limit of $${clip.toLocaleString()} for Clean Vehicle Credit.`
       };
     }
 
     return {
       status: "nearly_eligible",
       message:
-        "Income appears within EV credit limits. Verify VIN/model eligibility and MSRP caps before purchase.",
+        "Income qualifies for EV credit (up to $7,500 new / $4,000 used). Check vehicle eligibility at fueleconomy.gov.",
       next_steps: [
-        "Check VIN eligibility at fueleconomy.gov",
-        "Use dealer point-of-sale transfer option if available",
-        "Confirm MSRP caps by vehicle class"
+        "Verify vehicle VIN qualifies at fueleconomy.gov before purchasing",
+        "Use point-of-sale transfer option to receive credit as immediate discount at dealer",
+        "Check MSRP limits: SUV/truck/van <= $80,000; sedan <= $55,000"
       ]
     };
   },
@@ -803,17 +803,17 @@ const rules: Record<string, RuleFn> = {
     if (!hasHome) {
       return {
         status: "not_applicable",
-        message: "Residential Clean Energy Credit requires a primary or secondary home you own."
+        message: "Residential Clean Energy Credit requires a home you own (primary or secondary)."
       };
     }
 
     return {
       status: "nearly_eligible",
-      message: "Homeowner may qualify for 30% credit on solar, battery, wind, or geothermal installations.",
+      message: "Homeowner qualifies for 30% credit on solar panels, battery storage, wind, or geothermal installed at your home.",
       next_steps: [
-        "Get quotes for qualifying systems and confirm placed-in-service year",
-        "Check state and utility rebates that stack with federal credit",
-        "Use Form 5695 and carry forward unused credit if tax liability is limited"
+        "Get solar quotes from 3+ installers - 30% credit applies through 2032",
+        "Battery storage (3 kWh+) qualifies even without solar",
+        "Check state and utility rebates that stack on top of federal credit"
       ]
     };
   },

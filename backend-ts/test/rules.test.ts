@@ -392,4 +392,51 @@ describe("rules parity", () => {
     expect(result.status).toBe("nearly_eligible");
     expect(result.missing_facts).toContain("household.residence.state or foreign country confirmation");
   });
+
+  test("clean vehicle credit is not applicable above AGI limit", () => {
+    const result = evaluateBenefit(
+      {
+        id: "clean-vehicle-credit",
+        name: "Clean Vehicle Credit",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 200000
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("exceeds income limit");
+  });
+
+  test("residential clean energy credit is not applicable without owned home", () => {
+    const result = evaluateBenefit(
+      {
+        id: "residential-clean-energy-credit",
+        name: "Residential Clean Energy Credit",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: []
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("requires a home you own");
+  });
 });
