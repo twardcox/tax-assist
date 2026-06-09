@@ -1160,13 +1160,13 @@ const rules: Record<string, RuleFn> = {
     if (facts.stateCode()) {
       return {
         status: "not_applicable",
-        message: "US state residence recorded. FEIE generally applies to taxpayers living/working abroad."
+        message: "US state residence recorded — FEIE applies to taxpayers living and working abroad."
       };
     }
 
     return {
       status: "nearly_eligible",
-      message: "No US state residence recorded. FEIE may apply if foreign residency and tests are met.",
+      message: "No US state recorded — may qualify for Foreign Earned Income Exclusion ($130,000 for 2025) if living abroad.",
       missing_facts: ["household.residence.state or foreign country confirmation"]
     };
   },

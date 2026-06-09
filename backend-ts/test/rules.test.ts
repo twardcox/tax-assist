@@ -342,4 +342,54 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("below 100% FPL");
   });
+
+  test("foreign earned income exclusion is not applicable when US state is present", () => {
+    const result = evaluateBenefit(
+      {
+        id: "foreign-earned-income-exclusion",
+        name: "Foreign Earned Income Exclusion",
+        category: "federal_exclusion",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "PA"
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("FEIE applies to taxpayers living and working abroad");
+  });
+
+  test("foreign earned income exclusion is nearly eligible when no US state is set", () => {
+    const result = evaluateBenefit(
+      {
+        id: "foreign-earned-income-exclusion",
+        name: "Foreign Earned Income Exclusion",
+        category: "federal_exclusion",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: ""
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.residence.state or foreign country confirmation");
+  });
 });
