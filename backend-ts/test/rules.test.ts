@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { readFileSync } from "node:fs";
 import { evaluateBenefit } from "../src/domain/scanner/rules";
 import { UserFacts } from "../src/domain/scanner/userFacts";
 
@@ -21,6 +22,24 @@ function makeFacts(data: Record<string, unknown>): UserFacts {
 }
 
 describe("rules parity", () => {
+  test("every scanner rule id has at least one direct regression test", () => {
+    const rulesSource = readFileSync("src/domain/scanner/rules.ts", "utf8");
+    const testSource = readFileSync("test/rules.test.ts", "utf8");
+
+    const ruleIds = Array.from(
+      rulesSource.matchAll(/^\s*"([a-z0-9-]+)": \(_benefit, facts\) => \{/gm),
+      (match) => match[1]
+    );
+    const testedIds = new Set(
+      Array.from(testSource.matchAll(/id:\s*"([a-z0-9-]+)"/g), (match) => match[1]).filter(
+        (id) => id !== "some-obscure-benefit"
+      )
+    );
+
+    const missing = ruleIds.filter((id) => !testedIds.has(id));
+    expect(missing).toEqual([]);
+  });
+
   test("unknown benefit returns unknown status", () => {
     const result = evaluateBenefit(
       {
