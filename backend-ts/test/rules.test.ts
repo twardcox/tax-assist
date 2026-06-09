@@ -540,4 +540,62 @@ describe("rules parity", () => {
     expect(result.missing_facts).toContain("businesses.health_insurance.premium_amount");
     expect(result.next_steps).toContain("Record monthly premium in businesses.yaml");
   });
+
+  test("child tax credit reports partial phaseout when AGI exceeds threshold", () => {
+    const result = evaluateBenefit(
+      {
+        id: "child-tax-credit",
+        name: "Child Tax Credit",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "mfj",
+          estimated_agi: 410000
+        },
+        dependents: {
+          dependents: [
+            { age_at_year_end: 8, ssn_obtained: true },
+            { age_at_year_end: 12, ssn_obtained: true }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("Partial credit:");
+    expect(result.phaseout_note).toContain("phaseout threshold");
+  });
+
+  test("excess fica refund is eligible now when social security withholding exceeds cap", () => {
+    const result = evaluateBenefit(
+      {
+        id: "excess-fica-refund",
+        name: "Excess FICA Refund",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        income: {
+          w2_employment: [
+            { wages: 120000 },
+            { wages: 120000 }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("refundable");
+    expect(result.estimated_value).toContain("refundable credit");
+  });
 });

@@ -218,7 +218,7 @@ const rules: Record<string, RuleFn> = {
       const creditValue = qualifying.length * 2000;
       return {
         status: "nearly_eligible",
-        message: `${qualifyingNoSsn.length} child(ren) missing SSN. Credit requires SSN by return due date.`,
+        message: `${qualifyingNoSsn.length} child(ren) missing SSN - credit requires SSN by return due date.`,
         estimated_value: `~$${creditValue.toLocaleString()}/year if all SSNs are obtained`,
         next_steps: ["Apply for SSN at the Social Security Administration immediately"]
       };
@@ -232,14 +232,14 @@ const rules: Record<string, RuleFn> = {
       if (remaining === 0) {
         return {
           status: "not_applicable",
-          message: `AGI $${agi.toLocaleString()} fully phases out Child Tax Credit.`
+          message: `AGI $${agi.toLocaleString()} - Child Tax Credit fully phased out.`
         };
       }
       return {
         status: "eligible_now",
-        message: `Child Tax Credit partially available after phaseout: ~${remaining.toLocaleString()} remaining.`,
-        estimated_value: `~$${remaining.toLocaleString()}/year`,
-        phaseout_note: `AGI $${agi.toLocaleString()} is above the ${cliff.toLocaleString()} phaseout threshold`
+        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $2,000 = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
+        estimated_value: `~$${baseCredit.toLocaleString()}/year`,
+        phaseout_note: `AGI $${agi.toLocaleString()} is above the ${cliff.toLocaleString()} phaseout threshold.`
       };
     }
 
@@ -373,11 +373,14 @@ const rules: Record<string, RuleFn> = {
     }
 
     const excess = Math.max(0, Math.round((totalSsWithheld - ssMax) * 100) / 100);
+    const excessRounded = Math.round(excess);
+    const totalSsWithheldRounded = Math.round(totalSsWithheld);
+    const ssMaxRounded = Math.round(ssMax);
     if (excess <= 0) {
       return {
         status: "nearly_eligible",
         message:
-          `Combined wages $${totalWages.toLocaleString()} exceed SS wage base — check each W-2 Box 4 for actual SS withheld. Record ss_withheld on each W-2 to compute exact refund.`,
+          `Combined wages $${totalWages.toLocaleString()} exceed SS wage base - check each W-2 Box 4 for actual SS withheld. Record ss_withheld on each W-2 to compute exact refund.`,
         missing_facts: ["income.w2_employment[*].social_security_withheld"]
       };
     }
@@ -385,8 +388,8 @@ const rules: Record<string, RuleFn> = {
     return {
       status: "eligible_now",
       message:
-        `Excess Social Security withholding: ~$${excess.toLocaleString()} refundable. Total SS withheld $${totalSsWithheld.toLocaleString()} exceeds 2025 max of $${ssMax.toLocaleString()}.`,
-      estimated_value: `$${excess.toLocaleString()} refundable credit`,
+        `Excess Social Security withholding: ~$${excessRounded.toLocaleString()} refundable. Total SS withheld $${totalSsWithheldRounded.toLocaleString()} exceeds 2025 max of $${ssMaxRounded.toLocaleString()}.`,
+      estimated_value: `$${excessRounded.toLocaleString()} refundable credit`,
       next_steps: [
         "Claim on Schedule 3, Line 11 of Form 1040",
         "Verify Box 4 on each W-2 — sum must exceed $10,918.20 to have excess",
