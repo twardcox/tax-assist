@@ -617,6 +617,11 @@ export class UserFacts {
     }
 
     const legacyTraditional = toObject(retirement.traditional_ira);
+    const legacyAccounts = toObjectArray(legacyTraditional.accounts);
+    if (legacyAccounts.length > 0) {
+      return toNumber(legacyAccounts[0].balance);
+    }
+
     return toNumber(legacyTraditional.balance);
   }
 

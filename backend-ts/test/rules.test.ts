@@ -656,4 +656,70 @@ describe("rules parity", () => {
     expect(result.status).toBe("eligible_if_changed");
     expect(result.message).toContain("seller financing");
   });
+
+  test("backdoor roth detects legacy traditional_ira.accounts balance and stays nearly eligible", () => {
+    const result = evaluateBenefit(
+      {
+        id: "backdoor-roth-ira",
+        name: "Backdoor Roth IRA",
+        category: "retirement_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 200000
+        },
+        retirement: {
+          traditional_ira: {
+            accounts: [
+              {
+                balance: 25000
+              }
+            ]
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("pro-rata");
+  });
+
+  test("qlac includes legacy traditional_ira.accounts balance in total balance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "qlac",
+        name: "QLAC",
+        category: "retirement_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          taxpayer: { age: 66 }
+        },
+        retirement: {
+          traditional_ira: {
+            accounts: [
+              {
+                balance: 80000
+              }
+            ]
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("Retirement balance");
+    expect(result.message).toContain("80,000");
+  });
 });
