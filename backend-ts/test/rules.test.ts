@@ -439,4 +439,105 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("requires a home you own");
   });
+
+  test("section 121 exclusion is not applicable without a primary residence", () => {
+    const result = evaluateBenefit(
+      {
+        id: "section-121-exclusion",
+        name: "Section 121 Exclusion",
+        category: "federal_exclusion",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              acquisition: {
+                purchase_price: 300000,
+                current_market_value: 450000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("applies to sale of primary residence only");
+  });
+
+  test("section 121 exclusion is eligible_if_changed when occupancy is under 2 years", () => {
+    const result = evaluateBenefit(
+      {
+        id: "section-121-exclusion",
+        name: "Section 121 Exclusion",
+        category: "federal_exclusion",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single"
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence",
+              primary_residence: {
+                years_lived_in: 1
+              },
+              acquisition: {
+                purchase_price: 300000,
+                current_market_value: 450000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.changes_needed).toContain("Wait until 1 more year(s) before selling to qualify");
+  });
+
+  test("self-employed health insurance is nearly eligible with next steps when premium facts are missing", () => {
+    const result = evaluateBenefit(
+      {
+        id: "self-employed-health-insurance",
+        name: "Self-Employed Health Insurance Deduction",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop"
+            }
+          ]
+        },
+        healthcare: {
+          insurance: {
+            coverage_type: "marketplace"
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("businesses.health_insurance.premium_amount");
+    expect(result.next_steps).toContain("Record monthly premium in businesses.yaml");
+  });
 });

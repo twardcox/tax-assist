@@ -745,17 +745,9 @@ const rules: Record<string, RuleFn> = {
 
   "section-121-exclusion": (_benefit, facts) => {
     if (!facts.hasPrimaryResidence()) {
-      if (facts.hasAnyRealEstate()) {
-        return {
-          status: "nearly_eligible",
-          message: "Real estate found but no primary residence identified for Section 121 evaluation.",
-          missing_facts: ["real_estate.properties (primary_residence)"]
-        };
-      }
-
       return {
         status: "not_applicable",
-        message: "No primary residence found. Section 121 applies only to sale of primary residence."
+        message: "No primary residence found. Section 121 exclusion applies to sale of primary residence only."
       };
     }
 
@@ -765,8 +757,8 @@ const rules: Record<string, RuleFn> = {
     if (yearsLived > 0 && yearsLived < 2) {
       return {
         status: "eligible_if_changed",
-        message: `Only ${yearsLived} year(s) in home. Need 2 of last 5 years to fully qualify for Section 121.`,
-        changes_needed: ["Delay sale until 2-year occupancy threshold where feasible"]
+        message: `Only ${yearsLived} year(s) in home - need 2 of last 5 years as primary residence for exclusion.`,
+        changes_needed: [`Wait until ${2 - yearsLived} more year(s) before selling to qualify`]
       };
     }
 
@@ -791,9 +783,8 @@ const rules: Record<string, RuleFn> = {
       message,
       estimated_value: `Up to $${exclusion.toLocaleString()} gain excluded`,
       next_steps: [
-        "Track capital improvements to maximize basis",
-        "Document residency/use period",
-        "Model depreciation recapture if any rental use occurred"
+        "Track all capital improvements to increase basis",
+        "Document rental period (if any) - depreciation recapture applies"
       ]
     };
   },
@@ -2858,7 +2849,7 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "not_applicable",
         message:
-          "Employer coverage detected. Deduction is unavailable for months with employer-sponsored coverage."
+          "Covered by employer plan - self-employed health insurance deduction not available in months with employer coverage."
       };
     }
 
@@ -2876,10 +2867,14 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "nearly_eligible",
-      message: "Has self-employment. Confirm premium amount and deduction treatment.",
+      message: "Has self-employment - confirm health insurance premium amount and coverage structure.",
       missing_facts: [
         "businesses.health_insurance.premium_amount",
         "businesses.health_insurance.owner_health_insurance_deducted"
+      ],
+      next_steps: [
+        "Record monthly premium in businesses.yaml",
+        "Confirm policy is in business name or owner is reimbursed"
       ]
     };
   }
