@@ -2084,6 +2084,197 @@ describe("rules parity", () => {
     expect(result.next_steps?.[1]).toContain("Invest HSA balance ($5,000)");
   });
 
+  test("ichra qsehra is not applicable with group plan for small employer", () => {
+    const result = evaluateBenefit(
+      {
+        id: "ichra-qsehra",
+        name: "ICHRA/QSEHRA",
+        category: "business_benefit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              employees: {
+                w2_employees_count: 8
+              }
+            }
+          ]
+        },
+        healthcare: {
+          employer_group_plan: true
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("QSEHRA requires that the employer not offer a group health plan");
+  });
+
+  test("employer childcare credit is nearly eligible with employees but no childcare expenses", () => {
+    const result = evaluateBenefit(
+      {
+        id: "employer-childcare-credit",
+        name: "Employer Childcare Credit",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              employees: {
+                w2_employees_count: 6
+              },
+              financials: {
+                childcare_expenses: 0
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("businesses.financials.childcare_expenses");
+    expect(result.next_steps?.[2]).toContain("Maximum credit $150,000/year; file Form 8882");
+  });
+
+  test("employer childcare credit eligible-now computes 25 percent credit with cap", () => {
+    const result = evaluateBenefit(
+      {
+        id: "employer-childcare-credit",
+        name: "Employer Childcare Credit",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              employees: {
+                w2_employees_count: 10
+              },
+              financials: {
+                childcare_expenses: 800000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("~$150,000");
+    expect(result.message).toContain("25% of $800,000 childcare expenses");
+    expect(result.estimated_value).toBe("~$150,000/year");
+  });
+
+  test("child dependent care credit eligible-now uses qualifying-expense wording and FSA note", () => {
+    const result = evaluateBenefit(
+      {
+        id: "child-dependent-care-credit",
+        name: "Child and Dependent Care Credit",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        dependents: {
+          dependents: [
+            {
+              age_at_year_end: 5,
+              care_expenses: {
+                daycare_cost: 4000,
+                after_school_care_cost: 0,
+                summer_camp_cost: 0
+              }
+            }
+          ]
+        },
+        healthcare: {
+          flexible_spending_accounts: {
+            dependent_care_fsa: {
+              election_amount: 1000
+            }
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("20% of 2,000 qualifying expenses");
+    expect(result.next_steps?.[2]).toContain("Note: Dependent Care FSA (1,000) reduces CDCC expense base");
+  });
+
+  test("state ev credit is not applicable in non-credit states", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-ev-credit",
+        name: "State EV Credit",
+        category: "state_credit",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "TX"
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("TX does not currently offer a broad state EV purchase credit or rebate");
+  });
+
+  test("state ev credit is eligible-if-changed in qualifying states without EV", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-ev-credit",
+        name: "State EV Credit",
+        category: "state_credit",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "CO"
+          },
+          has_electric_vehicle: false
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("stacks on top of the federal §30D credit");
+    expect(result.changes_needed).toContain("Purchase or lease a qualifying BEV or PHEV");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {

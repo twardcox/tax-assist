@@ -294,12 +294,12 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `Child and Dependent Care Credit estimated at ~${credit.toLocaleString()} (20% of ${expenseBase.toLocaleString()}).`,
+      message: `Child and Dependent Care Credit: ~${credit.toLocaleString()} (20% of ${expenseBase.toLocaleString()} qualifying expenses).`,
       estimated_value: `~$${Math.round(credit).toLocaleString()}/year`,
       next_steps: [
         "Report on Form 2441",
         "Collect care provider TIN (EIN or SSN)",
-        `Dependent Care FSA (${fsaAmount.toLocaleString()}) reduces CDCC expense base`
+        `Note: Dependent Care FSA (${fsaAmount.toLocaleString()}) reduces CDCC expense base`
       ]
     };
   },
