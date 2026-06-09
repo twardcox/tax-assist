@@ -898,7 +898,7 @@ const rules: Record<string, RuleFn> = {
     if (coverage && !["marketplace", "aca", "exchange", "healthcare.gov"].includes(coverage.toLowerCase())) {
       return {
         status: "not_applicable",
-        message: `Premium Tax Credit requires ACA marketplace coverage. Coverage '${coverage}' does not qualify.`
+        message: `Premium Tax Credit requires ACA Marketplace insurance. Coverage type '${coverage}' does not qualify.`
       };
     }
 
@@ -912,13 +912,13 @@ const rules: Record<string, RuleFn> = {
         return {
           status: "not_applicable",
           message:
-            "Premium Tax Credit applies to ACA marketplace insurance. No qualifying marketplace coverage was found."
+            "Premium Tax Credit applies to ACA Marketplace insurance. No coverage type recorded. If you have employer-sponsored insurance, you likely don't qualify."
         };
       }
       return {
         status: "nearly_eligible",
         message:
-          "Self-employment detected without coverage type. ACA marketplace may provide a Premium Tax Credit.",
+          "Self-employed without employer insurance - ACA Marketplace may provide a large Premium Tax Credit. Update healthcare.coverage_type if you purchase Marketplace insurance.",
         missing_facts: ["healthcare.coverage_type"]
       };
     }
@@ -926,7 +926,7 @@ const rules: Record<string, RuleFn> = {
     if (agi == null) {
       return {
         status: "nearly_eligible",
-        message: "Marketplace coverage found. Add AGI to calculate Premium Tax Credit amount.",
+        message: "ACA Marketplace coverage found - enter AGI to calculate Premium Tax Credit amount.",
         missing_facts: ["household.estimated_agi"]
       };
     }
@@ -935,7 +935,7 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "not_applicable",
         message:
-          `AGI ${agi.toLocaleString()} appears below 100% FPL (${fplBase.toLocaleString()} for household size ${householdSize}).`
+          `AGI $${agi.toLocaleString()} appears to be below 100% FPL ($${fplBase.toLocaleString()} for household of ${householdSize}). Medicaid eligibility likely - PTC requires income at or above 100% FPL.`
       };
     }
 
@@ -943,9 +943,12 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "eligible_now",
         message:
-          `ACA Premium Tax Credit available. At ~${Math.round((agi / fplBase) * 100)}% FPL, benchmark premium may be near $0.`,
-        estimated_value: "$0 premium for benchmark Silver plan at lower FPL bands",
-        next_steps: ["Reconcile with Form 8962", "Keep Form 1095-A from exchange"]
+          `ACA Premium Tax Credit available - at ${Math.round((agi / fplBase) * 100)}% FPL, your benchmark plan premium is $0 or near $0. Household size ${householdSize} (FPL: $${fplBase.toLocaleString()}).`,
+        estimated_value: "$0 premium for benchmark Silver plan (below 150% FPL)",
+        next_steps: [
+          "File Form 8962 to reconcile advance credit payments with actual credit",
+          "Ensure Form 1095-A from the exchange is received before filing"
+        ]
       };
     }
 
@@ -953,9 +956,13 @@ const rules: Record<string, RuleFn> = {
     return {
       status: "eligible_now",
       message:
-        `ACA Premium Tax Credit available. Estimated premium cap is ~${capPct.toFixed(1)}% of income at current AGI.`,
-      estimated_value: `Credit equals benchmark premium minus ~$${Math.round((agi * capPct) / 100).toLocaleString()} annual required contribution`,
-      next_steps: ["Use Form 8962 to compute final credit", "Manage year-end MAGI to avoid repayment surprises"]
+        `ACA Premium Tax Credit available. At AGI $${agi.toLocaleString()} (${Math.round((agi / fplBase) * 100)}% FPL), your premium is capped at ~${capPct.toFixed(1)}% of income (~$${Math.round((agi * capPct) / 100).toLocaleString()}/year).`,
+      estimated_value: `Credit = benchmark plan premium minus $${Math.round((agi * capPct) / 100).toLocaleString()}/year required contribution`,
+      next_steps: [
+        "Receive Form 1095-A from healthcare.gov or your state exchange",
+        "File Form 8962 to compute and reconcile the credit",
+        "Manage MAGI carefully - income spikes trigger repayment of advance credits"
+      ]
     };
   },
 

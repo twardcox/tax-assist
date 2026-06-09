@@ -275,4 +275,71 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("above Lifetime Learning Credit limit");
   });
+
+  test("premium tax credit is nearly eligible for self-employed user without coverage type", () => {
+    const result = evaluateBenefit(
+      {
+        id: "premium-tax-credit",
+        name: "Premium Tax Credit",
+        category: "healthcare",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              financials: {
+                net_profit_loss: 50000
+              }
+            }
+          ]
+        },
+        healthcare: {
+          insurance: {}
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("healthcare.coverage_type");
+  });
+
+  test("premium tax credit is not applicable when AGI is below 100% FPL", () => {
+    const result = evaluateBenefit(
+      {
+        id: "premium-tax-credit",
+        name: "Premium Tax Credit",
+        category: "healthcare",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          estimated_agi: 10000
+        },
+        dependents: {
+          dependents: [
+            { name: "One" },
+            { name: "Two" }
+          ]
+        },
+        healthcare: {
+          insurance: {
+            coverage_type: "marketplace"
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("below 100% FPL");
+  });
 });
