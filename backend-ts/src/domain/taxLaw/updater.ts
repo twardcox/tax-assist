@@ -3,6 +3,43 @@ import path from "node:path";
 import yaml from "js-yaml";
 import { projectPaths } from "../../lib/paths";
 
+const STATE_FILE = path.join(projectPaths.state, "update_state.json");
+const FUTURE_LAW_DIR = path.join(projectPaths.taxLibrary, "future_law");
+const REPORT_FILE = path.join(projectPaths.reports, "tax_law_updates.md");
+const FEDERAL_REGISTER_API = "https://www.federalregister.gov/api/v1/documents.json";
+const FEDERAL_REGISTER_FIELDS = [
+  "title",
+  "abstract",
+  "html_url",
+  "publication_date",
+  "type",
+  "document_number",
+  "action",
+  "agencies"
+];
+
+export const SUPPORTED_TAX_LAW_SOURCES = [
+  "federal_register",
+  "irs_news",
+  "irs_publications",
+  "internal_revenue_bulletin",
+  "treasury_regulations",
+  "congress_legislation",
+  "tax_court",
+  "state_ca",
+  "state_ny",
+  "state_il",
+  "state_ma",
+  "state_nj",
+  "state_co",
+  "state_or",
+  "state_pa",
+  "state_oh",
+  "state_ga"
+] as const;
+
+type TaxLawSource = (typeof SUPPORTED_TAX_LAW_SOURCES)[number];
+
 const CHANGE_TYPE_PATTERNS: Record<string, string[]> = {
   new_benefit: [
     "new (credit|deduction|exclusion|benefit)",
@@ -246,4 +283,212 @@ export function updateIrsNewsState(state: Record<string, unknown>, records: Chan
   source.seen_item_ids = Array.from(seen);
   source.last_checked = new Date().toISOString().slice(0, 19);
   state.irs_news = source;
+}
+
+function loadState(): Record<string, unknown> {
+  if (!fs.existsSync(STATE_FILE)) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+    return asRecord(parsed);
+  } catch {
+    return {};
+  }
+}
+
+function saveState(state: Record<string, unknown>): void {
+  fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
+  fs.writeFileSync(STATE_FILE, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+}
+
+function saveChangeRecord(record: ChangeRecord, dryRun: boolean): void {
+  if (dryRun) {
+    return;
+  }
+
+  fs.mkdirSync(FUTURE_LAW_DIR, { recursive: true });
+  const filename = `${record.publication_date}-${makeSlug(record.title)}.yaml`;
+  const outPath = path.join(FUTURE_LAW_DIR, filename);
+  fs.writeFileSync(outPath, yaml.dump(record, { sortKeys: false }), "utf8");
+}
+
+function writeSummaryReport(records: ChangeRecord[], dryRun: boolean): void {
+  if (dryRun) {
+    return;
+  }
+
+  fs.mkdirSync(path.dirname(REPORT_FILE), { recursive: true });
+
+  const lines: string[] = [];
+  lines.push("# Tax Law Updates");
+  lines.push("");
+  lines.push(`Generated: ${new Date().toISOString().slice(0, 19).replace("T", " ")}`);
+  lines.push(`New changes: ${records.length}`);
+  lines.push("");
+
+  for (const record of records) {
+    lines.push(`## ${record.title}`);
+    lines.push(`- Source: ${record.source_name}`);
+    lines.push(`- Date: ${record.publication_date}`);
+    lines.push(`- URL: ${record.url}`);
+    lines.push(`- Change types: ${record.change_types.join(", ") || "none"}`);
+    if (record.affected_benefits.length > 0) {
+      lines.push(`- Affected benefits: ${record.affected_benefits.join(", ")}`);
+    }
+    lines.push(`- Summary: ${record.summary}`);
+    lines.push("");
+  }
+
+  fs.writeFileSync(REPORT_FILE, `${lines.join("\n")}\n`, "utf8");
+}
+
+function daysAgoIso(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
+function parseFederalRegisterResults(payload: unknown): Array<Record<string, unknown>> {
+  const obj = asRecord(payload);
+  const results = obj.results;
+  return Array.isArray(results)
+    ? results.filter((value) => value && typeof value === "object") as Array<Record<string, unknown>>
+    : [];
+}
+
+async function fetchFederalRegister(sinceDate: string, state: Record<string, unknown>): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state.federal_register);
+  const seenRaw = sourceState.seen_document_numbers;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  const params = new URLSearchParams();
+  params.append("conditions[agencies][]", "internal-revenue-service");
+  params.append("conditions[publication_date][gte]", sinceDate);
+  params.append("per_page", "100");
+  params.append("order", "newest");
+  for (const field of FEDERAL_REGISTER_FIELDS) {
+    params.append("fields[]", field);
+  }
+
+  try {
+    const response = await fetch(`${FEDERAL_REGISTER_API}?${params.toString()}`);
+    if (!response.ok) {
+      return [];
+    }
+
+    const results = parseFederalRegisterResults(await response.json());
+    const records: ChangeRecord[] = [];
+
+    for (const doc of results) {
+      const title = String(doc.title ?? "").trim();
+      if (!title) {
+        continue;
+      }
+
+      const documentNumber = String(doc.document_number ?? "").trim();
+      if (documentNumber && seen.has(documentNumber)) {
+        continue;
+      }
+
+      const rawAbstract = String(doc.abstract ?? "").trim();
+      const publicationDate = String(doc.publication_date ?? sinceDate);
+      records.push(
+        new ChangeRecord({
+          id: `federal-register-${documentNumber || makeSlug(title)}`,
+          source: "federal_register",
+          source_name: "Federal Register - Treasury/IRS Rules",
+          title,
+          url: String(doc.html_url ?? ""),
+          publication_date: publicationDate,
+          change_types: classifyChangeTypes(title, rawAbstract),
+          affected_benefits: detectAffectedBenefits(title, rawAbstract),
+          summary: rawAbstract ? rawAbstract.slice(0, 500) : title,
+          document_number: documentNumber,
+          document_type: String(doc.type ?? ""),
+          raw_abstract: rawAbstract
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+async function fetchIrsNews(_sinceDate: string, _state: Record<string, unknown>): Promise<ChangeRecord[]> {
+  return [];
+}
+
+async function fetchBySource(
+  source: TaxLawSource,
+  sinceDate: string,
+  state: Record<string, unknown>
+): Promise<ChangeRecord[]> {
+  if (source === "federal_register") {
+    return fetchFederalRegister(sinceDate, state);
+  }
+  if (source === "irs_news") {
+    return fetchIrsNews(sinceDate, state);
+  }
+  return [];
+}
+
+function updateSourceState(source: TaxLawSource, state: Record<string, unknown>, records: ChangeRecord[]): void {
+  if (source === "federal_register") {
+    updateFederalRegisterState(state, records);
+    return;
+  }
+  if (source === "irs_news") {
+    updateIrsNewsState(state, records);
+  }
+}
+
+export type RunTaxLawUpdateOptions = {
+  source?: TaxLawSource | null;
+  days?: number;
+  sinceDate?: string | null;
+  dryRun?: boolean;
+};
+
+export type RunTaxLawUpdateResult = {
+  since_date: string;
+  source: string | null;
+  dry_run: boolean;
+  new_changes: number;
+};
+
+export async function runTaxLawUpdate(options: RunTaxLawUpdateOptions = {}): Promise<RunTaxLawUpdateResult> {
+  const dryRun = options.dryRun === true;
+  const days = Number.isFinite(options.days) ? Number(options.days) : 30;
+  const sinceDate = options.sinceDate ?? daysAgoIso(days);
+  const state = loadState();
+  const sources: TaxLawSource[] = options.source ? [options.source] : [...SUPPORTED_TAX_LAW_SOURCES];
+
+  const allNewRecords: ChangeRecord[] = [];
+
+  for (const source of sources) {
+    const records = await fetchBySource(source, sinceDate, state);
+    if (records.length > 0) {
+      for (const record of records) {
+        saveChangeRecord(record, dryRun);
+      }
+      allNewRecords.push(...records);
+    }
+    updateSourceState(source, state, records);
+  }
+
+  if (!dryRun) {
+    saveState(state);
+    writeSummaryReport(allNewRecords, dryRun);
+  }
+
+  return {
+    since_date: sinceDate,
+    source: options.source ?? null,
+    dry_run: dryRun,
+    new_changes: allNewRecords.length
+  };
 }

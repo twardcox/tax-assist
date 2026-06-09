@@ -1,30 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import { spawn } from "node:child_process";
 import yaml from "js-yaml";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
+import { runTaxLawUpdate, SUPPORTED_TAX_LAW_SOURCES } from "../domain/taxLaw/updater";
 
-const KNOWN_SOURCES = new Set([
-  "federal_register",
-  "irs_news",
-  "irs_publications",
-  "internal_revenue_bulletin",
-  "treasury_regulations",
-  "congress_legislation",
-  "tax_court",
-  "state_ca",
-  "state_ny",
-  "state_il",
-  "state_ma",
-  "state_nj",
-  "state_co",
-  "state_or",
-  "state_pa",
-  "state_oh",
-  "state_ga"
-]);
+const KNOWN_SOURCES = new Set<string>(SUPPORTED_TAX_LAW_SOURCES);
 
 let updateRunning = false;
 
@@ -118,29 +100,17 @@ export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> 
         return;
       }
 
-      const args = [path.join(projectPaths.root, "scripts", "update_tax_law.py"), "--days", String(days)];
-      if (source) {
-        args.push("--source", source);
-      }
-      if (dryRun) {
-        args.push("--dry-run");
-      }
-
-      const child = spawn("python", args, {
-        cwd: projectPaths.root,
-        stdio: "ignore",
-        detached: true
-      });
-
-      child.on("error", () => {
-        updateRunning = false;
-      });
-
-      child.on("exit", () => {
-        updateRunning = false;
-      });
-
-      child.unref();
+      runTaxLawUpdate({
+        source: (source as (typeof SUPPORTED_TAX_LAW_SOURCES)[number] | undefined) ?? null,
+        days,
+        dryRun
+      })
+        .catch(() => {
+          // Background update errors are surfaced via logs in runner/report files.
+        })
+        .finally(() => {
+          updateRunning = false;
+        });
     });
 
     return { status: "started", dry_run: dryRun, days, source: source ?? null };
