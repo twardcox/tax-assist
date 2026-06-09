@@ -1302,4 +1302,72 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("Federal tax-free growth still applies");
   });
+
+  test("augusta rule includes Python-style fair-market-rate and 15th-day guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "augusta-rule",
+        name: "Augusta Rule",
+        category: "business_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop"
+            }
+          ]
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.estimated_value).toContain("14 days");
+    expect(result.changes_needed).toContain("Ensure payment is actually made from business account to your personal account");
+    expect(result.changes_needed).toContain("Keep total rental days at 14 or fewer — the 15th day eliminates the exclusion");
+  });
+
+  test("cost segregation eligible-now branch includes Python ROI and bonus-rate guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "cost-segregation",
+        name: "Cost Segregation",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              acquisition: {
+                purchase_price: 1000000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.estimated_value).toContain("2025 bonus rate");
+    expect(result.next_steps).toContain("Expect study cost of $5,000-$20,000; typical ROI is 5-10x");
+    expect(result.next_steps).toContain("Act in 2025 or 2026 — bonus depreciation drops to 20% in 2026, 0% in 2027");
+  });
 });

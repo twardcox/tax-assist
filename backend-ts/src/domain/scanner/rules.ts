@@ -2442,7 +2442,7 @@ const rules: Record<string, RuleFn> = {
     if (price <= 0) {
       return {
         status: "nearly_eligible",
-        message: "Has rental property but purchase price is not recorded. Needed to assess cost segregation ROI.",
+        message: "Has rental property but purchase price not provided — needed to assess cost segregation ROI.",
         missing_facts: ["real_estate.acquisition.purchase_price"]
       };
     }
@@ -2450,21 +2450,21 @@ const rules: Record<string, RuleFn> = {
     if (price < 500000) {
       return {
         status: "eligible_if_changed",
-        message: `Property value of ~${price.toLocaleString()} may be too low for a cost segregation study to be cost-effective.`,
-        changes_needed: ["Acquire or aggregate higher-value properties where study ROI is clearer (often $1M+)"]
+        message: `Property value ~${price.toLocaleString()} — cost segregation study may not be cost-effective below $500,000.`,
+        changes_needed: ["Acquire higher-value properties where study ROI is clear (typically $1M+)"]
       };
     }
 
     const accelerated = price * 0.25 * 0.4;
     return {
       status: "eligible_now",
-      message: `Cost segregation study on a ${price.toLocaleString()} property could generate ~${Math.round(accelerated).toLocaleString()} in accelerated first-year deductions (using 40% bonus assumptions).`,
-      estimated_value: `~$${Math.round(accelerated).toLocaleString()} accelerated deduction`,
+      message: `Cost segregation study on $${price.toLocaleString()} property could generate ~${Math.round(accelerated).toLocaleString()} in accelerated first-year deductions (at 40% bonus rate).`,
+      estimated_value: `~$${Math.round(accelerated).toLocaleString()} accelerated deduction (2025 bonus rate)`,
       next_steps: [
         "Commission a cost segregation study from a qualified engineering firm",
-        "Expect study costs around $5,000-$20,000; evaluate ROI before ordering",
-        "If property was acquired in prior years, consider a lookback study with Form 3115",
-        "Act sooner while bonus depreciation percentages remain higher"
+        "Expect study cost of $5,000-$20,000; typical ROI is 5-10x",
+        "If property acquired in prior years: lookback study + Form 3115 (no amended returns needed)",
+        "Act in 2025 or 2026 — bonus depreciation drops to 20% in 2026, 0% in 2027"
       ]
     };
   },
@@ -2473,7 +2473,7 @@ const rules: Record<string, RuleFn> = {
     if (!facts.hasSelfEmployment()) {
       return {
         status: "not_applicable",
-        message: "Augusta Rule requires a business entity to rent a home from the owner."
+        message: "Augusta Rule requires a separate business entity to rent from the homeowner."
       };
     }
 
@@ -2485,24 +2485,22 @@ const rules: Record<string, RuleFn> = {
     if (!hasEligibleHome) {
       return {
         status: "nearly_eligible",
-        message: "Has business activity but no primary residence or second home is recorded.",
-        missing_facts: ["real_estate.properties (primary_residence or second_home)"]
+        message: "Has business but no primary residence or second home recorded.",
+        missing_facts: ["real_estate.properties (primary_residence)"]
       };
     }
 
     return {
       status: "eligible_if_changed",
-      message: "Augusta Rule strategy is available: rent your home to your business for up to 14 days per year tax-free.",
-      estimated_value: "$5,000-$25,000/year depending on fair-market daily rent",
+      message: "Augusta Rule available — rent your home to your business for up to 14 days/year tax-free.",
+      estimated_value: "$5,000 - $25,000/year (14 days × fair market daily rate)",
       changes_needed: [
-        "Schedule legitimate business meetings or events at home",
-        "Create a written rental agreement between owner and business",
-        "Invoice and pay fair-market rent from business account to personal account",
-        "Keep rental use to 14 or fewer days in the year"
-      ],
-      next_steps: [
-        "Document meeting purpose, attendees, and agenda",
-        "Keep comparable local rental data to support fair-market pricing"
+        "Schedule legitimate business meeting(s) or events at your home",
+        "Create a written rental agreement between yourself and your business",
+        "Invoice your business at fair market rental rate (document comparable rates)",
+        "Ensure payment is actually made from business account to your personal account",
+        "Document the meeting agenda and attendees",
+        "Keep total rental days at 14 or fewer — the 15th day eliminates the exclusion"
       ]
     };
   },
