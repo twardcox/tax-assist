@@ -40,6 +40,21 @@ describe("rules parity", () => {
     expect(missing).toEqual([]);
   });
 
+  test("every direct regression test targets a current scanner rule id", () => {
+    const rulesSource = readFileSync("src/domain/scanner/rules.ts", "utf8");
+    const testSource = readFileSync("test/rules.test.ts", "utf8");
+
+    const ruleIds = new Set(
+      Array.from(rulesSource.matchAll(/^\s*"([a-z0-9-]+)": \(_benefit, facts\) => \{/gm), (match) => match[1])
+    );
+    const testIds = Array.from(testSource.matchAll(/id:\s*"([a-z0-9-]+)"/g), (match) => match[1]).filter(
+      (id) => id !== "some-obscure-benefit"
+    );
+
+    const stale = Array.from(new Set(testIds)).filter((id) => !ruleIds.has(id));
+    expect(stale).toEqual([]);
+  });
+
   test("unknown benefit returns unknown status", () => {
     const result = evaluateBenefit(
       {
