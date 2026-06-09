@@ -294,6 +294,33 @@ describe("rules parity", () => {
     expect(result.next_steps).toContain("File before the county deadline (most states: March 1)");
   });
 
+  test("county homestead does not require state when county is present", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-homestead-exemption",
+        name: "County Homestead Exemption",
+        category: "county_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { county: "Allegheny" }
+        },
+        real_estate: {
+          properties: [{ property_type: "primary_residence" }]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("Allegheny County");
+    expect(result.missing_facts).toEqual([]);
+  });
+
   test("state homestead is not applicable with no state primary residence data", () => {
     const result = evaluateBenefit(
       {
@@ -1251,5 +1278,28 @@ describe("rules parity", () => {
 
     expect(result.status).toBe("eligible_now");
     expect(result.message).toContain("home-state 529 plan");
+  });
+
+  test("state 529 deduction not-applicable branch includes federal growth note for non-deduction states", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-529-deduction",
+        name: "State 529 Deduction",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { state: "CA" }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("Federal tax-free growth still applies");
   });
 });

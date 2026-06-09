@@ -1424,19 +1424,12 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    if (!state || !county) {
-      return {
-        status: "nearly_eligible",
-        message: "Primary residence found, but state/county info is incomplete for the county exemption.",
-        missing_facts: ["household.residence.state", "household.residence.county"]
-      };
-    }
-
-    const location = `${county} County, ${state}`;
+    const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
     return {
       status: "nearly_eligible",
       message:
         `You own a primary residence and likely qualify for ${location}'s county homestead exemption. Most counties administer their own exemption on top of the state exemption, but it is not automatic — you must apply with the county assessor.`,
+      missing_facts: county ? [] : ["household.residence.county"],
       next_steps: [
         `Search '${location} homestead exemption application' to find the county assessor portal`,
         "Gather deed/mortgage statement + government ID showing current address",
@@ -2534,7 +2527,7 @@ const rules: Record<string, RuleFn> = {
     if (!STATES_WITH_529_DEDUCTION.has(state)) {
       return {
         status: "not_applicable",
-        message: `${state} is not currently in the modeled list of states with a 529 deduction or credit.`
+        message: `${state} does not offer a state income tax deduction or credit for 529 contributions (as of 2025). Federal tax-free growth still applies.`
       };
     }
 
