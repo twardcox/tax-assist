@@ -2622,7 +2622,7 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "nearly_eligible",
         message:
-          "Has self-employment but net profit not provided. Needed to calculate SEP contribution limit.",
+          "Has self-employment but net profit not provided — needed to calculate SEP contribution limit.",
         missing_facts: ["businesses.financials.net_profit_loss"]
       };
     }
@@ -2637,11 +2637,12 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "nearly_eligible",
         message:
-          `SEP-IRA not yet established. Can contribute up to $${maxContrib.toLocaleString()} for this tax year.`,
+          `SEP-IRA not yet established. Can contribute up to $${maxContrib.toLocaleString()} for tax year ${facts.taxYear}.`,
         estimated_value: `Up to $${maxContrib.toLocaleString()} deductible contribution`,
         next_steps: [
-          "Open SEP-IRA at a brokerage custodian.",
-          "Establish and fund by filing deadline (including extension)."
+          "Open SEP-IRA at Fidelity, Vanguard, or Schwab (takes 15 minutes)",
+          "Can establish and fund up to October 15 (with extension)",
+          `Max contribution: $${maxContrib.toLocaleString()}`
         ]
       };
     }
@@ -2650,15 +2651,15 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "eligible_now",
         message:
-          `SEP-IRA established. $${remaining.toLocaleString()} contribution room remaining (${contributionsYtd.toLocaleString()} contributed).`,
+          `SEP-IRA established. $${remaining.toLocaleString()} of contribution room remaining ($${contributionsYtd.toLocaleString()} contributed of $${maxContrib.toLocaleString()} max).`,
         estimated_value: `Up to $${remaining.toLocaleString()} additional deductible contribution`,
-        next_steps: [`Contribute up to $${remaining.toLocaleString()} before filing deadline.`]
+        next_steps: [`Contribute up to $${remaining.toLocaleString()} before October 15`]
       };
     }
 
     return {
       status: "not_applicable",
-      message: "SEP-IRA appears fully funded for the year."
+      message: `SEP-IRA fully funded for the year ($${contributionsYtd.toLocaleString()} of $${maxContrib.toLocaleString()} max contributed).`
     };
   },
 
@@ -2674,8 +2675,8 @@ const rules: Record<string, RuleFn> = {
     if (employeeCount > 0) {
       return {
         status: "not_applicable",
-        message: "Solo 401(k) is generally unavailable when the business has W-2 employees (other than spouse).",
-        changes_needed: ["Consider SIMPLE IRA or Safe Harbor 401(k) options for businesses with employees"]
+        message: "Solo 401(k) not available when business has W-2 employees (other than owner's spouse).",
+        changes_needed: ["Consider SIMPLE IRA or Safe Harbor 401(k) for businesses with employees"]
       };
     }
 
@@ -2691,24 +2692,25 @@ const rules: Record<string, RuleFn> = {
     if (!facts.solo401kEstablished()) {
       return {
         status: "nearly_eligible",
-        message: `Solo 401(k) is not yet established. It must be set up by December 31 to contribute for the tax year.`,
+        message: `Solo 401(k) not yet established. Must be set up by December 31 to contribute for ${facts.taxYear}.`,
         estimated_value: netProfit > 0 ? `Up to $${Math.round(maxTotal).toLocaleString()} in combined contributions` : "Depends on net profit",
         next_steps: [
-          "Open a Solo 401(k) plan before year-end",
-          "Elect employee deferrals by December 31",
-          "Fund employer contribution by filing deadline (with extension)"
+          "Open Solo 401(k) at Fidelity (free plan, no admin fees)",
+          "MUST be established by December 31 — cannot retroactively create",
+          "Employee deferrals also due by December 31",
+          "Employer profit-sharing contribution can be made up to October 15"
         ]
       };
     }
 
     return {
       status: "eligible_now",
-      message: `Solo 401(k) is established. Estimated max combined contribution is ~${Math.round(maxTotal).toLocaleString()}.`,
+      message: `Solo 401(k) established. Max combined contribution: ~${Math.round(maxTotal).toLocaleString()}.`,
       estimated_value: `Up to $${Math.round(maxTotal).toLocaleString()} tax-deferred`,
       next_steps: [
-        `Employee deferral up to ${employeeLimit.toLocaleString()} must be elected by December 31`,
-        `Employer contribution up to ${Math.max(0, Math.round(maxEmployer)).toLocaleString()} can generally be funded by filing deadline`,
-        "Evaluate Roth Solo 401(k) option if available"
+        `Employee deferral: up to $${employeeLimit.toLocaleString()} — must elect by December 31`,
+        `Employer contribution: up to $${Math.max(0, Math.round(maxEmployer)).toLocaleString()} — can fund by October 15`,
+        "Consider Roth Solo 401(k) option for tax-free growth"
       ]
     };
   },

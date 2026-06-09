@@ -1370,4 +1370,86 @@ describe("rules parity", () => {
     expect(result.next_steps).toContain("Expect study cost of $5,000-$20,000; typical ROI is 5-10x");
     expect(result.next_steps).toContain("Act in 2025 or 2026 — bonus depreciation drops to 20% in 2026, 0% in 2027");
   });
+
+  test("sep ira unestablished branch includes Python October 15 and custodian guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "sep-ira-contribution",
+        name: "SEP-IRA Contribution",
+        category: "retirement_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              financials: {
+                net_profit_loss: 100000
+              }
+            }
+          ]
+        },
+        retirement: {
+          sep_ira: {
+            established: false,
+            contributions_ytd: 0
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("for tax year 2025");
+    expect(result.next_steps).toContain("Can establish and fund up to October 15 (with extension)");
+  });
+
+  test("solo 401k established branch uses Python-style max and October 15 guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "solo-401k",
+        name: "Solo 401(k)",
+        category: "retirement_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          taxpayer: {
+            age: 45
+          }
+        },
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              financials: {
+                net_profit_loss: 100000
+              },
+              employees: {
+                w2_employees_count: 0
+              }
+            }
+          ]
+        },
+        retirement: {
+          solo_401k: {
+            established: true
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("Max combined contribution");
+    expect(result.next_steps?.some((step) => step.includes("Employer contribution: up to $"))).toBe(true);
+    expect(result.next_steps?.some((step) => step.includes("can fund by October 15"))).toBe(true);
+  });
 });
