@@ -598,4 +598,62 @@ describe("rules parity", () => {
     expect(result.message).toContain("refundable");
     expect(result.estimated_value).toContain("refundable credit");
   });
+
+  test("net unrealized appreciation is not applicable with only social security income", () => {
+    const result = evaluateBenefit(
+      {
+        id: "net-unrealized-appreciation",
+        name: "Net Unrealized Appreciation",
+        category: "retirement_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        income: {
+          social_security: {
+            gross_benefits: 25000
+          }
+        },
+        retirement: {
+          employer_plans: {}
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("401k/profit-sharing plan");
+  });
+
+  test("installment sale uses top-level current_value and purchase_price for appreciated property", () => {
+    const result = evaluateBenefit(
+      {
+        id: "installment-sale",
+        name: "Installment Sale",
+        category: "capital_gains",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              status: "held",
+              purchase_price: 300000,
+              current_value: 460000
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("seller financing");
+  });
 });

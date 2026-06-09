@@ -1000,9 +1000,9 @@ const rules: Record<string, RuleFn> = {
 
   "net-unrealized-appreciation": (_benefit, facts) => {
     const hasW2 = facts.hasW2Income();
-    const hasRetirementIncome = facts.hasRetirementIncome();
+    const hasRetirementDistributions = facts.hasRetirementDistributions();
 
-    if (!hasW2 && !hasRetirementIncome) {
+    if (!hasW2 && !hasRetirementDistributions) {
       return {
         status: "not_applicable",
         message: "NUA strategy applies to employees with employer stock in a 401k/profit-sharing plan."
@@ -1013,7 +1013,7 @@ const rules: Record<string, RuleFn> = {
     const employerPlans = (retirement?.employer_plans as Record<string, unknown> | undefined) ?? {};
     const has401k = Boolean(employerPlans.traditional_401k || employerPlans.profit_sharing);
 
-    if (!has401k && !hasRetirementIncome) {
+    if (!has401k && !hasRetirementDistributions) {
       return {
         status: "nearly_eligible",
         message:
@@ -2219,10 +2219,11 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const appreciated = facts.properties().filter(
-      (property) => Number((property.acquisition as Record<string, unknown> | undefined)?.current_market_value ?? 0) >
-        Number((property.acquisition as Record<string, unknown> | undefined)?.purchase_price ?? 0)
-    );
+    const appreciated = facts.properties().filter((property) => {
+      const currentValue = Number(property.current_value ?? 0);
+      const purchasePrice = Number(property.purchase_price ?? 0);
+      return currentValue > purchasePrice;
+    });
     if (appreciated.length > 0) {
       return {
         status: "eligible_if_changed",

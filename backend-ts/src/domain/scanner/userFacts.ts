@@ -451,6 +451,11 @@ export class UserFacts {
     return retirementTotal || this.socialSecurityBenefits() > 0;
   }
 
+  hasRetirementDistributions(): boolean {
+    const distributions = this.retirementDistributions();
+    return Object.values(distributions).some((value) => toNumber(value) > 0);
+  }
+
   dependents(): Array<Record<string, unknown>> {
     const deps = toObject(this.data.dependents);
     return toObjectArray(deps.dependents);
