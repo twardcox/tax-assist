@@ -2,7 +2,7 @@
 **Universal Tax Benefit Intelligence System**
 **Project root:** `d:\programs\tax-assist`
 **Last updated:** 2026-06-05
-**Python:** 3.14.5 | **Node:** npm (frontend)
+**Backend Runtime:** TypeScript/Fastify (`backend-ts`) | **Legacy Python:** retained for migration references
 
 ---
 
@@ -13,18 +13,18 @@
 **Auth:** JWT self-registration · **DB:** SQLite (29 tables) · **Users:** multi-user, fully isolated
 **Documents:** Stored as BLOBs in `documents` table — no filesystem dependency
 
-### Start the full stack
+### Start the full stack (TypeScript backend)
 ```powershell
 # Load env vars first (required for AI features)
 Get-Content .env | ForEach-Object { if ($_ -match '^([^#=]+)=(.*)$') { [System.Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim()) } }
 
-# Terminal 1 — backend (migrates YAML → DB automatically on first run)
-python -m uvicorn api.main:app --reload --port 8000
+# Terminal 1 — backend-ts
+cd backend-ts; npm run dev
 
 # Terminal 2 — frontend
 cd frontend && npm run dev
 ```
-- API + docs: http://localhost:8000 / http://localhost:8000/docs
+- API health: http://localhost:8000/api/health
 - App: http://localhost:5173 → redirects to `/login`
 
 **Default credentials (auto-created on first run from existing YAML data):**
@@ -32,7 +32,7 @@ cd frontend && npm run dev
 
 **Test user (rich profile, 10 eligible benefits):**
 - Email: `alex.carter@example.com` · Password: `Test1234!`
-- Re-create: `python scripts/create_test_user.py`
+- Re-create (legacy helper): `python scripts/create_test_user.py`
 
 ---
 

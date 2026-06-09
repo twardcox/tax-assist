@@ -83,10 +83,12 @@ utbis/
 
 ## Getting Started
 
-1. Edit files in `user_data/` with your actual tax facts
-2. Run `scripts/scan_opportunities.py` to generate your opportunity report
-3. Review `reports/opportunity_report.md` for matches and near-misses
-4. Generate `reports/cpa_packet.md` for professional review
+1. Start the TypeScript backend:
+	- `cd backend-ts && npm install && npm run dev`
+2. Start the frontend:
+	- `cd frontend && npm install && npm run dev`
+3. Open the app at `http://localhost:5173` (API health at `http://localhost:8000/api/health`)
+4. Legacy Python scripts in `scripts/` remain available during migration, but the primary runtime path is `backend-ts`.
 
 ## Eligibility Status Legend
 
