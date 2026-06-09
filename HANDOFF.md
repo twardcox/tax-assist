@@ -32,7 +32,7 @@ cd frontend && npm run dev
 
 **Test user (rich profile, 10 eligible benefits):**
 - Email: `alex.carter@example.com` · Password: `Test1234!`
-- Re-create (legacy helper): `python scripts/create_test_user.py`
+- Re-create (TypeScript helper): `cd backend-ts && npm run seed:test-user`
 
 ---
 

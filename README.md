@@ -88,7 +88,9 @@ utbis/
 2. Start the frontend:
 	- `cd frontend && npm install && npm run dev`
 3. Open the app at `http://localhost:5173` (API health at `http://localhost:8000/api/health`)
-4. Legacy Python scripts in `scripts/` remain available during migration, but the primary runtime path is `backend-ts`.
+4. Seed the canonical scanner test profile when needed:
+	- `cd backend-ts && npm run seed:test-user`
+5. Legacy Python scripts in `scripts/` remain available during migration, but the primary runtime path is `backend-ts`.
 
 ## Eligibility Status Legend
 
