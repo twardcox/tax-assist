@@ -462,9 +462,9 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "nearly_eligible",
-      message: "Lifetime Learning Credit can apply to post-secondary education (including grad/professional programs).",
+      message: "Lifetime Learning Credit available for any post-secondary education (grad school, professional courses).",
       missing_facts: ["dependents.education.tuition_paid"],
-      next_steps: ["Record tuition expenses and collect Form 1098-T"]
+      next_steps: ["Record tuition expenses in dependents.yaml", "Collect Form 1098-T"]
     };
   },
 

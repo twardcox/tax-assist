@@ -240,4 +240,39 @@ describe("rules parity", () => {
     expect(result.status).toBe("nearly_eligible");
     expect(result.message).toContain("property tax assessment freeze");
   });
+
+  test("lifetime learning credit is not applicable above AGI limit", () => {
+    const result = evaluateBenefit(
+      {
+        id: "lifetime-learning-credit",
+        name: "Lifetime Learning Credit",
+        category: "education_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 120000
+        },
+        dependents: {
+          dependents: [
+            {
+              name: "Student One",
+              education: {
+                school_level: "graduate",
+                tuition_paid: 15000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("above Lifetime Learning Credit limit");
+  });
 });
