@@ -1348,7 +1348,7 @@ const rules: Record<string, RuleFn> = {
     if (itemizing === false) {
       return {
         status: "eligible_if_changed",
-        message: "Has mortgage interest but not itemizing. Deduction only applies when itemizing.",
+        message: "Has mortgage interest but not itemizing — deduction only applies when itemizing.",
         changes_needed: ["Calculate if total itemized deductions exceed standard deduction"]
       };
     }
@@ -1356,7 +1356,7 @@ const rules: Record<string, RuleFn> = {
     if (interest > 0) {
       return {
         status: "eligible_now",
-        message: `Mortgage interest of ~${interest.toLocaleString()} is deductible if itemizing.`,
+        message: `Mortgage interest ~$${interest.toLocaleString()} deductible if itemizing.`,
         estimated_value: `~$${interest.toLocaleString()}/year deduction`,
         next_steps: ["Collect Form 1098 from lender", "Report on Schedule A"]
       };
@@ -1364,7 +1364,7 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "nearly_eligible",
-      message: "Has real estate but mortgage interest amount is not recorded.",
+      message: "Has real estate but mortgage interest amount not recorded.",
       missing_facts: ["real_estate.financing.mortgage_interest_paid"]
     };
   },
@@ -1375,14 +1375,14 @@ const rules: Record<string, RuleFn> = {
     if (itemizing === false) {
       return {
         status: "not_applicable",
-        message: "Not itemizing. SALT deduction only applies when itemizing."
+        message: "Not itemizing — SALT deduction only applies when itemizing."
       };
     }
 
     if (itemizing === null) {
       return {
         status: "nearly_eligible",
-        message: "Itemization status not confirmed. SALT deduction (up to $10,000) is available if itemizing.",
+        message: "Itemization status not confirmed — SALT deduction (up to $10,000) available if itemizing.",
         missing_facts: ["household.itemizing_deductions"]
       };
     }
@@ -2762,11 +2762,11 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "nearly_eligible",
         message:
-          "Not confirmed on HDHP. Switching to a qualifying HDHP unlocks HSA triple-tax advantage.",
-        missing_facts: ["healthcare.insurance.hdhp_enrolled"],
+          "Not confirmed on HDHP. Switching to a qualifying HDHP unlocks the HSA triple tax advantage.",
+        missing_facts: ["healthcare.hdhp_enrolled"],
         changes_needed: [
-          "Switch to a qualifying HDHP plan.",
-          "Open an HSA after HDHP enrollment."
+          "Switch to a High Deductible Health Plan (min deductible $1,650 self / $3,300 family for 2025)",
+          "Open HSA account at Fidelity (no fees) after HDHP enrollment"
         ]
       };
     }
@@ -2790,8 +2790,8 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `HDHP enrolled. HSA contribution available. $${remaining.toLocaleString()} of $${limit.toLocaleString()} limit remaining.`,
-      estimated_value: `$${remaining.toLocaleString()} deductible contribution plus tax-free growth`,
+      message: `HDHP enrolled — HSA contribution available. $${remaining.toLocaleString()} of $${limit.toLocaleString()} limit remaining.`,
+      estimated_value: `$${remaining.toLocaleString()} deductible contribution + tax-free growth`,
       next_steps: nextSteps
     };
   },

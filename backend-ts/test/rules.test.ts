@@ -1963,6 +1963,127 @@ describe("rules parity", () => {
     expect(result.next_steps?.[0]).toContain("avoid capital gains AND get full FMV deduction");
   });
 
+  test("mortgage interest deduction uses Python itemizing-required wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "mortgage-interest-deduction",
+        name: "Mortgage Interest Deduction",
+        category: "itemized_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          itemizing_deductions: false
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence",
+              financing: {
+                mortgage_interest_paid: 12000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("deduction only applies when itemizing");
+  });
+
+  test("salt deduction includes Python itemization-status wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "salt-deduction",
+        name: "SALT Deduction",
+        category: "itemized_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          itemizing_deductions: null
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("SALT deduction (up to $10,000) available if itemizing");
+    expect(result.missing_facts).toContain("household.itemizing_deductions");
+  });
+
+  test("hsa triple-tax advantage nearly-eligible branch uses Python HDHP guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "hsa-triple-tax-advantage",
+        name: "HSA Triple Tax Advantage",
+        category: "healthcare",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        healthcare: {
+          hdhp_enrolled: false,
+          coverage_type: "marketplace"
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("HSA triple tax advantage");
+    expect(result.missing_facts).toContain("healthcare.hdhp_enrolled");
+    expect(result.changes_needed?.[0]).toContain("High Deductible Health Plan");
+  });
+
+  test("hsa triple-tax advantage eligible-now branch includes catch-up and investment step", () => {
+    const result = evaluateBenefit(
+      {
+        id: "hsa-triple-tax-advantage",
+        name: "HSA Triple Tax Advantage",
+        category: "healthcare",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        healthcare: {
+          insurance: {
+            hdhp_enrolled: true,
+            hdhp_coverage_level: "family"
+          },
+          health_savings_account: {
+            contributions_ytd: 3000,
+            existing_balance: 5000,
+            investment_account_within_hsa: false
+          }
+        },
+        household: {
+          taxpayer: {
+            age: 56
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("$6,550 of $9,550 limit remaining");
+    expect(result.estimated_value).toContain("$6,550 deductible contribution + tax-free growth");
+    expect(result.next_steps?.[1]).toContain("Invest HSA balance ($5,000)");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {
