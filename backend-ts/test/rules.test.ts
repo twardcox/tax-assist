@@ -893,4 +893,53 @@ describe("rules parity", () => {
     expect(result.missing_facts).toContain("income.investment_income.long_term_capital_gains or investments.taxable_accounts");
     expect(result.changes_needed).toContain("Identify taxable brokerage holdings with unrealized long-term gains");
   });
+
+  test("opportunity zone investment eligible now uses Python-style QOF and deferred-gain wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "opportunity-zone-investment",
+        name: "Opportunity Zone Investment",
+        category: "investment_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        income: {
+          investment_income: {
+            long_term_capital_gains: 25000
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("Opportunity Zone investment would defer this tax");
+    expect(result.next_steps).toContain("10+ year hold permanently excludes QOF appreciation from income");
+  });
+
+  test("annual gift exclusion not-applicable branch uses Python-style estate-planning prompt", () => {
+    const result = evaluateBenefit(
+      {
+        id: "annual-gift-tax-exclusion",
+        name: "Annual Gift Tax Exclusion",
+        category: "estate_planning",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        goals: {
+          transfer_wealth_to_heirs: false
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("Update goals.yaml if estate planning becomes a priority");
+  });
 });

@@ -817,20 +817,20 @@ const rules: Record<string, RuleFn> = {
     if (ltcg > 0) {
       return {
         status: "eligible_now",
-        message: `Recorded long-term gains of ${ltcg.toLocaleString()}. Opportunity Zone investment can defer this gain.`,
-        estimated_value: `Deferred tax on $${ltcg.toLocaleString()} plus potential 10-year appreciation exclusion`,
+        message: `Capital gains of ~$${ltcg.toLocaleString()} recorded — Opportunity Zone investment would defer this tax.`,
+        estimated_value: `Deferred tax on $${ltcg.toLocaleString()} + potential 10-year exclusion on QOF appreciation`,
         next_steps: [
-          "Identify and invest in a Qualified Opportunity Fund within 180 days of gain recognition",
-          "Plan for deferred-gain recognition deadlines",
-          "Track annual reporting on Form 8997"
+          "Identify and invest in a Qualified Opportunity Fund (QOF) within 180 days of gain recognition",
+          "Note: deferred gain recognized December 31, 2026 — plan for that tax event",
+          "10+ year hold permanently excludes QOF appreciation from income"
         ]
       };
     }
 
     return {
       status: "future_opportunity",
-      message: "No realized long-term capital gains found. Opportunity Zone deferral is relevant after gain events.",
-      next_steps: ["Revisit before any planned sale of appreciated assets"]
+      message: "No realized capital gains recorded. Opportunity Zone deferral becomes relevant when selling appreciated assets.",
+      next_steps: ["Revisit before any planned sale of stocks, real estate, or business assets"]
     };
   },
 
@@ -1177,17 +1177,19 @@ const rules: Record<string, RuleFn> = {
     if (transferGoal === false) {
       return {
         status: "not_applicable",
-        message: "Wealth transfer is not currently a stated goal."
+        message: "Wealth transfer is not a stated goal. Update goals.yaml if estate planning becomes a priority."
       };
     }
 
     return {
       status: transferGoal ? "eligible_now" : "nearly_eligible",
-      message: "Annual gift tax exclusion can remove $19,000 per recipient ($38,000 MFJ) from taxable estate each year.",
-      estimated_value: "$19,000-$38,000 per recipient per year transferred without gift tax",
+      message: "Annual gift tax exclusion: $19,000 per recipient per year (2025) — $38,000 per recipient for married couples.",
+      estimated_value: "$19,000-$38,000 per recipient per year removed from taxable estate",
       next_steps: [
-        "Identify intended recipients and year-end transfer plan",
-        "Track gifts and consider 529 superfunding strategy where appropriate"
+        "Identify recipients: children, grandchildren, siblings, etc.",
+        "Make gifts by December 31",
+        "Direct tuition/medical payments to institutions are additionally excluded (no dollar limit)",
+        "Consider 529 superfunding: 5 years of exclusion at once ($95,000 single / $190,000 MFJ per beneficiary)"
       ]
     };
   },
