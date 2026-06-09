@@ -2709,27 +2709,23 @@ const rules: Record<string, RuleFn> = {
 
     const assetCount = facts.firstBusinessAssetsPlacedInServiceCount();
     if (assetCount > 0) {
-      const totalCost = facts.firstBusinessAssetsPlacedInServiceTotalCost();
       return {
         status: "eligible_now",
-        message: `Business assets were placed in service (${assetCount} item${assetCount === 1 ? "" : "s"}). Section 179 immediate expensing may be available.`,
-        estimated_value: totalCost > 0
-          ? `Up to ~$${Math.round(totalCost).toLocaleString()} immediate deduction (subject to annual limits and taxable income)`
-          : "Immediate deduction may be available, subject to annual limits and taxable income",
+        message: "Business assets placed in service — Section 179 immediate expensing available.",
         next_steps: [
-          "Complete Form 4562 and confirm each asset is Section 179 eligible",
-          "Section 179 is income-limited; apply bonus depreciation to remaining basis where appropriate"
+          "Complete Form 4562",
+          "Apply Section 179 before bonus depreciation on same assets"
         ]
       };
     }
 
     return {
       status: "nearly_eligible",
-      message: "Has a business. Section 179 can apply if equipment or vehicles are purchased and placed in service this year.",
+      message: "Has business — Section 179 available if equipment or vehicles are purchased this year.",
       missing_facts: ["businesses.depreciation.assets_placed_in_service"],
       next_steps: [
-        "Record any business assets purchased and placed in service",
-        "Evaluate year-end equipment purchases only if they fit business needs"
+        "Record any business assets purchased in businesses.yaml",
+        "Consider whether needed equipment purchase makes sense before year-end"
       ]
     };
   },

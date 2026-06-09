@@ -1811,6 +1811,105 @@ describe("rules parity", () => {
     expect(result.next_steps).toContain("Do NOT receive any proceeds — all funds must go directly to QI");
   });
 
+  test("section 179 expensing eligible-now branch uses Python form and sequencing guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "section-179-expensing",
+        name: "Section 179 Expensing",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              depreciation: {
+                assets_placed_in_service: [
+                  {
+                    description: "Laptop",
+                    placed_in_service_date: "2025-03-01",
+                    purchase_price: 2500
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("Section 179 immediate expensing available");
+    expect(result.next_steps).toContain("Complete Form 4562");
+    expect(result.next_steps).toContain("Apply Section 179 before bonus depreciation on same assets");
+  });
+
+  test("section 179 expensing nearly-eligible branch uses Python purchase-record guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "section-179-expensing",
+        name: "Section 179 Expensing",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("Section 179 available if equipment or vehicles are purchased this year");
+    expect(result.next_steps).toContain("Record any business assets purchased in businesses.yaml");
+  });
+
+  test("business vehicle deduction eligible-now branch uses Python mileage formula guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "business-vehicle-deduction",
+        name: "Business Vehicle Deduction",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              vehicle: {
+                business_vehicle: true,
+                business_miles: 10000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("10,000 miles");
+    expect(result.message).toContain("$0.67");
+    expect(result.next_steps).toContain("Compare standard mileage vs. actual expense method");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {
