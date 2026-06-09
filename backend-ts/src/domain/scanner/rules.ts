@@ -869,21 +869,26 @@ const rules: Record<string, RuleFn> = {
     if (ltcg > 0) {
       return {
         status: "eligible_now",
-        message: `0% LTCG bracket planning available with ~${headroom.toLocaleString()} headroom and current LTCG ${ltcg.toLocaleString()}.`,
-        estimated_value: `Potentially tax-free harvest of up to $${Math.min(ltcg, headroom).toLocaleString()} of gains`,
+        message: `0% long-term capital gains rate applies. You have ~$${headroom.toLocaleString()} of 0% gain headroom (AGI $${agi.toLocaleString()} vs. $${zeroPctCeiling.toLocaleString()} ceiling). Current LTCG recorded: $${ltcg.toLocaleString()}.`,
+        estimated_value: `Permanent elimination of federal tax on up to $${Math.min(ltcg, headroom).toLocaleString()} of gains`,
         next_steps: [
-          `Realize up to $${headroom.toLocaleString()} of 12+ month gains this year`,
-          "Rebuy positions if desired (wash sale rule does not apply to gains)",
-          "Model total taxable income to avoid crossing into the 15% bracket"
+          `Sell appreciated positions held 12+ months to realize up to $${headroom.toLocaleString()} in gains this year`,
+          "Immediately repurchase same shares — no wash sale rule for gains (only for losses)",
+          "New cost basis eliminates deferred gain permanently",
+          "Model with tax software to stay under the ceiling — one dollar over shifts the entire gain to 15%"
         ]
       };
     }
 
     return {
       status: "eligible_if_changed",
-      message: `You appear in/near the 0% LTCG bracket with ~${headroom.toLocaleString()} headroom, but no long-term gains are recorded.`,
-      missing_facts: ["income.investment_income.long_term_capital_gains"],
-      changes_needed: ["Identify appreciated long-term positions in taxable accounts"]
+      message: `You are in the 0% LTCG bracket (AGI $${agi.toLocaleString()}, $${headroom.toLocaleString()} headroom). No long-term capital gains recorded — if you hold appreciated assets, this is a harvesting opportunity.`,
+      missing_facts: ["income.investment_income.long_term_capital_gains or investments.taxable_accounts"],
+      changes_needed: ["Identify taxable brokerage holdings with unrealized long-term gains"],
+      next_steps: [
+        "Check brokerage for appreciated positions held 12+ months",
+        `You can realize up to $${headroom.toLocaleString()} in gains tax-free this year`
+      ]
     };
   },
 

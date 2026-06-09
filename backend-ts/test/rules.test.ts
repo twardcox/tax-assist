@@ -833,4 +833,64 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("contribute directly to Roth IRA");
   });
+
+  test("capital gains harvesting eligible now includes permanent elimination wording and detailed steps", () => {
+    const result = evaluateBenefit(
+      {
+        id: "capital-gains-harvesting",
+        name: "Capital Gains Harvesting",
+        category: "investment_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 30000
+        },
+        income: {
+          investment_income: {
+            long_term_capital_gains: 10000
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.estimated_value).toContain("Permanent elimination of federal tax");
+    expect(result.next_steps).toContain("New cost basis eliminates deferred gain permanently");
+  });
+
+  test("capital gains harvesting eligible-if-changed includes brokerage missing facts wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "capital-gains-harvesting",
+        name: "Capital Gains Harvesting",
+        category: "investment_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 30000
+        },
+        income: {
+          investment_income: {
+            long_term_capital_gains: 0
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.missing_facts).toContain("income.investment_income.long_term_capital_gains or investments.taxable_accounts");
+    expect(result.changes_needed).toContain("Identify taxable brokerage holdings with unrealized long-term gains");
+  });
 });
