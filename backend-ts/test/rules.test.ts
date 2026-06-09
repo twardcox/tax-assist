@@ -446,6 +446,31 @@ describe("rules parity", () => {
     expect(result.missing_facts).toContain("healthcare.coverage_type");
   });
 
+  test("premium tax credit treats missing AGI with marketplace coverage as below-FPL not applicable", () => {
+    const result = evaluateBenefit(
+      {
+        id: "premium-tax-credit",
+        name: "Premium Tax Credit",
+        category: "healthcare",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        healthcare: {
+          insurance: {
+            coverage_type: "marketplace"
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("below 100% FPL");
+  });
+
   test("premium tax credit is not applicable when AGI is below 100% FPL", () => {
     const result = evaluateBenefit(
       {

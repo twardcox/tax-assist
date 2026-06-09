@@ -199,7 +199,7 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const agi = facts.estimatedAgi();
+    const agi = facts.estimatedAgi() ?? 0;
     const filingStatus = facts.filingStatus() ?? "single";
     const cliff = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? 400000 : 200000;
 
@@ -295,7 +295,7 @@ const rules: Record<string, RuleFn> = {
   },
 
   "earned-income-tax-credit": (_benefit, facts) => {
-    const agi = facts.estimatedAgi();
+    const agi = facts.estimatedAgi() ?? 0;
     const filingStatus = facts.filingStatus() ?? "single";
     const deps = facts.dependents().length;
     const fsKey = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? "mfj" : "single";
@@ -905,7 +905,7 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const agi = facts.estimatedAgi();
+    const agi = facts.estimatedAgi() ?? 0;
     const householdSize = facts.householdSize();
     const fplBase = 15060 + (householdSize - 1) * 5380;
     const fpl400 = fplBase * 4;
@@ -923,14 +923,6 @@ const rules: Record<string, RuleFn> = {
         message:
           "Self-employed without employer insurance - ACA Marketplace may provide a large Premium Tax Credit. Update healthcare.coverage_type if you purchase Marketplace insurance.",
         missing_facts: ["healthcare.coverage_type"]
-      };
-    }
-
-    if (agi == null) {
-      return {
-        status: "nearly_eligible",
-        message: "ACA Marketplace coverage found - enter AGI to calculate Premium Tax Credit amount.",
-        missing_facts: ["household.estimated_agi"]
       };
     }
 
