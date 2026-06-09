@@ -1432,14 +1432,16 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
+    const location = `${county} County, ${state}`;
     return {
-      status: "eligible_now",
-      message: `Primary residence in ${county}, ${state} should qualify for a county homestead exemption.`,
-      estimated_value: "Typically $50–$500+/year depending on county millage",
+      status: "nearly_eligible",
+      message:
+        `You own a primary residence and likely qualify for ${location}'s county homestead exemption. Most counties administer their own exemption on top of the state exemption, but it is not automatic — you must apply with the county assessor.`,
       next_steps: [
-        "File with the county assessor/property appraiser",
-        "Confirm the county deadline for the current tax year",
-        "Keep a copy of the deed and ID showing the address"
+        `Search '${location} homestead exemption application' to find the county assessor portal`,
+        "Gather deed/mortgage statement + government ID showing current address",
+        "File before the county deadline (most states: March 1)",
+        "Confirm you also have the state-level exemption — both layers are required separately"
       ]
     };
   },
@@ -2523,36 +2525,23 @@ const rules: Record<string, RuleFn> = {
     if (!facts.has529Account()) {
       return {
         status: "eligible_if_changed",
-        message: `${state} offers a state 529 deduction or credit. Open a home-state 529 account to claim it.`,
-        changes_needed: ["Open and fund a 529 plan aligned with your state's deduction rules"],
+        message: `${state} offers a 529 deduction — open a home-state 529 account to claim it.`,
+        changes_needed: ["Open a 529 college savings account with your home-state plan"],
         next_steps: [
-          `Research ${state} 529 plan details and contribution limits`,
-          "Contribute by year-end to maximize current-year state benefit"
-        ]
-      };
-    }
-
-    const contributions = facts.total529ContributionsThisYear();
-    if (contributions <= 0) {
-      return {
-        status: "eligible_if_changed",
-        message: `${state} 529 account is present, but no current-year contribution is recorded for state deduction/credit benefit.`,
-        missing_facts: ["investments.529_plans[*].contributions_this_year"],
-        changes_needed: ["Make and record current-year 529 contributions before year-end"],
-        next_steps: [
-          `Check ${state} annual deduction or credit limits per beneficiary`,
-          "Keep contribution confirmations for state return support"
+          `Research ${state}'s 529 plan at your state treasurer's website`,
+          "Open an account with a beneficiary — can be any family member",
+          "Contribute by December 31 to get the deduction for this tax year (PA allows by April 15)"
         ]
       };
     }
 
     return {
       status: "eligible_now",
-      message: `${state} offers a state tax benefit for 529 contributions, and ${contributions.toLocaleString()} is recorded this year.`,
+      message: `${state} offers a state income tax deduction/credit for contributions to the home-state 529 plan. Contribute by December 31 to claim the deduction this tax year.`,
       next_steps: [
-        "Confirm whether your state requires use of the in-state plan",
-        "Check annual state deduction caps per beneficiary",
-        "Keep contribution confirmations for state return support"
+        "Contribute to the home-state 529 plan (not an out-of-state plan — most states require home-state plan)",
+        "Check the annual deduction limit for your state (typically $2,500–$20,000 per beneficiary)",
+        "Consider superfunding: elect to spread 5 years of gifts ($95,000 single / $190,000 MFJ) into one contribution"
       ]
     };
   },

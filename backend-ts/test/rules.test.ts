@@ -267,6 +267,33 @@ describe("rules parity", () => {
     expect(result.message).toContain("applies to a primary residence");
   });
 
+  test("county homestead is nearly eligible with primary residence because county filing is required", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-homestead-exemption",
+        name: "County Homestead Exemption",
+        category: "county_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { state: "PA", county: "Allegheny" }
+        },
+        real_estate: {
+          properties: [{ property_type: "primary_residence" }]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("not automatic");
+    expect(result.next_steps).toContain("File before the county deadline (most states: March 1)");
+  });
+
   test("lifetime learning credit is not applicable above AGI limit", () => {
     const result = evaluateBenefit(
       {
@@ -1136,5 +1163,36 @@ describe("rules parity", () => {
     expect(result.status).toBe("nearly_eligible");
     expect(result.message).toContain("40% in 2025");
     expect(result.message).toContain("Rate drops to 20% in 2026");
+  });
+
+  test("state 529 deduction is eligible now when home-state 529 account exists even without contributions", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-529-deduction",
+        name: "State 529 Deduction",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { state: "PA" }
+        },
+        investments: {
+          "529_plans": [
+            {
+              beneficiary: "Child One",
+              balance: 0
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("home-state 529 plan");
   });
 });
