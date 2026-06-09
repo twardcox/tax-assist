@@ -1295,6 +1295,40 @@ describe("rules parity", () => {
     expect(result.message).toContain("moderate-income taxpayers");
   });
 
+  test("qbi deduction includes Python-style AGI-in-range phaseout note", () => {
+    const result = evaluateBenefit(
+      {
+        id: "qbi-deduction",
+        name: "QBI Deduction",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 210000
+        },
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              financials: {
+                net_profit_loss: 100000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("Note: AGI $210,000 is within phaseout planning range");
+  });
+
   test("s corp election returns not-applicable when entity is already s corp", () => {
     const result = evaluateBenefit(
       {

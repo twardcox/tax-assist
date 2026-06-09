@@ -170,6 +170,16 @@ function phaseoutNote(raw: unknown): string {
   return "";
 }
 
+function phaseoutRange(agi: number, fullBelow: number, zeroAbove: number): string {
+  if (agi < fullBelow) {
+    return "";
+  }
+  if (agi >= zeroAbove) {
+    return `AGI $${agi.toLocaleString()} is above phaseout — benefit fully phased out`;
+  }
+  return `AGI $${agi.toLocaleString()} is within phaseout planning range`;
+}
+
 function baseResult(benefit: RawBenefit): Omit<ScanResult, "status" | "message"> {
   const review = benefit.review_required as Record<string, unknown> | undefined;
 
@@ -1827,7 +1837,7 @@ const rules: Record<string, RuleFn> = {
       head_of_household: [197300, 247300],
       mfs: [197300, 247300]
     };
-    const [, hi] = thresholds[filingStatus.toLowerCase()] ?? thresholds.single;
+    const [lo, hi] = thresholds[filingStatus.toLowerCase()] ?? thresholds.single;
 
     if (netProfit <= 0) {
       return {
@@ -1839,7 +1849,7 @@ const rules: Record<string, RuleFn> = {
 
     let phaseout = "";
     if (agi) {
-      phaseout = `${agi >= hi ? "AGI above phaseout range" : `AGI ${agi.toLocaleString()} is within phaseout planning range`}`;
+      phaseout = phaseoutRange(agi, lo, hi);
       if (agi > hi) {
         const sstb = (biz.specified_service_trade as boolean | null | undefined) === true;
         if (sstb) {
