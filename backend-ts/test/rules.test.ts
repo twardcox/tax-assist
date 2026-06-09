@@ -1659,6 +1659,93 @@ describe("rules parity", () => {
     expect(result.next_steps?.some((step) => step.includes("can fund by October 15"))).toBe(true);
   });
 
+  test("passive activity loss is nearly eligible when rental property exists but AGI is missing", () => {
+    const result = evaluateBenefit(
+      {
+        id: "passive-activity-loss",
+        name: "Passive Activity Loss",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.estimated_agi");
+  });
+
+  test("passive activity loss in phaseout range uses Python-style phaseout note", () => {
+    const result = evaluateBenefit(
+      {
+        id: "passive-activity-loss",
+        name: "Passive Activity Loss",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          estimated_agi: 120000
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.phaseout_note).toContain("AGI $120,000 is within phaseout planning range");
+  });
+
+  test("passive activity loss is eligible-if-changed above full phaseout", () => {
+    const result = evaluateBenefit(
+      {
+        id: "passive-activity-loss",
+        name: "Passive Activity Loss",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          estimated_agi: 180000
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("fully phased out");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {

@@ -2132,7 +2132,7 @@ const rules: Record<string, RuleFn> = {
         status: "eligible_now",
         message: `Partial rental loss allowance available — ~${allowance.toLocaleString()} of the $25,000 limit (AGI ${agi.toLocaleString()}).`,
         estimated_value: `~$${Math.round(allowance).toLocaleString()} rental loss against ordinary income`,
-        phaseout_note: `AGI ${agi.toLocaleString()} is within passive loss phaseout range (100,000–150,000)`,
+        phaseout_note: phaseoutRange(agi, 100000, 150000),
         next_steps: ["Consider whether Real Estate Professional status applies"]
       };
     }
