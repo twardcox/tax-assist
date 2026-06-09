@@ -1746,6 +1746,71 @@ describe("rules parity", () => {
     expect(result.message).toContain("fully phased out");
   });
 
+  test("1031 exchange is nearly eligible when rental values are missing", () => {
+    const result = evaluateBenefit(
+      {
+        id: "1031-exchange",
+        name: "1031 Exchange",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              acquisition: {
+                purchase_price: 350000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("confirm current value");
+    expect(result.missing_facts).toContain("real_estate.acquisition.current_market_value");
+  });
+
+  test("1031 exchange eligible-now branch includes Python QI guidance wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "1031-exchange",
+        name: "1031 Exchange",
+        category: "real_estate_strategy",
+        jurisdiction: "federal",
+        risk_level: "medium",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              acquisition: {
+                purchase_price: 300000,
+                current_market_value: 500000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("1031 exchange would defer this tax on sale");
+    expect(result.estimated_value).toContain("+ depreciation recapture");
+    expect(result.next_steps).toContain("Engage a Qualified Intermediary (QI) BEFORE listing the property for sale");
+    expect(result.next_steps).toContain("Do NOT receive any proceeds — all funds must go directly to QI");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {

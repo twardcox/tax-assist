@@ -2165,7 +2165,7 @@ const rules: Record<string, RuleFn> = {
     if (purchase <= 0 || current <= 0) {
       return {
         status: "nearly_eligible",
-        message: "Has rental property. Confirm current value to assess potential gain for 1031 planning.",
+        message: "Has rental property — confirm current value to assess potential gain for 1031 planning.",
         missing_facts: ["real_estate.acquisition.purchase_price", "real_estate.acquisition.current_market_value"]
       };
     }
@@ -2174,18 +2174,18 @@ const rules: Record<string, RuleFn> = {
     if (gain <= 0) {
       return {
         status: "future_opportunity",
-        message: "No unrealized gain at current values. 1031 planning becomes relevant when selling at a gain.",
+        message: "No unrealized gain at current values. 1031 becomes relevant when you sell at a gain.",
         next_steps: ["Revisit when property has appreciated or before any planned sale"]
       };
     }
 
     return {
       status: "eligible_now",
-      message: `Estimated gain of ~${gain.toLocaleString()} on rental property. A 1031 exchange would defer this tax on sale.`,
-      estimated_value: `Deferred tax on ~${gain.toLocaleString()} gain plus depreciation recapture`,
+      message: `Estimated gain of ~${gain.toLocaleString()} on rental property — 1031 exchange would defer this tax on sale.`,
+      estimated_value: `Deferred tax on ~${gain.toLocaleString()} gain + depreciation recapture`,
       next_steps: [
-        "Engage a Qualified Intermediary before listing the property",
-        "Do not receive sale proceeds directly; funds must flow through the intermediary",
+        "Engage a Qualified Intermediary (QI) BEFORE listing the property for sale",
+        "Do NOT receive any proceeds — all funds must go directly to QI",
         "Identify replacement property within 45 days of closing",
         "Close replacement property within 180 days"
       ]
