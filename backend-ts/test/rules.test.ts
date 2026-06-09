@@ -1910,6 +1910,59 @@ describe("rules parity", () => {
     expect(result.next_steps).toContain("Compare standard mileage vs. actual expense method");
   });
 
+  test("charitable contribution uses Python itemizing-required wording when not itemizing", () => {
+    const result = evaluateBenefit(
+      {
+        id: "charitable-contribution-deduction",
+        name: "Charitable Contribution Deduction",
+        category: "itemized_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          itemizing_deductions: false
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("Not currently itemizing — charitable deduction only applies when itemizing");
+  });
+
+  test("charitable contribution includes Python appreciated-stock FMV guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "charitable-contribution-deduction",
+        name: "Charitable Contribution Deduction",
+        category: "itemized_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          itemizing_deductions: true
+        },
+        investments: {
+          taxable_accounts: [
+            {
+              unrealized_gains: 15000
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.next_steps?.[0]).toContain("avoid capital gains AND get full FMV deduction");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {

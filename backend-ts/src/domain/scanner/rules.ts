@@ -1198,7 +1198,7 @@ const rules: Record<string, RuleFn> = {
     if (itemizing === false) {
       return {
         status: "eligible_if_changed",
-        message: "Not currently itemizing. Charitable deduction only applies when itemizing.",
+        message: "Not currently itemizing — charitable deduction only applies when itemizing.",
         changes_needed: [
           "Calculate total itemized deductions (mortgage interest + SALT + charitable)",
           "If total exceeds standard deduction ($30,000 MFJ / $15,000 Single), itemize",
@@ -1210,7 +1210,7 @@ const rules: Record<string, RuleFn> = {
     if (itemizing === null) {
       return {
         status: "nearly_eligible",
-        message: "Itemization status not confirmed. Charitable deduction is valuable if itemizing.",
+        message: "Itemization status not confirmed — charitable deduction valuable if itemizing.",
         missing_facts: ["household.itemizing_deductions"],
         next_steps: ["Compare total itemized deductions to standard deduction amount"]
       };
@@ -1220,7 +1220,7 @@ const rules: Record<string, RuleFn> = {
     const nextSteps = ["Document all contributions. Written acknowledgment required for gifts over $250."];
     if (hasAppreciatedStock) {
       nextSteps.unshift(
-        "Donate appreciated stock directly instead of cash to avoid capital gains and potentially deduct full FMV"
+        "Donate appreciated stock directly instead of cash — avoid capital gains AND get full FMV deduction"
       );
     }
 
