@@ -187,4 +187,57 @@ describe("rules parity", () => {
     expect(result.status).toBe("eligible_now");
     expect(result.message).toContain("taxes only interest and dividend income");
   });
+
+  test("county senior freeze is future opportunity for ages 60-64", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-senior-property-tax-freeze",
+        name: "County Senior Property Tax Freeze",
+        category: "county_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          taxpayer: { age: 62 },
+          residence: { state: "PA", county: "Allegheny" }
+        },
+        real_estate: {
+          properties: [{ property_type: "primary_residence" }]
+        }
+      })
+    );
+
+    expect(result.status).toBe("future_opportunity");
+  });
+
+  test("county senior freeze is nearly eligible at 65+ with primary residence", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-senior-property-tax-freeze",
+        name: "County Senior Property Tax Freeze",
+        category: "county_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          taxpayer: { age: 67 },
+          residence: { state: "PA", county: "Allegheny" }
+        },
+        real_estate: {
+          properties: [{ property_type: "primary_residence" }]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("property tax assessment freeze");
+  });
 });

@@ -1570,35 +1570,42 @@ const rules: Record<string, RuleFn> = {
 
     if (!facts.hasPrimaryResidence()) {
       return {
-        status: "nearly_eligible",
-        message: "Primary residence not found. Senior freeze applies only to owner-occupied homes.",
-        missing_facts: ["real_estate.properties (primary_residence present)"]
+        status: "not_applicable",
+        message: "Senior property tax freeze requires owning a primary residence."
       };
     }
 
-    if (age == null) {
-      return {
-        status: "nearly_eligible",
-        message: "Primary residence found, but taxpayer age is missing. Senior freeze generally starts at 65.",
-        missing_facts: ["household.taxpayer.age"]
-      };
-    }
-
-    if (age < 65) {
+    if (age !== null && age < 60) {
       return {
         status: "not_applicable",
-        message: `Taxpayer age ${age} is below the usual 65+ senior freeze threshold.`
+        message: `Senior property tax freeze requires age 65+ (current age: ${age}). Return to this once you approach that threshold.`
       };
     }
 
+    if (age !== null && age >= 60 && age < 65) {
+      return {
+        status: "future_opportunity",
+        message:
+          `Age ${age} - most county senior freeze programs require age 65. Plan to apply as soon as you qualify to lock in the current assessed value.`,
+        next_steps: ["Note the county assessor deadline for the year you turn 65"]
+      };
+    }
+
+    const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
+    const ageLabel = age !== null ? `age ${age}` : "your age";
+
     return {
-      status: "eligible_now",
-      message: `Age ${age} with a primary residence${state && county ? ` in ${county}, ${state}` : ""} can qualify for a senior property tax freeze.`,
-      estimated_value: "Potentially hundreds to thousands per year in appreciating markets",
+      status: "nearly_eligible",
+      message:
+        `At ${ageLabel} you likely qualify for ${location}'s senior property tax assessment freeze. This locks your assessed value so your tax bill won't rise even as home values increase - potentially saving hundreds to thousands per year in appreciating markets.`,
+      missing_facts: age === null
+        ? ["household.taxpayer.age"]
+        : (county ? [] : ["household.residence.county"]),
       next_steps: [
-        "Apply with the county assessor as soon as you qualify",
-        "Verify whether an income cap applies in your county",
-        "Keep proof of age and ownership handy for the application"
+        `Contact ${location} assessor to confirm the senior freeze program and income limits`,
+        "Gather proof of age (driver's license or birth certificate) and property ownership documents",
+        "File before the county deadline (IL: July 1; TX/FL: April 30; others: typically March 1)",
+        "Renew annually if required - missing a year can reset the frozen value"
       ]
     };
   },
