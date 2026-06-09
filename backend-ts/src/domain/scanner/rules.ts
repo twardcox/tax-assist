@@ -327,14 +327,14 @@ const rules: Record<string, RuleFn> = {
     if (investmentIncome > 11950) {
       return {
         status: "not_applicable",
-        message: `Investment income ${investmentIncome.toLocaleString()} exceeds EITC limit ($11,950).`
+        message: `Investment income $${investmentIncome.toLocaleString()} exceeds $11,950 limit — EITC disqualified.`
       };
     }
 
     if (agi && agi > agiLimit) {
       return {
         status: "not_applicable",
-        message: `AGI ${agi.toLocaleString()} is above EITC limit of ${agiLimit.toLocaleString()} for ${filingStatus} with ${deps} dependent(s).`
+        message: `AGI $${agi.toLocaleString()} above EITC limit of $${agiLimit.toLocaleString()} for ${filingStatus} with ${deps} dependent(s).`
       };
     }
 
@@ -349,9 +349,9 @@ const rules: Record<string, RuleFn> = {
     const credit = maxCredits[depKey] ?? 8046;
     return {
       status: "eligible_now",
-      message: `EITC may be available, up to ${credit.toLocaleString()} with ${depKey} qualifying child(ren).`,
+      message: `EITC potentially available — up to $${credit.toLocaleString()} with ${depKey} qualifying child(ren).`,
       estimated_value: `Up to $${credit.toLocaleString()}/year (fully refundable)`,
-      next_steps: ["Confirm qualifying child details on Schedule EIC", "Verify all qualifying children have SSNs"]
+      next_steps: ["Confirm qualifying child details on Schedule EIC", "Verify all children have SSNs"]
     };
   },
 
@@ -1555,7 +1555,7 @@ const rules: Record<string, RuleFn> = {
       status: "nearly_eligible",
       message:
         `Many counties exempt solar and renewable energy installations from property reassessment. Verify whether ${location} offers this exemption before or after installing solar panels.`,
-      missing_facts: [] as string[] | undefined,
+      missing_facts: state && county ? [] : !state ? ["household.residence.state"] : ["household.residence.county"],
       next_steps: [
         `Search '${location} solar property tax exemption' or call the county assessor`,
         "If available, apply before or immediately after installation",
@@ -2087,7 +2087,7 @@ const rules: Record<string, RuleFn> = {
     const annualDepreciation = (purchasePrice * 0.75) / 27.5;
     return {
       status: "eligible_now",
-      message: `Rental property depreciation available — estimated ~${annualDepreciation.toLocaleString()} per year (27.5-year residential).`,
+      message: `Rental property depreciation available — estimated ~$${annualDepreciation.toLocaleString()} per year (27.5-year residential).`,
       estimated_value: `~$${Math.round(annualDepreciation).toLocaleString()}/year non-cash deduction`,
       next_steps: [
         "Verify depreciation has been tracked since purchase date",

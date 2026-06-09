@@ -2275,6 +2275,353 @@ describe("rules parity", () => {
     expect(result.changes_needed).toContain("Purchase or lease a qualifying BEV or PHEV");
   });
 
+  test("earned income tax credit is not applicable when investment income exceeds limit", () => {
+    const result = evaluateBenefit(
+      {
+        id: "earned-income-tax-credit",
+        name: "Earned Income Tax Credit",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        income: {
+          investment_income: {
+            interest: 12000
+          },
+          w2_employment: [
+            {
+              wages: 20000
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("exceeds $11,950 limit — EITC disqualified");
+  });
+
+  test("earned income tax credit eligible-now branch uses Python potential-availability wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "earned-income-tax-credit",
+        name: "Earned Income Tax Credit",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 25000
+        },
+        income: {
+          w2_employment: [
+            {
+              wages: 25000
+            }
+          ]
+        },
+        dependents: {
+          dependents: [
+            {
+              age_at_year_end: 8,
+              ssn_obtained: true
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("EITC potentially available — up to $4,328");
+    expect(result.next_steps?.[1]).toContain("Verify all children have SSNs");
+  });
+
+  test("nol carryforward is future opportunity when business is profitable", () => {
+    const result = evaluateBenefit(
+      {
+        id: "nol-carryforward",
+        name: "NOL Carryforward",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              financials: {
+                net_profit_loss: 42000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("future_opportunity");
+    expect(result.message).toContain("Business is profitable (net $42,000)");
+    expect(result.next_steps?.[0]).toContain("unused NOL carryforward");
+  });
+
+  test("qsbs exclusion is future opportunity when business exists but startup equity is not flagged", () => {
+    const result = evaluateBenefit(
+      {
+        id: "qsbs-exclusion",
+        name: "QSBS Exclusion",
+        category: "capital_gains",
+        jurisdiction: "federal",
+        risk_level: "high",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "c_corp"
+            }
+          ]
+        },
+        investments: {
+          has_qualified_small_business_stock: false
+        }
+      })
+    );
+
+    expect(result.status).toBe("future_opportunity");
+    expect(result.message).toContain("§1202 may exclude 100% of gains up to $10M+");
+    expect(result.next_steps?.[1]).toContain("assets ≤ $50M");
+  });
+
+  test("conservation easement is eligible-if-changed when no qualifying land type is identified", () => {
+    const result = evaluateBenefit(
+      {
+        id: "conservation-easement",
+        name: "Conservation Easement",
+        category: "itemized_deduction",
+        jurisdiction: "federal",
+        risk_level: "high",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence",
+              description: "suburban home",
+              current_value: 550000
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("No qualifying land type identified");
+    expect(result.changes_needed).toContain("Own land with qualifying conservation purpose");
+  });
+
+  test("conservation easement nearly-eligible branch includes land-value estimate and AGI limit", () => {
+    const result = evaluateBenefit(
+      {
+        id: "conservation-easement",
+        name: "Conservation Easement",
+        category: "itemized_deduction",
+        jurisdiction: "federal",
+        risk_level: "high",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          estimated_agi: 300000
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "land",
+              current_value: 500000
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("estimated value $500,000");
+    expect(result.message).toContain("~$200,000 deduction");
+    expect(result.message).toContain("Annual deduction limit: $150,000");
+  });
+
+  test("county agricultural valuation is nearly eligible for land and requests county when missing", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-agricultural-use-valuation",
+        name: "County Agricultural Use Valuation",
+        category: "county_property_tax",
+        jurisdiction: "county",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: {
+            state: "TX"
+          }
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "land"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("may qualify for TX's agricultural use valuation");
+    expect(result.missing_facts).toContain("household.residence.county");
+  });
+
+  test("county veteran exemption is not applicable when veteran status is false", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-veteran-property-tax-exemption",
+        name: "County Veteran Property Tax Exemption",
+        category: "county_property_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          taxpayer: {
+            veteran: false
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("requires honorably discharged veteran status");
+  });
+
+  test("county disability exemption nearly-eligible branch includes AGI income-limit note", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-disability-property-tax-exemption",
+        name: "County Disability Property Tax Exemption",
+        category: "county_property_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          estimated_agi: 98000,
+          taxpayer: {
+            disabled: true
+          },
+          residence: {
+            state: "TX"
+          }
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("Income limit may apply (your AGI: $98,000)");
+    expect(result.missing_facts).toContain("household.residence.county");
+  });
+
+  test("county solar exemption asks for state when missing in non-mandatory branch", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-solar-exemption",
+        name: "County Solar Exemption",
+        category: "county_property_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.residence.state");
+  });
+
+  test("real estate depreciation eligible-now branch returns annual estimate", () => {
+    const result = evaluateBenefit(
+      {
+        id: "real-estate-depreciation",
+        name: "Real Estate Depreciation",
+        category: "real_estate_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "rental_residential",
+              acquisition: {
+                purchase_price: 550000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("estimated ~$15,000 per year");
+    expect(result.estimated_value).toContain("~$15,000/year non-cash deduction");
+  });
+
   test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
     const result = evaluateBenefit(
       {
