@@ -1100,6 +1100,30 @@ describe("rules parity", () => {
     expect(result.message).toContain("contribute directly to Roth IRA");
   });
 
+    test("backdoor roth treats missing AGI as below-limit not-applicable path", () => {
+      const result = evaluateBenefit(
+        {
+          id: "backdoor-roth-ira",
+          name: "Backdoor Roth IRA",
+          category: "retirement_strategy",
+          jurisdiction: "federal",
+          risk_level: "low",
+          required_forms: [],
+          required_documents: [],
+          review_required: {}
+        },
+        makeFacts({
+          household: {
+            filing_status: "single"
+          }
+        })
+      );
+
+      expect(result.status).toBe("not_applicable");
+      expect(result.message).toContain("below Roth IRA income limit");
+      expect(result.message).toContain("contribute directly to Roth IRA");
+    });
+
   test("capital gains harvesting eligible now includes permanent elimination wording and detailed steps", () => {
     const result = evaluateBenefit(
       {

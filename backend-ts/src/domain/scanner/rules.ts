@@ -1055,7 +1055,7 @@ const rules: Record<string, RuleFn> = {
   },
 
   "backdoor-roth-ira": (_benefit, facts) => {
-    const agi = facts.estimatedAgi();
+    const agi = facts.estimatedAgi() ?? 0;
     const filingStatus = facts.filingStatus() ?? "single";
     const rothLimits: Record<string, number> = {
       mfj: 236000,
@@ -1065,14 +1065,6 @@ const rules: Record<string, RuleFn> = {
       head_of_household: 150000
     };
     const limit = rothLimits[filingStatus.toLowerCase()] ?? 150000;
-
-    if (agi == null) {
-      return {
-        status: "nearly_eligible",
-        message: "AGI not recorded — needed to determine Roth IRA eligibility and whether backdoor strategy applies.",
-        missing_facts: ["household.estimated_agi"]
-      };
-    }
 
     if (agi <= limit) {
       return {
