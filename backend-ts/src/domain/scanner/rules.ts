@@ -1627,31 +1627,47 @@ const rules: Record<string, RuleFn> = {
 
   "state-homestead-exemption": (_benefit, facts) => {
     const state = facts.stateCode();
-
-    if (!facts.hasPrimaryResidence()) {
-      return {
-        status: "nearly_eligible",
-        message: "Primary residence not found. State homestead exemptions apply only to owner-occupied homes.",
-        missing_facts: ["real_estate.properties (primary_residence present)"]
-      };
-    }
-
     if (!state) {
       return {
         status: "nearly_eligible",
-        message: "Primary residence found, but household.state is missing for the state homestead exemption.",
+        message: "Set household.residence.state to check homestead exemption availability.",
         missing_facts: ["household.residence.state"]
       };
     }
 
+    if (!facts.hasPrimaryResidence() && !facts.hasAnyRealEstate()) {
+      return {
+        status: "not_applicable",
+        message: "No primary residence recorded in real_estate.yaml."
+      };
+    }
+
+    const primary = facts.primaryResidenceProperty();
+    const applied = Boolean(primary.homestead_exemption_applied || primary.homestead_applied);
+    if (applied) {
+      return {
+        status: "eligible_now",
+        message: `Homestead exemption already applied in ${state}. If you have a spouse, senior, or veteran status, check for enhanced exemptions.`,
+        next_steps: [
+          "Verify the exemption amount on your property tax statement",
+          "Check for senior/veteran enhanced exemptions if applicable"
+        ]
+      };
+    }
+
+    const age = facts.taxpayerAge();
+    const seniorNote = age !== null && age >= 65 ? " Enhanced senior exemptions may be available for taxpayers 65+." : "";
+
     return {
-      status: "eligible_now",
-      message: `Primary residence in ${state} should qualify for a state homestead exemption.`,
-      estimated_value: "Typically $200–$2,000+/year depending on the state and locality",
+      status: "nearly_eligible",
+      message:
+        `${state} offers a homestead property tax exemption. No evidence it has been applied — most homeowners must file an application with the county.${seniorNote}`,
+      missing_facts: ["real_estate.properties.homestead_exemption_applied"],
       next_steps: [
-        "File the county/appraiser homestead application",
-        "Confirm whether your state requires an annual filing",
-        "Check for senior, veteran, or disability add-ons"
+        `Apply with your ${state} county property appraiser or assessor before the deadline (typically March 1)`,
+        "Bring: proof of ownership, government ID showing property address",
+        "Set homestead_exemption_applied: true in real_estate.yaml once filed",
+        "Check for senior (65+), veteran, or disability enhanced exemptions"
       ]
     };
   },

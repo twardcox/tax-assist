@@ -294,6 +294,63 @@ describe("rules parity", () => {
     expect(result.next_steps).toContain("File before the county deadline (most states: March 1)");
   });
 
+  test("state homestead is not applicable with no state primary residence data", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-homestead-exemption",
+        name: "State Homestead Exemption",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { state: "PA" }
+        },
+        real_estate: {
+          properties: []
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("No primary residence recorded");
+  });
+
+  test("state homestead is eligible now when already applied", () => {
+    const result = evaluateBenefit(
+      {
+        id: "state-homestead-exemption",
+        name: "State Homestead Exemption",
+        category: "state_tax",
+        jurisdiction: "state",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { state: "PA" }
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence",
+              homestead_exemption_applied: true
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("already applied in PA");
+  });
+
   test("lifetime learning credit is not applicable above AGI limit", () => {
     const result = evaluateBenefit(
       {
