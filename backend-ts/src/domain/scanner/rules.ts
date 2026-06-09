@@ -776,12 +776,12 @@ const rules: Record<string, RuleFn> = {
 
     const filingStatus = facts.filingStatus() ?? "single";
     const exclusion = ["mfj", "married_filing_jointly"].includes(filingStatus.toLowerCase()) ? 500000 : 250000;
-    let message = `Section 121 exclusion available up to ${exclusion.toLocaleString()} of primary-residence gain.`;
+    let message = `Section 121 exclusion available - up to $${exclusion.toLocaleString()} gain excluded on home sale.`;
     if (gain !== null) {
       if (gain > exclusion) {
-        message += ` Estimated gain ${gain.toLocaleString()} exceeds exclusion by ${(gain - exclusion).toLocaleString()}.`;
+        message += ` Estimated gain ~$${gain.toLocaleString()} exceeds exclusion - $${(gain - exclusion).toLocaleString()} would be taxable.`;
       } else {
-        message += ` Estimated gain ${gain.toLocaleString()} is within exclusion.`;
+        message += ` Estimated gain ~$${gain.toLocaleString()} is fully within exclusion.`;
       }
     }
 
@@ -1891,24 +1891,6 @@ const rules: Record<string, RuleFn> = {
     const biz = facts.firstBusiness();
     const entity = String(biz.entity_type ?? "");
     if (entity === "s_corp") {
-      const ownerSalary = facts.firstBusinessOwnerW2Salary();
-      const netProfitExisting = facts.firstBusinessNetProfit();
-      if (netProfitExisting > 0 && ownerSalary <= 0) {
-        return {
-          status: "nearly_eligible",
-          message: "Business is already an S Corp, but owner W-2 salary is not recorded. Reasonable compensation support is important.",
-          missing_facts: ["businesses.employees.owner_w2_salary"],
-          next_steps: ["Run payroll and document reasonable compensation before year-end"]
-        };
-      }
-      if (netProfitExisting > 0 && ownerSalary > 0 && ownerSalary < netProfitExisting * 0.2) {
-        return {
-          status: "nearly_eligible",
-          message: `Business is already an S Corp, but owner W-2 salary (${ownerSalary.toLocaleString()}) may be low relative to net profit (${netProfitExisting.toLocaleString()}).`,
-          changes_needed: ["Review and document reasonable compensation methodology with CPA"],
-          next_steps: ["Adjust payroll prospectively if compensation is below supportable market levels"]
-        };
-      }
       return {
         status: "not_applicable",
         message: "Business is already taxed as an S Corp."

@@ -508,6 +508,44 @@ describe("rules parity", () => {
     expect(result.changes_needed).toContain("Wait until 1 more year(s) before selling to qualify");
   });
 
+  test("section 121 exclusion eligible-now message mirrors Python gain wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "section-121-exclusion",
+        name: "Section 121 Exclusion",
+        category: "federal_exclusion",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single"
+        },
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence",
+              primary_residence: {
+                years_lived_in: 3
+              },
+              acquisition: {
+                purchase_price: 300000,
+                current_market_value: 450000
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("up to $250,000 gain excluded on home sale");
+    expect(result.message).toContain("Estimated gain ~$150,000 is fully within exclusion");
+  });
+
   test("self-employed health insurance is nearly eligible with next steps when premium facts are missing", () => {
     const result = evaluateBenefit(
       {
@@ -1003,5 +1041,38 @@ describe("rules parity", () => {
     expect(result.status).toBe("nearly_eligible");
     expect(result.message).toContain("AGI not provided");
     expect(result.message).toContain("moderate-income taxpayers");
+  });
+
+  test("s corp election returns not-applicable when entity is already s corp", () => {
+    const result = evaluateBenefit(
+      {
+        id: "s-corp-election",
+        name: "S Corp Election",
+        category: "business_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "s_corp",
+              financials: {
+                net_profit_loss: 120000
+              },
+              employees: {
+                owner_w2_salary: 0
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("already taxed as an S Corp");
   });
 });
