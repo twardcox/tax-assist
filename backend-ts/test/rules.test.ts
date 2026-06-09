@@ -942,4 +942,66 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("Update goals.yaml if estate planning becomes a priority");
   });
+
+  test("25c energy home improvement eligible-now branch includes detailed annual cap guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "25c-energy-home-improvement",
+        name: "25C Energy Home Improvement",
+        category: "federal_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        real_estate: {
+          properties: [
+            {
+              property_type: "primary_residence"
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("Heat pump: up to $2,000/year");
+    expect(result.next_steps).toContain("Home energy audit = up to $150 toward $1,200 cap");
+  });
+
+  test("savers credit AGI-missing with contributions uses Python-style moderate-income message", () => {
+    const result = evaluateBenefit(
+      {
+        id: "savers-credit",
+        name: "Saver's Credit",
+        category: "retirement_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          taxpayer: {
+            age: 35
+          }
+        },
+        retirement: {
+          employer_plans: {
+            traditional_401k: {
+              employee_contribution_ytd: 1500
+            }
+          }
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("AGI not provided");
+    expect(result.message).toContain("moderate-income taxpayers");
+  });
 });

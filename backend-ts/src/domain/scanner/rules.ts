@@ -532,15 +532,18 @@ const rules: Record<string, RuleFn> = {
         status: "eligible_if_changed",
         message: `AGI ${agi.toLocaleString()} qualifies for Saver's Credit at ${rate}, but no retirement contributions were found.`,
         missing_facts: ["retirement contributions"],
-        changes_needed: ["Make IRA or qualified plan contributions this year"],
-        next_steps: ["IRA contributions can generally be made up to filing deadline"]
+        changes_needed: ["Make an IRA or 401k contribution this year (or by April 15 for IRA)"],
+        next_steps: [
+          "Contribute to a Roth or Traditional IRA (up to $7,000 in 2025) by April 15",
+          "Even $400 -> $200 credit at 50% rate"
+        ]
       };
     }
 
     return {
       status: hasContributions ? "nearly_eligible" : "nearly_eligible",
       message: hasContributions
-        ? "Retirement contributions found, but AGI is missing for Saver's Credit evaluation."
+        ? "Has retirement contributions but AGI not provided — Saver's Credit may be available for moderate-income taxpayers."
         : "Saver's Credit available for moderate-income taxpayers with retirement contributions. Enter AGI to evaluate.",
       missing_facts: hasContributions ? ["household.estimated_agi"] : ["household.estimated_agi", "retirement contributions"]
     };
@@ -565,13 +568,14 @@ const rules: Record<string, RuleFn> = {
     return {
       status: "eligible_now",
       message:
-        "Section 25C credit available: 30% on qualifying home-energy improvements with annual category caps.",
-      estimated_value: "$600-$3,200/year",
+        "Section 25C Energy Efficient Home Improvement Credit: 30% credit on eligible improvements. Heat pump: up to $2,000/year; insulation, windows, doors, energy audit: up to $1,200/year ($3,200 combined cap).",
+      estimated_value: "$600 - $3,200/year",
       next_steps: [
-        "Get ENERGY STAR or Section 25C certification from manufacturer",
-        "Track placed-in-service dates and receipts",
-        "Use Form 5695 Part II",
-        "Spread upgrades across years to reuse annual caps"
+        "Get ENERGY STAR or Section 25C certification from manufacturer before purchase",
+        "Heat pump HVAC or water heater = up to $2,000 30% credit",
+        "Insulation, exterior doors, windows = up to $1,200 30% credit",
+        "Home energy audit = up to $150 toward $1,200 cap",
+        "Spread improvements across multiple years to use the $3,200 annual cap each year"
       ]
     };
   },
