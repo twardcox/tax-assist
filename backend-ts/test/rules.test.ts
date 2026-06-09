@@ -1624,4 +1624,105 @@ describe("rules parity", () => {
     expect(result.next_steps?.some((step) => step.includes("Employer contribution: up to $"))).toBe(true);
     expect(result.next_steps?.some((step) => step.includes("can fund by October 15"))).toBe(true);
   });
+
+  test("small employer retirement startup credit is eligible now with employees and no retirement plan", () => {
+    const result = evaluateBenefit(
+      {
+        id: "small-employer-retirement-startup-credit",
+        name: "Small Employer Retirement Startup Credit",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "llc_single",
+              employees: {
+                w2_employees_count: 4
+              },
+              retirement_plans: {
+                sep_ira: false,
+                simple_ira: false,
+                solo_401k: false,
+                defined_benefit: false
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("§45E applies");
+    expect(result.next_steps).toContain("File Form 8881 with the return for each of the 3 qualifying years");
+  });
+
+  test("small employer retirement startup credit is not applicable when plan already exists", () => {
+    const result = evaluateBenefit(
+      {
+        id: "small-employer-retirement-startup-credit",
+        name: "Small Employer Retirement Startup Credit",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "llc_single",
+              employees: {
+                w2_employees_count: 3
+              },
+              retirement_plans: {
+                simple_ira: true
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("new plan establishment only");
+  });
+
+  test("work opportunity tax credit with employees is nearly eligible and requests wotc hires", () => {
+    const result = evaluateBenefit(
+      {
+        id: "work-opportunity-tax-credit",
+        name: "Work Opportunity Tax Credit",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "llc_single",
+              employees: {
+                w2_employees_count: 2
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("WOTC credit");
+    expect(result.missing_facts).toContain("businesses.employees.wotc_hires");
+  });
 });
