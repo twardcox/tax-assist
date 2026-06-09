@@ -784,4 +784,53 @@ describe("rules parity", () => {
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("No credit available above this income level");
   });
+
+  test("capital gains harvesting is not applicable above 0% LTCG ceiling zone with Python-style wording", () => {
+    const result = evaluateBenefit(
+      {
+        id: "capital-gains-harvesting",
+        name: "Capital Gains Harvesting",
+        category: "investment_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 70000
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("0% LTCG bracket ceiling");
+    expect(result.message).toContain("15% or 20%");
+  });
+
+  test("backdoor roth is not applicable below Roth limit with direct-contribution guidance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "backdoor-roth-ira",
+        name: "Backdoor Roth IRA",
+        category: "retirement_strategy",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          filing_status: "single",
+          estimated_agi: 120000
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("contribute directly to Roth IRA");
+  });
 });

@@ -853,7 +853,7 @@ const rules: Record<string, RuleFn> = {
     if (agi == null) {
       return {
         status: "nearly_eligible",
-        message: "Potential 0% long-term capital gains harvesting opportunity. Add AGI to evaluate bracket headroom.",
+        message: "Capital gains 0% bracket harvesting opportunity — enter AGI to evaluate if you fall within the 0% rate bracket.",
         missing_facts: ["household.estimated_agi"]
       };
     }
@@ -861,7 +861,7 @@ const rules: Record<string, RuleFn> = {
     if (agi >= zeroPctCeiling * 1.15) {
       return {
         status: "not_applicable",
-        message: `AGI ${agi.toLocaleString()} is above the 0% LTCG bracket zone for ${filingStatus}.`
+        message: `AGI $${agi.toLocaleString()} is above the 0% LTCG bracket ceiling ($${zeroPctCeiling.toLocaleString()} for ${filingStatus}). Gains will be taxed at 15% or 20%.`
       };
     }
 
@@ -1068,7 +1068,7 @@ const rules: Record<string, RuleFn> = {
     if (agi == null) {
       return {
         status: "nearly_eligible",
-        message: "AGI is required to determine direct Roth eligibility versus backdoor strategy.",
+        message: "AGI not recorded — needed to determine Roth IRA eligibility and whether backdoor strategy applies.",
         missing_facts: ["household.estimated_agi"]
       };
     }
@@ -1077,7 +1077,7 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "not_applicable",
         message:
-          `AGI ${agi.toLocaleString()} is below direct Roth IRA phaseout. Backdoor strategy is not required.`
+          `AGI $${agi.toLocaleString()} is below Roth IRA income limit — contribute directly to Roth IRA (no backdoor needed).`
       };
     }
 
@@ -1086,23 +1086,25 @@ const rules: Record<string, RuleFn> = {
       return {
         status: "nearly_eligible",
         message:
-          `Backdoor Roth is possible, but pro-rata rule applies with traditional IRA balance of ~${traditionalBalance.toLocaleString()}.`,
+          `Backdoor Roth available but pro-rata rule applies — traditional IRA balance of ~$${traditionalBalance.toLocaleString()} makes conversion partially taxable.`,
         changes_needed: [
-          "Roll pre-tax traditional IRA balance into an employer 401(k) where possible",
-          "Then execute backdoor Roth conversion on a cleaner basis"
-        ]
+          "Roll pre-tax traditional IRA balance into employer 401(k) to clear the pro-rata issue",
+          "Then execute backdoor Roth on clean slate"
+        ],
+        next_steps: ["Confirm employer 401(k) plan accepts incoming rollovers"]
       };
     }
 
     return {
       status: "eligible_now",
       message:
-        "Income is above Roth limit and no pre-tax IRA balance is detected. Backdoor Roth process is available.",
-      estimated_value: "$7,000/year ($8,000 if 50+) moved into Roth with long-term tax-free growth",
+        "Income above Roth limit — backdoor Roth IRA strategy available. Contribute $7,000 (2025) as nondeductible traditional IRA, then convert.",
+      estimated_value: "$7,000/year ($8,000 if 50+) into Roth — tax-free growth forever",
       next_steps: [
-        "Make nondeductible traditional IRA contribution",
-        "Convert to Roth promptly",
-        "File Form 8606 each year"
+        "Make nondeductible traditional IRA contribution ($7,000 or $8,000 if 50+)",
+        "Convert to Roth IRA immediately (Roth conversion has no income limit)",
+        "File Form 8606 tracking nondeductible basis — file every year",
+        "Confirm no existing pre-tax IRA balance (pro-rata rule)"
       ]
     };
   },
