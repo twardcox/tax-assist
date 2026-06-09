@@ -241,6 +241,32 @@ describe("rules parity", () => {
     expect(result.message).toContain("property tax assessment freeze");
   });
 
+  test("county homestead is not applicable without a primary residence", () => {
+    const result = evaluateBenefit(
+      {
+        id: "county-homestead-exemption",
+        name: "County Homestead Exemption",
+        category: "county_tax",
+        jurisdiction: "county",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        household: {
+          residence: { state: "PA", county: "Allegheny" }
+        },
+        real_estate: {
+          properties: [{ property_type: "rental_residential" }]
+        }
+      })
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.message).toContain("applies to a primary residence");
+  });
+
   test("lifetime learning credit is not applicable above AGI limit", () => {
     const result = evaluateBenefit(
       {
@@ -1074,5 +1100,41 @@ describe("rules parity", () => {
 
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("already taxed as an S Corp");
+  });
+
+  test("bonus depreciation is nearly eligible for self-employment with assets (Python parity)", () => {
+    const result = evaluateBenefit(
+      {
+        id: "bonus-depreciation",
+        name: "Bonus Depreciation",
+        category: "business_deduction",
+        jurisdiction: "federal",
+        risk_level: "low",
+        required_forms: [],
+        required_documents: [],
+        review_required: {}
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            {
+              entity_type: "sole_prop",
+              depreciation: {
+                assets_placed_in_service: [
+                  {
+                    description: "Equipment",
+                    cost: 25000
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("40% in 2025");
+    expect(result.message).toContain("Rate drops to 20% in 2026");
   });
 });

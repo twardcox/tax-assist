@@ -1419,9 +1419,8 @@ const rules: Record<string, RuleFn> = {
 
     if (!facts.hasPrimaryResidence()) {
       return {
-        status: "nearly_eligible",
-        message: "Primary residence not found. County homestead exemption requires an owner-occupied home.",
-        missing_facts: ["real_estate.properties (primary_residence present)", "household.residence.county"]
+        status: "not_applicable",
+        message: "County homestead exemption applies to a primary residence — no primary residence recorded."
       };
     }
 
@@ -2761,29 +2760,13 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const assetCount = facts.firstBusinessAssetsPlacedInServiceCount();
-    if (facts.hasSelfEmployment() && assetCount > 0) {
-      const totalCost = facts.firstBusinessAssetsPlacedInServiceTotalCost();
-      const estimatedBonus = Math.round(totalCost * 0.4);
-      return {
-        status: "eligible_now",
-        message: `Qualifying business assets were placed in service (${assetCount} item${assetCount === 1 ? "" : "s"}). Bonus depreciation can generally apply at the modeled 40% 2025 rate.`,
-        estimated_value: totalCost > 0 ? `~$${estimatedBonus.toLocaleString()} first-year bonus deduction` : "40% first-year bonus deduction on qualifying basis",
-        next_steps: [
-          "Classify assets by recovery life and confirm bonus eligibility on Form 4562",
-          "Apply Section 179 first where optimal, then bonus on remaining basis",
-          "Review state conformity because many states decouple from federal bonus rules"
-        ]
-      };
-    }
-
     return {
       status: "nearly_eligible",
-      message: "Bonus depreciation may apply on qualifying assets placed in service (modeled at 40% for 2025).",
+      message: "Bonus depreciation available (40% in 2025) on qualifying assets placed in service. Rate drops to 20% in 2026.",
       next_steps: [
         "Identify qualifying asset purchases this year",
-        "Apply Section 179 first and bonus depreciation on remaining basis",
-        "Consider cost segregation for real estate-related acceleration opportunities"
+        "Apply Section 179 first, bonus on remainder",
+        "Consider cost segregation study on real estate for QIP reclassification"
       ]
     };
   },
