@@ -4,8 +4,8 @@ import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
-import { runScan } from "../domain/scanner/scan";
 import { getFilingDetails, saveFilingDetails, type FilingDetails } from "../db/filingDetailsRepo";
+import { computeTaxFigures, buildFormPackage } from "../domain/taxForms/index";
 
 type JobState = {
   status: "running" | "complete" | "error";
@@ -23,43 +23,44 @@ function toNumber(value: unknown, fallback: number): number {
 }
 
 function buildPreviewPdfBytes(userId: string, taxYear: number): Buffer {
-  const scan = runScan(taxYear, userId);
+  const figures = computeTaxFigures(userId, taxYear);
+  const c = figures.computed;
+  const n = (key: string) => Math.round(Number(c[key] ?? 0)).toLocaleString("en-US");
   const text = [
     "%PDF-1.4",
-    "% Placeholder PDF for tax-forms preview",
-    `Tax year: ${taxYear}`,
-    `Opportunities: ${scan.total}`,
-    "%%EOF"
+    `% Form 1040 Preview — Tax Year ${taxYear}`,
+    `% ${figures.display_name} — ${figures.filing_status}`,
+    `%`,
+    `% AGI:             $${n("agi")}`,
+    `% Taxable Income:  $${n("taxable_income")}`,
+    `% Total Tax:       $${n("total_tax")}`,
+    `% Total Payments:  $${n("total_payments")}`,
+    Number(c["refund"]) > 0
+      ? `% REFUND:          $${n("refund")}`
+      : `% AMOUNT OWED:     $${n("amount_owed")}`,
+    `% Effective Rate:  ${Number(c["effective_rate"] ?? 0).toFixed(1)}%`,
+    `% Marginal Rate:   ${Number(c["marginal_rate"] ?? 0).toFixed(1)}%`,
+    `%`,
+    `% NOTE: This is a data preview. Download the full package for the`,
+    `% complete tax data summary and CPA instructions.`,
+    "%%EOF",
   ].join("\n");
   return Buffer.from(text, "utf8");
 }
 
-function buildComputeSummary(userId: string, taxYear: number) {
-  const scan = runScan(taxYear, userId);
-  return {
-    tax_year: taxYear,
-    filing_details: getFilingDetails(userId, taxYear),
-    summary: {
-      total: scan.total,
-      counts: scan.counts
-    }
-  };
-}
-
 function runJob(jobId: string, userId: string, taxYear: number): void {
   try {
-    const summary = buildComputeSummary(userId, taxYear);
-    fs.mkdirSync(projectPaths.reports, { recursive: true });
     fs.mkdirSync(path.join(projectPaths.root, "state", "tax_form_packages"), { recursive: true });
     const zipName = `tax_forms_${taxYear}_${jobId.slice(0, 8)}.zip`;
     const zipPath = path.join(projectPaths.root, "state", "tax_form_packages", zipName);
-    fs.writeFileSync(zipPath, JSON.stringify(summary, null, 2), "utf8");
+    const zipBytes = buildFormPackage(userId, taxYear);
+    fs.writeFileSync(zipPath, zipBytes);
     jobs.set(jobId, {
       status: "complete",
       progress: "Package generated",
       zip_path: zipPath,
       zip_name: zipName,
-      error: null
+      error: null,
     });
   } catch (error) {
     jobs.set(jobId, {
@@ -67,7 +68,7 @@ function runJob(jobId: string, userId: string, taxYear: number): void {
       progress: "Package generation failed",
       zip_path: null,
       zip_name: null,
-      error: (error as Error).message
+      error: (error as Error).message,
     });
   }
 }
@@ -119,7 +120,12 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
       throw new AppError(401, "Authentication required");
     }
 
-    return buildComputeSummary(userId, taxYear);
+    const figures = computeTaxFigures(userId, taxYear);
+    return {
+      ...figures,
+      filing_details: getFilingDetails(userId, taxYear),
+      summary: { counts: {} },
+    };
   });
 
   app.post("/reports/tax-forms", { preHandler: app.authenticate }, async (request) => {

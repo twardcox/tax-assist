@@ -1,0 +1,92 @@
+id: home-office-deduction
+name: Home Office Deduction
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "280A"
+  irs_publication: "587"
+  form_instruction: "Instructions for Form 8829"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  Self-employed individuals and certain employees required to work from home by their employer
+  may deduct a portion of home expenses (utilities, insurance, mortgage interest, rent, repairs)
+  proportional to the percentage of the home used regularly and exclusively for business. The
+  simplified method ($5/sq ft, max 300 sq ft = $1,500) is easier to compute; the regular method
+  (Form 8829) often yields a larger deduction. The deduction can also establish precedent for
+  deducting home depreciation and other allocated expenses.
+
+estimated_value:
+  typical_range: "$500 – $5,000+/year"
+  calculation_basis: "Office sq ft ÷ total home sq ft × home expenses (mortgage interest, insurance, utilities, repairs) OR $5/sq ft simplified"
+  depends_on:
+    - businesses[*].home_office.claimed
+    - businesses[*].home_office.square_footage
+    - real_estate.properties (mortgage interest, property tax, insurance)
+
+eligibility_rules:
+  - rule: "Must have self-employment income or own a business (Schedule C, partnership, S Corp, or employer-required home office)"
+  - rule: "Office space must be used regularly and exclusively for business — no personal use permitted in the dedicated area"
+  - rule: "Home office must be your principal place of business OR a place to meet clients/customers"
+  - rule: "Renter and homeowner both qualify; homeowner may also deduct a portion of depreciation"
+
+phaseouts:
+  - rule: "Deduction cannot exceed net business profit (cannot create a net loss with simplified method)"
+  - rule: "Regular method: deduction limited to gross income from business minus other business deductions"
+
+required_user_facts:
+  - fact: "businesses[*].home_office.claimed (true/false)"
+  - fact: "businesses[*].home_office.square_footage (sq ft of dedicated office space)"
+  - fact: "real_estate.properties (for calculating home expense allocations)"
+
+required_documents:
+  - document: "Floor plan or diagram showing office area vs. total home square footage"
+  - document: "Photographs of the dedicated workspace (audit support)"
+  - document: "Utility bills, homeowner's/renter's insurance, mortgage statements (for regular method)"
+  - document: "Lease or mortgage documents showing total occupancy costs"
+
+required_forms:
+  - form: "Form 8829 (regular method — homeowners and renters)"
+  - form: "Schedule C, Line 30 (simplified method — no Form 8829 needed)"
+
+deadlines:
+  - deadline: "Claimed on annual return — April 15 (or extension)"
+
+stacking_rules:
+  compatible_with:
+    - qbi-deduction
+    - sep-ira-contribution
+    - business-vehicle-deduction
+    - self-employed-health-insurance
+    - section-179-expensing
+  conflicts_with: []
+
+risk_level: medium
+
+risk_notes: |
+  The home office deduction is a common IRS audit trigger — maintain contemporaneous
+  documentation of exclusive business use. A dedicated room is far easier to defend than
+  a desk in a shared space. The "exclusive use" requirement is strict: even occasional
+  personal use of the space disqualifies it.
+
+planning_notes: |
+  - Compare simplified method ($5/sq ft, max $1,500) vs. regular method before filing
+  - Homeowners: regular method lets you deduct a portion of home depreciation (recaptured on sale)
+  - S Corp shareholders: employer must require the home office as a condition of employment; reimburse
+    via an Accountable Plan for a cleaner deduction with no self-employment income required
+  - If selling your home, track the home office depreciation — it triggers Section 1250 recapture
+
+qualification_pathways:
+  - "Self-employed with dedicated workspace: measure sq ft, document exclusive use, claim on Schedule C"
+  - "S Corp owner: establish Accountable Plan for employer reimbursement of home office expenses"
+
+review_required:
+  cpa: recommended
+  attorney: false
+
+last_verified: 2025-01-01
+next_review: 2026-01-01

@@ -6,6 +6,7 @@ import fastifyStatic from "@fastify/static";
 import { registerErrorHandler } from "./lib/errors";
 import { ensureRequiredDirectories, projectPaths } from "./lib/paths";
 import { initDb } from "./db/init";
+import { bootstrapYamlIfNeeded } from "./db/bootstrap";
 import { registerAuthPlugin } from "./plugins/auth";
 import { registerAuthRoutes } from "./routes/auth";
 import { registerHealthRoutes } from "./routes/health";
@@ -24,6 +25,7 @@ import { registerTaxFormsRoutes } from "./routes/taxForms";
 export function buildApp() {
   ensureRequiredDirectories();
   initDb();
+  bootstrapYamlIfNeeded();
 
   const app = Fastify({ logger: true });
 

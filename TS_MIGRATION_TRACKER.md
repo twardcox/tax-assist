@@ -36,19 +36,19 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 ## Logic Ports
 | Module | Python Source | TypeScript Target | Owner | Status |
 |---|---|---|---|---|
-| Scanner | scripts/scan_opportunities.py | backend-ts/src/domain/scanner/* | Backend A | IN_PROGRESS |
-| Scenarios | scripts/scenario_simulator.py | backend-ts/src/domain/scenarios/* | Backend A | IN_PROGRESS |
-| CPA packet | scripts/generate_cpa_packet.py | backend-ts/src/domain/reports/cpaPacket.ts | Backend B | IN_PROGRESS |
+| Scanner | scripts/scan_opportunities.py | backend-ts/src/domain/scanner/* | Backend A | DONE |
+| Scenarios | scripts/scenario_simulator.py | backend-ts/src/domain/scenarios/* | Backend A | DONE |
+| CPA packet | scripts/generate_cpa_packet.py | backend-ts/src/domain/reports/cpaPacket.ts | Backend B | DONE |
 | Receipt classifier | scripts/classify_receipts.py | backend-ts/src/domain/documents/* | Backend B | DONE |
-| Tax law updater | scripts/update_tax_law.py | backend-ts/src/domain/taxLaw/updater.ts | Backend A | IN_PROGRESS |
-| Tax forms | scripts/generate_tax_forms.py | backend-ts/src/domain/taxForms/* | Backend B | TODO |
-| Test seeder | scripts/create_test_user.py | backend-ts/src/scripts/createTestUser.ts | Backend B | TODO |
+| Tax law updater | scripts/update_tax_law.py (retired) | backend-ts/src/domain/taxLaw/updater.ts | Backend A | DONE |
+| Tax forms | scripts/generate_tax_forms.py | backend-ts/src/domain/taxForms/* | Backend B | DONE |
+| Test seeder | scripts/create_test_user.py | backend-ts/src/scripts/createTestUser.ts | Backend B | DONE |
 
 ## Data Layer
 | Area | Python Source | TypeScript Target | Owner | Status |
 |---|---|---|---|---|
-| DB schema/migrations | api/db.py | backend-ts/src/db/migrations/* | Backend B | IN_PROGRESS |
-| YAML->DB bootstrap | api/migrate.py | backend-ts/src/db/bootstrap.ts | Backend B | TODO |
+| DB schema/migrations | api/db.py | backend-ts/src/db/init.ts (section_data JSON arch) | Backend B | DONE |
+| YAML->DB bootstrap | api/migrate.py | backend-ts/src/db/bootstrap.ts | Backend B | DONE |
 | Auth token revoke store | api/db.py revoked_tokens | backend-ts/src/db/revokedTokens.ts | Backend A | DONE |
 
 ## Test and Parity
@@ -60,7 +60,12 @@ Status board for Python to TypeScript migration on branch switch-to-ts.
 | Forms parity | tests/test_forms.py | backend-ts/test/forms.test.ts | QA/Release | DONE |
 | Tax law parity | tests/test_update_tax_law.py | backend-ts/test/taxLaw.test.ts | QA/Release | DONE |
 
-## Current Sprint Goal
-1. Port remaining rule handlers beyond the implemented subset (home office, QBI, vehicle, real estate, state/county property relief, federal family/education credits, selected energy/home-sale rules, core investment strategy rules, key healthcare/retirement planning rules, core itemized deduction rules, and entity/state strategy rules including S Corp election, Solo 401(k), Section 179, bonus depreciation, 1031, REP, PTE, cost segregation, Augusta, and state 529 planning), while continuing to tighten fact-level accuracy (tax-year-aware asset depreciation logic, S Corp salary sanity checks, and contribution-aware 529 logic including negative-path validation).
-2. Expand SQLite schema toward normalized section persistence.
-3. Keep frontend API contract unchanged for migrated routes.
+## Migration Complete — 2026-06-10
+
+All rows above are DONE. The `switch-to-ts` branch is ready to merge to `main`.
+
+## Next Sprint Goals
+
+1. Add more benefit rules — extend `tax_library/` beyond the current 58 benefits.
+2. Normalize the DB schema — migrate `section_data` JSON blobs toward relational tables.
+3. Merge `switch-to-ts` → `main` and retire the branch.

@@ -29,6 +29,12 @@ export function createUser(email: string, passwordHash: string, displayName = ""
   return id;
 }
 
+export function getUserCount(): number {
+  const db = getDb();
+  const row = db.prepare("SELECT COUNT(*) as n FROM users").get() as { n: number };
+  return row.n;
+}
+
 export function getUserByEmail(email: string): UserRow | null {
   const db = getDb();
   const normalizedEmail = email.toLowerCase().trim();

@@ -5,7 +5,8 @@ import type { FastifyInstance } from "fastify";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { runScan } from "../domain/scanner/scan";
-import { writeCpaPacketReport } from "../domain/reports/cpaPacket";
+import { writeCpaPacketReport, type HouseholdSummary } from "../domain/reports/cpaPacket";
+import { getSectionData } from "../db/sectionRepo";
 
 type JobState = {
   status: "running" | "complete" | "error";
@@ -35,11 +36,26 @@ function parseInteger(value: unknown, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function loadHousehold(userId: string | null | undefined, taxYear: number): HouseholdSummary {
+  if (!userId) return {};
+  try {
+    const data = getSectionData(userId, taxYear, "household");
+    return {
+      filing_status: data.filing_status as string | undefined,
+      state: (data.residence as Record<string, unknown> | undefined)?.state as string | undefined,
+      estimated_agi: data.estimated_agi as string | number | undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
 function runCpaPacket(jobId: string, taxYear: number, withAi: boolean, userId?: string | null): void {
   try {
     const scan = runScan(taxYear, userId ?? null);
     const aiSummary = buildAiSummaryPlaceholder(taxYear, withAi);
-    const reportName = writeCpaPacketReport(scan, aiSummary);
+    const household = loadHousehold(userId, taxYear);
+    const reportName = writeCpaPacketReport(scan, aiSummary, household);
     cpaJobs.set(jobId, { status: "complete", report_name: reportName, error: null });
   } catch (error) {
     cpaJobs.set(jobId, {

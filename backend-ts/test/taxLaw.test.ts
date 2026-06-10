@@ -4,16 +4,21 @@ import {
   _parseRssDate,
   ChangeRecord,
   classifyChangeTypes,
+  fetchCongressLegislation,
   fetchInternalRevenueBulletin,
   fetchIrsNews,
   fetchIrsPublications,
+  fetchTaxCourt,
   fetchTreasuryRegulations,
+  aiClassifyChanges,
   detectAffectedBenefits,
   loadSources,
   makeSlug,
+  updateCongressLegislationState,
   updateFederalRegisterState,
   updateInternalRevenueBulletinState,
   updateIrsPublicationsState,
+  updateTaxCourtState,
   updateTreasuryRegulationsState,
   updateIrsNewsState
 } from "../src/domain/taxLaw/updater";
@@ -590,6 +595,269 @@ describe("tax law parity", () => {
       });
 
       expect(record.ai_classified).toBe(false);
+    });
+  });
+
+  describe("fetchCongressLegislation", () => {
+    test("extracts tax-relevant bills updated since date", async () => {
+      const payload = {
+        bills: [
+          {
+            title: "Tax Relief and Small Business Act",
+            type: "HR",
+            number: "1234",
+            congress: "119",
+            updateDate: "2026-06-01",
+            originChamber: "House",
+            latestAction: { text: "Referred to Ways and Means" }
+          },
+          {
+            title: "National Parks Beautification Act",
+            type: "HR",
+            number: "9999",
+            congress: "119",
+            updateDate: "2026-06-01",
+            originChamber: "House",
+            latestAction: { text: "Referred to Natural Resources Committee" }
+          }
+        ]
+      };
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(JSON.stringify(payload), { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchCongressLegislation("2026-05-01", {});
+        expect(records).toHaveLength(1);
+        expect(records[0]?.source).toBe("congress_legislation");
+        expect(records[0]?.title).toContain("HR1234");
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    test("skips seen congress bills", async () => {
+      const payload = {
+        bills: [
+          {
+            title: "Tax Deduction Enhancement Act",
+            type: "HR",
+            number: "5678",
+            congress: "119",
+            updateDate: "2026-06-01",
+            originChamber: "House",
+            latestAction: { text: "Tax credit provisions" }
+          }
+        ]
+      };
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(JSON.stringify(payload), { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchCongressLegislation("2026-05-01", {
+          congress_legislation: { seen_item_ids: ["congress-119-HR5678"] }
+        });
+        expect(records).toHaveLength(0);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    test("returns empty on 403 rate limit", async () => {
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response("", { status: 403 }) as unknown as Promise<Response>;
+        const records = await fetchCongressLegislation("2026-05-01", {});
+        expect(records).toHaveLength(0);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe("fetchTaxCourt", () => {
+    test("returns empty when no DAWSON credentials", async () => {
+      const origUser = process.env.DAWSON_USERNAME;
+      const origPass = process.env.DAWSON_PASSWORD;
+      delete process.env.DAWSON_USERNAME;
+      delete process.env.DAWSON_PASSWORD;
+      try {
+        const records = await fetchTaxCourt("2026-05-01", {});
+        expect(records).toHaveLength(0);
+      } finally {
+        if (origUser !== undefined) process.env.DAWSON_USERNAME = origUser;
+        if (origPass !== undefined) process.env.DAWSON_PASSWORD = origPass;
+      }
+    });
+
+    test("fetches opinions after DAWSON login", async () => {
+      const opinions = [
+        {
+          docketNumber: "12345-26",
+          caseTitle: "Smith v. Commissioner",
+          documentType: "Opinion",
+          filingDate: "2026-06-01"
+        }
+      ];
+
+      const originalFetch = global.fetch;
+      let callCount = 0;
+      try {
+        process.env.DAWSON_USERNAME = "test@example.com";
+        process.env.DAWSON_PASSWORD = "testpass";
+        global.fetch = async (url: RequestInfo | URL) => {
+          callCount += 1;
+          if (String(url).includes("/auth/login")) {
+            return new Response(JSON.stringify({ idToken: "fake-token-abc" }), { status: 200 }) as unknown as Promise<Response>;
+          }
+          return new Response(JSON.stringify(opinions), { status: 200 }) as unknown as Promise<Response>;
+        };
+        const state: Record<string, unknown> = {};
+        const records = await fetchTaxCourt("2026-05-01", state);
+        expect(callCount).toBe(2);
+        expect(records).toHaveLength(1);
+        expect(records[0]?.source).toBe("tax_court");
+        expect(records[0]?.document_number).toBe("12345-26");
+        expect(state.dawson_auth).toBeTruthy();
+      } finally {
+        global.fetch = originalFetch;
+        delete process.env.DAWSON_USERNAME;
+        delete process.env.DAWSON_PASSWORD;
+      }
+    });
+
+    test("reuses cached DAWSON token", async () => {
+      const originalFetch = global.fetch;
+      let loginCalls = 0;
+      try {
+        process.env.DAWSON_USERNAME = "test@example.com";
+        process.env.DAWSON_PASSWORD = "testpass";
+        const futureExpiry = new Date();
+        futureExpiry.setHours(futureExpiry.getHours() + 1);
+        const state: Record<string, unknown> = {
+          dawson_auth: {
+            id_token: "cached-token",
+            expires_at: futureExpiry.toISOString().slice(0, 19)
+          }
+        };
+        global.fetch = async (url: RequestInfo | URL) => {
+          if (String(url).includes("/auth/login")) {
+            loginCalls += 1;
+          }
+          return new Response(JSON.stringify([]), { status: 200 }) as unknown as Promise<Response>;
+        };
+        await fetchTaxCourt("2026-05-01", state);
+        expect(loginCalls).toBe(0);
+      } finally {
+        global.fetch = originalFetch;
+        delete process.env.DAWSON_USERNAME;
+        delete process.env.DAWSON_PASSWORD;
+      }
+    });
+  });
+
+  describe("updateCongressLegislationState", () => {
+    test("tracks seen bill IDs", () => {
+      const state: Record<string, unknown> = {};
+      const records = [
+        new ChangeRecord({
+          id: "congress-119-HR1234",
+          source: "congress_legislation",
+          source_name: "Congress.gov — Tax Legislation",
+          title: "HR1234: Tax Relief Act",
+          url: "https://www.congress.gov/bill/119th-congress/house-bill/1234",
+          publication_date: "2026-06-01",
+          change_types: ["new_benefit"],
+          affected_benefits: [],
+          summary: "Tax Relief Act"
+        })
+      ];
+
+      updateCongressLegislationState(state, records);
+      const source = state.congress_legislation as { seen_item_ids?: string[]; last_checked?: string };
+      expect(source.seen_item_ids).toContain("congress-119-HR1234");
+      expect(source.last_checked).toBeTruthy();
+    });
+  });
+
+  describe("updateTaxCourtState", () => {
+    test("tracks seen opinion IDs", () => {
+      const state: Record<string, unknown> = {};
+      const records = [
+        new ChangeRecord({
+          id: "tax-court-abc12345",
+          source: "tax_court",
+          source_name: "US Tax Court (DAWSON)",
+          title: "Smith v. Commissioner (Opinion)",
+          url: "https://dawson.ustaxcourt.gov/case-detail/12345-26",
+          publication_date: "2026-06-01",
+          change_types: ["new_interpretation"],
+          affected_benefits: [],
+          summary: "Smith v. Commissioner — Opinion"
+        })
+      ];
+
+      updateTaxCourtState(state, records);
+      const source = state.tax_court as { seen_item_ids?: string[]; last_checked?: string };
+      expect(source.seen_item_ids).toContain("tax-court-abc12345");
+      expect(source.last_checked).toBeTruthy();
+    });
+  });
+
+  describe("aiClassifyChanges", () => {
+    test("returns records unchanged when ANTHROPIC_API_KEY not set", async () => {
+      const orig = process.env.ANTHROPIC_API_KEY;
+      delete process.env.ANTHROPIC_API_KEY;
+      try {
+        const records = [
+          new ChangeRecord({
+            id: "test-001",
+            source: "federal_register",
+            source_name: "Federal Register",
+            title: "Final Regulations Under Section 168",
+            url: "https://federalregister.gov/example",
+            publication_date: "2026-06-01",
+            change_types: ["final_rule"],
+            affected_benefits: ["federal-bonus-depreciation"],
+            summary: "Final regs for bonus depreciation.",
+            raw_abstract: "Treasury and IRS issue final regulations under section 168(k) regarding additional first-year depreciation deductions for qualified property."
+          })
+        ];
+        const result = await aiClassifyChanges(records);
+        expect(result).toHaveLength(1);
+        expect(result[0]?.ai_classified).toBe(false);
+      } finally {
+        if (orig !== undefined) process.env.ANTHROPIC_API_KEY = orig;
+      }
+    });
+
+    test("skips records with short abstracts", async () => {
+      const orig = process.env.ANTHROPIC_API_KEY;
+      process.env.ANTHROPIC_API_KEY = "test-key";
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response("{}", { status: 200 }) as unknown as Promise<Response>;
+        const records = [
+          new ChangeRecord({
+            id: "test-short",
+            source: "irs_news",
+            source_name: "IRS Newsroom",
+            title: "Brief notice",
+            url: "",
+            publication_date: "2026-06-01",
+            change_types: ["new_interpretation"],
+            affected_benefits: [],
+            summary: "Brief",
+            raw_abstract: "Short"
+          })
+        ];
+        const result = await aiClassifyChanges(records);
+        expect(result).toHaveLength(1);
+        expect(result[0]?.ai_classified).toBe(false);
+      } finally {
+        global.fetch = originalFetch;
+        if (orig !== undefined) process.env.ANTHROPIC_API_KEY = orig;
+        else delete process.env.ANTHROPIC_API_KEY;
+      }
     });
   });
 });

@@ -1,6 +1,7 @@
 import { loadBenefitLibrary } from "../scanner/benefitLoader";
 import { evaluateBenefit } from "../scanner/rules";
 import { UserFacts, type FactsData } from "../scanner/userFacts";
+import { generateScenarioAiNarrative, type ScenarioDiff } from "../scanner/aiAdvisor";
 
 export const SCENARIOS: Record<string, { description: string; fact_changes: Record<string, unknown> }> = {
   buy_rental_property: {
@@ -173,7 +174,10 @@ function countByStatus(results: Array<{ status: string }>): Record<string, numbe
   return counts;
 }
 
-function diffResults(baseline: Array<{ benefit_id: string; status: string }>, scenario: Array<{ benefit_id: string; status: string }>) {
+function diffResults(
+  baseline: Array<{ benefit_id: string; benefit_name: string; status: string }>,
+  scenario: Array<{ benefit_id: string; benefit_name: string; status: string }>
+) {
   const order = ["eligible_now", "nearly_eligible", "eligible_if_changed", "future_opportunity", "high_risk", "unknown", "not_applicable", "expired"];
   const baselineMap = new Map(baseline.map((result) => [result.benefit_id, result]));
   const scenarioMap = new Map(scenario.map((result) => [result.benefit_id, result]));
@@ -219,7 +223,7 @@ function evaluateFacts(taxYear: number, facts: UserFacts) {
   };
 }
 
-export function runScenario(key: string, taxYear: number, userId?: string | null) {
+export async function runScenario(key: string, taxYear: number, userId?: string | null, withAi = false) {
   const scenario = SCENARIOS[key];
   if (!scenario) {
     return null;
@@ -228,20 +232,27 @@ export function runScenario(key: string, taxYear: number, userId?: string | null
   const baselineFacts = UserFacts.fromUserSections(userId ?? "", taxYear);
   const baseline = evaluateFacts(taxYear, baselineFacts);
   const patched = applyOverrides(cloneData(baselineFacts.data), scenario.fact_changes);
-  const scenarioFacts = new (UserFacts as unknown as { new(data: FactsData, taxYear: number): UserFacts })(patched, taxYear);
+  const scenarioFacts = UserFacts.fromData(patched, taxYear);
   const scenarioScan = evaluateFacts(taxYear, scenarioFacts);
-  const diff = diffResults(baseline.results, scenarioScan.results);
+  const diffRaw = diffResults(baseline.results, scenarioScan.results);
+
+  const diff: ScenarioDiff = {
+    newly_added: diffRaw.newlyAdded,
+    improved: diffRaw.improved.map(([before, after]) => ({ before, after })),
+    degraded: diffRaw.degraded.map(([before, after]) => ({ before, after })),
+    removed: diffRaw.removed
+  };
+
+  const ai_narrative = withAi
+    ? await generateScenarioAiNarrative(scenario.description, diff, taxYear)
+    : "";
 
   return {
     scenario: key,
     description: scenario.description,
     baseline_counts: baseline.counts,
     scenario_counts: scenarioScan.counts,
-    diff: {
-      newly_added: diff.newlyAdded,
-      improved: diff.improved.map(([before, after]) => ({ before, after })),
-      degraded: diff.degraded.map(([before, after]) => ({ before, after })),
-      removed: diff.removed
-    }
+    diff,
+    ...(ai_narrative ? { ai_narrative } : {})
   };
 }

@@ -1420,7 +1420,7 @@ const rules: Record<string, RuleFn> = {
 
     const location = county && state ? `${county} County, ${state}` : county ? `${county} County` : state ?? "your county";
     return {
-      status: "nearly_eligible",
+      status: "eligible_now",
       message:
         `You own a primary residence and likely qualify for ${location}'s county homestead exemption. Most counties administer their own exemption on top of the state exemption, but it is not automatic — you must apply with the county assessor.`,
       missing_facts: county ? [] : ["household.residence.county"],
@@ -1646,14 +1646,13 @@ const rules: Record<string, RuleFn> = {
     const seniorNote = age !== null && age >= 65 ? " Enhanced senior exemptions may be available for taxpayers 65+." : "";
 
     return {
-      status: "nearly_eligible",
+      status: "eligible_now",
       message:
-        `${state} offers a homestead property tax exemption. No evidence it has been applied — most homeowners must file an application with the county.${seniorNote}`,
-      missing_facts: ["real_estate.properties.homestead_exemption_applied"],
+        `${state} offers a homestead property tax exemption. If not yet applied, file an application with your county — most homeowners must apply once.${seniorNote}`,
       next_steps: [
         `Apply with your ${state} county property appraiser or assessor before the deadline (typically March 1)`,
         "Bring: proof of ownership, government ID showing property address",
-        "Set homestead_exemption_applied: true in real_estate.yaml once filed",
+        "Set homestead_exemption_applied: true once filed",
         "Check for senior (65+), veteran, or disability enhanced exemptions"
       ]
     };
@@ -2219,8 +2218,9 @@ const rules: Record<string, RuleFn> = {
     }
 
     const appreciated = facts.properties().filter((property) => {
-      const currentValue = Number(property.current_value ?? 0);
-      const purchasePrice = Number(property.purchase_price ?? 0);
+      const acq = (property.acquisition as Record<string, unknown> | undefined) ?? {};
+      const currentValue = Number(property.current_value ?? acq.current_market_value ?? acq.current_value ?? 0);
+      const purchasePrice = Number(property.purchase_price ?? acq.purchase_price ?? 0);
       return currentValue > purchasePrice;
     });
     if (appreciated.length > 0) {
@@ -2536,6 +2536,20 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
+    const contributionsThisYear = facts.total529ContributionsThisYear();
+    if (contributionsThisYear <= 0) {
+      return {
+        status: "eligible_if_changed",
+        message: `${state} offers a state 529 deduction but no contributions were made this year — contribute to claim the deduction.`,
+        changes_needed: ["Make contributions to your home-state 529 plan this tax year"],
+        next_steps: [
+          "Contribute by December 31 (PA allows by April 15 of the following year)",
+          "Check the annual deduction limit for your state (typically $2,500–$20,000 per beneficiary)",
+          "Even a small contribution starts or continues your annual deduction"
+        ]
+      };
+    }
+
     return {
       status: "eligible_now",
       message: `${state} offers a state income tax deduction/credit for contributions to the home-state 529 plan. Contribute by December 31 to claim the deduction this tax year.`,
@@ -2738,9 +2752,23 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
+    const assetCount = facts.firstBusinessAssetsPlacedInServiceCount();
+    if (assetCount > 0) {
+      return {
+        status: "eligible_now",
+        message: `Business assets placed in service this year — bonus depreciation (40% in 2025) available after Section 179 is applied. Rate drops to 20% in 2026.`,
+        next_steps: [
+          "Apply Section 179 first on qualifying assets",
+          "Apply bonus depreciation on the remaining basis",
+          "Complete Form 4562"
+        ]
+      };
+    }
+
     return {
       status: "nearly_eligible",
-      message: "Bonus depreciation available (40% in 2025) on qualifying assets placed in service. Rate drops to 20% in 2026.",
+      message: "Has business — bonus depreciation (40% in 2025) available on assets placed in service this year. Rate drops to 20% in 2026.",
+      missing_facts: ["businesses.depreciation.assets_placed_in_service"],
       next_steps: [
         "Identify qualifying asset purchases this year",
         "Apply Section 179 first, bonus on remainder",

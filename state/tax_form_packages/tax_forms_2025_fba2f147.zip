@@ -1,0 +1,26 @@
+{
+  "tax_year": 2025,
+  "filing_details": {
+    "pec_fund_taxpayer": true,
+    "pec_fund_spouse": false,
+    "direct_deposit_routing": "111000025",
+    "direct_deposit_account": "123456789",
+    "direct_deposit_type": "checking",
+    "allow_third_party": true,
+    "designee_name": "Tax Preparer",
+    "designee_phone": "555-123-4567",
+    "designee_pin": "4321"
+  },
+  "summary": {
+    "total": 117,
+    "counts": {
+      "eligible_now": 0,
+      "nearly_eligible": 15,
+      "eligible_if_changed": 1,
+      "future_opportunity": 1,
+      "high_risk": 0,
+      "unknown": 58,
+      "not_applicable": 42
+    }
+  }
+}

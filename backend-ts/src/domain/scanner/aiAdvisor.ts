@@ -1,6 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ScanResult, ScanRun } from "./types";
 
+export type ScenarioDiff = {
+  newly_added: Array<{ benefit_id: string; benefit_name: string; status: string }>;
+  improved: Array<{ before: { benefit_id: string; benefit_name: string; status: string }; after: { status: string } }>;
+  degraded: Array<{ before: { benefit_id: string; benefit_name: string; status: string }; after: { status: string } }>;
+  removed: Array<{ benefit_id: string; benefit_name: string; status: string }>;
+};
+
 export type ScanAiMode = "opportunities" | "gaps" | "both";
 
 const TAX_SYSTEM_PROMPT = `You are an expert CPA and tax planning advisor with deep knowledge of the Internal Revenue Code (IRC), Treasury Regulations, IRS Publications, and practical federal tax strategy for individuals, self-employed taxpayers, real estate investors, and closely held business owners.
@@ -138,6 +145,56 @@ Write at the level of a productive CPA client meeting. Be specific about dollar 
     return this.call(prompt);
   }
 
+  async analyzeScenario(description: string, diff: ScenarioDiff, taxYear: number): Promise<string> {
+    const parts: string[] = [];
+
+    if (diff.newly_added.length > 0) {
+      parts.push("**Newly unlocked:**");
+      for (const r of diff.newly_added) parts.push(`- ${r.benefit_name} (${r.status})`);
+    }
+    if (diff.improved.length > 0) {
+      parts.push("**Improved:**");
+      for (const { before, after } of diff.improved) parts.push(`- ${before.benefit_name}: ${before.status} → ${after.status}`);
+    }
+    if (diff.degraded.length > 0) {
+      parts.push("**Degraded:**");
+      for (const { before, after } of diff.degraded) parts.push(`- ${before.benefit_name}: ${before.status} → ${after.status}`);
+    }
+    if (diff.removed.length > 0) {
+      parts.push("**Lost:**");
+      for (const r of diff.removed) parts.push(`- ${r.benefit_name}`);
+    }
+
+    if (parts.length === 0) {
+      return "_This scenario produced no change in tax benefit eligibility._";
+    }
+
+    const prompt = `Tax Year: ${taxYear}
+Scenario: "${description}"
+
+The UTBIS rule engine compared the taxpayer's current facts against a modified scenario.
+
+${parts.join("\n")}
+
+Please provide:
+
+## Scenario Analysis
+In 2-3 sentences, what is the net tax impact of this scenario? Is it worth pursuing?
+
+## Key Benefits Unlocked
+For each newly_added or improved benefit: why does this scenario enable it? What is the estimated dollar value?
+
+## Risks and Trade-offs
+What does the taxpayer give up or take on with this change? (Legal, financial, operational risks)
+
+## Recommended Next Steps
+The 2-3 most important actions if the taxpayer decides to pursue this scenario.
+
+Be specific about dollar amounts where the data supports it.`;
+
+    return this.call(prompt, 2000);
+  }
+
   async analyzeGaps(results: ScanResult[], taxYear: number): Promise<string> {
     const gaps = results.filter((result) => result.status === "nearly_eligible" || result.status === "eligible_if_changed");
 
@@ -176,6 +233,18 @@ export function __setScanAiNarrativeOverrideForTest(
   override: ((scan: ScanRun, taxYear: number, mode: ScanAiMode) => Promise<string>) | null
 ): void {
   scanAiOverride = override;
+}
+
+export async function generateScenarioAiNarrative(
+  description: string,
+  diff: ScenarioDiff,
+  taxYear: number
+): Promise<string> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return "";
+  }
+  const model = process.env.CLAUDE_MODEL ?? "claude-opus-4-8";
+  return createAdvisor(model).analyzeScenario(description, diff, taxYear);
 }
 
 export async function generateScanAiNarrative(scan: ScanRun, taxYear: number, mode: ScanAiMode): Promise<string> {

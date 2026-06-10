@@ -245,10 +245,16 @@ const sections: Record<string, Record<string, unknown>> = {
   }
 };
 
-function printSummaryLine(status: string, count: number): void {
-  const label = status.replaceAll("_", " ").toUpperCase();
-  process.stdout.write(`${label}: ${count}\n`);
-}
+const STATUS_ORDER = [
+  "eligible_now",
+  "nearly_eligible",
+  "eligible_if_changed",
+  "future_opportunity",
+  "high_risk",
+  "not_applicable",
+  "expired",
+  "unknown"
+] as const;
 
 function main(): void {
   ensureRequiredDirectories();
@@ -269,10 +275,28 @@ function main(): void {
   }
 
   const scan = runScan(TAX_YEAR, userId);
-  process.stdout.write("\nScan summary:\n");
-  printSummaryLine("eligible_now", scan.counts.eligible_now ?? 0);
-  printSummaryLine("nearly_eligible", scan.counts.nearly_eligible ?? 0);
-  printSummaryLine("eligible_if_changed", scan.counts.eligible_if_changed ?? 0);
+  process.stdout.write("\nScan results:\n");
+
+  for (const status of STATUS_ORDER) {
+    const group = scan.results.filter((r) => r.status === status);
+    if (group.length === 0) continue;
+    const label = status.replaceAll("_", " ").toUpperCase();
+    process.stdout.write(`\n${label} (${group.length}):\n`);
+    for (const r of group) {
+      const value = r.estimated_value ? `  [${r.estimated_value}]` : "";
+      process.stdout.write(`  - ${r.benefit_name}${value}\n`);
+    }
+  }
+
+  process.stdout.write("\nSummary:\n");
+  for (const status of STATUS_ORDER) {
+    const count = scan.counts[status] ?? 0;
+    if (count > 0) {
+      process.stdout.write(`  ${status.replaceAll("_", " ").toUpperCase()}: ${count}\n`);
+    }
+  }
+
+  process.stdout.write(`\nLogin: ${EMAIL} / ${PASSWORD}\n`);
 }
 
 main();

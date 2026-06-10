@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import yaml from "js-yaml";
+import Anthropic from "@anthropic-ai/sdk";
 import { projectPaths } from "../../lib/paths";
 
 const STATE_FILE = path.join(projectPaths.state, "update_state.json");
@@ -147,6 +148,48 @@ const BENEFIT_KEYWORDS: Record<string, string[]> = {
 };
 
 const TREASURY_TAX_KEYWORDS_RE = /\b(tax|IRS|Internal Revenue|Treasury|deduction|credit|depreciation|regulation|ruling|T\.D\.|REG-|Rev\. Proc|section \d+)\b/i;
+
+const CONGRESS_API = "https://api.congress.gov/v3/bill";
+const DAWSON_BASE = "https://public-api-green.dawson.ustaxcourt.gov";
+
+const STATE_SOURCES: Partial<Record<TaxLawSource, { url: string; name: string }>> = {
+  state_ca: { url: "https://www.ftb.ca.gov/about-ftb/newsroom/news-releases/", name: "California Franchise Tax Board" },
+  state_ny: { url: "https://www.tax.ny.gov/press/releases/", name: "New York Department of Taxation and Finance" },
+  state_il: { url: "https://tax.illinois.gov/about/newsroom.html", name: "Illinois Department of Revenue" },
+  state_ma: { url: "https://www.mass.gov/lists/dor-news-and-updates", name: "Massachusetts Department of Revenue" },
+  state_nj: { url: "https://www.nj.gov/treasury/taxation/news.shtml", name: "New Jersey Division of Taxation" },
+  state_co: { url: "https://tax.colorado.gov/news", name: "Colorado Department of Revenue" },
+  state_or: { url: "https://www.oregon.gov/dor/news/Pages/default.aspx", name: "Oregon Department of Revenue" },
+  state_pa: { url: "https://www.revenue.pa.gov/GeneralTaxInformation/News/Pages/default.aspx", name: "Pennsylvania Department of Revenue" },
+  state_oh: { url: "https://tax.ohio.gov/latest-news", name: "Ohio Department of Taxation" },
+  state_ga: { url: "https://dor.georgia.gov/news", name: "Georgia Department of Revenue" }
+};
+
+const AI_SYSTEM_PROMPT = `You are a tax law analyst for UTBIS, a tax benefit intelligence tool.
+Given a tax document title and abstract, respond with JSON only — no prose:
+{
+  "change_types": ["<one or more valid types>"],
+  "affected_benefits": ["<zero or more benefit-id slugs from the list below>"],
+  "summary": "<1-2 sentence plain-English summary for a tax professional>"
+}
+
+Valid change_types:
+  new_benefit, changed_threshold, expired_benefit, future_effective_law,
+  new_form, deadline_change, risk_change, new_interpretation,
+  proposed_rule, revenue_ruling, revenue_procedure, final_rule
+
+Valid benefit slugs:
+  federal-qbi-deduction, federal-s-corp-election, federal-sep-ira,
+  federal-solo-401k, federal-self-employed-health-insurance, federal-hsa,
+  federal-section-179, federal-bonus-depreciation, federal-business-vehicle,
+  federal-real-estate-depreciation, federal-passive-activity-loss,
+  federal-1031-exchange, federal-augusta-rule, federal-charitable-contribution,
+  federal-backdoor-roth, federal-child-tax-credit, federal-child-care-credit,
+  federal-eitc, federal-american-opportunity-credit, federal-lifetime-learning-credit,
+  federal-clean-energy-credit, federal-ev-credit, federal-mortgage-interest,
+  federal-salt-deduction, federal-section-121-exclusion, federal-foreign-earned-income,
+  federal-opportunity-zone, federal-annual-gift-exclusion,
+  federal-real-estate-professional, federal-cost-segregation`;
 
 export interface ChangeRecordInput {
   id: string;
@@ -442,6 +485,28 @@ export function updateTreasuryRegulationsState(state: Record<string, unknown>, r
   source.seen_item_ids = Array.from(seen);
   source.last_checked = new Date().toISOString().slice(0, 19);
   state.treasury_regulations = source;
+}
+
+function updateSimpleState(sourceKey: string, state: Record<string, unknown>, records: ChangeRecord[]): void {
+  const source = asRecord(state[sourceKey]);
+  const seenRaw = source.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  for (const record of records) {
+    seen.add(record.id);
+  }
+
+  source.seen_item_ids = Array.from(seen);
+  source.last_checked = new Date().toISOString().slice(0, 19);
+  state[sourceKey] = source;
+}
+
+export function updateCongressLegislationState(state: Record<string, unknown>, records: ChangeRecord[]): void {
+  updateSimpleState("congress_legislation", state, records);
+}
+
+export function updateTaxCourtState(state: Record<string, unknown>, records: ChangeRecord[]): void {
+  updateSimpleState("tax_court", state, records);
 }
 
 function loadState(): Record<string, unknown> {
@@ -834,6 +899,350 @@ export async function fetchTreasuryRegulations(
   }
 }
 
+export async function fetchCongressLegislation(sinceDate: string, state: Record<string, unknown>): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state.congress_legislation);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  const congressApiKey = process.env.CONGRESS_API_KEY ?? "DEMO_KEY";
+  const params = new URLSearchParams({
+    format: "json",
+    limit: "50",
+    sort: "updateDate desc",
+    api_key: congressApiKey,
+    fromDateTime: `${sinceDate}T00:00:00Z`
+  });
+
+  try {
+    const response = await fetch(`${CONGRESS_API}?${params.toString()}`);
+    if (response.status === 403 || !response.ok) {
+      return [];
+    }
+
+    const data = asRecord(await response.json());
+    const bills = Array.isArray(data.bills) ? (data.bills as Array<Record<string, unknown>>) : [];
+    const records: ChangeRecord[] = [];
+
+    for (const bill of bills) {
+      const title = String(bill.title ?? "").trim();
+      const billNum = `${String(bill.type ?? "")}${String(bill.number ?? "")}`;
+      const congressNum = String(bill.congress ?? "");
+      const updateDate = String(bill.updateDate ?? "").slice(0, 10);
+      const originChamber = String(bill.originChamber ?? "house").toLowerCase();
+      const url = `https://www.congress.gov/bill/${congressNum}th-congress/${originChamber}-bill/${String(bill.number ?? "")}`;
+
+      if (!TREASURY_TAX_KEYWORDS_RE.test(title)) {
+        const latestAction = asRecord(bill.latestAction);
+        if (!TREASURY_TAX_KEYWORDS_RE.test(String(latestAction.text ?? ""))) {
+          continue;
+        }
+      }
+
+      if (!updateDate || updateDate < sinceDate) {
+        continue;
+      }
+
+      const itemId = `congress-${congressNum}-${billNum}`;
+      if (seen.has(itemId)) {
+        continue;
+      }
+
+      records.push(
+        new ChangeRecord({
+          id: itemId,
+          source: "congress_legislation",
+          source_name: "Congress.gov — Tax Legislation",
+          title: `${billNum}: ${title}`,
+          url,
+          publication_date: updateDate || sinceDate,
+          change_types: classifyChangeTypes(title),
+          affected_benefits: detectAffectedBenefits(title),
+          summary: title
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+async function getDawsonIdToken(state: Record<string, unknown>): Promise<string | null> {
+  const username = process.env.DAWSON_USERNAME;
+  const password = process.env.DAWSON_PASSWORD;
+  if (!username || !password) {
+    return null;
+  }
+
+  const auth = asRecord(state.dawson_auth);
+  const idToken = String(auth.id_token ?? "");
+  const expiresAt = String(auth.expires_at ?? "");
+
+  if (idToken && expiresAt > new Date().toISOString().slice(0, 19)) {
+    return idToken;
+  }
+
+  try {
+    const response = await fetch(`${DAWSON_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: username, password })
+    });
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = asRecord(await response.json());
+    const token = String(data.idToken ?? data.token ?? data.id_token ?? "");
+    if (!token) {
+      return null;
+    }
+
+    const expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 55);
+    state.dawson_auth = { id_token: token, expires_at: expiry.toISOString().slice(0, 19) };
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchTaxCourt(sinceDate: string, state: Record<string, unknown>): Promise<ChangeRecord[]> {
+  const idToken = await getDawsonIdToken(state);
+  if (!idToken) {
+    return [];
+  }
+
+  const sourceState = asRecord(state.tax_court);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  try {
+    const params = new URLSearchParams({ "dateRange.startDate": sinceDate });
+    const response = await fetch(`${DAWSON_BASE}/case-documents/opinion-search?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${idToken}` }
+    });
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const dataObj = asRecord(data);
+    const opinions: Array<Record<string, unknown>> = Array.isArray(data)
+      ? (data as Array<Record<string, unknown>>)
+      : Array.isArray(dataObj.results)
+        ? (dataObj.results as Array<Record<string, unknown>>)
+        : Array.isArray(dataObj.items)
+          ? (dataObj.items as Array<Record<string, unknown>>)
+          : [];
+
+    const records: ChangeRecord[] = [];
+
+    for (const opinion of opinions) {
+      const docket = String(opinion.docketNumber ?? opinion.docketNo ?? "").trim();
+      const caseTitle = String(opinion.caseTitle ?? opinion.caseName ?? opinion.title ?? "").trim();
+      const docType = String(opinion.documentType ?? opinion.eventCode ?? "Opinion").trim();
+      const rawDate = String(opinion.filingDate ?? opinion.receivedAt ?? "");
+      const filingDate = rawDate.length >= 10 ? rawDate.slice(0, 10) : "";
+
+      if (!docket || !caseTitle || !filingDate || filingDate < sinceDate) {
+        continue;
+      }
+
+      const itemId = `tax-court-${createHash("md5").update(docket).digest("hex").slice(0, 8)}`;
+      if (seen.has(itemId)) {
+        continue;
+      }
+
+      const abstract = `${caseTitle} — ${docType}`;
+      const url = `https://dawson.ustaxcourt.gov/case-detail/${docket.replace(/ /g, "-")}`;
+
+      records.push(
+        new ChangeRecord({
+          id: itemId,
+          source: "tax_court",
+          source_name: "US Tax Court (DAWSON)",
+          title: `${caseTitle} (${docType})`,
+          url,
+          publication_date: filingDate,
+          change_types: classifyChangeTypes(caseTitle, abstract),
+          affected_benefits: detectAffectedBenefits(caseTitle, abstract),
+          summary: abstract.slice(0, 500),
+          document_number: docket,
+          document_type: docType,
+          raw_abstract: abstract
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+async function scrapeStateNewsPage(
+  url: string,
+  source: string,
+  sourceName: string,
+  sinceDate: string,
+  state: Record<string, unknown>
+): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state[source]);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return [];
+    }
+
+    const html = await response.text();
+    const candidates: Array<{ title: string; href: string; pubDate: string }> = [];
+
+    // Pattern 1: class-named containers (article/li/div with news-like class names)
+    const containerRegex = /<(article|li|div)[^>]*class="[^"]*(?:news|press|release|article-item|update|entry)[^"]*"[^>]*>([\s\S]*?)<\/\1>/gi;
+    for (const m of html.matchAll(containerRegex)) {
+      const block = m[2] ?? "";
+      const linkMatch = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+      if (!linkMatch) {
+        continue;
+      }
+      const href = linkMatch[1] ?? "";
+      const rawTitle = decodeHtmlEntities(stripHtml(linkMatch[2] ?? ""));
+      if (!rawTitle || rawTitle.length < 10) {
+        continue;
+      }
+      const blockText = stripHtml(block);
+      const pubDate = parseMonthDayYear(blockText) ?? parseMmDdYyyy(blockText);
+      if (pubDate && pubDate >= sinceDate) {
+        candidates.push({ title: rawTitle, href, pubDate });
+      }
+    }
+
+    // Pattern 2: headings with nearby links and date text
+    if (candidates.length === 0) {
+      const headingRegex = /<h[234][^>]*>([\s\S]*?)<\/h[234]>/gi;
+      for (const m of html.matchAll(headingRegex)) {
+        const block = m[1] ?? "";
+        const linkMatch = /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+        if (!linkMatch) {
+          continue;
+        }
+        const href = linkMatch[1] ?? "";
+        const rawTitle = decodeHtmlEntities(stripHtml(block));
+        if (!rawTitle || rawTitle.length < 10) {
+          continue;
+        }
+        const idx = m.index ?? 0;
+        const context = stripHtml(html.slice(idx, Math.min(html.length, idx + 500)));
+        const pubDate = parseMonthDayYear(context) ?? parseMmDdYyyy(context);
+        if (pubDate && pubDate >= sinceDate) {
+          candidates.push({ title: rawTitle, href, pubDate });
+        }
+      }
+    }
+
+    const baseUrl = new URL(url).origin;
+    const records: ChangeRecord[] = [];
+
+    for (const { title, href, pubDate } of candidates.slice(0, 20)) {
+      const fullUrl = href.startsWith("http")
+        ? href
+        : href.startsWith("/")
+          ? `${baseUrl}${href}`
+          : `${url.replace(/\/?$/, "/")}${href.replace(/^\//, "")}`;
+      const itemId = `${source}-${createHash("md5").update(href).digest("hex").slice(0, 8)}`;
+      if (seen.has(itemId)) {
+        continue;
+      }
+
+      records.push(
+        new ChangeRecord({
+          id: itemId,
+          source,
+          source_name: sourceName,
+          title,
+          url: fullUrl,
+          publication_date: pubDate,
+          change_types: classifyChangeTypes(title),
+          affected_benefits: detectAffectedBenefits(title),
+          summary: title
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+export async function aiClassifyChanges(records: ChangeRecord[]): Promise<ChangeRecord[]> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return records;
+  }
+
+  const client = new Anthropic({ apiKey });
+  const enriched: ChangeRecord[] = [];
+
+  for (const record of records) {
+    if (record.raw_abstract.length < 50) {
+      enriched.push(record);
+      continue;
+    }
+
+    try {
+      const response = await client.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 512,
+        system: [
+          {
+            type: "text",
+            text: AI_SYSTEM_PROMPT,
+            cache_control: { type: "ephemeral" }
+          }
+        ],
+        messages: [
+          {
+            role: "user",
+            content: `Title: ${record.title}\n\nAbstract: ${record.raw_abstract.slice(0, 2000)}`
+          }
+        ]
+      });
+
+      const text = response.content[0]?.type === "text" ? response.content[0].text : "";
+      const jsonMatch = /\{[\s\S]+\}/.exec(text);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as {
+          change_types?: string[];
+          affected_benefits?: string[];
+          summary?: string;
+        };
+        if (Array.isArray(parsed.change_types) && parsed.change_types.length > 0) {
+          record.change_types = parsed.change_types;
+        }
+        if (Array.isArray(parsed.affected_benefits)) {
+          record.affected_benefits = parsed.affected_benefits;
+        }
+        if (typeof parsed.summary === "string" && parsed.summary) {
+          record.ai_summary = parsed.summary;
+        }
+        record.ai_classified = true;
+      }
+    } catch {
+      // keep original classification on any error
+    }
+
+    enriched.push(record);
+  }
+
+  return enriched;
+}
+
 async function fetchBySource(
   source: TaxLawSource,
   sinceDate: string,
@@ -853,6 +1262,16 @@ async function fetchBySource(
   }
   if (source === "treasury_regulations") {
     return fetchTreasuryRegulations(sinceDate, state);
+  }
+  if (source === "congress_legislation") {
+    return fetchCongressLegislation(sinceDate, state);
+  }
+  if (source === "tax_court") {
+    return fetchTaxCourt(sinceDate, state);
+  }
+  const stateConfig = STATE_SOURCES[source];
+  if (stateConfig) {
+    return scrapeStateNewsPage(stateConfig.url, source, stateConfig.name, sinceDate, state);
   }
   return [];
 }
@@ -876,7 +1295,9 @@ function updateSourceState(source: TaxLawSource, state: Record<string, unknown>,
   }
   if (source === "treasury_regulations") {
     updateTreasuryRegulationsState(state, records);
+    return;
   }
+  updateSimpleState(source, state, records);
 }
 
 export type RunTaxLawUpdateOptions = {
@@ -904,24 +1325,24 @@ export async function runTaxLawUpdate(options: RunTaxLawUpdateOptions = {}): Pro
 
   for (const source of sources) {
     const records = await fetchBySource(source, sinceDate, state);
-    if (records.length > 0) {
-      for (const record of records) {
-        saveChangeRecord(record, dryRun);
-      }
-      allNewRecords.push(...records);
-    }
+    allNewRecords.push(...records);
     updateSourceState(source, state, records);
   }
 
+  const finalRecords = await aiClassifyChanges(allNewRecords);
+
   if (!dryRun) {
+    for (const record of finalRecords) {
+      saveChangeRecord(record, dryRun);
+    }
     saveState(state);
-    writeSummaryReport(allNewRecords, dryRun);
+    writeSummaryReport(finalRecords, dryRun);
   }
 
   return {
     since_date: sinceDate,
     source: options.source ?? null,
     dry_run: dryRun,
-    new_changes: allNewRecords.length
+    new_changes: finalRecords.length
   };
 }

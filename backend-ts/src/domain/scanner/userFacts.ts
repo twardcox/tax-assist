@@ -92,6 +92,10 @@ export class UserFacts {
     this.taxYear = taxYear;
   }
 
+  static fromData(data: FactsData, taxYear: number): UserFacts {
+    return new UserFacts(data, taxYear);
+  }
+
   static fromUserSections(userId: string, taxYear: number): UserFacts {
     const data: FactsData = {};
     for (const section of SCAN_SECTIONS) {

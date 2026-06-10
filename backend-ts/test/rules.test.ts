@@ -301,7 +301,7 @@ describe("rules parity", () => {
     expect(result.message).toContain("applies to a primary residence");
   });
 
-  test("county homestead is nearly eligible with primary residence because county filing is required", () => {
+  test("county homestead is eligible now with primary residence because the benefit is currently available", () => {
     const result = evaluateBenefit(
       {
         id: "county-homestead-exemption",
@@ -323,7 +323,7 @@ describe("rules parity", () => {
       })
     );
 
-    expect(result.status).toBe("nearly_eligible");
+    expect(result.status).toBe("eligible_now");
     expect(result.message).toContain("not automatic");
     expect(result.next_steps).toContain("File before the county deadline (most states: March 1)");
   });
@@ -350,7 +350,7 @@ describe("rules parity", () => {
       })
     );
 
-    expect(result.status).toBe("nearly_eligible");
+    expect(result.status).toBe("eligible_now");
     expect(result.message).toContain("Allegheny County");
     expect(result.missing_facts).toEqual([]);
   });
@@ -1396,7 +1396,7 @@ describe("rules parity", () => {
     expect(result.message).toContain("already taxed as an S Corp");
   });
 
-  test("bonus depreciation is nearly eligible for self-employment with assets (Python parity)", () => {
+  test("bonus depreciation is eligible now when assets are placed in service", () => {
     const result = evaluateBenefit(
       {
         id: "bonus-depreciation",
@@ -1427,12 +1427,12 @@ describe("rules parity", () => {
       })
     );
 
-    expect(result.status).toBe("nearly_eligible");
+    expect(result.status).toBe("eligible_now");
     expect(result.message).toContain("40% in 2025");
     expect(result.message).toContain("Rate drops to 20% in 2026");
   });
 
-  test("state 529 deduction is eligible now when home-state 529 account exists even without contributions", () => {
+  test("state 529 deduction is eligible_if_changed when home-state account exists but no contributions this year", () => {
     const result = evaluateBenefit(
       {
         id: "state-529-deduction",
@@ -1459,8 +1459,8 @@ describe("rules parity", () => {
       })
     );
 
-    expect(result.status).toBe("eligible_now");
-    expect(result.message).toContain("home-state 529 plan");
+    expect(result.status).toBe("eligible_if_changed");
+    expect(result.message).toContain("no contributions");
   });
 
   test("state 529 deduction not-applicable branch includes federal growth note for non-deduction states", () => {

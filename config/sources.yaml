@@ -1,5 +1,5 @@
 # Tax Law Update Source Registry
-# Used by scripts/update_tax_law.py to monitor authoritative legal sources.
+# Used by backend-ts/src/domain/taxLaw/updater.ts to monitor authoritative legal sources.
 
 federal_sources:
 
