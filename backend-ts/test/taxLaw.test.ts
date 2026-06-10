@@ -1,12 +1,20 @@
 import { describe, expect, test } from "vitest";
+import { createHash } from "node:crypto";
 import {
   _parseRssDate,
   ChangeRecord,
   classifyChangeTypes,
+  fetchInternalRevenueBulletin,
+  fetchIrsNews,
+  fetchIrsPublications,
+  fetchTreasuryRegulations,
   detectAffectedBenefits,
   loadSources,
   makeSlug,
   updateFederalRegisterState,
+  updateInternalRevenueBulletinState,
+  updateIrsPublicationsState,
+  updateTreasuryRegulationsState,
   updateIrsNewsState
 } from "../src/domain/taxLaw/updater";
 
@@ -194,6 +202,28 @@ describe("tax law parity", () => {
       expect(source.last_checked).toBeTruthy();
     });
 
+    test("irs_publications_state_tracks_item_ids", () => {
+      const state: Record<string, unknown> = {};
+      const records = [
+        new ChangeRecord({
+          id: "irs-pub-abc12345",
+          source: "irs_publications",
+          source_name: "IRS Publications",
+          title: "Form 1040 - U.S. Individual Income Tax Return",
+          url: "https://apps.irs.gov/example",
+          publication_date: "2026-06-01",
+          change_types: ["new_form"],
+          affected_benefits: [],
+          summary: "Posted 06/01/2026"
+        })
+      ];
+
+      updateIrsPublicationsState(state, records);
+      const source = state.irs_publications as { seen_item_ids?: string[]; last_checked?: string };
+      expect(source.seen_item_ids).toContain("irs-pub-abc12345");
+      expect(source.last_checked).toBeTruthy();
+    });
+
     test("state_accumulates_across_calls", () => {
       const state: Record<string, unknown> = {};
       const r1 = new ChangeRecord({
@@ -227,6 +257,277 @@ describe("tax law parity", () => {
       const source = state.federal_register as { seen_document_numbers?: string[] };
       expect(source.seen_document_numbers).toContain("2026-001");
       expect(source.seen_document_numbers).toContain("2026-002");
+    });
+
+    test("internal_revenue_bulletin_state_tracks_item_ids", () => {
+      const state: Record<string, unknown> = {};
+      const records = [
+        new ChangeRecord({
+          id: "irb-2026-23",
+          source: "internal_revenue_bulletin",
+          source_name: "Internal Revenue Bulletin",
+          title: "IRB 2026-23",
+          url: "https://www.irs.gov/irb/2026-23_IRB",
+          publication_date: "2026-01-01",
+          change_types: ["revenue_ruling"],
+          affected_benefits: [],
+          summary: "New Internal Revenue Bulletin"
+        })
+      ];
+
+      updateInternalRevenueBulletinState(state, records);
+      const source = state.internal_revenue_bulletin as { seen_item_ids?: string[]; last_checked?: string };
+      expect(source.seen_item_ids).toContain("irb-2026-23");
+      expect(source.last_checked).toBeTruthy();
+    });
+
+    test("treasury_regulations_state_tracks_item_ids", () => {
+      const state: Record<string, unknown> = {};
+      const records = [
+        new ChangeRecord({
+          id: "treasury-rss-abc12345",
+          source: "treasury_regulations",
+          source_name: "Treasury Regulations",
+          title: "Treasury announces tax regulation updates",
+          url: "https://home.treasury.gov/example",
+          publication_date: "2026-06-01",
+          change_types: ["new_interpretation"],
+          affected_benefits: [],
+          summary: "Tax-related update"
+        })
+      ];
+
+      updateTreasuryRegulationsState(state, records);
+      const source = state.treasury_regulations as { seen_item_ids?: string[]; last_checked?: string };
+      expect(source.seen_item_ids).toContain("treasury-rss-abc12345");
+      expect(source.last_checked).toBeTruthy();
+    });
+  });
+
+  describe("fetchIrsNews", () => {
+    test("extracts dated IRS newsroom links after since date", async () => {
+      const html = `
+        <html><body>
+          <div>
+            <span>May 29, 2026</span>
+            <a href="/newsroom/irs-announces-clean-vehicle-credit-update">IRS announces clean vehicle credit update</a>
+          </div>
+          <div>
+            <span>April 2, 2026</span>
+            <a href="/newsroom/irs-announces-old-item">IRS announces old item</a>
+          </div>
+        </body></html>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(html, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchIrsNews("2026-05-01", {});
+        expect(records).toHaveLength(1);
+        expect(records[0]?.source).toBe("irs_news");
+        expect(records[0]?.publication_date).toBe("2026-05-29");
+        expect(records[0]?.url).toContain("/newsroom/irs-announces-clean-vehicle-credit-update");
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    test("skips seen irs newsroom items", async () => {
+      const href = "/newsroom/irs-announces-hsa-contribution-limits";
+      const seenId = `irs-news-${createHash("md5").update(href).digest("hex").slice(0, 8)}`;
+      const html = `
+        <html><body>
+          <div>
+            <span>June 1, 2026</span>
+            <a href="${href}">IRS announces HSA contribution limits</a>
+          </div>
+        </body></html>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(html, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchIrsNews("2026-05-01", {
+          irs_news: {
+            seen_item_ids: [seenId]
+          }
+        });
+        expect(records).toHaveLength(0);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe("fetchIrsPublications", () => {
+    test("extracts publication rows newer than since date", async () => {
+      const html = `
+        <html><body>
+          <table class="pup-table">
+            <tr>
+              <td><a href="/app/picklist/forms/1040">Form 1040</a></td>
+              <td>U.S. Individual Income Tax Return</td>
+              <td>Jan 2026</td>
+              <td>06/01/2026</td>
+            </tr>
+            <tr>
+              <td><a href="/app/picklist/forms/941">Form 941</a></td>
+              <td>Employer's Quarterly Federal Tax Return</td>
+              <td>Jan 2025</td>
+              <td>03/01/2025</td>
+            </tr>
+          </table>
+        </body></html>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(html, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchIrsPublications("2026-01-01", {});
+        expect(records).toHaveLength(1);
+        expect(records[0]?.source).toBe("irs_publications");
+        expect(records[0]?.publication_date).toBe("2026-06-01");
+        expect(records[0]?.url).toContain("/app/picklist/forms/1040");
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    test("skips seen publication items", async () => {
+      const formNum = "Form 1040";
+      const revDate = "Jan 2026";
+      const seenId = `irs-pub-${createHash("md5").update(formNum + revDate).digest("hex").slice(0, 8)}`;
+      const html = `
+        <html><body>
+          <table>
+            <tr>
+              <td>${formNum}</td>
+              <td>U.S. Individual Income Tax Return</td>
+              <td>${revDate}</td>
+              <td>06/01/2026</td>
+            </tr>
+          </table>
+        </body></html>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(html, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchIrsPublications("2026-01-01", {
+          irs_publications: {
+            seen_item_ids: [seenId]
+          }
+        });
+        expect(records).toHaveLength(0);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe("fetchInternalRevenueBulletin", () => {
+    test("extracts IRB links from IRS IRB page", async () => {
+      const html = `
+        <html><body>
+          <a href="/irb/2026-23_IRB">Internal Revenue Bulletin: 2026-23</a>
+          <a href="/irb/2025-01_IRB">Internal Revenue Bulletin: 2025-01</a>
+        </body></html>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(html, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchInternalRevenueBulletin("2026-01-01", {});
+        expect(records).toHaveLength(1);
+        expect(records[0]?.id).toBe("irb-2026-23");
+        expect(records[0]?.source).toBe("internal_revenue_bulletin");
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    test("skips seen IRB links", async () => {
+      const html = `
+        <html><body>
+          <a href="/irb/2026-23_IRB">Internal Revenue Bulletin: 2026-23</a>
+        </body></html>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(html, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchInternalRevenueBulletin("2026-01-01", {
+          internal_revenue_bulletin: {
+            seen_item_ids: ["irb-2026-23"]
+          }
+        });
+        expect(records).toHaveLength(0);
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
+  describe("fetchTreasuryRegulations", () => {
+    test("extracts tax-relevant treasury rss items since date", async () => {
+      const xml = `
+        <rss><channel>
+          <item>
+            <title>Treasury announces new tax regulation guidance</title>
+            <link>https://home.treasury.gov/news/press-releases/jy9999</link>
+            <guid>guid-tax-1</guid>
+            <description>New guidance on Internal Revenue section 179.</description>
+            <pubDate>Mon, 01 Jun 2026 12:00:00 +0000</pubDate>
+          </item>
+          <item>
+            <title>Department announces arts program</title>
+            <link>https://home.treasury.gov/news/press-releases/jy0000</link>
+            <guid>guid-nontax-1</guid>
+            <description>Public outreach event.</description>
+            <pubDate>Mon, 01 Jun 2026 12:00:00 +0000</pubDate>
+          </item>
+        </channel></rss>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(xml, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchTreasuryRegulations("2026-05-01", {});
+        expect(records).toHaveLength(1);
+        expect(records[0]?.source).toBe("treasury_regulations");
+        expect(records[0]?.url).toContain("jy9999");
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    test("skips seen treasury rss items", async () => {
+      const guid = "guid-tax-1";
+      const seenId = `treasury-rss-${createHash("md5").update(guid).digest("hex").slice(0, 8)}`;
+      const xml = `
+        <rss><channel>
+          <item>
+            <title>Treasury announces new tax regulation guidance</title>
+            <link>https://home.treasury.gov/news/press-releases/jy9999</link>
+            <guid>${guid}</guid>
+            <description>New guidance on Internal Revenue section 179.</description>
+            <pubDate>Mon, 01 Jun 2026 12:00:00 +0000</pubDate>
+          </item>
+        </channel></rss>
+      `;
+
+      const originalFetch = global.fetch;
+      try {
+        global.fetch = async () => new Response(xml, { status: 200 }) as unknown as Promise<Response>;
+        const records = await fetchTreasuryRegulations("2026-05-01", {
+          treasury_regulations: {
+            seen_item_ids: [seenId]
+          }
+        });
+        expect(records).toHaveLength(0);
+      } finally {
+        global.fetch = originalFetch;
+      }
     });
   });
 

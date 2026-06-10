@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import yaml from "js-yaml";
 import { projectPaths } from "../../lib/paths";
 
@@ -7,6 +8,8 @@ const STATE_FILE = path.join(projectPaths.state, "update_state.json");
 const FUTURE_LAW_DIR = path.join(projectPaths.taxLibrary, "future_law");
 const REPORT_FILE = path.join(projectPaths.reports, "tax_law_updates.md");
 const FEDERAL_REGISTER_API = "https://www.federalregister.gov/api/v1/documents.json";
+const IRS_NEWSROOM_URL = "https://www.irs.gov/newsroom";
+const TREASURY_RSS_URL = "https://home.treasury.gov/rss.xml";
 const FEDERAL_REGISTER_FIELDS = [
   "title",
   "abstract",
@@ -143,6 +146,8 @@ const BENEFIT_KEYWORDS: Record<string, string[]> = {
   "federal-cost-segregation": ["cost segregation", "component depreciation", "accelerated depreciation study"]
 };
 
+const TREASURY_TAX_KEYWORDS_RE = /\b(tax|IRS|Internal Revenue|Treasury|deduction|credit|depreciation|regulation|ruling|T\.D\.|REG-|Rev\. Proc|section \d+)\b/i;
+
 export interface ChangeRecordInput {
   id: string;
   source: string;
@@ -271,6 +276,118 @@ export function _parseRssDate(dateStr: string): string | null {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
+const MONTH_DAY_YEAR_RE = /\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+(\d{1,2}),?\s+(20\d{2})\b/i;
+const MONTH_MAP: Record<string, string> = {
+  january: "01",
+  jan: "01",
+  february: "02",
+  feb: "02",
+  march: "03",
+  mar: "03",
+  april: "04",
+  apr: "04",
+  may: "05",
+  june: "06",
+  jun: "06",
+  july: "07",
+  jul: "07",
+  august: "08",
+  aug: "08",
+  september: "09",
+  sep: "09",
+  october: "10",
+  oct: "10",
+  november: "11",
+  nov: "11",
+  december: "12",
+  dec: "12"
+};
+
+function parseMonthDayYear(text: string): string | null {
+  const match = MONTH_DAY_YEAR_RE.exec(text);
+  if (!match) {
+    return null;
+  }
+
+  const month = MONTH_MAP[match[1]?.toLowerCase() ?? ""];
+  const day = (match[2] ?? "").padStart(2, "0");
+  const year = match[3] ?? "";
+  if (!month || !day || !year) {
+    return null;
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
+function parseMmDdYyyy(text: string): string | null {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(text.trim());
+  if (!match) {
+    return null;
+  }
+  const month = (match[1] ?? "").padStart(2, "0");
+  const day = (match[2] ?? "").padStart(2, "0");
+  const year = match[3] ?? "";
+  if (!month || !day || !year) {
+    return null;
+  }
+  return `${year}-${month}-${day}`;
+}
+
+function parseMonthYear(text: string): string | null {
+  const value = text.trim();
+  if (!value) {
+    return null;
+  }
+
+  const byDate = Date.parse(`1 ${value}`);
+  if (!Number.isNaN(byDate)) {
+    return new Date(byDate).toISOString().slice(0, 7) + "-01";
+  }
+
+  const yearMatch = /\b(20\d{2})\b/.exec(value);
+  return yearMatch ? `${yearMatch[1]}-01-01` : null;
+}
+
+function stripHtml(text: string): string {
+  return text.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+function extractNearestItemText(html: string, index: number): string {
+  const wrappers = [
+    ["<article", "</article>"],
+    ["<li", "</li>"],
+    ["<div", "</div>"]
+  ] as const;
+
+  for (const [openTag, closeTag] of wrappers) {
+    const openIdx = html.lastIndexOf(openTag, index);
+    if (openIdx < 0) {
+      continue;
+    }
+    const closeIdx = html.indexOf(closeTag, index);
+    if (closeIdx < 0) {
+      continue;
+    }
+
+    const fragment = html.slice(openIdx, closeIdx + closeTag.length);
+    return stripHtml(fragment);
+  }
+
+  const contextStart = Math.max(0, index - 250);
+  const contextEnd = Math.min(html.length, index + 250);
+  return stripHtml(html.slice(contextStart, contextEnd));
+}
+
 export function updateIrsNewsState(state: Record<string, unknown>, records: ChangeRecord[]): void {
   const source = asRecord(state.irs_news);
   const seenRaw = source.seen_item_ids;
@@ -283,6 +400,48 @@ export function updateIrsNewsState(state: Record<string, unknown>, records: Chan
   source.seen_item_ids = Array.from(seen);
   source.last_checked = new Date().toISOString().slice(0, 19);
   state.irs_news = source;
+}
+
+export function updateIrsPublicationsState(state: Record<string, unknown>, records: ChangeRecord[]): void {
+  const source = asRecord(state.irs_publications);
+  const seenRaw = source.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  for (const record of records) {
+    seen.add(record.id);
+  }
+
+  source.seen_item_ids = Array.from(seen);
+  source.last_checked = new Date().toISOString().slice(0, 19);
+  state.irs_publications = source;
+}
+
+export function updateInternalRevenueBulletinState(state: Record<string, unknown>, records: ChangeRecord[]): void {
+  const source = asRecord(state.internal_revenue_bulletin);
+  const seenRaw = source.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  for (const record of records) {
+    seen.add(record.id);
+  }
+
+  source.seen_item_ids = Array.from(seen);
+  source.last_checked = new Date().toISOString().slice(0, 19);
+  state.internal_revenue_bulletin = source;
+}
+
+export function updateTreasuryRegulationsState(state: Record<string, unknown>, records: ChangeRecord[]): void {
+  const source = asRecord(state.treasury_regulations);
+  const seenRaw = source.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  for (const record of records) {
+    seen.add(record.id);
+  }
+
+  source.seen_item_ids = Array.from(seen);
+  source.last_checked = new Date().toISOString().slice(0, 19);
+  state.treasury_regulations = source;
 }
 
 function loadState(): Record<string, unknown> {
@@ -418,8 +577,261 @@ async function fetchFederalRegister(sinceDate: string, state: Record<string, unk
   }
 }
 
-async function fetchIrsNews(_sinceDate: string, _state: Record<string, unknown>): Promise<ChangeRecord[]> {
-  return [];
+export async function fetchIrsNews(sinceDate: string, state: Record<string, unknown>): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state.irs_news);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  try {
+    const response = await fetch(IRS_NEWSROOM_URL);
+    if (!response.ok) {
+      return [];
+    }
+
+    const html = await response.text();
+    const linkRegex = /<a[^>]*href=["'](\/newsroom\/irs-[a-z][^"'#?]*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    const records: ChangeRecord[] = [];
+
+    for (const match of html.matchAll(linkRegex)) {
+      const href = match[1] ?? "";
+      const rawTitle = match[2] ?? "";
+      const title = decodeHtmlEntities(stripHtml(rawTitle));
+
+      if (!title || title.length < 10) {
+        continue;
+      }
+
+      const idx = match.index ?? 0;
+      const publicationDate = parseMonthDayYear(extractNearestItemText(html, idx));
+      if (!publicationDate || publicationDate < sinceDate) {
+        continue;
+      }
+
+      const itemId = `irs-news-${createHash("md5").update(href).digest("hex").slice(0, 8)}`;
+      if (seen.has(itemId)) {
+        continue;
+      }
+
+      records.push(
+        new ChangeRecord({
+          id: itemId,
+          source: "irs_news",
+          source_name: "IRS Newsroom",
+          title,
+          url: `https://www.irs.gov${href}`,
+          publication_date: publicationDate,
+          change_types: classifyChangeTypes(title),
+          affected_benefits: detectAffectedBenefits(title),
+          summary: title
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchIrsPublications(sinceDate: string, state: Record<string, unknown>): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state.irs_publications);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  const sinceYear = Number(sinceDate.slice(0, 4));
+  const currentYear = new Date().getFullYear();
+  const records: ChangeRecord[] = [];
+
+  for (let year = sinceYear; year <= currentYear; year += 1) {
+    const params = new URLSearchParams({
+      value: String(year),
+      criteria: "postedDate",
+      results: "",
+      resultsPerPage: "200",
+      indexOfFirstRow: "0",
+      sortColumn: "postedDate",
+      isDescending: "true"
+    });
+    const url = `https://apps.irs.gov/app/picklist/list/formsPublications.html?${params.toString()}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        continue;
+      }
+
+      const html = await response.text();
+      const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+
+      for (const rowMatch of html.matchAll(rowRegex)) {
+        const row = rowMatch[1] ?? "";
+        const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+        const cells = Array.from(row.matchAll(cellRegex)).map((match) => decodeHtmlEntities(stripHtml(match[1] ?? "")));
+        if (cells.length < 3) {
+          continue;
+        }
+
+        const formNum = cells[0] ?? "";
+        const title = cells[1] ?? "";
+        const revDate = cells[2] ?? "";
+        const postedDate = cells[3] ?? "";
+        const publicationDate = parseMmDdYyyy(postedDate) ?? parseMonthYear(revDate);
+        if (!publicationDate || publicationDate < sinceDate) {
+          continue;
+        }
+
+        const hrefMatch = /<a[^>]*href=["']([^"']+)["']/i.exec(row);
+        const href = hrefMatch?.[1] ?? "";
+        const fullUrl = href.startsWith("/") ? `https://apps.irs.gov${href}` : href;
+
+        const itemId = `irs-pub-${createHash("md5").update(formNum + revDate).digest("hex").slice(0, 8)}`;
+        if (seen.has(itemId)) {
+          continue;
+        }
+
+        records.push(
+          new ChangeRecord({
+            id: itemId,
+            source: "irs_publications",
+            source_name: "IRS Publications",
+            title: `${formNum} - ${title}`,
+            url: fullUrl,
+            publication_date: publicationDate,
+            change_types: classifyChangeTypes(title),
+            affected_benefits: detectAffectedBenefits(title),
+            summary: `Posted ${postedDate || revDate}: ${formNum} ${title}`
+          })
+        );
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return records;
+}
+
+export async function fetchInternalRevenueBulletin(
+  sinceDate: string,
+  state: Record<string, unknown>
+): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state.internal_revenue_bulletin);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  try {
+    const response = await fetch("https://www.irs.gov/irb/");
+    if (!response.ok) {
+      return [];
+    }
+
+    const html = await response.text();
+    const linkRegex = /<a[^>]*href=["']([^"']*\/irb\/\d{4}-\d+[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    const records: ChangeRecord[] = [];
+    const sinceYear = Number(sinceDate.slice(0, 4));
+
+    for (const match of html.matchAll(linkRegex)) {
+      const href = match[1] ?? "";
+      const title = decodeHtmlEntities(stripHtml(match[2] ?? ""));
+
+      const bulletinMatch = /\/irb\/(\d{4})-(\d+)/i.exec(href);
+      if (!bulletinMatch) {
+        continue;
+      }
+
+      const year = Number(bulletinMatch[1] ?? "0");
+      const number = Number(bulletinMatch[2] ?? "0");
+      if (!Number.isFinite(year) || !Number.isFinite(number) || year < sinceYear) {
+        continue;
+      }
+
+      const itemId = `irb-${year}-${String(number).padStart(2, "0")}`;
+      if (seen.has(itemId)) {
+        continue;
+      }
+
+      const fullUrl = href.startsWith("/") ? `https://www.irs.gov${href}` : href;
+      records.push(
+        new ChangeRecord({
+          id: itemId,
+          source: "internal_revenue_bulletin",
+          source_name: "Internal Revenue Bulletin",
+          title: title || `IRB ${year}-${String(number).padStart(2, "0")}`,
+          url: fullUrl,
+          publication_date: `${year}-01-01`,
+          change_types: ["revenue_ruling"],
+          affected_benefits: detectAffectedBenefits(title),
+          summary: `New Internal Revenue Bulletin ${year}-${String(number).padStart(2, "0")}: ${title}`
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchTreasuryRegulations(
+  sinceDate: string,
+  state: Record<string, unknown>
+): Promise<ChangeRecord[]> {
+  const sourceState = asRecord(state.treasury_regulations);
+  const seenRaw = sourceState.seen_item_ids;
+  const seen = new Set<string>(Array.isArray(seenRaw) ? seenRaw.map((value) => String(value)) : []);
+
+  try {
+    const response = await fetch(TREASURY_RSS_URL);
+    if (!response.ok) {
+      return [];
+    }
+
+    const xml = await response.text();
+    const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+    const records: ChangeRecord[] = [];
+
+    for (const match of xml.matchAll(itemRegex)) {
+      const item = match[1] ?? "";
+      const title = decodeHtmlEntities(stripHtml((/<title>([\s\S]*?)<\/title>/i.exec(item)?.[1] ?? "")));
+      const link = decodeHtmlEntities(stripHtml((/<link>([\s\S]*?)<\/link>/i.exec(item)?.[1] ?? "")));
+      const guid = decodeHtmlEntities(stripHtml((/<guid[^>]*>([\s\S]*?)<\/guid>/i.exec(item)?.[1] ?? ""))) || link;
+      const description = decodeHtmlEntities(stripHtml((/<description>([\s\S]*?)<\/description>/i.exec(item)?.[1] ?? "")));
+      const pubDateRaw = decodeHtmlEntities(stripHtml((/<pubDate>([\s\S]*?)<\/pubDate>/i.exec(item)?.[1] ?? "")));
+      const publicationDate = _parseRssDate(pubDateRaw) ?? sinceDate;
+
+      if (publicationDate < sinceDate) {
+        continue;
+      }
+
+      if (!TREASURY_TAX_KEYWORDS_RE.test(`${title} ${description}`)) {
+        continue;
+      }
+
+      const itemId = `treasury-rss-${createHash("md5").update(guid).digest("hex").slice(0, 8)}`;
+      if (seen.has(itemId)) {
+        continue;
+      }
+
+      records.push(
+        new ChangeRecord({
+          id: itemId,
+          source: "treasury_regulations",
+          source_name: "Treasury Regulations",
+          title,
+          url: link,
+          publication_date: publicationDate,
+          change_types: classifyChangeTypes(title, description),
+          affected_benefits: detectAffectedBenefits(title, description),
+          summary: description.slice(0, 500),
+          raw_abstract: description
+        })
+      );
+    }
+
+    return records;
+  } catch {
+    return [];
+  }
 }
 
 async function fetchBySource(
@@ -433,6 +845,15 @@ async function fetchBySource(
   if (source === "irs_news") {
     return fetchIrsNews(sinceDate, state);
   }
+  if (source === "irs_publications") {
+    return fetchIrsPublications(sinceDate, state);
+  }
+  if (source === "internal_revenue_bulletin") {
+    return fetchInternalRevenueBulletin(sinceDate, state);
+  }
+  if (source === "treasury_regulations") {
+    return fetchTreasuryRegulations(sinceDate, state);
+  }
   return [];
 }
 
@@ -443,6 +864,18 @@ function updateSourceState(source: TaxLawSource, state: Record<string, unknown>,
   }
   if (source === "irs_news") {
     updateIrsNewsState(state, records);
+    return;
+  }
+  if (source === "irs_publications") {
+    updateIrsPublicationsState(state, records);
+    return;
+  }
+  if (source === "internal_revenue_bulletin") {
+    updateInternalRevenueBulletinState(state, records);
+    return;
+  }
+  if (source === "treasury_regulations") {
+    updateTreasuryRegulationsState(state, records);
   }
 }
 
