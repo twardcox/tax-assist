@@ -45,7 +45,8 @@ describe("eligibility parity", () => {
   test("scanner runs against blank user sections without error", () => {
     const scan = runScan(2025, "missing-user");
 
-    expect(scan.results).toHaveLength(loadBenefitLibrary().length);
+    expect(scan.results.length).toBeLessThanOrEqual(loadBenefitLibrary().length);
+    expect(scan.results.every((r) => r.status !== "unknown")).toBe(true);
     expect(scan.counts.eligible_now).toBe(0);
   });
 });

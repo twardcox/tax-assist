@@ -357,7 +357,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {sorted?.map((r) => (
-                  <BenefitRow key={r.benefit_id} result={r} />
+                  <BenefitRow key={`${r.benefit_id}-${r.jurisdiction}`} result={r} />
                 ))}
               </tbody>
             </table>

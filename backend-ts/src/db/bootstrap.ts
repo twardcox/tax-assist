@@ -7,8 +7,8 @@ import { hashPassword } from "../auth/service";
 import { projectPaths } from "../lib/paths";
 import { getDb } from "./client";
 
-const DEFAULT_EMAIL = "admin@localhost";
-const DEFAULT_PASSWORD = "changeme123";
+const DEFAULT_EMAIL = "admin@localhost.com";
+const DEFAULT_PASSWORD = "Password1!";
 const DEFAULT_DISPLAY_NAME = "Admin";
 const BOOTSTRAP_TAX_YEAR = 2025;
 

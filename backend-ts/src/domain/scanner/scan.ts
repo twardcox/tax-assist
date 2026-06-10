@@ -9,7 +9,8 @@ const STATUS_ORDER: ScanStatus[] = [
   "eligible_if_changed",
   "future_opportunity",
   "high_risk",
-  "unknown"
+  "not_applicable",
+  "expired"
 ];
 
 function countByStatus(results: ScanResult[]): Record<string, number> {
@@ -29,7 +30,9 @@ export function runScan(taxYear: number, userId?: string | null): ScanRun {
   const rawBenefits = loadBenefitLibrary();
   const facts = userId ? UserFacts.fromUserSections(userId, taxYear) : UserFacts.fromYaml(taxYear);
 
-  const results: ScanResult[] = rawBenefits.map((b) => evaluateBenefit(b, facts));
+  const results: ScanResult[] = rawBenefits
+    .map((b) => evaluateBenefit(b, facts))
+    .filter((r) => r.status !== "unknown");
 
   return {
     tax_year: taxYear,
