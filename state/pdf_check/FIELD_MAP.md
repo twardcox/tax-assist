@@ -3,38 +3,59 @@
 
 ## Form 1040 — Page 1 (AcroForm Page1)
 
-### Header
-| Field | Form Label | ComputedValues Key | Status |
+### Header — field positions verified via mapFieldPositions.mjs (2026-06-11)
+f1_01–f1_13 are NON-NAME header fields (fiscal year dates, deceased dates, etc.).
+Name fields begin at f1_14 (Y≈94 from page top).
+
+| Field | Y,X pos | Form Label | Data Key | Status |
+|---|---|---|---|---|
+| f1_01[0] | 48, 229 | Alternate tax year "beginning" date | — | not filled |
+| f1_02[0] | 48, 366 | Alternate tax year "ending" date | — | not filled |
+| f1_03[0] | 48, 469 | Alternate tax year ending year | — | not filled |
+| f1_04–f1_10 | 61, * | Deceased/spouse death dates, combat zone text | — | not filled |
+| f1_11–f1_13 | 73, * | "Other" section text fields | — | not filled |
+| **f1_14[0]** | **94, 36** | **Your first name and middle initial** | `household.taxpayer.first_name` | ✓ FIXED |
+| **f1_15[0]** | **94, 253** | **Your last name** | `household.taxpayer.last_name` | ✓ FIXED |
+| **f1_16[0]** | **94, 469** | **Your social security number** | `household.taxpayer.ssn` | ✓ FIXED |
+| **f1_17[0]** | **118, 36** | **Spouse's first name and middle initial** | `household.spouse.first_name` | ✓ FIXED |
+| **f1_18[0]** | **118, 253** | **Spouse's last name** | `household.spouse.last_name` | ✓ FIXED |
+| **f1_19[0]** | **118, 469** | **Spouse's social security number** | `household.spouse.ssn` | ✓ FIXED |
+| Address_ReadOrder.f1_20[0] | 142, 36 | Home address (number and street) | `household.residence.street_address` | ✓ |
+| Address_ReadOrder.f1_21[0] | 142, 419 | Apt. no. | — | not filled |
+| Address_ReadOrder.f1_22[0] | 166, 36 | City, town, or post office | `household.residence.city` | ✓ |
+| Address_ReadOrder.f1_23[0] | 166, 332 | State | `household.residence.state` | ✓ |
+| Address_ReadOrder.f1_24[0] | 166, 397 | ZIP code | `household.residence.zip` | ✓ |
+
+### Filing Status Checkboxes — CORRECTED 2026-06-11
+Left column (Single/MFJ/MFS) are inside Checkbox_ReadOrder subform; right column (HOH/QSS) are top-level.
+
+| Field (full path) | Y,X pos | Form Label | Status |
 |---|---|---|---|
-| f1_01[0] | Your first name and middle initial | `household.taxpayer.first_name` | ✓ |
-| f1_02[0] | Last name | `household.taxpayer.last_name` | ✓ |
-| f1_03[0] | Your social security number | `household.taxpayer.ssn` | ✓ |
-| f1_04[0] | Spouse's first name and middle initial | `household.spouse.first_name` | ✓ |
-| f1_05[0] | Spouse's last name | `household.spouse.last_name` | ✓ |
-| f1_06[0] | Spouse's social security number | `household.spouse.ssn` | ✓ |
-| Address_ReadOrder.f1_20[0] | Home address (number and street) | `household.residence.street_address` | ✓ |
-| Address_ReadOrder.f1_21[0] | Apt. no. | — | not filled |
-| Address_ReadOrder.f1_22[0] | City, town, or post office | `household.residence.city` | ✓ |
-| Address_ReadOrder.f1_23[0] | State | `household.residence.state` | ✓ |
-| Address_ReadOrder.f1_24[0] | ZIP code | `household.residence.zip` | ✓ |
+| Checkbox_ReadOrder[0].c1_8[0] | 206, 98 | Single | ✓ FIXED |
+| Checkbox_ReadOrder[0].c1_8[1] | 218, 98 | Married filing jointly | ✓ FIXED |
+| Checkbox_ReadOrder[0].c1_8[2] | 230, 98 | Married filing separately | ✓ FIXED |
+| c1_8[0] (top-level) | 206, 350 | Head of household | ✓ FIXED |
+| c1_8[1] (top-level) | 218, 350 | Qualifying surviving spouse | ✓ FIXED |
+| c1_10[0] | 287, 518 | Digital Assets — Yes | ✓ FIXED |
+| c1_10[1] | 287, 554 | Digital Assets — No | ✓ FIXED |
 
-### Filing Status Checkboxes
-| Field | Form Label | Status |
+Previously wrong mappings (OLD → these were Presidential Campaign / main-home checkboxes):
+- c1_5[0] (Y=147, X=568) = "main home in U.S." checkbox — NOT Single
+- c1_6[0] (Y=194, X=482) = Presidential Campaign "You" — NOT MFJ
+- c1_7[0] (Y=194, X=526) = Presidential Campaign "Spouse" — NOT MFS
+
+### Dependents — NOW FILLED (2026-06-11)
+| Field (full path) | Form Label | Data Key |
 |---|---|---|
-| c1_5[0] | Single | ✓ |
-| c1_6[0] | Married filing jointly | ✓ |
-| c1_7[0] | Married filing separately | ✓ |
-| c1_9[0] | Head of household | ✓ |
-| c1_10[0] | Qualifying surviving spouse | ✓ |
-
-### Dependents (not filled — CPA responsibility)
-| Field | Form Label |
-|---|---|
-| Table_Dependents.Row1.f1_31[0] | Dependent 1 first name |
-| Table_Dependents.Row1.f1_32[0] | Dependent 1 last name |
-| Table_Dependents.Row1.f1_33[0] | Dependent 1 SSN |
-| Table_Dependents.Row1.f1_34[0] | Dependent 1 relationship |
+| Table_Dependents[0].Row1[0].f1_31[0] | Dep 1 first name | `name.split[0]` |
+| Table_Dependents[0].Row1[0].f1_32[0] | Dep 1 last name | `name.split[1+]` |
+| Table_Dependents[0].Row1[0].f1_33[0] | Dep 1 SSN | `ssn` |
+| Table_Dependents[0].Row1[0].f1_34[0] | Dep 1 relationship | `relationship` |
 | (Row2–Row4 follow same pattern: f1_35–f1_46) | | |
+| Row5.Dependent1.c1_12[0] | Dep 1 lived with you (Yes) | `lives_with_taxpayer` |
+| Row6.Dependent1.c1_20[0] | Dep 1 full-time student | `full_time_student` |
+| Row7.Dependent1.c1_28[0] | Dep 1 child tax credit | `age_at_year_end < 17` |
+| Row7.Dependent1.c1_28[1] | Dep 1 other dependent credit | `age_at_year_end >= 17` |
 
 ### Income (Line Numbers)
 | Field | Line | Form Label | ComputedValues Key | Status |

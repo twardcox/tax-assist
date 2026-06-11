@@ -137,13 +137,14 @@ function getStr(data: Record<string, unknown>, dotPath: string): string {
   return cur == null ? "" : String(cur);
 }
 
-// Map filing status string to Form 1040 checkbox index (c1_5 = Single … c1_9 = QSS)
+// Full AcroForm paths for the 5 filing-status checkboxes.
+// Left column (Single, MFJ, MFS) are nested in Checkbox_ReadOrder; right column (HOH, QSS) are top-level.
 const FILING_STATUS_CB: Record<string, string> = {
-  single:                       "c1_5[0]",
-  married_filing_jointly:       "c1_6[0]",
-  married_filing_separately:    "c1_7[0]",
-  head_of_household:            "c1_9[0]",
-  qualifying_surviving_spouse:  "c1_10[0]",
+  single:                      "topmostSubform[0].Page1[0].Checkbox_ReadOrder[0].c1_8[0]",
+  married_filing_jointly:      "topmostSubform[0].Page1[0].Checkbox_ReadOrder[0].c1_8[1]",
+  married_filing_separately:   "topmostSubform[0].Page1[0].Checkbox_ReadOrder[0].c1_8[2]",
+  head_of_household:           "topmostSubform[0].Page1[0].c1_8[0]",
+  qualifying_surviving_spouse: "topmostSubform[0].Page1[0].c1_8[1]",
 };
 
 async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promise<PDFDocument> {
@@ -166,34 +167,98 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   const spLast  = String(sp["last_name"]  ?? "");
   const spSSN   = String(sp["ssn"]        ?? "");
 
-  ts(doc, p(1, "f1_01[0]"), tpFirst);              // Your first name + MI
-  ts(doc, p(1, "f1_02[0]"), tpLast);               // Your last name
-  ts(doc, p(1, "f1_03[0]"), tpSSN);                // Your SSN
+  // f1_01–f1_13 are header/meta fields (fiscal year dates, deceased dates, etc.).
+  // Name fields start at f1_14.
+  ts(doc, p(1, "f1_14[0]"), tpFirst);              // Your first name + MI
+  ts(doc, p(1, "f1_15[0]"), tpLast);               // Your last name
+  ts(doc, p(1, "f1_16[0]"), tpSSN);                // Your SSN
   if (spFirst || spLast) {
-    ts(doc, p(1, "f1_04[0]"), spFirst);             // Spouse first name + MI
-    ts(doc, p(1, "f1_05[0]"), spLast);              // Spouse last name
-    ts(doc, p(1, "f1_06[0]"), spSSN);              // Spouse SSN
+    ts(doc, p(1, "f1_17[0]"), spFirst);             // Spouse first name + MI
+    ts(doc, p(1, "f1_18[0]"), spLast);              // Spouse last name
+    ts(doc, p(1, "f1_19[0]"), spSSN);               // Spouse SSN
   }
 
   // Address — Address_ReadOrder subform contains the 8 address fields
   const street = String(res["street_address"] ?? "");
+  const apt    = String(res["apt_number"]    ?? "");
   const city   = String(res["city"]   ?? "");
   const state  = String(res["state"]  ?? "");
   const zip    = String(res["zip"]    ?? "");
   const addr   = (base: string) => `topmostSubform[0].Page1[0].Address_ReadOrder[0].${base}`;
   ts(doc, addr("f1_20[0]"), street);               // Home address (number and street)
+  ts(doc, addr("f1_21[0]"), apt);                  // Apt. no.
   ts(doc, addr("f1_22[0]"), city);                 // City, town, or post office
   ts(doc, addr("f1_23[0]"), state);                // State
   ts(doc, addr("f1_24[0]"), zip);                  // ZIP code
 
-  // Filing status checkbox
+  // Filing status checkbox — FILING_STATUS_CB stores the full AcroForm path
   const fs = String(c["_fs"] ?? getStr(data, "household.filing_status"));
   const cbKey = FILING_STATUS_CB[fs];
-  if (cbKey) tryCheckBox(doc, p(1, cbKey), true);
+  if (cbKey) tryCheckBox(doc, cbKey, true);
 
-  // Digital assets checkbox (c1_4 = Yes)
+  // Digital assets Yes/No (c1_10[0] = Yes, c1_10[1] = No)
   const digitalAssets = (hh["digital_assets"] as boolean | undefined) ?? false;
-  if (digitalAssets) tryCheckBox(doc, p(1, "c1_4[0]"), true);
+  tryCheckBox(doc, p(1, "c1_10[0]"), digitalAssets);
+  tryCheckBox(doc, p(1, "c1_10[1]"), !digitalAssets);
+
+  // ── Page 1 ── Dependents ────────────────────────────────────────────────────
+  const depsSection = (data["dependents"] ?? {}) as Record<string, unknown>;
+  const deps = (depsSection["dependents"] as Record<string, unknown>[]) ?? [];
+  // Row text fields: f1_31–f1_34 (dep1), f1_35–f1_38 (dep2), f1_39–f1_42 (dep3), f1_43–f1_46 (dep4)
+  const depRows = [
+    { fn: "f1_31[0]", ln: "f1_32[0]", ssn: "f1_33[0]", rel: "f1_34[0]", n: 1 },
+    { fn: "f1_35[0]", ln: "f1_36[0]", ssn: "f1_37[0]", rel: "f1_38[0]", n: 2 },
+    { fn: "f1_39[0]", ln: "f1_40[0]", ssn: "f1_41[0]", rel: "f1_42[0]", n: 3 },
+    { fn: "f1_43[0]", ln: "f1_44[0]", ssn: "f1_45[0]", rel: "f1_46[0]", n: 4 },
+  ] as const;
+  // Dependent credit checkboxes (per row): child tax credit [0] vs other dependent credit [1]
+  const depCreditCb = ["c1_28", "c1_29", "c1_30", "c1_31"] as const;
+  // "Lived with you" Yes checkboxes
+  const depLivedWithCb = [
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent1[0].c1_12[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent2[0].c1_14[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent3[0].c1_16[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent4[0].c1_18[0]",
+  ] as const;
+  // "Full-time student" checkboxes
+  const depStudentCb = [
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent1[0].c1_20[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent2[0].c1_22[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent3[0].c1_24[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent4[0].c1_26[0]",
+  ] as const;
+
+  for (let i = 0; i < Math.min(deps.length, 4); i++) {
+    const d = deps[i];
+    const row = depRows[i];
+    const fullName = String(d["name"] ?? "").trim();
+    const nameParts = fullName.split(/\s+/);
+    const firstName = nameParts[0] ?? "";
+    const lastName = nameParts.slice(1).join(" ");
+    const depPath = (f: string) =>
+      `topmostSubform[0].Page1[0].Table_Dependents[0].Row${i + 1}[0].${f}`;
+    ts(doc, depPath(row.fn), firstName);
+    ts(doc, depPath(row.ln), lastName);
+    ts(doc, depPath(row.ssn), String(d["ssn"] ?? ""));
+    ts(doc, depPath(row.rel), String(d["relationship"] ?? ""));
+
+    // "Lived with taxpayer" Yes checkbox
+    if (d["lives_with_taxpayer"] !== false) {
+      tryCheckBox(doc, depLivedWithCb[i], true);
+    }
+
+    // Full-time student checkbox
+    if (d["full_time_student"]) {
+      tryCheckBox(doc, depStudentCb[i], true);
+    }
+
+    // Credit type checkbox
+    const age = Number(d["age_at_year_end"] ?? 99);
+    const isQualifyingChild = age < 17;
+    const creditCbBase = `topmostSubform[0].Page1[0].Table_Dependents[0].Row7[0].Dependent${i + 1}[0].${depCreditCb[i]}`;
+    tryCheckBox(doc, `${creditCbBase}[0]`, isQualifyingChild);   // Child tax credit
+    tryCheckBox(doc, `${creditCbBase}[1]`, !isQualifyingChild);  // Credit for other dependents
+  }
 
   // ── Page 1 ── Income ────────────────────────────────────────────────────────
   s(p(1, "f1_47[0]"), c["wages"]);                // Line 1a  W-2 wages
@@ -266,13 +331,19 @@ async function fillSchedule1(c: ComputedValues): Promise<PDFDocument> {
   s(p(1, "f1_38[0]"), c["schedule1_additional"]);      // Line 10 carry to Form 1040 line 8
 
   // ── Page 2 ── Part II Adjustments ──────────────────────────────────────────
+  // Field order verified via mapFieldPositions.mjs (Y-coordinate anchors):
+  //   f2_10 is in "Line19b_CombField" → f2_09 = Line 19a (one row above)
+  //   f2_16 is in "Line24a_ReadOrder" → counting back: f2_12=L20, f2_13=L21
+  //   Lines 12 and 18 have no AcroForm field in this PDF.
   s(p(2, "f2_03[0]"), c["educator_expenses"]);         // Line 11 educator expenses
-  s(p(2, "f2_05[0]"), c["hsa_outside_payroll"]);       // Line 13 HSA deduction
-  s(p(2, "f2_06[0]"), c["moving_expenses_military"]);  // Line 14 moving expenses (military)
-  s(p(2, "f2_07[0]"), c["se_tax_deduction"]);          // Line 15 deductible part of SE tax
-  s(p(2, "f2_08[0]"), c["se_health_insurance"]);       // Line 16 SE health insurance
-  s(p(2, "f2_13[0]"), c["ira_deduction"]);             // Line 20 IRA deduction
-  s(p(2, "f2_14[0]"), c["student_loan_interest"]);     // Line 21 student loan interest
+  s(p(2, "f2_04[0]"), c["hsa_outside_payroll"]);       // Line 13 HSA deduction
+  s(p(2, "f2_05[0]"), c["moving_expenses_military"]);  // Line 14 moving expenses (military)
+  s(p(2, "f2_06[0]"), c["se_tax_deduction"]);          // Line 15 deductible part of SE tax
+  // Line 16 SEP/SIMPLE (f2_07): no data collected — left blank
+  s(p(2, "f2_08[0]"), c["se_health_insurance"]);       // Line 17 SE health insurance
+  s(p(2, "f2_09[0]"), c["alimony_paid"]);              // Line 19a alimony paid
+  s(p(2, "f2_12[0]"), c["ira_deduction"]);             // Line 20 IRA deduction
+  s(p(2, "f2_13[0]"), c["student_loan_interest"]);     // Line 21 student loan interest
   s(p(2, "f2_30[0]"), c["total_adjustments"]);         // Line 26 total adjustments
 
   return doc;
@@ -320,7 +391,9 @@ async function fillScheduleC(
 
   // Header
   ts(doc, `topmostSubform[0].Page1[0].f1_1[0]`, displayName);
+  ts(doc, `topmostSubform[0].Page1[0].f1_3[0]`, String(biz["naics_code"] ?? ""));     // Line A principal business / NAICS code
   ts(doc, `topmostSubform[0].Page1[0].BComb[0].f1_4[0]`, String(biz["business_name"] ?? ""));
+  ts(doc, `topmostSubform[0].Page1[0].DComb[0].f1_6[0]`, String(biz["ein"] ?? ""));   // Line D employer ID (EIN)
 
   // ── Part I Income ───────────────────────────────────────────────────────────
   s(`topmostSubform[0].Page1[0].f1_10[0]`, gross);  // Line 1  gross receipts

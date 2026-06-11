@@ -71,6 +71,14 @@ export const schema = {
           source: "Your mailing address.",
         },
         {
+          key: "apt_number",
+          label: "Apt. / Unit No.",
+          type: "text",
+          placeholder: "Apt 4B",
+          description: "Apartment, unit, suite, or room number. Leave blank if not applicable.",
+          source: "Your mailing address.",
+        },
+        {
           key: "city",
           label: "City",
           type: "text",

@@ -45,9 +45,17 @@ Complete text→field→data mapping for all 6 forms:
 ### Verification artifacts (state/pdf_check/)
 - `f1040_2025.md` — markitdown output of the downloaded filled Form 1040
 - `FIELD_MAP.md` — authoritative field reference for all 6 forms
+- `FORM_MAPPING_PROCESS.md` — **step-by-step playbook** for adding/correcting any form
 - `labeled_all_*.pdf` — each form with field names labeled in every text field
+- `flat_labeled_*.pdf` — flattened versions; readable by markitdown
 - `annotated_f1040.pdf` — Form 1040 with field names drawn as red text overlays
-- Scripts: `inspectFields.mjs`, `labelAllForms.mjs`, `annotateFields.mjs`, `findStray4.mjs`
+- Scripts: `inspectFields.mjs`, `mapFieldPositions.mjs`, `labelAllForms.mjs`, `flattenLabeledForms.mjs`, `annotateFields.mjs`
+
+### Form 1040 header fields — FIXED 2026-06-11
+Names were filling the wrong fields (f1_01–f1_06 are fiscal-year/deceased-date meta fields,
+not the name row). Correct name fields: f1_14–f1_19. Filing status checkboxes also corrected
+(Checkbox_ReadOrder subform for Single/MFJ/MFS; top-level c1_8 for HOH/QSS). Dependents
+now filled from data.dependents.dependents array. Digital assets checkbox fixed to c1_10.
 
 ### Schedules not yet verified
 The field mapping for Schedules 1, B, C, D, SE was done from code inspection only — not yet verified via markitdown on the actual filled PDFs. Next step: download each from the new per-form tab, run markitdown, and cross-check against `FIELD_MAP.md`.

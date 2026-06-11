@@ -22,6 +22,14 @@ export const schema = {
               source: "W-2 Box c (Employer's name).",
             },
             {
+              key: "employer_ein",
+              label: "Employer EIN",
+              type: "text",
+              placeholder: "XX-XXXXXXX",
+              description: "Your employer's federal tax ID number. Used for verification and some state returns.",
+              source: "W-2 Box b (Employer identification number).",
+            },
+            {
               key: "wages",
               label: "Wages (Box 1)",
               type: "currency",
@@ -299,10 +307,24 @@ export const schema = {
           source: "Form W-2G from casinos, or your own records.",
         },
         {
+          key: "prizes_awards",
+          label: "Prizes & Awards",
+          type: "currency",
+          description: "Taxable prizes, awards, and contest winnings. Reported on Form 1099-MISC or 1099-NEC.",
+          source: "Form 1099-MISC box 3, or Form 1099-NEC.",
+        },
+        {
+          key: "canceled_debt",
+          label: "Canceled / Forgiven Debt",
+          type: "currency",
+          description: "Debt forgiven by a lender is generally taxable income. Exclusions may apply for insolvency or bankruptcy.",
+          source: "Form 1099-C from the lender.",
+        },
+        {
           key: "other_amount",
           label: "Other Income Amount",
           type: "currency",
-          description: "Other taxable income not captured elsewhere (prizes, awards, cancellation of debt, etc.).",
+          description: "Other taxable income not captured by any category above.",
           source: "Any 1099 or income statement for amounts not covered above.",
         },
         {

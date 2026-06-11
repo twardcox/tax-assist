@@ -52,13 +52,6 @@ export const schema = {
               source: "Birth certificate, adoption papers, or foster care placement documents.",
             },
             {
-              key: "date_of_birth",
-              label: "Date of Birth",
-              type: "date",
-              description: "Their date of birth. Used to calculate age and determine qualifying child vs. relative status.",
-              source: "Birth certificate.",
-            },
-            {
               key: "age_at_year_end",
               label: "Age at Year End",
               type: "number",
