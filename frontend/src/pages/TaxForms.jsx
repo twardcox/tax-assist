@@ -604,9 +604,46 @@ function FilingDetailsWidget({ taxYear }) {
   );
 }
 
+// ── Form tab helpers ──────────────────────────────────────────────────────────
+
+const FORM_LABELS = {
+  f1040:   "Form 1040",
+  f1040s1: "Schedule 1",
+  f1040sb: "Schedule B",
+  f1040sd: "Schedule D",
+  f1040sse:"Schedule SE",
+};
+
+function getFormTabs(c) {
+  const tabs = [{ key: "f1040", label: "Form 1040" }];
+  const needSch1 = Number(c.total_adjustments ?? 0) > 0 || Number(c.schedule1_additional ?? 0) !== 0;
+  if (needSch1) tabs.push({ key: "f1040s1", label: "Schedule 1" });
+  if (c._need_sch_b) tabs.push({ key: "f1040sb", label: "Schedule B" });
+  if (c._need_sch_c) {
+    const records = c.schedule_c_records || [];
+    records.forEach((biz, i) =>
+      tabs.push({
+        key: `f1040sc_${i}`,
+        label: records.length > 1 ? `Sch C (${i + 1})` : "Schedule C",
+      })
+    );
+  }
+  if (c._need_sch_d) tabs.push({ key: "f1040sd", label: "Schedule D" });
+  if (c._need_sch_se) tabs.push({ key: "f1040sse", label: "Schedule SE" });
+  return tabs;
+}
+
+function formDownloadName(formKey, taxYear) {
+  if (formKey.startsWith("f1040sc_")) {
+    const i = Number(formKey.split("_")[1]) + 1;
+    return `Schedule_C_${i}_${taxYear}.pdf`;
+  }
+  return `${FORM_LABELS[formKey] || formKey}_${taxYear}.pdf`.replace(/\s+/g, "_");
+}
+
 // ── PDF viewer ────────────────────────────────────────────────────────────────
 
-function PdfViewer({ taxYear }) {
+function PdfViewer({ taxYear, form }) {
   const [blobUrl,  setBlobUrl]  = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState(null);
@@ -615,23 +652,25 @@ function PdfViewer({ taxYear }) {
     setLoading(true);
     setError(null);
     setBlobUrl(null);
-    api.previewTaxFormPdf(taxYear)
+    api.previewTaxFormPdf(taxYear, form)
       .then((blob) => setBlobUrl(URL.createObjectURL(blob)))
       .catch((e) => setError(e.message || "Could not load PDF"))
       .finally(() => setLoading(false));
   }
 
-  // Load on mount (each new pdfKey causes a remount)
+  // Load on mount (each new key prop causes a remount)
   useEffect(() => { load(); }, []);
 
   // Revoke blob URL on unmount to free memory
   useEffect(() => () => { if (blobUrl) URL.revokeObjectURL(blobUrl); }, [blobUrl]);
 
+  const label = FORM_LABELS[form] || (form?.startsWith("f1040sc_") ? `Schedule C (${Number(form.split("_")[1]) + 1})` : form);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-500">
         <div className="w-6 h-6 border-2 border-gray-600 border-t-gray-300 rounded-full animate-spin" />
-        <p className="text-sm">Loading Form 1040…</p>
+        <p className="text-sm">Loading {label}…</p>
         <p className="text-xs text-gray-600">Fetching from IRS if not cached — up to 10 s on first load.</p>
       </div>
     );
@@ -640,23 +679,29 @@ function PdfViewer({ taxYear }) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-red-400 text-sm">
         <p>{error}</p>
-        <button
-          onClick={load}
-          className="text-xs text-gray-500 hover:text-gray-300 underline"
-        >
-          Retry
-        </button>
+        <button onClick={load} className="text-xs text-gray-500 hover:text-gray-300 underline">Retry</button>
       </div>
     );
   }
   if (!blobUrl) return null;
   return (
-    <iframe
-      src={blobUrl}
-      title="Form 1040 Preview"
-      className="w-full h-full rounded border border-gray-800"
-      style={{ minHeight: 0 }}
-    />
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex justify-end flex-shrink-0 mb-1.5">
+        <a
+          href={blobUrl}
+          download={formDownloadName(form, taxYear)}
+          className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded font-semibold transition-colors"
+        >
+          Download PDF
+        </a>
+      </div>
+      <iframe
+        src={blobUrl}
+        title={`${label} Preview`}
+        className="w-full flex-1 rounded border border-gray-800"
+        style={{ minHeight: 0 }}
+      />
+    </div>
   );
 }
 
@@ -664,11 +709,10 @@ function PdfViewer({ taxYear }) {
 
 export default function TaxForms() {
   const [taxYear]   = useState(2025);
-  const [tab,       setTab]       = useState("lines"); // "lines" | "form"
+  const [tab,       setTab]       = useState("lines");
   const [loading,   setLoading]   = useState(false);
   const [result,    setResult]    = useState(null);
   const [error,     setError]     = useState(null);
-  // Ref to the PdfViewer so we can trigger a reload when recompute is clicked
   const pdfReloadKey = useRef(0);
   const [pdfKey,    setPdfKey]    = useState(0);
 
@@ -690,6 +734,14 @@ export default function TaxForms() {
 
   const c  = result?.computed || {};
   const fs = result?.filing_status || "";
+
+  const formTabs = result ? getFormTabs(c) : [];
+  const allTabs  = [{ key: "lines", label: "Line Items" }, ...formTabs];
+
+  // If current tab was removed (e.g. after recompute with different forms), fall back to lines
+  useEffect(() => {
+    if (!allTabs.some((t) => t.key === tab)) setTab("lines");
+  }, [result]);
 
   return (
     <div className="flex gap-6 h-[calc(100vh-140px)]">
@@ -720,6 +772,22 @@ export default function TaxForms() {
           </div>
         )}
 
+        {/* Tab switcher */}
+        <div className="flex gap-1 mb-3 flex-shrink-0 border-b border-gray-800 pb-0 flex-wrap">
+          {allTabs.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-t transition-colors
+                ${tab === key
+                  ? "bg-gray-800 text-white border border-b-gray-800 border-gray-700 -mb-px"
+                  : "text-gray-500 hover:text-gray-300"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {!result && !loading && (
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-600">
             <svg className="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -739,22 +807,6 @@ export default function TaxForms() {
 
         {result && !loading && (
           <>
-            {/* Tab switcher */}
-            <div className="flex gap-1 mb-3 flex-shrink-0 border-b border-gray-800 pb-0">
-              {[["lines", "Line Items"], ["form", "Form 1040"]].map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-t transition-colors
-                    ${tab === key
-                      ? "bg-gray-800 text-white border border-b-gray-800 border-gray-700 -mb-px"
-                      : "text-gray-500 hover:text-gray-300"}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {/* Line Items tab */}
             {tab === "lines" && (
           <div className="overflow-y-auto flex-1 pr-1">
@@ -782,10 +834,10 @@ export default function TaxForms() {
           </div>
             )}
 
-            {/* Form 1040 tab — embedded filled IRS PDF */}
-            {tab === "form" && (
+            {/* Per-form PDF tabs */}
+            {tab !== "lines" && (
               <div className="flex-1 min-h-0">
-                <PdfViewer key={pdfKey} taxYear={taxYear} />
+                <PdfViewer key={`${tab}-${pdfKey}`} taxYear={taxYear} form={tab} />
               </div>
             )}
           </>

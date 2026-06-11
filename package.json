@@ -1,0 +1,12 @@
+{
+  "name": "tax-assist",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"API,UI\" --prefix-colors \"cyan,green\" \"npm run dev --prefix backend-ts\" \"npm run dev --prefix frontend\"",
+    "test": "npm test --prefix backend-ts",
+    "seed": "npm run seed:test-user --prefix backend-ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

@@ -5,7 +5,8 @@ import type { FastifyInstance } from "fastify";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { getFilingDetails, saveFilingDetails, type FilingDetails } from "../db/filingDetailsRepo";
-import { computeTaxFigures, buildFormPackage } from "../domain/taxForms/index";
+import { computeTaxFigures, buildFormPackage, loadAllUserData } from "../domain/taxForms/index";
+import { fillIrsForms, fillSingleIrsForm } from "../domain/taxForms/fillIrsForms";
 
 type JobState = {
   status: "running" | "complete" | "error";
@@ -22,38 +23,18 @@ function toNumber(value: unknown, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function buildPreviewPdfBytes(userId: string, taxYear: number): Buffer {
+async function buildPreviewPdfBytes(userId: string, taxYear: number): Promise<Uint8Array> {
+  const data = loadAllUserData(userId, taxYear);
   const figures = computeTaxFigures(userId, taxYear);
-  const c = figures.computed;
-  const n = (key: string) => Math.round(Number(c[key] ?? 0)).toLocaleString("en-US");
-  const text = [
-    "%PDF-1.4",
-    `% Form 1040 Preview — Tax Year ${taxYear}`,
-    `% ${figures.display_name} — ${figures.filing_status}`,
-    `%`,
-    `% AGI:             $${n("agi")}`,
-    `% Taxable Income:  $${n("taxable_income")}`,
-    `% Total Tax:       $${n("total_tax")}`,
-    `% Total Payments:  $${n("total_payments")}`,
-    Number(c["refund"]) > 0
-      ? `% REFUND:          $${n("refund")}`
-      : `% AMOUNT OWED:     $${n("amount_owed")}`,
-    `% Effective Rate:  ${Number(c["effective_rate"] ?? 0).toFixed(1)}%`,
-    `% Marginal Rate:   ${Number(c["marginal_rate"] ?? 0).toFixed(1)}%`,
-    `%`,
-    `% NOTE: This is a data preview. Download the full package for the`,
-    `% complete tax data summary and CPA instructions.`,
-    "%%EOF",
-  ].join("\n");
-  return Buffer.from(text, "utf8");
+  return fillIrsForms(figures.computed, figures.display_name, taxYear, data);
 }
 
-function runJob(jobId: string, userId: string, taxYear: number): void {
+async function runJob(jobId: string, userId: string, taxYear: number): Promise<void> {
   try {
     fs.mkdirSync(path.join(projectPaths.root, "state", "tax_form_packages"), { recursive: true });
     const zipName = `tax_forms_${taxYear}_${jobId.slice(0, 8)}.zip`;
     const zipPath = path.join(projectPaths.root, "state", "tax_form_packages", zipName);
-    const zipBytes = buildFormPackage(userId, taxYear);
+    const zipBytes = await buildFormPackage(userId, taxYear);
     fs.writeFileSync(zipPath, zipBytes);
     jobs.set(jobId, {
       status: "complete",
@@ -98,18 +79,27 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/tax-forms/preview-pdf", { preHandler: app.authenticate }, async (request, reply) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = request.query as { tax_year?: string | number; form?: string };
     const taxYear = toNumber(query.tax_year, 2025);
     const userId = request.currentUser?.id;
-    if (!userId) {
-      throw new AppError(401, "Authentication required");
+    if (!userId) throw new AppError(401, "Authentication required");
+
+    if (query.form) {
+      const data = loadAllUserData(userId, taxYear);
+      const figures = computeTaxFigures(userId, taxYear);
+      const pdfBytes = await fillSingleIrsForm(query.form, figures.computed, figures.display_name, taxYear, data);
+      const filename = `${query.form}_${taxYear}.pdf`;
+      return reply
+        .type("application/pdf")
+        .header("Content-Disposition", `inline; filename=${filename}`)
+        .send(Buffer.from(pdfBytes));
     }
 
-    const pdfBytes = buildPreviewPdfBytes(userId, taxYear);
+    const pdfBytes = await buildPreviewPdfBytes(userId, taxYear);
     return reply
       .type("application/pdf")
       .header("Content-Disposition", "inline; filename=form_1040_preview.pdf")
-      .send(pdfBytes);
+      .send(Buffer.from(pdfBytes));
   });
 
   app.get("/tax-forms/compute", { preHandler: app.authenticate }, async (request) => {
@@ -145,7 +135,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
       error: null
     });
 
-    queueMicrotask(() => runJob(jobId, userId, taxYear));
+    queueMicrotask(() => void runJob(jobId, userId, taxYear));
 
     return { job_id: jobId };
   });

@@ -4,6 +4,7 @@ import { getUserById } from "../../db/authRepo";
 import { TaxCalculator, type ComputedValues } from "./taxCalculator";
 import { buildSummaryText } from "./summaryText";
 import { createZip } from "./zipWriter";
+import { fillIrsForms } from "./fillIrsForms";
 
 export type { ComputedValues };
 export { TaxCalculator };
@@ -56,7 +57,7 @@ export function computeTaxFigures(userId: string, taxYear: number): TaxFigures {
   };
 }
 
-export function buildFormPackage(userId: string, taxYear: number): Buffer {
+export async function buildFormPackage(userId: string, taxYear: number): Promise<Buffer> {
   const data = loadAllUserData(userId, taxYear);
   const user = getUserById(userId);
   const displayName = user?.display_name || user?.email || "";
@@ -76,6 +77,7 @@ export function buildFormPackage(userId: string, taxYear: number): Buffer {
   c["_designee_pin"] = fd.allow_third_party ? (fd.designee_pin ?? "") : "";
 
   const summaryText = buildSummaryText(c, data, taxYear, displayName);
+  const pdfBytes = await fillIrsForms(c, displayName, taxYear, data);
 
   const needSchSe = Number(c["se_tax"]) > 0;
   const schCRecords = (c["schedule_c_records"] as Record<string, unknown>[]) ?? [];
@@ -127,6 +129,7 @@ export function buildFormPackage(userId: string, taxYear: number): Buffer {
   );
 
   return createZip([
+    { name: `form_1040_filled_${taxYear}.pdf`, data: Buffer.from(pdfBytes) },
     { name: `00_data_summary_${taxYear}.txt`, data: Buffer.from(summaryText, "utf8") },
     { name: "manifest.json", data: Buffer.from(manifest, "utf8") },
     { name: "INSTRUCTIONS_FOR_CPA.txt", data: Buffer.from(instructions, "utf8") },

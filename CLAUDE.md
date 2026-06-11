@@ -2,8 +2,9 @@
 
 Project: `tax-assist`
 Branch: `switch-to-ts`
+Last updated: 2026-06-11
 
-## Current State — Migration Complete
+## Current State — Migration Complete + Tax Forms Verified
 
 The Python → TypeScript migration is fully done. Every item in `TS_MIGRATION_TRACKER.md` is DONE.
 
@@ -12,17 +13,52 @@ The Python → TypeScript migration is fully done. Every item in `TS_MIGRATION_T
 - **Scanner:** 59 rules, full parity, regression-tested
 - **Scenarios:** with AI narrative support
 - **CPA packet:** 4-bucket status sections, household summary, AI summary block
-- **Tax forms:** full `TaxCalculator` (2024/2025 params), ZIP package generator, text summary
+- **Tax forms:** full `TaxCalculator` (2024/2025 params), ZIP package generator, per-form PDF viewer/download
 - **YAML→DB bootstrap:** idempotent on startup; creates `admin@localhost` / `changeme123`
 - **Test seeder:** `npm run seed:test-user` (alex.carter@example.com / TestUser123!)
 - **225 tests passing**, lint and build clean
 
+## Tax Forms — Current State (2026-06-11)
+
+### Per-form tabs (just shipped)
+The Tax Forms page now has one tab per applicable form instead of a single merged PDF:
+- **Line Items** | **Form 1040** | **Schedule 1** | **Schedule B** | **Schedule C** | **Schedule D** | **Schedule SE**
+- Each tab shows the filled IRS PDF embedded in the browser with a **Download PDF** button
+- Tabs are dynamic — only forms that apply to the user's data appear
+- Backend: `GET /tax-forms/preview-pdf?form=f1040` (or `f1040s1`, `f1040sb`, `f1040sc_0`, `f1040sd`, `f1040sse`)
+- See `backend-ts/src/domain/taxForms/fillIrsForms.ts` → `fillSingleIrsForm()`
+
+### Field mapping verified (markitdown + manual inspection)
+Used `python -m markitdown <pdf>` to convert the downloaded Form 1040 to markdown and verified all 21 numeric fields. Four bugs were found and fixed in `fillIrsForms.ts → fill1040()`:
+
+| Bug | Fix |
+|-----|-----|
+| `f2_01–f2_06` blank on page 2 back | Added fills for Lines 11b, 12e, 13a, 14, 15 on page 2 |
+| `f2_14` (Line 25b — 1099 withholding) not filled | Now fills `other_withholding` |
+| `f2_17` (Line 25d total withholding) showed only W-2 amount | Fixed to `w2_withholding + other_withholding` |
+| `f2_26` (Line 35a — amount to refund) not filled | Now mirrors Line 34 refund |
+
+### Field map reference
+Complete text→field→data mapping for all 6 forms:
+`state/pdf_check/FIELD_MAP.md`
+
+### Verification artifacts (state/pdf_check/)
+- `f1040_2025.md` — markitdown output of the downloaded filled Form 1040
+- `FIELD_MAP.md` — authoritative field reference for all 6 forms
+- `labeled_all_*.pdf` — each form with field names labeled in every text field
+- `annotated_f1040.pdf` — Form 1040 with field names drawn as red text overlays
+- Scripts: `inspectFields.mjs`, `labelAllForms.mjs`, `annotateFields.mjs`, `findStray4.mjs`
+
+### Schedules not yet verified
+The field mapping for Schedules 1, B, C, D, SE was done from code inspection only — not yet verified via markitdown on the actual filled PDFs. Next step: download each from the new per-form tab, run markitdown, and cross-check against `FIELD_MAP.md`.
+
 ## Next Sprint Goals
 
-1. **Add more benefit rules** — extend the library beyond the current 58 benefits
+1. **Verify remaining schedules** — download each filled schedule PDF from the new per-form tab, run markitdown, and confirm field positions match `FIELD_MAP.md`
+2. **Add more benefit rules** — extend the library beyond the current 58 benefits
    (see `tax_library/federal/`, `tax_library/state/`, `tax_library/county/`)
-2. **Normalize the DB schema** — migrate `section_data` JSON blobs toward proper relational tables
-3. **Merge to main** — the `switch-to-ts` branch is ready
+3. **Normalize the DB schema** — migrate `section_data` JSON blobs toward proper relational tables
+4. **Merge to main** — the `switch-to-ts` branch is ready
 
 ## Validation Loop
 
@@ -38,3 +74,5 @@ The Python → TypeScript migration is fully done. Every item in `TS_MIGRATION_T
 - Benefit library: `tax_library/federal/`, `tax_library/state/`, `tax_library/county/`
 - Scanner rules: `backend-ts/src/domain/scanner/rules.ts`
 - Tax calculator: `backend-ts/src/domain/taxForms/taxCalculator.ts`
+- Tax form filler: `backend-ts/src/domain/taxForms/fillIrsForms.ts`
+- Field map: `state/pdf_check/FIELD_MAP.md`

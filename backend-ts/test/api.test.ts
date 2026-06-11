@@ -2478,12 +2478,18 @@ describe("API baseline", () => {
     const jobPayload = jobRes.json() as { job_id: string };
     expect(jobPayload.job_id).toBeTruthy();
 
-    const statusRes = await app.inject({
-      method: "GET",
-      url: `/api/reports/tax-forms/${jobPayload.job_id}`
-    });
-    expect(statusRes.statusCode).toBe(200);
-    const statusPayload = statusRes.json() as { status: string; zip_name: string | null };
+    // PDF generation is async (fillIrsForms), so poll until complete or timeout
+    let statusPayload: { status: string; zip_name: string | null } = { status: "running", zip_name: null };
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 100));
+      const statusRes = await app.inject({
+        method: "GET",
+        url: `/api/reports/tax-forms/${jobPayload.job_id}`
+      });
+      expect(statusRes.statusCode).toBe(200);
+      statusPayload = statusRes.json() as { status: string; zip_name: string | null };
+      if (statusPayload.status !== "running") break;
+    }
     expect(statusPayload.status).toBe("complete");
     expect(statusPayload.zip_name).toMatch(/\.zip$/);
 

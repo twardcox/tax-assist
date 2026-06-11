@@ -1,52 +1,38 @@
-# Household & Filing Facts
-# Edit these fields with your actual information before running any scripts.
-# All fields are optional — leave blank if unknown or not applicable.
-
-filing_status:           # single | married_filing_jointly | married_filing_separately | head_of_household | qualifying_surviving_spouse
-
-tax_year: 2025
-
+filing_status: married_filing_jointly
+estimated_agi: 190000
 residence:
-  state:                 # two-letter state code, e.g. TX, CA, NY
-  city:                  # city name (for local tax purposes)
-  county:                # county name
-  zip:
-
-spouse:
-  present: false         # true | false
-  employed: null         # true | false | null
-  self_employed: null    # true | false | null
-  age: null
-
+  state: WA
+  street_address: 123 main street
+  city: somewhere
+  zip: '98999'
+  county: King
 taxpayer:
-  age:
-  blind: false
-  disabled: false
-  active_military: false
-  veteran: false
-  student: false
-
+  age: 42
+  dob: '1983-03-15'
+  first_name: Alex
+  last_name: Carter
+  ssn: '1111111111111111'
+  blind: true
+  disabled: true
+  active_military: true
+  veteran: true
+  student: true
+spouse:
+  present: true
+  age: 40
+  employed_in_business: false
+  first_name: Sarah
+  last_name: Carter
+  ssn: '222222222222222222'
+  dob: '1977-06-16'
+  employed: true
+  self_employed: true
 dependents:
-  count: 0
-  # See user_data/dependents.yaml for individual dependent records
-
-income_sources:
-  # List all that apply — details in user_data/income.yaml
-  - w2_wages: false
-  - self_employment: false
-  - rental: false
-  - investments: false
-  - retirement_distributions: false
-  - social_security: false
-  - alimony_received: false
-  - gambling: false
-  - other: false
-
-estimated_agi:           # approximate adjusted gross income for current year
-
-prior_year_agi:          # from last filed return
-
-itemizing_deductions: null   # true | false | null (unknown)
-
-notes: |
-  Add any relevant household notes here.
+  count: 2
+itemizing_deductions: false
+has_electric_vehicle: true
+tax_year: 2026
+digital_assets: true
+payments:
+  estimated_tax_payments: 50000
+  other_withholding: 10000

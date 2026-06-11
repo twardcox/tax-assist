@@ -142,9 +142,12 @@ export const api = {
   downloadTaxFormsUrl: (jobId) => `${BASE}/reports/tax-forms/${jobId}/download`,
 
   // Preview — returns a Blob (PDF bytes) for embedding in an iframe
-  previewTaxFormPdf: async (taxYear = 2025) => {
+  previewTaxFormPdf: async (taxYear = 2025, form = null) => {
     const token = getToken();
-    const res = await fetch(`${BASE}/tax-forms/preview-pdf?tax_year=${taxYear}`, {
+    const url = form
+      ? `${BASE}/tax-forms/preview-pdf?tax_year=${taxYear}&form=${encodeURIComponent(form)}`
+      : `${BASE}/tax-forms/preview-pdf?tax_year=${taxYear}`;
+    const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (res.status === 401) {

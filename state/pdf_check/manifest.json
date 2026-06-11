@@ -1,0 +1,25 @@
+{
+  "tax_year": 2025,
+  "display_name": "Alex Carter",
+  "filing_status": "married_filing_jointly",
+  "forms_included": [
+    "Form 1040 — U.S. Individual Income Tax Return",
+    "Schedule 1 — Additional Income and Adjustments",
+    "Schedule A — Itemized Deductions",
+    "Schedule B — Interest and Ordinary Dividends",
+    "Schedule C — Carter Consulting LLC",
+    "Schedule D — Capital Gains and Losses",
+    "Schedule E — Supplemental Income and Loss",
+    "Schedule SE — Self-Employment Tax"
+  ],
+  "key_figures": {
+    "agi": 149112.53442025,
+    "taxable_income": 103579.73442025001,
+    "total_tax": 8236.379452967503,
+    "total_payments": 26035,
+    "refund": 17798.620547032497,
+    "amount_owed": 0,
+    "effective_rate": 5.52,
+    "marginal_rate": 22
+  }
+}

@@ -1,0 +1,200 @@
+══════════════════════════════════════════════════════════════════════════
+  FEDERAL TAX RETURN DATA PACKAGE
+  Tax Year 2025 — For CPA Review
+══════════════════════════════════════════════════════════════════════════
+
+  Taxpayer:      Alex Carter  SSN: 400-12-3456
+  Spouse:        Jordan Carter  SSN: 400-65-4321
+  Address:       4821 Mockingbird Lane, Austin, TX, 78701
+  Filing Status: Married Filing Jointly
+  Tax Year:      2025
+  Generated:     June 11, 2026 at 11:00 AM
+  Software:      UTBIS — Universal Tax Benefit Intelligence System
+
+  ⚠  IMPORTANT: This document is a data summary prepared for professional
+     review. All figures require CPA verification before filing.
+     Items marked [CPA REVIEW] require professional judgment.
+
+
+FORM 1040 — INCOME TAX SUMMARY
+──────────────────────────────────────────────────────────────────────────
+
+  INCOME
+  1a    Wages, salaries, tips (W-2)                              $111,111
+  2b    Taxable interest income                                    $2,020
+  3a    Qualified dividends                                        $2,929
+  3b    Ordinary dividends                                         $3,030
+  4a/b  IRA distributions (gross / taxable)                $4,040 / $4,040
+  5a/b  Pensions & annuities (gross / taxable)             $5,050 / $5,050
+  6a/b  Social security (gross / taxable)                  $6,060 / $5,151
+  7     Capital gain or (loss)  [ST: $7,070  LT: $8,080]          $15,150
+  8     Other income (Schedule 1)                                 $12,836
+──────────────────────────────────────────────────────────────────────────
+  9     TOTAL INCOME                                             $158,388
+
+  ADJUSTMENTS TO INCOME (Schedule 1, Part II)
+        ½ Self-employment tax deduction                              $636
+        Self-employed health insurance deduction                   $4,400
+        Student loan interest deduction                            $1,212
+        Educator expenses                                            $300
+        HSA contributions (outside payroll)                             —
+        IRA deduction                                              $1,313
+        Alimony paid (pre-2019 divorce)  [CPA REVIEW]              $1,414
+        Moving expenses (military only)                                 —
+──────────────────────────────────────────────────────────────────────────
+  10    TOTAL ADJUSTMENTS                                          $9,275
+  11    ADJUSTED GROSS INCOME (AGI)                              $149,113
+
+  DEDUCTIONS & TAXABLE INCOME
+  12    Deduction used: Itemized ($43,529 — Schedule A)           $43,529
+  13    Qualified Business Income (QBI) deduction (§199A)          $2,004
+──────────────────────────────────────────────────────────────────────────
+  15    TAXABLE INCOME                                           $103,580
+
+  TAX COMPUTATION
+  16    Income tax (ordinary brackets)                            $10,631
+        Long-term capital gains / qualified dividend tax           $1,032
+        Additional Medicare Tax (0.9%) — wages/SE over ...              —
+        Net Investment Income Tax (3.8%)                                —
+  17    Income tax before credits                                 $11,663
+        Self-employment tax (Schedule SE)                          $1,273
+──────────────────────────────────────────────────────────────────────────
+  24    TOTAL TAX BEFORE CREDITS                                  $12,936
+
+  CREDITS
+  19    Child Tax Credit (2 qualifying children × $2,000)          $4,000
+        Credit for other dependents                                  $500
+        Child and Dependent Care Credit (qualified expe...           $200
+        Education credit (AOTC — tuition paid: $0)  [CP...              —
+        Clean Vehicle Credit (§30D)                                     —
+        Retirement Savings Credit (Saver's Credit)  [CP...              —
+──────────────────────────────────────────────────────────────────────────
+  21    TOTAL CREDITS                                              $4,700
+  24    INCOME TAX AFTER CREDITS                                   $6,963
+        Self-employment tax                                        $1,273
+  24    TOTAL TAX                                                  $8,236
+
+  PAYMENTS & BALANCE DUE
+  25a   Federal income tax withheld (W-2)                         $22,020
+  25b   Federal income tax withheld (1099s / other)                $1,515
+  26    Estimated tax payments                                     $2,500
+──────────────────────────────────────────────────────────────────────────
+  33    TOTAL PAYMENTS                                            $26,035
+  34    REFUND                                                   +$17,799
+
+══════════════════════════════════════════════════════════════════════════
+  SUMMARY
+══════════════════════════════════════════════════════════════════════════
+  Effective Tax Rate:  5.5%
+  Marginal Tax Rate:   22.0%
+  AGI:                 $149,113
+  Total Tax:           $8,236
+  RESULT:              REFUND  $17,799
+══════════════════════════════════════════════════════════════════════════
+
+SCHEDULE A — ITEMIZED DEDUCTIONS
+──────────────────────────────────────────────────────────────────────────
+  1     Medical and dental expenses (total)                        $6,800
+  3     Medical expenses above 7.5% AGI floor                           —
+  5e    State and local income taxes withheld                      $7,007
+  5b    Real estate taxes                                         $13,013
+  5d    SALT total (capped $10,000 / $5,000 MFS)                  $10,000
+  8a    Home mortgage interest                                    $29,029
+  12    Charitable contributions  [CPA REVIEW — substan...         $4,500
+──────────────────────────────────────────────────────────────────────────
+  17    TOTAL ITEMIZED DEDUCTIONS                                 $43,529
+
+SCHEDULE B — INTEREST AND ORDINARY DIVIDENDS
+──────────────────────────────────────────────────────────────────────────
+  Part I Taxable interest income                                    $2,020
+  Part II Ordinary dividends                                         $3,030
+          of which qualified dividends                             $2,929
+
+  [CPA REVIEW] Enter payer names, EINs, and individual amounts on the
+  official Schedule B. Foreign account and trust questions on Schedule B
+  Part III require taxpayer answers.
+
+SCHEDULE C — PROFIT OR LOSS FROM BUSINESS: Carter Consulting LLC
+──────────────────────────────────────────────────────────────────────────
+  A     Business name                                      Carter Consulting LLC
+  B     Principal business code (NAICS)                            541611
+  C     Entity type                                            llc single
+  D     EIN                                                    82-1234567
+  1     Gross receipts / sales                                    $19,019
+  28    Total expenses                                            $10,010
+──────────────────────────────────────────────────────────────────────────
+  31    Net profit or (loss)                                       $9,009
+
+  ⚑ Home office deduction may apply — Form 8829 required  [CPA REVIEW]
+
+  [CPA REVIEW] Expense line items (advertising, car/truck, depreciation,
+  insurance, meals, supplies, utilities, etc.) must be populated from
+  receipts and records. Business-use vehicle mileage logs required.
+
+SCHEDULE D — CAPITAL GAINS AND LOSSES
+──────────────────────────────────────────────────────────────────────────
+  Part I Short-term net gain / (loss)                               $7,070
+  Part II Long-term net gain / (loss)                                $8,080
+──────────────────────────────────────────────────────────────────────────
+  16    Net capital gain / (loss) total                           $15,150
+
+  [CPA REVIEW] Individual transaction detail must be entered on Schedule D /
+  Form 8949. Brokerage 1099-B statements and cost-basis records are required.
+
+SCHEDULE E — SUPPLEMENTAL INCOME AND LOSS (RENTAL)
+──────────────────────────────────────────────────────────────────────────
+  A     Property address                                   1102 Congress Ave, Austin, TX 78701
+  3     Gross rents received                                      $21,021
+  21    Net income / (loss)                                        $1,100
+
+  [CPA REVIEW] Itemized expense detail (advertising, insurance, mortgage
+  interest, repairs, taxes, depreciation, etc.) must be completed.
+  Depreciation schedules and Form 4562 may be required.
+
+SCHEDULE SE — SELF-EMPLOYMENT TAX
+──────────────────────────────────────────────────────────────────────────
+  2     Net profit from Schedule C                                 $9,009
+  3     Net earnings subject to SE tax (× 0.9235)                  $8,320
+──────────────────────────────────────────────────────────────────────────
+  5     Self-employment tax (15.3% / 12.4% SS + 2.9%)              $1,273
+  6     Deduction for ½ of SE tax (→ Schedule 1)                     $636
+
+ITEMS REQUIRING CPA JUDGMENT
+──────────────────────────────────────────────────────────────────────────
+
+  GENERAL
+  • All figures are taxpayer-provided estimates. Reconcile against actual W-2s, 1099s,
+    and brokerage statements.
+  • This package does not include state return calculations. Prepare state return based
+    on federal AGI.
+  • AMT (Form 6251) applicability should be evaluated — estimated AGI may trigger analysis.
+
+  INCOME
+  • Verify all employer EINs and W-2 box amounts match official employer records.
+  • Social security taxable portion calculated using combined income rule (IRC §86); verify
+    with SSA-1099.
+  • Retirement distribution taxability depends on prior nondeductible IRA basis (Form 8606).
+
+  DEDUCTIONS
+  • Charitable deduction requires contemporaneous written acknowledgment for gifts ≥ $250.
+  • Mortgage interest deduction subject to acquisition debt limits (§163(h)); verify Form 1098.
+  • QBI deduction (§199A) simplified here — W-2 wages and UBIA tests may apply at higher income.
+
+  CREDITS
+  • Education credits (AOTC/LLC) subject to income phase-outs; Form 1098-T required.
+  • Child care credit rate (20% used here) is income-dependent — adjust per §21 tables.
+  • Saver's Credit (§25B) may apply if income is within limits — not computed; CPA to evaluate.
+  • EV credit subject to MSRP limits, taxpayer income limits, and dealer attestation requirements.
+
+  SCHEDULES
+  • Schedule C expense detail must be completed from receipts; home office requires Form 8829.
+  • Schedule D requires Form 8949 transaction detail; wash-sale rules apply.
+  • Schedule E depreciation must continue from prior-year schedules; Form 4562 required.
+
+  ESTIMATED TAXES
+  • Evaluate next-year estimated tax payment obligation based on final tax liability.
+  • Penalty for underpayment (Form 2210) should be computed if applicable.
+
+══════════════════════════════════════════════════════════════════════════
+  Generated by: UTBIS — Universal Tax Benefit Intelligence System
+══════════════════════════════════════════════════════════════════════════
