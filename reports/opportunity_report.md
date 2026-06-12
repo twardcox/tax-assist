@@ -1,6 +1,6 @@
 # Opportunity Report — Tax Year 2025
 
-_Generated: 6/11/26, 1:01 PM_
+_Generated: 6/11/26, 6:05 PM_
 
 ## Summary
 
@@ -37,7 +37,7 @@ Total benefits evaluated: **59**
 
 ### County Solar / Renewable Energy Property Tax Exemption
 
-TX mandates that counties exempt the added value of solar installations from property tax assessment. If you have or are considering solar panels, their value will not increase your property tax bill.
+WA mandates that counties exempt the added value of solar installations from property tax assessment. If you have or are considering solar panels, their value will not increase your property tax bill.
 
 **Missing facts:**
 - `household.residence.state`
