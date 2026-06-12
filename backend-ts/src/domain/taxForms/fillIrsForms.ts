@@ -313,6 +313,22 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
     tryCheckBox(doc, `${creditCbBase}[1]`, !isQualifyingChild);  // Credit for other dependents
   }
 
+  // ── Page 1 ── Income checkboxes (Lines 4c, 5c, 6c, 7b) ─────────────────────
+  const inc      = (data["income"]              ?? {}) as Record<string, unknown>;
+  const retDist  = (inc["retirement_distributions"] ?? {}) as Record<string, unknown>;
+  const ssBen    = (inc["social_security"]      ?? {}) as Record<string, unknown>;
+  const invInc   = (inc["investment_income"]    ?? {}) as Record<string, unknown>;
+
+  // Line 4c — IRA rollover (c1_33[0] = option 1 "Rollover")
+  if (retDist["ira_rollover"])     tryCheckBox(doc, p(1, "c1_33[0]"), true);
+  // Line 5c — Pension/annuity rollover (c1_35[0] = option 1 "Rollover")
+  if (retDist["pension_rollover"]) tryCheckBox(doc, p(1, "c1_35[0]"), true);
+  // Line 6c — SS lump-sum election
+  if (ssBen["lump_sum_election"])  tryCheckBox(doc, p(1, "c1_38[0]"), true);
+  // Line 7b — Schedule D not required / includes child's capital gain
+  if (invInc["schedule_d_not_required"])    tryCheckBox(doc, p(1, "c1_40[0]"), true);
+  if (invInc["child_capital_gain_included"]) tryCheckBox(doc, p(1, "c1_41[0]"), true);
+
   // ── Page 1 ── Income ────────────────────────────────────────────────────────
   s(p(1, "f1_47[0]"), c["wages"]);                // Line 1a  W-2 wages
   s(p(1, "f1_55[0]"), c["taxable_interest"]);     // Line 2b  taxable interest
@@ -374,6 +390,9 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   const totalWithholding = Number(c["w2_withholding"] ?? 0) + Number(c["other_withholding"] ?? 0);
   s(p(2, "f2_17[0]"), totalWithholding);               // Line 25d  total withholding (25a+25b+25c)
   s(p(2, "f2_18[0]"), c["estimated_tax_payments"]);    // Line 26   estimated tax payments
+  // Former spouse SSN for estimated payment allocation (Line 26 footnote field)
+  const formerSpouseSSN = String(pay["former_spouse_ssn"] ?? "");
+  if (formerSpouseSSN) ts(doc, p(2, "f2_16[0]"), formerSpouseSSN);
   s(p(2, "f2_24[0]"), c["total_payments"]);            // Line 33   total payments
 
   if (Number(c["refund"] ?? 0) > 0) {

@@ -427,6 +427,14 @@ export const schema = {
           description: "Whether the account is a checking or savings account. The IRS uses this to route the direct deposit correctly.",
           source: "Form 1040 Line 35c. Match the type of account you entered above.",
         },
+        {
+          key: "former_spouse_ssn",
+          label: "Former Spouse SSN",
+          type: "text",
+          placeholder: "XXX-XX-XXXX",
+          description: "If you made 2025 estimated tax payments jointly with a former spouse and are now filing separately, enter their Social Security Number so the IRS can allocate the payments correctly.",
+          source: "Form 1040 Line 26 footnote field. Only required if estimated payments were made jointly with a former spouse on a joint 2024 return and you are now filing separately.",
+        },
       ],
     },
     {
