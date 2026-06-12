@@ -50,6 +50,9 @@ export function computeTaxFigures(userId: string, taxYear: number): TaxFigures {
   c["_need_sch_se"] = Number(c["se_tax"]) > 0;
   c["_need_sch3"] = Number(c["schedule3_line8"]) > 0;
   c["_need_sch8812"] = (Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0;
+  c["_need_f8863"] = Number(c["education_credit"]) > 0;
+  c["_need_f2441"] = Number(c["child_care_credit"]) > 0;
+  c["_need_f5695"] = Number(c["clean_energy_credit"]) > 0 || Number(c["home_improvement_credit"]) > 0;
 
   return {
     tax_year: taxYear,
@@ -93,6 +96,15 @@ export async function buildFormPackage(userId: string, taxYear: number): Promise
   }
   if ((Number(c["taxable_interest"]) + Number(c["ordinary_dividends"])) > 1500) {
     formsIncluded.push("Schedule B — Interest and Ordinary Dividends");
+  }
+  if (Number(c["education_credit"]) > 0) {
+    formsIncluded.push("Form 8863 — Education Credits");
+  }
+  if (Number(c["child_care_credit"]) > 0) {
+    formsIncluded.push("Form 2441 — Child and Dependent Care Expenses");
+  }
+  if (Number(c["clean_energy_credit"]) > 0 || Number(c["home_improvement_credit"]) > 0) {
+    formsIncluded.push("Form 5695 — Residential Energy Credits");
   }
   if ((Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0) {
     formsIncluded.push("Schedule 8812 — Credits for Qualifying Children and Other Dependents");

@@ -68,8 +68,14 @@ export async function fillSingleIrsForm(
     const biz = records[idx];
     if (!biz) throw new Error(`No Schedule C record at index ${idx}`);
     doc = await fillScheduleC(biz, displayName, String(c["taxpayer_ssn"] ?? ""));
+  } else if (formKey === "f8863") {
+    doc = await fillForm8863(c, data);
+  } else if (formKey === "f2441") {
+    doc = await fillForm2441(c, data);
   } else if (formKey === "f1040sa") {
     doc = await fillScheduleA(c);
+  } else if (formKey === "f5695") {
+    doc = await fillForm5695(c, data);
   } else if (formKey === "f1040s3") {
     doc = await fillSchedule3(c);
   } else if (formKey === "f1040s8812") {
@@ -110,9 +116,21 @@ export async function fillIrsForms(
     docs.push(await fillScheduleB(c));
   }
 
+  if (Number(c["education_credit"]) > 0) {
+    docs.push(await fillForm8863(c, data));
+  }
+
+  if (Number(c["child_care_credit"]) > 0) {
+    docs.push(await fillForm2441(c, data));
+  }
+
   const needSch8812 = (Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0;
   if (needSch8812) {
     docs.push(await fillSchedule8812(c));
+  }
+
+  if (Number(c["clean_energy_credit"]) > 0 || Number(c["home_improvement_credit"]) > 0) {
+    docs.push(await fillForm5695(c, data));
   }
 
   if (Number(c["schedule3_line8"]) > 0) {
@@ -649,6 +667,216 @@ async function fillScheduleA(c: ComputedValues): Promise<PDFDocument> {
   return doc;
 }
 
+async function fillForm8863(c: ComputedValues, data: Record<string, unknown>): Promise<PDFDocument> {
+  const doc = await loadPdf("f8863.pdf");
+  const fp1 = (field: string) => `topmostSubform[0].Page1[0].${field}`;
+  const fp2 = (field: string) => `topmostSubform[0].Page2[0].${field}`;
+  const s = (field: string, val: unknown) =>
+    ts(doc, field, typeof val === "string" ? val : fmt(val));
+
+  const fn = (v: unknown) => Number(v ?? 0);
+
+  // ── Page 1 header ──────────────────────────────────────────────────────────
+  ts(doc, fp1("f1_1[0]"), String(c["taxpayer_name"] ?? ""));
+  const tpSSN = String(c["taxpayer_ssn"] ?? "").replace(/\D/g, "");
+  ts(doc, fp1("SocialSecurity[0].f1_2[0]"), tpSSN.slice(0, 3));
+  ts(doc, fp1("SocialSecurity[0].f1_3[0]"), tpSSN.slice(3, 5));
+  ts(doc, fp1("SocialSecurity[0].f1_4[0]"), tpSSN.slice(5));
+
+  // ── Part I — Refundable AOTC (not implemented — leave blank) ────────────────
+
+  // ── Part II — Nonrefundable Education Credits (LLC) ────────────────────────
+  const llcExpenses = Number(c["llc_expenses"] ?? 0);
+  const eduThresh   = Number(c["education_phaseout_threshold"] ?? 90000);
+  const eduRange    = Number(c["education_phaseout_range"] ?? 10000);
+  const eduFraction = Number(c["education_phaseout_fraction"] ?? 1.0);
+  const agi         = Number(c["agi"] ?? 0);
+
+  const line10 = llcExpenses;
+  const line11 = Math.min(line10, 10000);
+  const line12 = Math.round(line11 * 0.20);
+  const line15 = Math.max(0, eduThresh - agi);
+  const line17 = eduFraction >= 1.0 ? 1.0 : Math.round(eduFraction * 1000) / 1000;
+  const line18 = Math.round(line12 * line17);
+  // Credit Limit Worksheet: available tax after CTC + child care
+  const creditLimit = Math.max(0,
+    Number(c["income_tax_before_credits"] ?? 0) -
+    Number(c["ctc_with_odc"] ?? 0) -
+    Number(c["child_care_credit"] ?? 0)
+  );
+  const line19 = Math.min(line18, creditLimit);
+
+  if (line10 > 0) {
+    s(fp1("f1_14[0]"), line10);                          // Line 10 — total LLC expenses
+    s(fp1("f1_15[0]"), line11);                          // Line 11 — min(L10, $10,000)
+    s(fp1("f1_16[0]"), line12);                          // Line 12 — L11 × 20%
+    s(fp1("f1_17[0]"), eduThresh);                       // Line 13 — phaseout threshold
+    s(fp1("f1_18[0]"), agi);                             // Line 14 — AGI
+    if (line15 < eduRange) s(fp1("f1_19[0]"), line15);  // Line 15 — L13 − L14 (only if partial)
+    s(fp1("f1_20[0]"), eduRange);                        // Line 16 — phaseout range
+    if (line17 < 1.0) ts(doc, fp1("f1_21[0]"), line17.toFixed(3)); // Line 17 — fraction (if <1)
+    s(fp1("f1_22[0]"), line18);                          // Line 18 — L12 × L17
+    s(fp1("f1_23[0]"), line19);                          // Line 19 — final credit → Sch 3 L3
+  }
+
+  // ── Page 2 — Part III (one student per page) ───────────────────────────────
+  const depsSection = (data["dependents"] ?? {}) as Record<string, unknown>;
+  const allDeps = (depsSection["dependents"] as Record<string, unknown>[]) ?? [];
+  const students = allDeps.filter((d) => d["full_time_student"]);
+
+  if (students.length > 0) {
+    const student = students[0];
+    const edu = student["education"] && typeof student["education"] === "object"
+      ? student["education"] as Record<string, unknown>
+      : {};
+
+    // Page 2 header — taxpayer name/SSN
+    ts(doc, fp2("f2-5[0]"), String(c["taxpayer_name"] ?? ""));    // note hyphen, not underscore
+    ts(doc, fp2("SSN[0].f2_2[0]"), tpSSN.slice(0, 3));
+    ts(doc, fp2("SSN[0].f2_3[0]"), tpSSN.slice(3, 5));
+    ts(doc, fp2("SSN[0].f2_4[0]"), tpSSN.slice(5));
+
+    // Line 20 — Student name
+    ts(doc, fp2("f2_1[0]"), String(student["name"] ?? ""));
+
+    // Line 21 — Student SSN
+    const studentSSN = String(student["ssn"] ?? "").replace(/\D/g, "");
+    ts(doc, fp2("StudentSSN[0].f2_6[0]"), studentSSN.slice(0, 3));
+    ts(doc, fp2("StudentSSN[0].f2_7[0]"), studentSSN.slice(3, 5));
+    ts(doc, fp2("StudentSSN[0].f2_8[0]"), studentSSN.slice(5));
+
+    // Line 22a — Institution info
+    const received1098t = Boolean(edu["form_1098t_expected"]);
+    tryCheckBox(doc, fp2("Line22a[0].c2_1[0]"), received1098t);   // 1098-T 2025: Yes
+    tryCheckBox(doc, fp2("Line22a[0].c2_1[1]"), !received1098t);  // 1098-T 2025: No
+    tryCheckBox(doc, fp2("Line22a[0].c2_2[1]"), true);            // 1098-T 2024 box 7: No
+
+    // Lines 23–26: AOTC qualification (answer Yes on 23 to route to LLC / Line 31)
+    // "Has AOTC been claimed for any 4 prior tax years?" Yes → go to Line 31
+    tryCheckBox(doc, fp2("c2_5[0]"), true);   // Line 23: Yes → stop AOTC, go to Line 31
+
+    // Line 31 — LLC adjusted qualified expenses (net of scholarships)
+    const tuitionPaid = fn(edu["tuition_paid"] ?? student["tuition_paid"]);
+    const scholarships = fn(edu["scholarships_received"] ?? student["scholarships_received"]);
+    const adjExpenses = Math.max(0, tuitionPaid - scholarships);
+    s(fp2("f2_35[0]"), adjExpenses);          // Line 31 → feeds Part II Line 10
+  }
+
+  return doc;
+}
+
+async function fillForm2441(c: ComputedValues, data: Record<string, unknown>): Promise<PDFDocument> {
+  const doc = await loadPdf("f2441.pdf");
+  const fp1 = (field: string) => `topmostSubform[0].Page1[0].${field}`;
+  const s = (field: string, val: unknown) =>
+    ts(doc, field, typeof val === "string" ? val : fmt(val));
+
+  const fn = (v: unknown) => Number(v ?? 0);
+
+  // Header
+  ts(doc, fp1("f1_1[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, fp1("f1_2[0]"), String(c["taxpayer_ssn"] ?? ""));
+
+  // Extract qualifying care persons (under age 13 with care expenses)
+  const depsSection = (data["dependents"] ?? {}) as Record<string, unknown>;
+  const allDeps = (depsSection["dependents"] as Record<string, unknown>[]) ?? [];
+
+  type CarePersonInfo = { firstName: string; lastName: string; ssn: string; expenses: number };
+  type ProviderInfo = { name: string; totalPaid: number };
+
+  const carePersons: CarePersonInfo[] = [];
+  const providerMap = new Map<string, number>();
+
+  for (const dep of allDeps) {
+    const ce = dep["care_expenses"] && typeof dep["care_expenses"] === "object"
+      ? dep["care_expenses"] as Record<string, unknown>
+      : dep;
+    const depCare = fn(ce["daycare_cost"]) + fn(ce["after_school_care_cost"]) + fn(ce["summer_camp_cost"]);
+    if (depCare <= 0) continue;
+    // Only persons under 13 qualify for the care credit on Part II
+    if (fn(dep["age_at_year_end"]) >= 13) continue;
+
+    const fullName = String(dep["name"] ?? "");
+    const spaceIdx = fullName.lastIndexOf(" ");
+    carePersons.push({
+      firstName: spaceIdx > 0 ? fullName.slice(0, spaceIdx) : fullName,
+      lastName:  spaceIdx > 0 ? fullName.slice(spaceIdx + 1) : "",
+      ssn: String(dep["ssn"] ?? ""),
+      expenses: depCare,
+    });
+
+    const providerName = String(ce["daycare_provider"] ?? dep["daycare_provider"] ?? "");
+    if (providerName) {
+      providerMap.set(providerName, (providerMap.get(providerName) ?? 0) + depCare);
+    }
+  }
+
+  // Part I — Care providers (rows 1–3)
+  const providers: ProviderInfo[] = [...providerMap.entries()].map(([name, totalPaid]) => ({ name, totalPaid }));
+  const partIRows = [
+    { nameF: "f1_3[0]", addrF: "ColB[0].f1_4[0]", einF: "f1_5[0]", amtF: "f1_6[0]", cbPfx: "ColD[0].c1_4" },
+    { nameF: "f1_7[0]", addrF: "ColB[0].f1_8[0]", einF: "f1_9[0]", amtF: "f1_10[0]", cbPfx: "ColD[0].c1_5" },
+    { nameF: "f1_11[0]",addrF: "ColB[0].f1_12[0]",einF: "f1_13[0]",amtF: "f1_14[0]",cbPfx: "ColD[0].c1_6" },
+  ];
+  for (let i = 0; i < Math.min(providers.length, 3); i++) {
+    const { nameF, amtF, cbPfx } = partIRows[i];
+    const row = `PartITable[0].BodyRow${i + 1}[0]`;
+    ts(doc, fp1(`${row}.${nameF}`), providers[i].name);
+    s(fp1(`${row}.${amtF}`), providers[i].totalPaid);
+    tryCheckBox(doc, fp1(`${row}.${cbPfx}[1]`), true); // No — not a household employee
+  }
+
+  // Part II Line 2 — Qualifying persons table (rows 1–3)
+  const partIIRows = [
+    { fnF: "f1_15[0]", lnF: "f1_16[0]", ssnF: "f1_17[0]", expF: "f1_18[0]" },
+    { fnF: "f1_19[0]", lnF: "f1_20[0]", ssnF: "f1_21[0]", expF: "f1_22[0]" },
+    { fnF: "f1_23[0]", lnF: "f1_24[0]", ssnF: "f1_25[0]", expF: "f1_26[0]" },
+  ];
+  for (let i = 0; i < Math.min(carePersons.length, 3); i++) {
+    const { fnF, lnF, ssnF, expF } = partIIRows[i];
+    const row = `Table_Line2[0].Row${i + 1}[0]`;
+    ts(doc, fp1(`${row}.${fnF}`), carePersons[i].firstName);
+    ts(doc, fp1(`${row}.${lnF}`), carePersons[i].lastName);
+    ts(doc, fp1(`${row}.${ssnF}`), carePersons[i].ssn);
+    s(fp1(`${row}.${expF}`), carePersons[i].expenses);
+  }
+
+  // Line 3 — Total qualified expenses (already capped at $3k/$6k in eligibleCare)
+  const eligibleCare = Number(c["care_eligible_expenses"] ?? 0);
+  s(fp1("f1_27[0]"), eligibleCare);                    // Line 3
+
+  // Line 4/5 — Earned income
+  const earnedIncome = Number(c["earned_income"] ?? 0);
+  s(fp1("f1_28[0]"), earnedIncome);                    // Line 4 — your earned income
+  s(fp1("f1_29[0]"), earnedIncome);                    // Line 5 — spouse (simplified: same if not tracking separately)
+
+  // Line 6 — Smallest of lines 3/4/5
+  const line6 = Math.min(eligibleCare, earnedIncome);
+  s(fp1("f1_30[0]"), line6);                           // Line 6
+
+  // Line 7 — AGI
+  s(fp1("f1_31[0]"), c["agi"]);                        // Line 7
+
+  // Line 8 — Credit percentage
+  const careRate = Number(c["care_credit_rate"] ?? 0.20);
+  ts(doc, fp1("f1_32[0]"), careRate.toFixed(2));        // Line 8 decimal
+
+  // Line 9a — Line 6 × Line 8
+  const line9a = Math.round(line6 * careRate);
+  s(fp1("f1_33[0]"), line9a);                          // Line 9a
+  s(fp1("f1_34[0]"), "");                              // Line 9b — prior-year (0)
+  s(fp1("f1_35[0]"), line9a);                          // Line 9c = 9a + 9b
+
+  // Line 10 — Credit limit (from Credit Limit Worksheet)
+  const creditLimit = Number(c["care_credit_limit"] ?? 0);
+  s(fp1("f1_36[0]"), creditLimit);                     // Line 10
+
+  // Line 11 — Actual credit → Schedule 3 Line 2
+  s(fp1("f1_37[0]"), c["child_care_credit"]);          // Line 11
+
+  return doc;
+}
+
 async function fillSchedule3(c: ComputedValues): Promise<PDFDocument> {
   const doc = await loadPdf("f1040s3.pdf");
   const s = (field: string, val: unknown) =>
@@ -667,6 +895,14 @@ async function fillSchedule3(c: ComputedValues): Promise<PDFDocument> {
   if (Number(c["education_credit"] ?? 0) > 0)
     s(p(1, "f1_05[0]"), c["education_credit"]);
 
+  // Line 5a: §25D Residential Clean Energy Credit (Form 5695)
+  if (Number(c["clean_energy_credit"] ?? 0) > 0)
+    s(p(1, "f1_07[0]"), c["clean_energy_credit"]);
+
+  // Line 5b: §25C Energy Efficient Home Improvement Credit (Form 5695)
+  if (Number(c["home_improvement_credit"] ?? 0) > 0)
+    s(p(1, "f1_08[0]"), c["home_improvement_credit"]);
+
   // Line 6f: Clean vehicle credit (§30D)
   if (Number(c["ev_credit"] ?? 0) > 0) {
     s(p(1, "f1_14[0]"), c["ev_credit"]);
@@ -676,7 +912,7 @@ async function fillSchedule3(c: ComputedValues): Promise<PDFDocument> {
   const sch3Line7 = Number(c["ev_credit"] ?? 0);
   if (sch3Line7 > 0) s(p(1, "f1_24[0]"), sch3Line7);
 
-  // Line 8: Lines 1 + 2 + 3 + 4 + 5 + 7 → Form 1040 Line 20
+  // Line 8: Lines 1 + 2 + 3 + 4 + 5a + 5b + 7 → Form 1040 Line 20
   s(p(1, "f1_25[0]"), c["schedule3_line8"]);
 
   return doc;
@@ -802,6 +1038,225 @@ async function fillScheduleD(c: ComputedValues): Promise<PDFDocument> {
 
   // ── Part III ────────────────────────────────────────────────────────────────
   ss(`topmostSubform[0].Page2[0].f2_2[0]`, netCg);  // Line 16 combined net gain/(loss)
+
+  return doc;
+}
+
+async function fillForm5695(c: ComputedValues, data: Record<string, unknown>): Promise<PDFDocument> {
+  const doc = await loadPdf("f5695.pdf");
+  const s = (field: string, val: unknown) =>
+    ts(doc, field, typeof val === "string" ? val : fmt(val));
+  const name = String(c["taxpayer_name"] ?? "");
+  const ssn  = String(c["taxpayer_ssn"]  ?? "");
+
+  // Derive primary residence address for the form header fields
+  const props = (((data["real_estate"] ?? {}) as Record<string, unknown>)["properties"] ?? []) as Record<string, unknown>[];
+  const primary = props.find((p) => p["property_type"] === "primary_residence") ?? {};
+  const addr    = String(primary["address"] ?? "");
+  // Parse "4821 Mockingbird Lane, Austin, TX 78701" → street / city / state / zip
+  const addrMatch = addr.match(/^(.+?),\s*(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+  const addrStreet = addrMatch?.[1] ?? addr;
+  const addrCity   = addrMatch?.[2] ?? "";
+  const addrState  = addrMatch?.[3] ?? "";
+  const addrZip    = addrMatch?.[4] ?? "";
+
+  // Credit values from calculator
+  const solarCost   = Number(c["f5695_solar_cost"]      ?? 0);
+  const solarWater  = Number(c["f5695_solar_water_cost"] ?? 0);
+  const windCost    = Number(c["f5695_wind_cost"]        ?? 0);
+  const geoCost     = Number(c["f5695_geothermal_cost"]  ?? 0);
+  const batteryCost = Number(c["f5695_battery_cost"]     ?? 0);
+  const total25d    = Number(c["f5695_25d_total"]        ?? 0);
+  const times30_25d = Number(c["f5695_25d_times_30"]     ?? 0);
+  const credit25d   = Number(c["clean_energy_credit"]    ?? 0);
+  const carryFwd25d = Number(c["clean_energy_carryforward"] ?? 0);
+
+  const insulCost   = Number(c["f5695_insulation_cost"]  ?? 0);
+  const insulCr     = Number(c["f5695_insulation_cr"]    ?? 0);
+  const doorCost    = Number(c["f5695_door_cost"]        ?? 0);
+  const doorCr      = Number(c["f5695_door_cr"]          ?? 0);
+  const winCost     = Number(c["f5695_window_cost"]      ?? 0);
+  const winCr       = Number(c["f5695_window_cr"]        ?? 0);
+  const acCost      = Number(c["f5695_ac_cost"]          ?? 0);
+  const acCr        = Number(c["f5695_ac_cr"]            ?? 0);
+  const whCost      = Number(c["f5695_wh_cost"]          ?? 0);
+  const whCr        = Number(c["f5695_wh_cr"]            ?? 0);
+  const furnCost    = Number(c["f5695_furnace_cost"]     ?? 0);
+  const furnCr      = Number(c["f5695_furnace_cr"]       ?? 0);
+  const auditCost   = Number(c["f5695_audit_cost"]       ?? 0);
+  const auditCr     = Number(c["f5695_audit_cr"]         ?? 0);
+  const hpCost      = Number(c["f5695_heat_pump_cost"]   ?? 0);
+  const hpWhCost    = Number(c["f5695_heat_pump_wh_cost"]?? 0);
+  const biomassCost = Number(c["f5695_biomass_cost"]     ?? 0);
+  const hpAll       = Number(c["f5695_heat_pump_all"]    ?? 0);
+  const hpCr        = Number(c["f5695_heat_pump_cr"]     ?? 0);
+  const sub1200     = Number(c["f5695_subtotal_1200"]    ?? 0);
+  const raw25c      = Number(c["f5695_25c_raw"]          ?? 0);
+  const credit25c   = Number(c["home_improvement_credit"]?? 0);
+  const energyLimit = Number(c["f5695_energy_limit"]     ?? 0);
+
+  // ── Page 1 — Part I §25D Residential Clean Energy Credit ────────────────────
+
+  // Header
+  ts(doc, p(1, "f1_01[0]"), name);
+  ts(doc, p(1, "f1_02[0]"), ssn);
+
+  // Home address (Lines 1–5b property)
+  ts(doc, p(1, "f1_03[0]"), addrStreet);
+  ts(doc, p(1, "f1_04[0]"), "");          // unit
+  ts(doc, p(1, "f1_05[0]"), addrCity);
+  ts(doc, p(1, "f1_06[0]"), addrState);
+  ts(doc, p(1, "f1_07[0]"), addrZip);
+
+  // Lines 1–5b cost inputs
+  if (solarCost   > 0) s(p(1, "f1_08[0]"), solarCost);    // Line 1  solar electric
+  if (solarWater  > 0) s(p(1, "f1_09[0]"), solarWater);   // Line 2  solar water heating
+  if (windCost    > 0) s(p(1, "f1_10[0]"), windCost);     // Line 3  small wind
+  if (geoCost     > 0) s(p(1, "f1_11[0]"), geoCost);      // Line 4  geothermal
+
+  // Line 5a checkbox (battery qualifies if ≥3 kWh — we assume qualifying if cost > 0)
+  const batteryQualifies = batteryCost > 0;
+  tryCheckBox(doc, p(1, "c1_1[0]"), batteryQualifies);    // Yes
+  tryCheckBox(doc, p(1, "c1_1[1]"), !batteryQualifies);   // No
+  if (batteryQualifies) s(p(1, "f1_12[0]"), batteryCost); // Line 5b battery cost
+
+  // Line 6a sum of lines 1–5b; 6b ×30%
+  if (total25d > 0) s(p(1, "f1_13[0]"), total25d);        // Line 6a
+  if (times30_25d > 0) s(p(1, "f1_14[0]"), times30_25d);  // Line 6b
+
+  // Line 7a — fuel cell: mark No (skipping fuel cell section)
+  tryCheckBox(doc, p(1, "c1_2[0]"), false);
+  tryCheckBox(doc, p(1, "c1_2[1]"), true);
+
+  // Lines 11–16 (fuel cell = 0; carryforward = 0)
+  // f1_25 = Line 11 (fuel cell limited amount), f1_26 = Line 12 (2024 carryforward)
+  // f1_27 = Line 13 (total), f1_28 = Line 14 (limit), f1_29 = Line 15 (credit), f1_30 = Line 16 (carryforward)
+  if (times30_25d > 0) s(p(1, "f1_27[0]"), times30_25d);  // Line 13 = 6b + 11 + 12
+  s(p(1, "f1_28[0]"), energyLimit);                        // Line 14 tax liability limit
+  s(p(1, "f1_29[0]"), credit25d);                          // Line 15 → Sch 3 L5a
+  if (carryFwd25d > 0) s(p(1, "f1_30[0]"), carryFwd25d);  // Line 16 carryforward
+
+  // ── Page 2 — Part II §25C Section A (Insulation, Doors, Windows) ─────────────
+
+  ts(doc, p(2, "f2_01[0]"), name);
+  ts(doc, p(2, "f2_02[0]"), ssn);
+
+  // Line 17a/b/c Yes checkboxes (improvements in US main home, original user, ≥5 yr)
+  const hasPartII = raw25c > 0;
+  tryCheckBox(doc, p(2, "c2_1[0]"), hasPartII);    // 17a Yes
+  tryCheckBox(doc, p(2, "c2_1[1]"), !hasPartII);   // 17a No
+  tryCheckBox(doc, p(2, "c2_2[0]"), hasPartII);    // 17b Yes
+  tryCheckBox(doc, p(2, "c2_2[1]"), !hasPartII);   // 17b No
+  tryCheckBox(doc, p(2, "c2_3[0]"), hasPartII);    // 17c Yes
+  tryCheckBox(doc, p(2, "c2_3[1]"), !hasPartII);   // 17c No
+
+  // Line 17d home address
+  ts(doc, p(2, "f2_03[0]"), addrStreet);
+  ts(doc, p(2, "f2_04[0]"), "");        // unit
+  ts(doc, p(2, "f2_05[0]"), addrCity);
+  ts(doc, p(2, "f2_06[0]"), addrState);
+  ts(doc, p(2, "f2_07[0]"), addrZip);
+
+  // Line 17e — related to construction: No
+  tryCheckBox(doc, p(2, "c2_4[0]"), false);  // Yes
+  tryCheckBox(doc, p(2, "c2_4[1]"), true);   // No
+
+  // Line 18 — Insulation
+  if (insulCost > 0) s(p(2, "f2_08[0]"), insulCost);   // 18a cost
+  if (insulCr   > 0) s(p(2, "f2_09[0]"), insulCr);     // 18b credit (≤$1,200)
+
+  // Line 19 — Exterior doors
+  // Simplified: put all door cost in 19a (most expensive), 19h = total door credit
+  if (doorCost > 0) {
+    s(p(2, "f2_10[0]"), doorCost);                      // 19a most expensive door
+    s(p(2, "f2_13[0]"), Math.min(doorCost * 0.30, 250));// 19c credit (≤$250)
+    s(p(2, "f2_24[0]"), doorCr);                        // 19h total door credit (≤$500)
+  }
+
+  // Line 20 — Windows/skylights
+  // Simplified: put all window cost in 20a(i), 20c total, 20d credit
+  if (winCost > 0) {
+    s(p(2, "f2_28[0]"), winCost);                       // 20a(i) most expensive window
+    s(p(2, "f2_38[0]"), winCost);                       // 20c total
+    s(p(2, "f2_39[0]"), winCr);                         // 20d credit (≤$600)
+  }
+
+  // ── Page 3 — Part II §25C Section B (HVAC, Water Heaters, Furnace) ──────────
+
+  // Line 21a/21b Yes checkboxes
+  const hasSectionB = (acCost + whCost + furnCost) > 0;
+  tryCheckBox(doc, p(3, "c3_1[0]"), hasSectionB);   // 21a Yes
+  tryCheckBox(doc, p(3, "c3_1[1]"), !hasSectionB);  // 21a No
+  tryCheckBox(doc, p(3, "c3_2[0]"), hasSectionB);   // 21b Yes
+  tryCheckBox(doc, p(3, "c3_2[1]"), !hasSectionB);  // 21b No
+
+  // Line 21c address (one row: first row of the 4-row table)
+  ts(doc, `topmostSubform[0].Page3[0].Table_Line21c[0].Row1[0].f3_01[0]`, addrStreet);
+  ts(doc, `topmostSubform[0].Page3[0].Table_Line21c[0].Row1[0].f3_03[0]`, addrCity);
+  ts(doc, `topmostSubform[0].Page3[0].Table_Line21c[0].Row1[0].f3_04[0]`, addrState);
+  ts(doc, `topmostSubform[0].Page3[0].Table_Line21c[0].Row1[0].f3_05[0]`, addrZip);
+
+  // Line 22 — Central air conditioner
+  if (acCost > 0) {
+    s(p(3, "f3_21[0]"), acCost);                        // 22a cost
+    s(p(3, "f3_25[0]"), acCost);                        // 22c total (= 22a, no others)
+    s(p(3, "f3_26[0]"), acCr);                          // 22d credit (≤$600)
+  }
+
+  // Line 23 — Water heaters (gas/propane/oil)
+  if (whCost > 0) {
+    s(p(3, "f3_30[0]"), whCost);                        // 23a(i) most expensive
+    s(p(3, "f3_34[0]"), whCost);                        // 23c total
+    s(p(3, "f3_35[0]"), whCr);                          // 23d credit (≤$600)
+  }
+
+  // Line 24 — Furnace or hot water boiler
+  if (furnCost > 0) {
+    s(p(3, "f3_36[0]"), furnCost);                      // 24a cost
+    s(p(3, "f3_40[0]"), furnCost);                      // 24c total
+    s(p(3, "f3_41[0]"), furnCr);                        // 24d credit (≤$600)
+  }
+
+  // ── Page 4 — Part II §25C Lines 26–32 (Audit, Totals, Heat Pumps) ────────────
+
+  // Line 26 — Home energy audit
+  const hasAudit = auditCost > 0;
+  tryCheckBox(doc, p(4, "c4_1[0]"), hasAudit);          // 26a Yes
+  tryCheckBox(doc, p(4, "c4_1[1]"), !hasAudit);         // 26a No
+  if (hasAudit) {
+    s(p(4, "f4_01[0]"), auditCost);                     // 26b cost
+    s(p(4, "f4_02[0]"), auditCr);                       // 26c credit (≤$150)
+  }
+
+  // Line 27 — sum of 18b + 19h + 20d + 22d + 23d + 24d + 25e + 26c
+  const line27 = insulCr + doorCr + winCr + acCr + whCr + furnCr + auditCr;
+  if (line27 > 0) s(p(4, "f4_03[0]"), line27);          // Line 27
+
+  // Line 28 — min(27, 1200)
+  if (sub1200 > 0) s(p(4, "f4_04[0]"), sub1200);        // Line 28
+
+  // Line 29 — Heat pumps, heat pump water heaters, biomass
+  if (hpCost > 0) {
+    s(p(4, "f4_05[0]"), hpCost);                        // 29a most expensive heat pump
+  }
+  if (hpWhCost > 0) {
+    s(p(4, "f4_09[0]"), hpWhCost);                      // 29c most expensive HP water heater
+  }
+  if (biomassCost > 0) {
+    s(p(4, "f4_13[0]"), biomassCost);                   // 29e most expensive biomass
+  }
+  if (hpAll > 0) s(p(4, "f4_17[0]"), hpAll);            // 29g total (29a–29f)
+  if (hpCr  > 0) s(p(4, "f4_18[0]"), hpCr);             // 29h credit (≤$2,000)
+
+  // Line 30 — sum of lines 28 + 29h
+  if (raw25c > 0) s(p(4, "f4_19[0]"), raw25c);          // Line 30 (before tax limit)
+
+  // Line 31 — tax liability limitation
+  const remaining25cLimit = Math.max(0, energyLimit - credit25d);
+  s(p(4, "f4_20[0]"), remaining25cLimit);               // Line 31
+
+  // Line 32 — §25C credit → Sch 3 L5b
+  s(p(4, "f4_21[0]"), credit25c);                       // Line 32
 
   return doc;
 }

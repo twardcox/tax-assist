@@ -141,6 +141,11 @@ function Form1040View({ c, fs }) {
       <Line line="20" label="Schedule 3, line 8 (nonrefundable credits)" value={c.schedule3_line8} highlight="credit" />
       <Line line=""   label={`  Child & Dependent Care Credit (expenses: ${dollar(c.care_expenses)})`} value={c.child_care_credit} highlight="credit" indent />
       <Line line=""   label={`  Education credit (tuition: ${dollar(c.tuition_expenses)})`} value={c.education_credit} highlight="credit" indent cpa />
+      {(c.clean_energy_credit > 0 || c.home_improvement_credit > 0) && <>
+        <Line line=""   label={`  §25D Residential Clean Energy Credit (solar/battery: ${dollar((c.f5695_solar_cost||0)+(c.f5695_battery_cost||0))})`} value={c.clean_energy_credit} highlight="credit" indent />
+        {c.clean_energy_carryforward > 0 && <Line line="" label="    Carryforward to 2026" value={c.clean_energy_carryforward} highlight="credit" indent note="unused §25D credit" />}
+        <Line line=""   label={`  §25C Home Improvement Credit (improvements: ${dollar((c.f5695_insulation_cost||0)+(c.f5695_window_cost||0)+(c.f5695_heat_pump_cost||0))})`} value={c.home_improvement_credit} highlight="credit" indent />
+      </>}
       <Line line=""   label="  Clean Vehicle Credit (§30D)" value={c.ev_credit} highlight="credit" indent cpa />
       <Divider />
       <Line line="21" label="TOTAL CREDITS" value={c.total_credits} bold highlight="credit" />
@@ -614,6 +619,9 @@ const FORM_LABELS = {
   f1040:     "Form 1040",
   f1040s1:   "Schedule 1",
   f1040sa:   "Schedule A",
+  f8863:     "Form 8863",
+  f2441:     "Form 2441",
+  f5695:     "Form 5695",
   f1040s8812:"Schedule 8812",
   f1040s3:   "Schedule 3",
   f1040sb:   "Schedule B",
@@ -626,6 +634,9 @@ function getFormTabs(c) {
   const needSch1 = Number(c.total_adjustments ?? 0) > 0 || Number(c.schedule1_additional ?? 0) !== 0;
   if (needSch1) tabs.push({ key: "f1040s1", label: "Schedule 1" });
   if ((c.itemized || 0) > 0) tabs.push({ key: "f1040sa", label: "Schedule A" });
+  if (c._need_f8863)   tabs.push({ key: "f8863",       label: "Form 8863" });
+  if (c._need_f2441)   tabs.push({ key: "f2441",       label: "Form 2441" });
+  if (c._need_f5695)   tabs.push({ key: "f5695",       label: "Form 5695" });
   if (c._need_sch8812) tabs.push({ key: "f1040s8812", label: "Schedule 8812" });
   if (c._need_sch3)    tabs.push({ key: "f1040s3",    label: "Schedule 3" });
   if (c._need_sch_b)   tabs.push({ key: "f1040sb",    label: "Schedule B" });

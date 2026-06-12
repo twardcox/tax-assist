@@ -103,6 +103,17 @@ function toObjArr(val: unknown): Record<string, unknown>[] {
   return Array.isArray(val) ? val.filter((x) => x && typeof x === "object") as Record<string, unknown>[] : [];
 }
 
+function _careRate(agi: number): number {
+  const table: [number, number][] = [
+    [15000, 0.35], [17000, 0.34], [19000, 0.33], [21000, 0.32],
+    [23000, 0.31], [25000, 0.30], [27000, 0.29], [29000, 0.28],
+    [31000, 0.27], [33000, 0.26], [35000, 0.25], [37000, 0.24],
+    [39000, 0.23], [41000, 0.22], [43000, 0.21],
+  ];
+  for (const [limit, rate] of table) if (agi <= limit) return rate;
+  return 0.20;
+}
+
 export type ComputedValues = Record<string, unknown>;
 
 export class TaxCalculator {
@@ -537,32 +548,135 @@ export class TaxCalculator {
     c["other_dependent_count"] = otherDeps.length;
     c["other_dependent_credit"] = Math.min(otherDeps.length * 500, 1500);
 
+    // ctc_with_odc must be set before care credit (care credit limit depends on it)
+    c["ctc_with_odc"] = this.n("child_tax_credit") + this.n("other_dependent_credit");
+
+    // Support nested care_expenses sub-object (real app) and flat format (tests)
     const care = deps.reduce((s, d) => {
-      return s + f(d["daycare_cost"]) + f(d["after_school_care_cost"]) + f(d["summer_camp_cost"]);
+      const ce = toObj(d["care_expenses"]);
+      return s + f(ce["daycare_cost"] ?? d["daycare_cost"])
+               + f(ce["after_school_care_cost"] ?? d["after_school_care_cost"])
+               + f(ce["summer_camp_cost"] ?? d["summer_camp_cost"]);
     }, 0);
     c["care_expenses"] = care;
     const fsaOffset = this.n("dependent_care_fsa");
     const eligibleCare = Math.max(0, Math.min(care - fsaOffset, qualifying.length === 1 ? 3000 : 6000));
-    c["child_care_credit"] = eligibleCare * 0.20;
+    c["care_eligible_expenses"] = eligibleCare;
+    const careRate = _careRate(agi);
+    c["care_credit_rate"] = careRate;
+    const careCreditLimit = Math.max(0, this.n("income_tax_before_credits") - this.n("ctc_with_odc"));
+    c["care_credit_limit"] = careCreditLimit;
+    c["child_care_credit"] = Math.min(eligibleCare * careRate, careCreditLimit);
 
-    const tuition = deps
+    // Net tuition = paid minus scholarships (per IRS adjusted qualified expenses)
+    const tuitionNet = deps
       .filter((d) => d["full_time_student"])
       .reduce((s, d) => {
         const edu = toObj(d["education"]);
-        return s + f(edu["tuition_paid"] ?? d["tuition_paid"]);
+        const paid = f(edu["tuition_paid"] ?? d["tuition_paid"]);
+        const schol = f(edu["scholarships_received"] ?? d["scholarships_received"]);
+        return s + Math.max(0, paid - schol);
       }, 0);
-    c["tuition_expenses"] = tuition;
-    c["education_credit"] = Math.min(tuition * 0.20, 2500);
+    c["tuition_expenses"] = tuitionNet;
+    c["llc_expenses"] = Math.min(tuitionNet, 10000); // LLC cap: $10k per return
+
+    // LLC phaseout: $80k-$90k single / $160k-$180k MFJ
+    const eduThresh = fs.includes("jointly") ? 180000 : 90000;
+    const eduRange = fs.includes("jointly") ? 20000 : 10000;
+    const eduRemaining = Math.max(0, eduThresh - agi);
+    const eduFraction = eduRemaining >= eduRange ? 1.0 : (eduRange > 0 ? eduRemaining / eduRange : 0);
+    c["education_phaseout_threshold"] = eduThresh;
+    c["education_phaseout_range"] = eduRange;
+    c["education_phaseout_fraction"] = eduFraction;
+
+    c["education_credit"] = Math.round(this.n("llc_expenses") * 0.20 * eduFraction * 100) / 100;
 
     c["ev_credit"] = toObj(this.data["household"])["has_electric_vehicle"] ? 7500 : 0;
     c["saver_credit"] = 0;
 
-    // Schedule 8812: CTC + ODC together → Form 1040 Line 19
-    c["ctc_with_odc"] = this.n("child_tax_credit") + this.n("other_dependent_credit");
+    // §25D + §25C from energy_credits on the primary residence
+    const props = toObjArr(toObj(this.data["real_estate"])["properties"]);
+    const primaryProp = props.find((p) => p["property_type"] === "primary_residence") ?? {};
+    const energy = toObj(primaryProp["energy_credits"]);
 
-    // Schedule 3 Line 8: child care + education + EV + saver → Form 1040 Line 20
+    const solarElec   = f(energy["solar_electric_cost"]);
+    const solarWater  = f(energy["solar_water_cost"]);
+    const wind        = f(energy["wind_cost"]);
+    const geothermal  = f(energy["geothermal_cost"]);
+    const battery     = f(energy["battery_cost"]);
+    const total25d    = solarElec + solarWater + wind + geothermal + battery;
+    const credit25dRaw = Math.round(total25d * 0.30);
+
+    const insulation    = f(energy["insulation_cost"]);
+    const door          = f(energy["door_cost"]);
+    const window        = f(energy["window_cost"]);
+    const ac            = f(energy["central_ac_cost"]);
+    const waterHeater   = f(energy["water_heater_cost"]);
+    const furnace       = f(energy["furnace_cost"]);
+    const audit         = f(energy["home_energy_audit_cost"]);
+    const heatPump      = f(energy["heat_pump_cost"]);
+    const heatPumpWh    = f(energy["heat_pump_wh_cost"]);
+    const biomass       = f(energy["biomass_cost"]);
+
+    // Per-category §25C caps
+    const insulationCr  = Math.min(insulation  * 0.30, 1200);
+    const doorCr        = Math.min(door        * 0.30, 500);
+    const windowCr      = Math.min(window      * 0.30, 600);
+    const acCr          = Math.min(ac          * 0.30, 600);
+    const waterHeaterCr = Math.min(waterHeater * 0.30, 600);
+    const furnaceCr     = Math.min(furnace     * 0.30, 600);
+    const auditCr       = Math.min(audit       * 0.30, 150);
+    // Annual $1,200 aggregate cap (line 28)
+    const subtotal1200  = Math.min(insulationCr + doorCr + windowCr + acCr + waterHeaterCr + furnaceCr + auditCr, 1200);
+    // Separate $2,000 cap for heat pumps + biomass (line 29h)
+    const heatPumpCr    = Math.min((heatPump + heatPumpWh + biomass) * 0.30, 2000);
+    const credit25cRaw  = subtotal1200 + heatPumpCr;
+
+    // Both credits nonrefundable — limited by remaining tax liability
+    const otherNonref = this.n("child_care_credit") + this.n("education_credit") + this.n("ev_credit") + this.n("saver_credit");
+    const energyLimit = Math.max(0, this.n("income_tax_before_credits") - this.n("ctc_with_odc") - otherNonref);
+    const cleanEnergyCr = Math.min(credit25dRaw, energyLimit);
+    c["clean_energy_credit"] = cleanEnergyCr;
+    c["clean_energy_carryforward"] = Math.max(0, credit25dRaw - cleanEnergyCr);
+    const remainingAfter25d = Math.max(0, energyLimit - cleanEnergyCr);
+
+    // Intermediates passed through to fill function
+    c["f5695_solar_cost"]       = solarElec;
+    c["f5695_solar_water_cost"] = solarWater;
+    c["f5695_wind_cost"]        = wind;
+    c["f5695_geothermal_cost"]  = geothermal;
+    c["f5695_battery_cost"]     = battery;
+    c["f5695_25d_total"]        = total25d;
+    c["f5695_25d_times_30"]     = credit25dRaw;
+    c["f5695_insulation_cost"]  = insulation;
+    c["f5695_insulation_cr"]    = insulationCr;
+    c["f5695_door_cost"]        = door;
+    c["f5695_door_cr"]          = doorCr;
+    c["f5695_window_cost"]      = window;
+    c["f5695_window_cr"]        = windowCr;
+    c["f5695_ac_cost"]          = ac;
+    c["f5695_ac_cr"]            = acCr;
+    c["f5695_wh_cost"]          = waterHeater;
+    c["f5695_wh_cr"]            = waterHeaterCr;
+    c["f5695_furnace_cost"]     = furnace;
+    c["f5695_furnace_cr"]       = furnaceCr;
+    c["f5695_audit_cost"]       = audit;
+    c["f5695_audit_cr"]         = auditCr;
+    c["f5695_heat_pump_cost"]   = heatPump;
+    c["f5695_heat_pump_wh_cost"]= heatPumpWh;
+    c["f5695_biomass_cost"]     = biomass;
+    c["f5695_heat_pump_all"]    = heatPump + heatPumpWh + biomass;
+    c["f5695_heat_pump_cr"]     = heatPumpCr;
+    c["f5695_subtotal_1200"]    = subtotal1200;
+    c["f5695_25c_raw"]          = credit25cRaw;
+    c["f5695_energy_limit"]     = energyLimit;
+
+    // Schedule 3 Line 8: child care + education + §25D + §25C + EV + saver → Form 1040 Line 20
+    const homeImproveCr = Math.min(credit25cRaw, remainingAfter25d);
+    c["home_improvement_credit"] = homeImproveCr;
     c["schedule3_line8"] = (
       this.n("child_care_credit") + this.n("education_credit") +
+      cleanEnergyCr + homeImproveCr +
       this.n("ev_credit") + this.n("saver_credit")
     );
 
