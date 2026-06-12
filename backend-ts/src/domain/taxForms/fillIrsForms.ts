@@ -241,13 +241,14 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   // ── Page 1 ── Dependents ────────────────────────────────────────────────────
   const depsSection = (data["dependents"] ?? {}) as Record<string, unknown>;
   const deps = (depsSection["dependents"] as Record<string, unknown>[]) ?? [];
-  // Row text fields: f1_31–f1_34 (dep1), f1_35–f1_38 (dep2), f1_39–f1_42 (dep3), f1_43–f1_46 (dep4)
-  const depRows = [
-    { fn: "f1_31[0]", ln: "f1_32[0]", ssn: "f1_33[0]", rel: "f1_34[0]", n: 1 },
-    { fn: "f1_35[0]", ln: "f1_36[0]", ssn: "f1_37[0]", rel: "f1_38[0]", n: 2 },
-    { fn: "f1_39[0]", ln: "f1_40[0]", ssn: "f1_41[0]", rel: "f1_42[0]", n: 3 },
-    { fn: "f1_43[0]", ln: "f1_44[0]", ssn: "f1_45[0]", rel: "f1_46[0]", n: 4 },
-  ] as const;
+  // The dependent table has rows=field types and columns=dependents 1–4.
+  // Row1=first names (f1_31–f1_34), Row2=last names (f1_35–f1_38),
+  // Row3=SSNs (f1_39–f1_42), Row4=relationships (f1_43–f1_46).
+  const DEP_TABLE = "topmostSubform[0].Page1[0].Table_Dependents[0]";
+  const depFnFields  = ["Row1[0].f1_31[0]","Row1[0].f1_32[0]","Row1[0].f1_33[0]","Row1[0].f1_34[0]"] as const;
+  const depLnFields  = ["Row2[0].f1_35[0]","Row2[0].f1_36[0]","Row2[0].f1_37[0]","Row2[0].f1_38[0]"] as const;
+  const depSsnFields = ["Row3[0].f1_39[0]","Row3[0].f1_40[0]","Row3[0].f1_41[0]","Row3[0].f1_42[0]"] as const;
+  const depRelFields = ["Row4[0].f1_43[0]","Row4[0].f1_44[0]","Row4[0].f1_45[0]","Row4[0].f1_46[0]"] as const;
   // Dependent credit checkboxes (per row): child tax credit [0] vs other dependent credit [1]
   const depCreditCb = ["c1_28", "c1_29", "c1_30", "c1_31"] as const;
   // "Lived with you" Yes checkboxes
@@ -281,17 +282,14 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
 
   for (let i = 0; i < Math.min(deps.length, 4); i++) {
     const d = deps[i];
-    const row = depRows[i];
     const fullName = String(d["name"] ?? "").trim();
     const nameParts = fullName.split(/\s+/);
     const firstName = nameParts[0] ?? "";
     const lastName = nameParts.slice(1).join(" ");
-    const depPath = (f: string) =>
-      `topmostSubform[0].Page1[0].Table_Dependents[0].Row${i + 1}[0].${f}`;
-    ts(doc, depPath(row.fn), firstName);
-    ts(doc, depPath(row.ln), lastName);
-    ts(doc, depPath(row.ssn), String(d["ssn"] ?? ""));
-    ts(doc, depPath(row.rel), String(d["relationship"] ?? ""));
+    ts(doc, `${DEP_TABLE}.${depFnFields[i]}`,  firstName);
+    ts(doc, `${DEP_TABLE}.${depLnFields[i]}`,  lastName);
+    ts(doc, `${DEP_TABLE}.${depSsnFields[i]}`, String(d["ssn"] ?? ""));
+    ts(doc, `${DEP_TABLE}.${depRelFields[i]}`, String(d["relationship"] ?? ""));
 
     // "Lived with taxpayer" Yes checkbox + "And in the U.S." checkbox
     if (d["lives_with_taxpayer"] !== false) {
@@ -319,15 +317,15 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   const ssBen    = (inc["social_security"]      ?? {}) as Record<string, unknown>;
   const invInc   = (inc["investment_income"]    ?? {}) as Record<string, unknown>;
 
-  // Line 4c — IRA rollover (c1_33[0] = option 1 "Rollover")
-  if (retDist["ira_rollover"])     tryCheckBox(doc, p(1, "c1_33[0]"), true);
-  // Line 5c — Pension/annuity rollover (c1_35[0] = option 1 "Rollover")
-  if (retDist["pension_rollover"]) tryCheckBox(doc, p(1, "c1_35[0]"), true);
-  // Line 6c — SS lump-sum election
-  if (ssBen["lump_sum_election"])  tryCheckBox(doc, p(1, "c1_38[0]"), true);
-  // Line 7b — Schedule D not required / includes child's capital gain
-  if (invInc["schedule_d_not_required"])    tryCheckBox(doc, p(1, "c1_40[0]"), true);
-  if (invInc["child_capital_gain_included"]) tryCheckBox(doc, p(1, "c1_41[0]"), true);
+  // Line 4c — IRA rollover (c1_35[0] = option 1 "Rollover"; c1_33–c1_34 are Line 3c)
+  if (retDist["ira_rollover"])     tryCheckBox(doc, p(1, "c1_35[0]"), true);
+  // Line 5c — Pension/annuity rollover (c1_38[0] = option 1 "Rollover"; c1_35–c1_37 are Line 4c)
+  if (retDist["pension_rollover"]) tryCheckBox(doc, p(1, "c1_38[0]"), true);
+  // Line 6c — SS lump-sum election (c1_41; c1_38–c1_40 are Line 5c)
+  if (ssBen["lump_sum_election"])  tryCheckBox(doc, p(1, "c1_41[0]"), true);
+  // Line 7b — Schedule D not required / includes child's capital gain (c1_43–c1_44; c1_42 is Line 6d)
+  if (invInc["schedule_d_not_required"])    tryCheckBox(doc, p(1, "c1_43[0]"), true);
+  if (invInc["child_capital_gain_included"]) tryCheckBox(doc, p(1, "c1_44[0]"), true);
 
   // ── Page 1 ── Income ────────────────────────────────────────────────────────
   s(p(1, "f1_47[0]"), c["wages"]);                // Line 1a  W-2 wages
@@ -390,9 +388,9 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   const totalWithholding = Number(c["w2_withholding"] ?? 0) + Number(c["other_withholding"] ?? 0);
   s(p(2, "f2_17[0]"), totalWithholding);               // Line 25d  total withholding (25a+25b+25c)
   s(p(2, "f2_18[0]"), c["estimated_tax_payments"]);    // Line 26   estimated tax payments
-  // Former spouse SSN for estimated payment allocation (Line 26 footnote field)
+  // Former spouse SSN for estimated payment allocation (Line 26 footnote — SSN_ReadOrder subform)
   const formerSpouseSSN = String(pay["former_spouse_ssn"] ?? "");
-  if (formerSpouseSSN) ts(doc, p(2, "f2_16[0]"), formerSpouseSSN);
+  if (formerSpouseSSN) ts(doc, "topmostSubform[0].Page2[0].SSN_ReadOrder[0].f2_22[0]", formerSpouseSSN);
   s(p(2, "f2_24[0]"), c["total_payments"]);            // Line 33   total payments
 
   if (Number(c["refund"] ?? 0) > 0) {
@@ -427,27 +425,60 @@ async function fillSchedule1(c: ComputedValues): Promise<PDFDocument> {
     ts(doc, field, typeof val === "string" ? val : fmtSigned(val));
 
   // ── Page 1 ── Part I Additional Income ─────────────────────────────────────
-  ss(p(1, "f1_05[0]"), c["schedule_c_profit"]);        // Line 3  business income (Sch C)
-  ss(p(1, "f1_07[0]"), c["schedule_e_net"]);           // Line 5  rental/royalties (Sch E)
-  s(p(1, "f1_15[0]"), c["gambling_winnings"]);         // Line 8b gambling winnings
-  s(p(1, "f1_37[0]"), c["schedule1_additional"]);      // Line 9  total additional income
-  s(p(1, "f1_38[0]"), c["schedule1_additional"]);      // Line 10 carry to Form 1040 line 8
+  // Field positions: f1_01/02=name/SSN, f1_03=L1, f1_04=L2a, f1_05=L3(confirmed),
+  //   f1_06=L4(other gains), f1_07=L5(confirmed), c1_1/c1_2=unknown checkboxes,
+  //   f1_08=L6(farm, estimated), f1_09/f1_10=unknown,
+  //   Line7_ReadOrder=L7(confirmed by subform), Line8a_ReadOrder=L8a(confirmed),
+  //   f1_14=unknown, f1_15=L8b(confirmed), f1_16=L8c, f1_17–f1_34=L8d–L8v,
+  //   Line8z_ReadOrder=L8z(confirmed by subform), f1_36=L8z amount, f1_37=L9, f1_38=L10.
+  s(p(1, "f1_03[0]"), c["taxable_refunds"]);              // Line 1  taxable state/local refunds
+  s(p(1, "f1_04[0]"), c["alimony_received"]);             // Line 2a alimony received (pre-2019)
+  ss(p(1, "f1_05[0]"), c["schedule_c_profit"]);           // Line 3  business income (Sch C)
+  ss(p(1, "f1_07[0]"), c["schedule_e_net"]);              // Line 5  rental/royalties/K-1 (Sch E)
+  ss(p(1, "f1_08[0]"), c["farm_income"]);                 // Line 6  farm income (estimated field)
+  // Line 7: unemployment compensation (subform confirmed by field name)
+  if (Number(c["unemployment_compensation"] ?? 0) !== 0) {
+    tryCheckBox(doc, p(1, "Line7_ReadOrder[0].c1_3[0]"), true);
+  }
+  ss(p(1, "Line7_ReadOrder[0].f1_11[0]"), c["unemployment_compensation"]);  // Line 7
+  ss(p(1, "Line8a_ReadOrder[0].f1_13[0]"), c["net_operating_loss"]);        // Line 8a NOL
+  s(p(1, "f1_15[0]"), c["gambling_winnings"]);            // Line 8b gambling winnings
+  s(p(1, "f1_16[0]"), c["canceled_debt"]);                // Line 8c cancellation of debt
+  // Line 8z: prizes/awards + other misc (subform confirmed by field name)
+  if (Number(c["line8z_amount"] ?? 0) !== 0) {
+    ts(doc, p(1, "Line8z_ReadOrder[0].f1_35[0]"), String(c["line8z_desc"] ?? "Other income"));
+    s(p(1, "f1_36[0]"), c["line8z_amount"]);              // Line 8z amount
+  }
+  s(p(1, "f1_37[0]"), c["schedule1_line9"]);              // Line 9  total Lines 8a–8z
+  s(p(1, "f1_38[0]"), c["schedule1_additional"]);         // Line 10 carry to Form 1040 line 8
 
   // ── Page 2 ── Part II Adjustments ──────────────────────────────────────────
   // Field order verified via mapFieldPositions.mjs (Y-coordinate anchors):
   //   f2_10 is in "Line19b_CombField" → f2_09 = Line 19a (one row above)
-  //   f2_16 is in "Line24a_ReadOrder" → counting back: f2_12=L20, f2_13=L21
+  //   f2_16 is in "Line24a_ReadOrder", f2_27 in "Line24z_ReadOrder"
+  //   counting back: f2_12=L20, f2_13=L21; f2_28=L24z amount, f2_29=L25 total, f2_30=L26
   //   Lines 12 and 18 have no AcroForm field in this PDF.
-  s(p(2, "f2_03[0]"), c["educator_expenses"]);         // Line 11 educator expenses
-  s(p(2, "f2_04[0]"), c["hsa_outside_payroll"]);       // Line 13 HSA deduction
-  s(p(2, "f2_05[0]"), c["moving_expenses_military"]);  // Line 14 moving expenses (military)
-  s(p(2, "f2_06[0]"), c["se_tax_deduction"]);          // Line 15 deductible part of SE tax
-  // Line 16 SEP/SIMPLE (f2_07): no data collected — left blank
-  s(p(2, "f2_08[0]"), c["se_health_insurance"]);       // Line 17 SE health insurance
-  s(p(2, "f2_09[0]"), c["alimony_paid"]);              // Line 19a alimony paid
-  s(p(2, "f2_12[0]"), c["ira_deduction"]);             // Line 20 IRA deduction
-  s(p(2, "f2_13[0]"), c["student_loan_interest"]);     // Line 21 student loan interest
-  s(p(2, "f2_30[0]"), c["total_adjustments"]);         // Line 26 total adjustments
+  s(p(2, "f2_03[0]"), c["educator_expenses"]);            // Line 11 educator expenses
+  s(p(2, "f2_04[0]"), c["hsa_outside_payroll"]);          // Line 13 HSA deduction
+  s(p(2, "f2_05[0]"), c["moving_expenses_military"]);     // Line 14 moving expenses (military)
+  s(p(2, "f2_06[0]"), c["se_tax_deduction"]);             // Line 15 deductible part of SE tax
+  s(p(2, "f2_07[0]"), c["sep_simple_contributions"]);     // Line 16 SEP/SIMPLE/qualified plan
+  s(p(2, "f2_08[0]"), c["se_health_insurance"]);          // Line 17 SE health insurance
+  s(p(2, "f2_09[0]"), c["alimony_paid"]);                 // Line 19a alimony paid
+  // Line 19b: recipient SSN — CombField accepts 9 digits only (no dashes)
+  if (c["alimony_recipient_ssn"]) {
+    const ssn19b = String(c["alimony_recipient_ssn"]).replace(/\D/g, "");
+    ts(doc, p(2, "Line19b_CombField[0].f2_10[0]"), ssn19b);
+  }
+  s(p(2, "f2_12[0]"), c["ira_deduction"]);                // Line 20 IRA deduction
+  s(p(2, "f2_13[0]"), c["student_loan_interest"]);        // Line 21 student loan interest
+  // Line 24z: other adjustments (subform confirmed by field name)
+  if (Number(c["other_adjustments_amount"] ?? 0) !== 0) {
+    ts(doc, p(2, "Line24z_ReadOrder[0].f2_27[0]"), String(c["other_adjustments_desc"] ?? "Other"));
+    s(p(2, "f2_28[0]"), c["other_adjustments_amount"]);   // Line 24z amount
+    s(p(2, "f2_29[0]"), c["other_adjustments_amount"]);   // Line 25 sum of Line 24 items
+  }
+  s(p(2, "f2_30[0]"), c["total_adjustments"]);            // Line 26 total adjustments
 
   return doc;
 }

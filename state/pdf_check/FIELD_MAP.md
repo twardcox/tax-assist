@@ -44,18 +44,45 @@ Previously wrong mappings (OLD → these were Presidential Campaign / main-home 
 - c1_6[0] (Y=194, X=482) = Presidential Campaign "You" — NOT MFJ
 - c1_7[0] (Y=194, X=526) = Presidential Campaign "Spouse" — NOT MFS
 
-### Dependents — NOW FILLED (2026-06-11)
+### Dependents — CORRECTED 2026-06-12
+Table layout: **rows = field type**, **columns = dependents 1–4**.
+Row1=first names, Row2=last names, Row3=SSNs, Row4=relationships.
+
 | Field (full path) | Form Label | Data Key |
 |---|---|---|
-| Table_Dependents[0].Row1[0].f1_31[0] | Dep 1 first name | `name.split[0]` |
-| Table_Dependents[0].Row1[0].f1_32[0] | Dep 1 last name | `name.split[1+]` |
-| Table_Dependents[0].Row1[0].f1_33[0] | Dep 1 SSN | `ssn` |
-| Table_Dependents[0].Row1[0].f1_34[0] | Dep 1 relationship | `relationship` |
-| (Row2–Row4 follow same pattern: f1_35–f1_46) | | |
+| Row1[0].f1_31[0] | **Dep 1** first name | `name.split[0]` |
+| Row1[0].f1_32[0] | **Dep 2** first name | `name.split[0]` |
+| Row1[0].f1_33[0] | **Dep 3** first name | `name.split[0]` |
+| Row1[0].f1_34[0] | **Dep 4** first name | `name.split[0]` |
+| Row2[0].f1_35[0] | Dep 1 last name | `name.split[1+]` |
+| Row2[0].f1_36–f1_38 | Dep 2–4 last names | same pattern |
+| Row3[0].f1_39[0] | Dep 1 SSN | `ssn` |
+| Row3[0].f1_40–f1_42 | Dep 2–4 SSNs | same pattern |
+| Row4[0].f1_43[0] | Dep 1 relationship | `relationship` |
+| Row4[0].f1_44–f1_46 | Dep 2–4 relationships | same pattern |
 | Row5.Dependent1.c1_12[0] | Dep 1 lived with you (Yes) | `lives_with_taxpayer` |
 | Row6.Dependent1.c1_20[0] | Dep 1 full-time student | `full_time_student` |
 | Row7.Dependent1.c1_28[0] | Dep 1 child tax credit | `age_at_year_end < 17` |
 | Row7.Dependent1.c1_28[1] | Dep 1 other dependent credit | `age_at_year_end >= 17` |
+
+### Income Checkboxes — CORRECTED 2026-06-12
+Income checkboxes c1_33–c1_44 map to Lines 3c, 4c, 5c, 6c, 6d, 7b in order (2+3+3+1+1+2 = 12).
+Tab order does not match visual reading order, but the visual grouping is definitive.
+
+| Field | Line | Form Label | Data Key | Status |
+|---|---|---|---|---|
+| c1_33[0] | 3c-1 | Child's dividends included in Line 3a | — | not filled |
+| c1_34[0] | 3c-2 | Child's dividends included in Line 3b | — | not filled |
+| c1_35[0] | 4c-1 | IRA rollover | `income.retirement_distributions.ira_rollover` | ✓ FIXED |
+| c1_36[0] | 4c-2 | IRA QCD | — | not filled |
+| c1_37[0] | 4c-3 | IRA other | — | not filled |
+| c1_38[0] | 5c-1 | Pension/annuity rollover | `income.retirement_distributions.pension_rollover` | ✓ FIXED |
+| c1_39[0] | 5c-2 | Pension PSO | — | not filled |
+| c1_40[0] | 5c-3 | Pension other | — | not filled |
+| c1_41[0] | 6c | SS lump-sum election method | `income.social_security.lump_sum_election` | ✓ FIXED |
+| c1_42[0] | 6d | MFS, lived apart entire year | — | not filled |
+| c1_43[0] | 7b-1 | Schedule D not required | `income.investment_income.schedule_d_not_required` | ✓ FIXED |
+| c1_44[0] | 7b-2 | Includes child's capital gain | `income.investment_income.child_capital_gain_included` | ✓ FIXED |
 
 ### Income (Line Numbers)
 | Field | Line | Form Label | ComputedValues Key | Status |
@@ -126,6 +153,7 @@ Previously wrong mappings (OLD → these were Presidential Campaign / main-home 
 | f2_15[0] | 25c | Other forms (see instructions) | — | not filled (zero) |
 | f2_17[0] | 25d | Add lines 25a + 25b + 25c | `w2_withholding + other_withholding` | ✓ FIXED |
 | f2_18[0] | 26 | 2025 estimated tax payments | `estimated_tax_payments` | ✓ |
+| SSN_ReadOrder[0].f2_22[0] | 26 footnote | Former spouse SSN | `household.payments.former_spouse_ssn` | ✓ FIXED |
 | f2_24[0] | 33 | TOTAL PAYMENTS | `total_payments` | ✓ |
 
 ### Refund / Amount Owed
@@ -138,21 +166,63 @@ Previously wrong mappings (OLD → these were Presidential Campaign / main-home 
 ---
 
 ## Schedule 1 (f1040s1.pdf)
-| Field | Page | Line | Form Label | ComputedValues Key | Status |
-|---|---|---|---|---|---|
-| f1_05[0] | 1 | 3 | Business income (Sch C net) | `schedule_c_profit` | ✓ |
-| f1_07[0] | 1 | 5 | Rental / royalties (Sch E net) | `schedule_e_net` | ✓ |
-| f1_15[0] | 1 | 8b | Gambling winnings | `gambling_winnings` | ✓ |
-| f1_37[0] | 1 | 9 | Total additional income | `schedule1_additional` | ✓ |
-| f1_38[0] | 1 | 10 | Carry to Form 1040 line 8 | `schedule1_additional` | ✓ |
-| f2_03[0] | 2 | 11 | Educator expenses | `educator_expenses` | ✓ |
-| f2_05[0] | 2 | 13 | HSA deduction | `hsa_outside_payroll` | ✓ |
-| f2_06[0] | 2 | 14 | Moving expenses (military) | `moving_expenses_military` | ✓ |
-| f2_07[0] | 2 | 15 | Deductible ½ of SE tax | `se_tax_deduction` | ✓ |
-| f2_08[0] | 2 | 16 | SE health insurance | `se_health_insurance` | ✓ |
-| f2_13[0] | 2 | 20 | IRA deduction | `ira_deduction` | ✓ |
-| f2_14[0] | 2 | 21 | Student loan interest | `student_loan_interest` | ✓ |
-| f2_30[0] | 2 | 26 | Total adjustments | `total_adjustments` | ✓ |
+
+Fields confirmed by subform name in all_fields.txt are marked (name✓).
+Fields confirmed by markitdown verification are marked (md✓).
+Fields estimated from tab-order position are marked (est).
+
+### Part I — Additional Income (Page 1)
+| Field | Line | Form Label | ComputedValues Key | Status |
+|---|---|---|---|---|
+| f1_01[0] | header | Taxpayer name | — | not filled |
+| f1_02[0] | header | SSN | — | not filled |
+| f1_03[0] | 1 | Taxable refunds of state/local taxes | `taxable_refunds` | ✓ est |
+| f1_04[0] | 2a | Alimony received | `alimony_received` | ✓ est |
+| f1_05[0] | 3 | Business income (Sch C net) | `schedule_c_profit` | ✓ md✓ |
+| f1_06[0] | 4 | Other gains/(losses) Form 4797 | — | not filled |
+| f1_07[0] | 5 | Rental/royalties/K-1 (Sch E net) | `schedule_e_net` | ✓ md✓ |
+| c1_1[0], c1_2[0] | ? | Unknown checkboxes | — | not filled |
+| f1_08[0] | 6 | Farm income/(loss) from Sch F | `farm_income` | ✓ est |
+| Line7_ReadOrder[0].c1_3[0] | 7 | Unemployment compensation checkbox | if `unemployment_compensation` > 0 | ✓ name✓ |
+| Line7_ReadOrder[0].f1_11[0] | 7 | Unemployment compensation amount | `unemployment_compensation` | ✓ name✓ |
+| Line8a_ReadOrder[0].f1_13[0] | 8a | Net operating loss | `net_operating_loss` | ✓ name✓ |
+| f1_15[0] | 8b | Gambling winnings | `gambling_winnings` | ✓ md✓ |
+| f1_16[0] | 8c | Cancellation of debt | `canceled_debt` | ✓ est |
+| f1_17[0]–f1_34[0] | 8d–8v | Specialized other income lines | — | not filled |
+| Line8z_ReadOrder[0].f1_35[0] | 8z | Other income description | `line8z_desc` | ✓ name✓ |
+| f1_36[0] | 8z | Other income amount (prizes+other) | `line8z_amount` | ✓ est |
+| f1_37[0] | 9 | Total Lines 8a–8z | `schedule1_line9` | ✓ md✓ |
+| f1_38[0] | 10 | Carry to Form 1040 line 8 | `schedule1_additional` | ✓ md✓ |
+
+### Part II — Adjustments to Income (Page 2)
+Field order verified via mapFieldPositions.mjs: f2_10 in Line19b_CombField → f2_09=L19a;
+f2_16 in Line24a_ReadOrder; f2_27 in Line24z_ReadOrder; f2_30=L26 total.
+Lines 12 and 18 have no AcroForm field in this PDF.
+
+| Field | Line | Form Label | ComputedValues Key | Status |
+|---|---|---|---|---|
+| f2_01[0], f2_02[0] | header | Name/SSN | — | not filled |
+| f2_03[0] | 11 | Educator expenses | `educator_expenses` | ✓ md✓ |
+| c2_1[0] | 11? | Unknown checkbox | — | not filled |
+| f2_04[0] | 13 | HSA deduction (Form 8889) | `hsa_outside_payroll` | ✓ md✓ |
+| f2_05[0] | 14 | Moving expenses (military only) | `moving_expenses_military` | ✓ md✓ |
+| f2_06[0] | 15 | Deductible ½ of SE tax | `se_tax_deduction` | ✓ md✓ |
+| f2_07[0] | 16 | SEP/SIMPLE/qualified plan | `sep_simple_contributions` | ✓ est |
+| f2_08[0] | 17 | SE health insurance | `se_health_insurance` | ✓ md✓ |
+| f2_09[0] | 19a | Alimony paid | `alimony_paid` | ✓ md✓ |
+| Line19b_CombField[0].f2_10[0] | 19b | Alimony recipient SSN | `alimony_recipient_ssn` | ✓ name✓ |
+| f2_11[0] | ? | Unknown field | — | not filled |
+| c2_2[0] | ? | Unknown checkbox | — | not filled |
+| f2_12[0] | 20 | IRA deduction | `ira_deduction` | ✓ md✓ |
+| f2_13[0] | 21 | Student loan interest | `student_loan_interest` | ✓ md✓ |
+| f2_14[0] | 22 | Tuition and fees (expired) | — | not filled |
+| f2_15[0] | 23 | Archer MSA deduction | — | not filled |
+| Line24a_ReadOrder[0].f2_16[0] | 24a | First additional adjustment desc | — | not filled |
+| f2_17[0]–f2_26[0] | 24b–24y | Additional adjustment amounts | — | not filled |
+| Line24z_ReadOrder[0].f2_27[0] | 24z | Last additional adjustment desc | `other_adjustments_desc` | ✓ name✓ |
+| f2_28[0] | 24z | Last additional adjustment amount | `other_adjustments_amount` | ✓ name✓ |
+| f2_29[0] | 25 | Total of Lines 24 items | `other_adjustments_amount` | ✓ est |
+| f2_30[0] | 26 | Total adjustments | `total_adjustments` | ✓ md✓ |
 
 ---
 

@@ -187,18 +187,47 @@ export class TaxCalculator {
     c["k1_guaranteed"] = f(passive["k1_guaranteed_payments"]);
 
     const other = toObj(inc["other_income"]);
+    c["taxable_refunds"] = f(other["taxable_refunds"]);
     c["alimony_received"] = f(other["alimony_received"]);
+    c["alimony_date_of_divorce"] = String(other["alimony_date_of_divorce"] ?? "");
+    c["farm_income"] = f(other["farm_income"]);
+    c["unemployment_compensation"] = f(other["unemployment_compensation"]);
+    c["net_operating_loss"] = f(other["net_operating_loss"]);
     c["gambling_winnings"] = f(other["gambling_winnings"]);
-    c["prizes_awards"] = f(other["prizes_awards"]);
     c["canceled_debt"] = f(other["canceled_debt"]);
+    c["prizes_awards"] = f(other["prizes_awards"]);
     c["other_income_misc"] = f(other["other_amount"]);
     c["other_income_desc"] = other["other_description"] ?? "";
 
+    // Line 8z combines prizes/awards and other misc (with generated description)
+    c["line8z_amount"] = this.n("prizes_awards") + this.n("other_income_misc");
+    c["line8z_desc"] = (() => {
+      const hasPrizes = this.n("prizes_awards") > 0;
+      const hasOther = this.n("other_income_misc") > 0;
+      if (hasPrizes && hasOther) return `Prizes/Awards; ${String(c["other_income_desc"] || "Other")}`;
+      if (hasPrizes) return "Prizes and awards";
+      if (hasOther) return String(c["other_income_desc"] || "Other income");
+      return "";
+    })();
+
+    // Line 9: sum of Lines 8a–8z only
+    c["schedule1_line9"] = (
+      this.n("net_operating_loss") +
+      this.n("gambling_winnings") +
+      this.n("canceled_debt") +
+      this.n("line8z_amount")
+    );
+
+    // Line 10: Lines 1+2a+3+5+6+7+Line9 (total additional income)
     c["schedule1_additional"] = (
-      this.n("schedule_c_profit") + this.n("schedule_e_net") +
+      this.n("taxable_refunds") +
+      this.n("alimony_received") +
+      this.n("schedule_c_profit") +
+      this.n("schedule_e_net") +
       this.n("k1_ordinary") + this.n("k1_rental") + this.n("k1_guaranteed") +
-      this.n("alimony_received") + this.n("gambling_winnings") +
-      this.n("prizes_awards") + this.n("canceled_debt") + this.n("other_income_misc")
+      this.n("farm_income") +
+      this.n("unemployment_compensation") +
+      this.n("schedule1_line9")
     );
 
     c["total_income"] = (
@@ -304,16 +333,21 @@ export class TaxCalculator {
     c["student_loan_interest"] = f(adj["student_loan_interest"]);
     c["educator_expenses"] = Math.min(f(adj["educator_expenses"]), 300);
     c["hsa_outside_payroll"] = f(adj["hsa_contributions_outside_payroll"]);
-    c["se_health_insurance"] = f(adj["self_employed_health_insurance"]);
-    c["ira_deduction"] = f(adj["ira_deduction"]);
-    c["alimony_paid"] = f(adj["alimony_paid"]);
     c["moving_expenses_military"] = f(adj["moving_expenses_military"]);
+    c["sep_simple_contributions"] = f(adj["sep_simple_contributions"]);
+    c["se_health_insurance"] = f(adj["self_employed_health_insurance"]);
+    c["alimony_paid"] = f(adj["alimony_paid"]);
+    c["alimony_recipient_ssn"] = String(adj["alimony_recipient_ssn"] ?? "");
+    c["ira_deduction"] = f(adj["ira_deduction"]);
+    c["other_adjustments_amount"] = f(adj["other_adjustments_amount"]);
+    c["other_adjustments_desc"] = String(adj["other_adjustments_description"] ?? "");
 
     c["total_adjustments"] = (
-      this.n("se_tax_deduction") + this.n("student_loan_interest") +
-      this.n("educator_expenses") + this.n("hsa_outside_payroll") +
-      this.n("se_health_insurance") + this.n("ira_deduction") +
-      this.n("alimony_paid") + this.n("moving_expenses_military")
+      this.n("se_tax_deduction") + this.n("educator_expenses") +
+      this.n("hsa_outside_payroll") + this.n("moving_expenses_military") +
+      this.n("sep_simple_contributions") + this.n("se_health_insurance") +
+      this.n("alimony_paid") + this.n("ira_deduction") +
+      this.n("student_loan_interest") + this.n("other_adjustments_amount")
     );
   }
 

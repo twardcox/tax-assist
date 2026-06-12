@@ -29,7 +29,9 @@ const TAX_YEAR = 2025;
 //  L8   Sch1 addl       $12,836   Sch C $9,009 + rental $1,100 + k1 $1,010
 //                                 + k1 rental $909 + gambling $808
 //  L25a withholding     $22,020   Alex $20,202 + Jordan $1,818
+//  L25b other withheld  $1,515    household.payments.other_withholding
 //  L26  est. tax        $2,500    household.payments.estimated_tax_payments
+//  L36  apply next yr   $750      household.payments.apply_to_next_year
 //
 // SCH 1 ADJUSTMENTS
 //  L11  educator        $300      (hard-capped at $300 by calculator)
@@ -57,6 +59,33 @@ const TAX_YEAR = 2025;
 //  net profit    $9,009
 //  × 0.9235      ~$8,316 (derived)
 //  SE tax        ~$1,272 (derived)
+//
+// 1040 CHECKBOXES & TEXT FIELDS UNDER TEST
+//  header         section_9100_2: true         → c1_1
+//  header         combat_zone: true            → c1_2
+//  header         taxpayer_deceased: true      → deceased header
+//  header         taxpayer_date_of_death       → "11" / "15" / "2025"  (f1_05–f1_07)
+//  header         presidential_campaign_you    → c1_6
+//  header         presidential_campaign_spouse → c1_7
+//  digital assets digital_assets: true         → c1_10[0] "Yes"
+//  foreign addr   foreign_country: "Germany"   → addr f1_25
+//  foreign addr   foreign_province: "Bavaria"  → addr f1_26
+//  foreign addr   foreign_postal_code: "80331" → addr f1_27
+//  p2 L12a        tp.can_be_claimed_as_dep     → c2_1
+//  p2 L12a        sp.can_be_claimed_as_dep     → c2_2
+//  p2 L12b        sp.itemizes_separately       → c2_3
+//  p2 L12c        tp.dual_status_alien         → c2_4
+//  p2 L12d        tp.blind: true               → c2_6
+//  p2 L12d        sp.blind: true               → c2_8
+//  p2 direct dep  routing_number: "987654321"  → RoutingNo.f2_32
+//  p2 direct dep  account_number: "1112223334" → AccountNo.f2_33
+//  p2 direct dep  account_type: "savings"      → c2_16[1]
+//  p2 L26 fmr sp  former_spouse_ssn: "500-77-8888" → f2_16
+//  L4c rollover   income.retDist.ira_rollover  → c1_33
+//  L5c rollover   income.retDist.pension_roll  → c1_35
+//  L6c lump-sum   income.ss.lump_sum_election  → c1_38
+//  L7b no-sched-d income.invInc.sched_d_no_req → c1_40
+//  L7b child cg   income.invInc.child_cg_incl  → c1_41
 // ─────────────────────────────────────────────────────────────────────────────
 
 const sections: Record<string, Record<string, unknown>> = {
@@ -68,9 +97,19 @@ const sections: Record<string, Record<string, unknown>> = {
     estimated_agi: 212000,
     prior_year_agi: 189000,
     itemizing_deductions: false,
-    digital_assets: false,
+    digital_assets: true,              // → c1_10[0] "Yes" checkbox
     has_electric_vehicle: false,
-    notes: "Primary earner at Meridian Technologies; side consulting practice via Carter Consulting LLC.",
+
+    // Header checkboxes — all enabled to verify field positions
+    section_9100_2: true,              // → c1_1
+    combat_zone: true,                 // → c1_2
+    taxpayer_deceased: true,           // → deceased header
+    taxpayer_date_of_death: "2025-11-15", // → f1_05 "11" / f1_06 "15" / f1_07 "2025"
+    spouse_deceased: false,
+    presidential_campaign_you: true,   // → c1_6
+    presidential_campaign_spouse: true, // → c1_7
+
+    notes: "PRIMARY earner at Meridian Technologies; side consulting practice via Carter Consulting LLC.",
 
     taxpayer: {
       first_name: "Alex",
@@ -78,11 +117,13 @@ const sections: Record<string, Record<string, unknown>> = {
       ssn: "400-12-3456",
       dob: "1983-03-15",
       age: 42,
-      blind: false,
+      blind: true,                        // → c2_6 "Are blind"
       disabled: false,
       active_military: false,
       veteran: false,
       student: false,
+      can_be_claimed_as_dependent: true,  // → c2_1 "You as a dependent"
+      dual_status_alien: true,            // → c2_4
     },
 
     spouse: {
@@ -94,6 +135,9 @@ const sections: Record<string, Record<string, unknown>> = {
       age: 40,
       employed: true,
       self_employed: false,
+      blind: true,                          // → c2_8 "Is blind"
+      can_be_claimed_as_dependent: true,    // → c2_2 "Spouse as a dependent"
+      itemizes_separately: true,            // → c2_3 (MFS scenario checkbox)
     },
 
     residence: {
@@ -102,15 +146,25 @@ const sections: Record<string, Record<string, unknown>> = {
       state: "TX",
       zip: "78701",
       county: "Travis",
+      // Foreign address fields — filled on form alongside domestic address for test
+      foreign_country: "Germany",           // → addr f1_25
+      foreign_province: "Bavaria",          // → addr f1_26
+      foreign_postal_code: "80331",         // → addr f1_27
     },
 
     dependents: { count: 3 },
 
     // est_tax → 1040 L26:  $2,500
     // other_withheld:       $1,515
+    // apply_to_next_year:   $750  → L36 (splits refund if any)
     payments: {
       estimated_tax_payments: 2500,
       other_withholding: 1515,
+      apply_to_next_year: 750,           // → f2_27
+      routing_number: "987654321",       // → RoutingNo.f2_32
+      account_number: "1112223334",      // → AccountNo.f2_33
+      account_type: "savings",           // → c2_16[1] Savings checkbox
+      former_spouse_ssn: "500-77-8888",  // → f2_16
     },
   },
 
@@ -174,6 +228,8 @@ const sections: Record<string, Record<string, unknown>> = {
       short_term_capital_gains: 7070,
       // Sch D row 8a:  $8,080
       long_term_capital_gains: 8080,
+      schedule_d_not_required: true,      // → c1_40[0] Line 7b checkbox
+      child_capital_gain_included: true,  // → c1_41[0] Line 7b checkbox
     },
 
     retirement_distributions: {
@@ -185,6 +241,8 @@ const sections: Record<string, Record<string, unknown>> = {
       annuity: 0,
       traditional_401k: 0,
       required_minimum_distribution: false,
+      ira_rollover: true,     // → c1_33[0] Line 4c "Rollover" checkbox
+      pension_rollover: true, // → c1_35[0] Line 5c "Rollover" checkbox
     },
 
     social_security: {
@@ -192,6 +250,7 @@ const sections: Record<string, Record<string, unknown>> = {
       // 1040 L6b:  derived ~$5,151 (85% × $6,060 at this income level)
       gross_benefits: 6060,
       taxable_portion: 0,
+      lump_sum_election: true, // → c1_38[0] Line 6c checkbox
     },
 
     passive_income: {
@@ -203,30 +262,49 @@ const sections: Record<string, Record<string, unknown>> = {
     },
 
     other_income: {
-      alimony_received: 0,
-      // Sch 1 L8b: $808
+      // Sch 1 L1:  $303  → f1_03
+      taxable_refunds: 303,
+      // Sch 1 L2a: $919  → f1_04 (pre-2019 agreement = taxable)
+      alimony_received: 919,
+      alimony_date_of_divorce: "06/15/2017",
+      // Sch 1 L7:  $707  → Line7_ReadOrder.f1_11
+      unemployment_compensation: 707,
+      // Sch 1 L8a: -$404 → Line8a_ReadOrder.f1_13
+      net_operating_loss: -404,
+      // Sch 1 L8b: $808  → f1_15
       gambling_winnings: 808,
-      prizes_awards: 0,
-      canceled_debt: 0,
+      // Sch 1 L8c: $505  → f1_16
+      canceled_debt: 505,
+      // Sch 1 L8z: $606  → Line8z_ReadOrder.f1_35 + f1_36
+      prizes_awards: 606,
+      farm_income: 0,
       other_amount: 0,
       other_description: "",
     },
 
     adjustments_to_income: {
-      // Sch 1 L21: $1,212
-      student_loan_interest: 1212,
-      // Sch 1 L11: $300 (calculator hard-caps at $300)
+      // Sch 1 L11: $300 (calculator hard-caps at $300) → f2_03
       educator_expenses: 300,
       hsa_contributions_outside_payroll: 0,
-      // Sch 1 L17: $4,400
-      self_employed_health_insurance: 4400,
-      // Sch 1 L15: derived (se_tax / 2)
-      self_employed_se_tax_deduction: 0,
-      // Sch 1 L20: $1,313
-      ira_deduction: 1313,
-      // Sch 1 L19: $1,414
-      alimony_paid: 1414,
+      // Sch 1 L14: $0 (non-military) → f2_05
       moving_expenses_military: 0,
+      // Sch 1 L15: derived (se_tax / 2) → f2_06
+      self_employed_se_tax_deduction: 0,
+      // Sch 1 L16: $505 → f2_07
+      sep_simple_contributions: 505,
+      // Sch 1 L17: $4,400 → f2_08
+      self_employed_health_insurance: 4400,
+      // Sch 1 L19a: $1,414 → f2_09
+      alimony_paid: 1414,
+      // Sch 1 L19b: recipient SSN → Line19b_CombField.f2_10
+      alimony_recipient_ssn: "600-88-9999",
+      // Sch 1 L20: $1,313 → f2_12
+      ira_deduction: 1313,
+      // Sch 1 L21: $1,212 → f2_13
+      student_loan_interest: 1212,
+      // Sch 1 L24z: $404 → Line24z_ReadOrder.f2_27 + f2_28
+      other_adjustments_amount: 404,
+      other_adjustments_description: "Repayment prior-year income",
     },
 
     notes: "Jordan is a teacher — educator expense eligible ($300 cap). SE health insurance for Alex's consulting LLC.",
