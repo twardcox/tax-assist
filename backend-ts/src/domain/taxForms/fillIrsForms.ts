@@ -155,10 +155,29 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
     ts(doc, field, typeof val === "string" ? val : fmtSigned(val));
 
   // ── Page 1 ── Header: name, SSN, address, filing status ────────────────────
-  const hh = (data["household"] ?? {}) as Record<string, unknown>;
-  const tp = (hh["taxpayer"] ?? {}) as Record<string, unknown>;
-  const sp = (hh["spouse"] ?? {}) as Record<string, unknown>;
-  const res = (hh["residence"] ?? {}) as Record<string, unknown>;
+  const hh  = (data["household"] ?? {}) as Record<string, unknown>;
+  const tp  = (hh["taxpayer"]   ?? {}) as Record<string, unknown>;
+  const sp  = (hh["spouse"]     ?? {}) as Record<string, unknown>;
+  const res = (hh["residence"]  ?? {}) as Record<string, unknown>;
+  const pay = (hh["payments"]   ?? {}) as Record<string, unknown>;
+
+  // Special header flags: "Filed pursuant to section 301.9100-2" (c1_1) and "Combat zone" (c1_2)
+  if (hh["section_9100_2"]) tryCheckBox(doc, p(1, "c1_1[0]"), true);
+  if (hh["combat_zone"])    tryCheckBox(doc, p(1, "c1_2[0]"), true);
+
+  // Deceased taxpayer/spouse — f1_05–f1_07 = taxpayer MM/DD/YYYY, f1_08–f1_10 = spouse MM/DD/YYYY
+  const fillDeceasedDate = (dateStr: string, mF: string, dF: string, yF: string) => {
+    const parts = dateStr.split("-");  // ISO: YYYY-MM-DD
+    if (parts.length === 3) {
+      ts(doc, p(1, mF), parts[1] ?? "");   // MM
+      ts(doc, p(1, dF), parts[2] ?? "");   // DD
+      ts(doc, p(1, yF), parts[0] ?? "");   // YYYY
+    }
+  };
+  const tpDod = String(hh["taxpayer_date_of_death"] ?? "");
+  const spDod = String(hh["spouse_date_of_death"]   ?? "");
+  if (tpDod) fillDeceasedDate(tpDod, "f1_05[0]", "f1_06[0]", "f1_07[0]");
+  if (spDod) fillDeceasedDate(spDod, "f1_08[0]", "f1_09[0]", "f1_10[0]");
 
   const tpFirst = String(tp["first_name"] ?? "");
   const tpLast  = String(tp["last_name"]  ?? "");
@@ -178,9 +197,9 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
     ts(doc, p(1, "f1_19[0]"), spSSN);               // Spouse SSN
   }
 
-  // Address — Address_ReadOrder subform contains the 8 address fields
+  // Address — Address_ReadOrder subform contains the address fields
   const street = String(res["street_address"] ?? "");
-  const apt    = String(res["apt_number"]    ?? "");
+  const apt    = String(res["apt_number"]     ?? "");
   const city   = String(res["city"]   ?? "");
   const state  = String(res["state"]  ?? "");
   const zip    = String(res["zip"]    ?? "");
@@ -191,10 +210,28 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   ts(doc, addr("f1_23[0]"), state);                // State
   ts(doc, addr("f1_24[0]"), zip);                  // ZIP code
 
+  // Foreign address (only present for non-U.S. mailing addresses)
+  const foreignCountry  = String(res["foreign_country"]  ?? "");
+  const foreignProvince = String(res["foreign_province"] ?? "");
+  const foreignPostal   = String(res["foreign_postal_code"] ?? "");
+  if (foreignCountry)  ts(doc, addr("f1_25[0]"), foreignCountry);   // Foreign country name
+  if (foreignProvince) ts(doc, addr("f1_26[0]"), foreignProvince);  // Foreign province/state/county
+  if (foreignPostal)   ts(doc, addr("f1_27[0]"), foreignPostal);    // Foreign postal code
+
   // Filing status checkbox — FILING_STATUS_CB stores the full AcroForm path
   const fs = String(c["_fs"] ?? getStr(data, "household.filing_status"));
   const cbKey = FILING_STATUS_CB[fs];
   if (cbKey) tryCheckBox(doc, cbKey, true);
+
+  // HOH qualifying person name — filled when the qualifying person is NOT your dependent
+  const hohQualifier = String(hh["hoh_qualifying_person_name"] ?? "");
+  if (fs === "head_of_household" && hohQualifier) {
+    ts(doc, "topmostSubform[0].Page1[0].Checkbox_ReadOrder[0].f1_28[0]", hohQualifier);
+  }
+
+  // Presidential Election Campaign — c1_6 = You, c1_7 = Spouse
+  if (hh["presidential_campaign_you"])    tryCheckBox(doc, p(1, "c1_6[0]"), true);
+  if (hh["presidential_campaign_spouse"]) tryCheckBox(doc, p(1, "c1_7[0]"), true);
 
   // Digital assets Yes/No (c1_10[0] = Yes, c1_10[1] = No)
   const digitalAssets = (hh["digital_assets"] as boolean | undefined) ?? false;
@@ -227,6 +264,20 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
     "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent3[0].c1_24[0]",
     "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent4[0].c1_26[0]",
   ] as const;
+  // "Permanently and totally disabled" checkboxes (Row6, adjacent to student checkboxes)
+  const depDisabledCb = [
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent1[0].c1_21[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent2[0].c1_23[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent3[0].c1_25[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row6[0].Dependent4[0].c1_27[0]",
+  ] as const;
+  // "And in the U.S." checkboxes (Row5, checkbox (b) adjacent to lived-with-you (a))
+  const depInUsCb = [
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent1[0].c1_13[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent2[0].c1_15[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent3[0].c1_17[0]",
+    "topmostSubform[0].Page1[0].Table_Dependents[0].Row5[0].Dependent4[0].c1_19[0]",
+  ] as const;
 
   for (let i = 0; i < Math.min(deps.length, 4); i++) {
     const d = deps[i];
@@ -242,15 +293,17 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
     ts(doc, depPath(row.ssn), String(d["ssn"] ?? ""));
     ts(doc, depPath(row.rel), String(d["relationship"] ?? ""));
 
-    // "Lived with taxpayer" Yes checkbox
+    // "Lived with taxpayer" Yes checkbox + "And in the U.S." checkbox
     if (d["lives_with_taxpayer"] !== false) {
       tryCheckBox(doc, depLivedWithCb[i], true);
+      tryCheckBox(doc, depInUsCb[i], true);        // assume in the U.S. when living with taxpayer
     }
 
     // Full-time student checkbox
-    if (d["full_time_student"]) {
-      tryCheckBox(doc, depStudentCb[i], true);
-    }
+    if (d["full_time_student"]) tryCheckBox(doc, depStudentCb[i], true);
+
+    // Permanently and totally disabled checkbox
+    if (d["disabled"]) tryCheckBox(doc, depDisabledCb[i], true);
 
     // Credit type checkbox
     const age = Number(d["age_at_year_end"] ?? 99);
@@ -288,6 +341,23 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   // ── Page 2 ── Deductions / taxable income carry-over ─────────────────────────
   // These fields repeat lines 11b-15 on the back page of the printed form
   s(p(2, "f2_01[0]"), c["agi"]);                       // Line 11b  AGI (carryover from page 1)
+
+  // ── Page 2 ── Line 12a–d standard deduction modifier checkboxes ─────────────
+  // Line 12a: Someone can claim you/spouse as a dependent
+  if (tp["can_be_claimed_as_dependent"]) tryCheckBox(doc, p(2, "c2_1[0]"), true);  // You
+  if (sp["can_be_claimed_as_dependent"]) tryCheckBox(doc, p(2, "c2_2[0]"), true);  // Spouse
+  // Line 12b: Spouse itemizes on a separate return (MFS only)
+  if (sp["itemizes_separately"]) tryCheckBox(doc, p(2, "c2_3[0]"), true);
+  // Line 12c: Dual-status alien
+  if (tp["dual_status_alien"]) tryCheckBox(doc, p(2, "c2_4[0]"), true);
+  // Line 12d: Born before January 2, 1961 (age >= 65 at year-end) and Blind — You and Spouse
+  const tpAge = Number(tp["age"] ?? 0);
+  const spAge = Number(sp["age"] ?? 0);
+  if (tpAge >= 65)         tryCheckBox(doc, p(2, "c2_5[0]"), true);   // You: born before Jan 2, 1961
+  if (tp["blind"])         tryCheckBox(doc, p(2, "c2_6[0]"), true);   // You: blind
+  if (spAge >= 65)         tryCheckBox(doc, p(2, "c2_7[0]"), true);   // Spouse: born before Jan 2, 1961
+  if (sp["blind"])         tryCheckBox(doc, p(2, "c2_8[0]"), true);   // Spouse: blind
+
   s(p(2, "f2_02[0]"), c["deduction"]);                 // Line 12e  standard or itemized deduction
   s(p(2, "f2_03[0]"), c["qbi_deduction"]);             // Line 13a  QBI deduction (§199A)
   s(p(2, "f2_05[0]"), line14);                         // Line 14   add lines 12e + 13a + 13b
@@ -308,10 +378,24 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
 
   if (Number(c["refund"] ?? 0) > 0) {
     s(p(2, "f2_25[0]"), c["refund"]);                  // Line 34   refund
-    s(p(2, "f2_26[0]"), c["refund"]);                  // Line 35a  amount to refund
+    const applyToNext = Number(pay["apply_to_next_year"] ?? 0);
+    const directRefund = Math.max(0, Number(c["refund"] ?? 0) - applyToNext);
+    s(p(2, "f2_26[0]"), directRefund || c["refund"]);  // Line 35a  amount to refund (direct)
+    if (applyToNext > 0) {
+      s(p(2, "f2_27[0]"), applyToNext);               // Line 36   apply to 2026 estimated tax
+    }
   } else {
     s(p(2, "f2_28[0]"), c["amount_owed"]);             // Line 37   amount owed
   }
+
+  // Direct deposit routing / account / type
+  const routing     = String(pay["routing_number"]  ?? "");
+  const accountNum  = String(pay["account_number"]  ?? "");
+  const accountType = String(pay["account_type"]    ?? "");
+  if (routing)    ts(doc, `topmostSubform[0].Page2[0].RoutingNo[0].f2_32[0]`, routing);
+  if (accountNum) ts(doc, `topmostSubform[0].Page2[0].AccountNo[0].f2_33[0]`, accountNum);
+  if (accountType === "checking") tryCheckBox(doc, p(2, "c2_16[0]"), true);
+  if (accountType === "savings")  tryCheckBox(doc, p(2, "c2_16[1]"), true);
 
   return doc;
 }
