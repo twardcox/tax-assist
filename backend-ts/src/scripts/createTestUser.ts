@@ -428,7 +428,33 @@ const sections: Record<string, Record<string, unknown>> = {
         opportunity_zone: false,
         historic_property: false,
         homestead_exemption_applied: true,
-        notes: "Primary home. §121 exclusion available. Solar panels planned 2026.",
+        notes: "Primary home. §121 exclusion available. Solar installed 2025.",
+
+        // Form 5695 energy credits installed in 2025
+        energy_credits: {
+          // Part I — §25D Residential Clean Energy Credit
+          // solar_electric: 25000 × 30% = 7,500; battery: 5000 × 30% = 1,500 → §25D total = 9,000
+          solar_electric_cost: 25000,
+          solar_water_cost: 0,
+          wind_cost: 0,
+          geothermal_cost: 0,
+          battery_cost: 5000,           // ≥3 kWh qualifies
+
+          // Part II — §25C Energy Efficient Home Improvement Credit
+          // insulation: 4000×30%=1200 (1200-cap item); window: 3000×30%=900→capped 600 (1200-cap item)
+          // subtotal 1200-cap items = min(1200+600, 1200) = 1200
+          // heat pump: 8000×30%=2400→capped 2000 (separate 2000-cap) → §25C total = 3,200
+          insulation_cost: 4000,
+          door_cost: 0,
+          window_cost: 3000,
+          central_ac_cost: 0,
+          water_heater_cost: 0,
+          furnace_cost: 0,
+          heat_pump_cost: 8000,
+          heat_pump_wh_cost: 0,
+          biomass_cost: 0,
+          home_energy_audit_cost: 0,
+        },
       },
       {
         address: "1102 Congress Ave, Austin, TX 78701",
