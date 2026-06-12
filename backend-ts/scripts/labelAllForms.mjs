@@ -16,6 +16,8 @@ const FORMS = [
   "f1040sd.pdf",
   "f1040sse.pdf",
   "f5695.pdf",
+  "f1040sh.pdf",
+  "f1040sf.pdf",
 ];
 
 for (const name of FORMS) {

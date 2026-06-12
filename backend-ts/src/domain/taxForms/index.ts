@@ -53,6 +53,8 @@ export function computeTaxFigures(userId: string, taxYear: number): TaxFigures {
   c["_need_f8863"] = Number(c["education_credit"]) > 0;
   c["_need_f2441"] = Number(c["child_care_credit"]) > 0;
   c["_need_f5695"] = Number(c["clean_energy_credit"]) > 0 || Number(c["home_improvement_credit"]) > 0;
+  c["_need_sch_h"] = Number(c["household_employment_tax"]) > 0;
+  c["_need_sch_f"] = Number(c["farm_gross"]) > 0 || Number(c["farm_income"]) !== 0;
 
   return {
     tax_year: taxYear,
@@ -123,6 +125,12 @@ export async function buildFormPackage(userId: string, taxYear: number): Promise
   }
   if (needSchSe) {
     formsIncluded.push("Schedule SE — Self-Employment Tax");
+  }
+  if (Number(c["household_employment_tax"]) > 0) {
+    formsIncluded.push("Schedule H — Household Employment Taxes");
+  }
+  if (Number(c["farm_gross"]) > 0 || Number(c["farm_income"]) !== 0) {
+    formsIncluded.push("Schedule F — Profit or Loss From Farming");
   }
 
   const instructions = buildInstructions(displayName, taxYear, c, formsIncluded);

@@ -138,6 +138,7 @@ export class TaxCalculator {
     this._taxableIncome();
     this._tax();
     this._credits();
+    this._scheduleH();
     this._payments();
     this._balance();
     return this.c;
@@ -229,7 +230,17 @@ export class TaxCalculator {
     c["taxable_refunds"] = f(other["taxable_refunds"]);
     c["alimony_received"] = f(other["alimony_received"]);
     c["alimony_date_of_divorce"] = String(other["alimony_date_of_divorce"] ?? "");
-    c["farm_income"] = f(other["farm_income"]);
+
+    // Farm income: prefer income.farm (detailed) over income.other_income.farm_income
+    const farmSection = toObj(inc["farm"]);
+    const farmNetFromSection = farmSection["net_profit"] !== undefined ? f(farmSection["net_profit"]) : null;
+    c["farm_income"] = farmNetFromSection !== null ? farmNetFromSection : f(other["farm_income"]);
+    c["farm_gross"] = f(farmSection["gross_revenue"] ?? Math.abs(Number(c["farm_income"])));
+    c["farm_expenses"] = Math.max(0, Number(c["farm_gross"]) - Number(c["farm_income"]));
+    c["farm_name"] = String(farmSection["farm_name"] ?? "");
+    c["farm_principal_product"] = String(farmSection["principal_product"] ?? "");
+    c["farm_naics"] = String(farmSection["naics_code"] ?? "111900");
+    c["farm_ein"] = String(farmSection["ein"] ?? "");
     c["unemployment_compensation"] = f(other["unemployment_compensation"]);
     c["net_operating_loss"] = f(other["net_operating_loss"]);
     c["gambling_winnings"] = f(other["gambling_winnings"]);
@@ -705,6 +716,56 @@ export class TaxCalculator {
     c["additional_ctc"] = qualifying.length > 0 && ctcUnused > 0
       ? Math.min(qualifying.length * 1700, actcFromEarned, ctcUnused)
       : 0;
+  }
+
+  private _scheduleH(): void {
+    const c = this.c;
+    const hh = toObj(this.data["household"]);
+    const emp = toObj(hh["household_employment"]);
+    const employees = toObjArr(emp["employees"]);
+
+    const totalWages = employees.reduce((s, e) => s + f(e["total_wages"]), 0);
+    const fedWithheld = f(emp["total_fed_tax_withheld"]);
+    c["sch_h_total_wages"] = totalWages;
+    c["sch_h_fed_withheld"] = fedWithheld;
+
+    let part1Total = 0;
+    const SS_THRESHOLD = 2800; // 2025 threshold for SS/Medicare withholding
+    if (totalWages >= SS_THRESHOLD) {
+      const ssWages = Math.min(totalWages, this.p.se_ss_wage_base);
+      const ssTax = Math.round(ssWages * 0.124);
+      const medicareTax = Math.round(totalWages * 0.029);
+      c["sch_h_ss_wages"] = ssWages;
+      c["sch_h_ss_tax"] = ssTax;
+      c["sch_h_medicare_wages"] = totalWages;
+      c["sch_h_medicare_tax"] = medicareTax;
+      part1Total = ssTax + medicareTax + fedWithheld;
+    }
+    c["sch_h_part1_total"] = part1Total;
+
+    // FUTA: 6% on first $7,000 per employee; with max state credit (5.4%), net = 0.6%
+    let futaTotal = 0;
+    const stateUnempPaid = Boolean(emp["state_unemployment_paid"] ?? true);
+    if (totalWages > 0 && stateUnempPaid) {
+      const futaWages = employees.reduce((s, e) => s + Math.min(f(e["total_wages"]), 7000), 0);
+      const futaGross = Math.round(futaWages * 0.06);
+      const stateContr = Math.round(futaWages * 0.054);
+      futaTotal = Math.round(futaWages * 0.006); // net 0.6% after max credit
+      c["sch_h_futa_wages"] = futaWages;
+      c["sch_h_futa_gross"] = futaGross;
+      c["sch_h_state"] = String(emp["state"] ?? "");
+      c["sch_h_state_contr"] = stateContr;
+      c["sch_h_futa_net"] = futaTotal;
+    }
+
+    const hhEmpTax = part1Total + futaTotal;
+    c["household_employment_tax"] = hhEmpTax;
+    c["sch_h_total"] = hhEmpTax;
+
+    // Update total_tax to include household employment taxes
+    if (hhEmpTax > 0) {
+      c["total_tax"] = Math.max(0, this.n("total_tax") + hhEmpTax);
+    }
   }
 
   private _payments(): void {

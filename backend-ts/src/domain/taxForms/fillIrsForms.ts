@@ -84,6 +84,10 @@ export async function fillSingleIrsForm(
     doc = await fillScheduleD(c);
   } else if (formKey === "f1040sse") {
     doc = await fillScheduleSE(c, displayName);
+  } else if (formKey === "f1040sh") {
+    doc = await fillScheduleH(c, data);
+  } else if (formKey === "f1040sf") {
+    doc = await fillScheduleF(c);
   } else {
     throw new Error(`Unknown form key: ${formKey}`);
   }
@@ -150,6 +154,14 @@ export async function fillIrsForms(
 
   if (Number(c["se_tax"]) > 0) {
     docs.push(await fillScheduleSE(c, displayName));
+  }
+
+  if (Number(c["household_employment_tax"]) > 0) {
+    docs.push(await fillScheduleH(c, data));
+  }
+
+  if (Number(c["farm_gross"]) > 0 || Number(c["farm_income"]) !== 0) {
+    docs.push(await fillScheduleF(c));
   }
 
   // Flatten each form and merge into one PDF
@@ -424,7 +436,8 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   s(p(2, "f2_08[0]"), c["schedule3_line8"]);           // Line 20  Schedule 3, line 8
   s(p(2, "f2_09[0]"), c["total_credits"]);             // Line 21  total credits (Lines 19+20)
   s(p(2, "f2_10[0]"), c["income_tax_after_credits"]);  // Line 22  tax after credits
-  s(p(2, "f2_11[0]"), c["se_tax"]);                    // Line 23  other taxes (SE tax)
+  const otherTaxes = Number(c["se_tax"] ?? 0) + Number(c["household_employment_tax"] ?? 0);
+  s(p(2, "f2_11[0]"), otherTaxes > 0 ? otherTaxes : ""); // Line 23  other taxes (SE + household employment)
   s(p(2, "f2_12[0]"), c["total_tax"]);                 // Line 24  total tax
   s(p(2, "f2_13[0]"), c["w2_withholding"]);            // Line 25a federal income tax withheld (W-2)
   s(p(2, "f2_14[0]"), c["other_withholding"]);         // Line 25b  1099 / other withholding
@@ -1257,6 +1270,101 @@ async function fillForm5695(c: ComputedValues, data: Record<string, unknown>): P
 
   // Line 32 — §25C credit → Sch 3 L5b
   s(p(4, "f4_21[0]"), credit25c);                       // Line 32
+
+  return doc;
+}
+
+async function fillScheduleH(c: ComputedValues, data: Record<string, unknown>): Promise<PDFDocument> {
+  const doc = await loadPdf("f1040sh.pdf");
+  const s = (field: string, val: unknown) => ts(doc, field, typeof val === "string" ? val : fmt(val));
+  const cb = (field: string, check: boolean) => tryCheckBox(doc, field, check);
+  const ph1 = (f: string) => `topmostSubform[0].Page1[0].${f}`;
+  const ph2 = (f: string) => `topmostSubform[0].Page2[0].${f}`;
+
+  // Header: name + SSN
+  s(ph1("f1_1[0]"), c["taxpayer_name"]);
+  s(ph1("f1_2[0]"), c["taxpayer_ssn"]);
+
+  const totalWages = Number(c["sch_h_total_wages"] ?? 0);
+  const SS_THRESHOLD = 2800;
+  const hasSsWages = totalWages >= SS_THRESHOLD;
+
+  // Line A: Yes (wages ≥ $2,800)
+  cb(ph1("c1_1[0]"), hasSsWages);
+
+  if (hasSsWages) {
+    s(ph1("f1_4[0]"), c["sch_h_ss_wages"]);      // Line 1: SS wages
+    s(ph1("f1_5[0]"), c["sch_h_ss_tax"]);         // Line 2: SS tax ×12.4%
+    s(ph1("f1_6[0]"), c["sch_h_medicare_wages"]); // Line 3: Medicare wages
+    s(ph1("f1_7[0]"), c["sch_h_medicare_tax"]);   // Line 4: Medicare tax ×2.9%
+    s(ph1("f1_10[0]"), c["sch_h_fed_withheld"]);  // Line 7: FIT withheld
+    s(ph1("f1_11[0]"), c["sch_h_part1_total"]);   // Line 8: total Part I
+  }
+
+  const hasFuta = Number(c["sch_h_futa_wages"] ?? 0) > 0;
+  // Line 9: Yes (FUTA wages ≥ $1,000 in any quarter). c1_4[0] at y=662 = Yes.
+  cb(ph1("c1_4[0]"), hasFuta);
+
+  if (hasFuta) {
+    // Page 2 Lines 10-12: all Yes (single state, paid timely, all wages taxable)
+    cb(ph2("Line10[0].c2_1[0]"), true);  // Line 10: Yes
+    cb(ph2("c2_2[0]"), true);            // Line 11: Yes
+    cb(ph2("c2_3[0]"), true);            // Line 12: Yes
+
+    // Section A: single-state path (net FUTA rate = 0.6%)
+    const hh = (data["household"] ?? {}) as Record<string, unknown>;
+    const emp = (hh["household_employment"] ?? {}) as Record<string, unknown>;
+    const stateName = String(c["sch_h_state"] ?? emp["state"] ?? "");
+    s(ph2("f2_1[0]"), stateName);                   // Line 13: state name
+    s(ph2("f2_2[0]"), c["sch_h_state_contr"]);      // Line 14: state contributions (5.4%)
+    s(ph2("f2_3[0]"), c["sch_h_futa_wages"]);       // Line 15: FUTA taxable wages
+    s(ph2("f2_4[0]"), c["sch_h_futa_net"]);         // Line 16: FUTA tax (0.6%)
+  }
+
+  // Part III: Line 25 (Part I total) and Line 26 (grand total)
+  s(ph2("f2_29[0]"), c["sch_h_part1_total"]);  // Line 25: amount from Line 8
+  s(ph2("f2_30[0]"), c["sch_h_total"]);         // Line 26: total → 1040 Line 23
+
+  // Line 27: Yes (required to file Form 1040)
+  cb(ph2("c2_5[0]"), true);
+
+  return doc;
+}
+
+async function fillScheduleF(c: ComputedValues): Promise<PDFDocument> {
+  const doc = await loadPdf("f1040sf.pdf");
+  const s = (field: string, val: unknown) => ts(doc, field, typeof val === "string" ? val : fmt(val));
+  const ss = (field: string, val: unknown) => ts(doc, field, typeof val === "string" ? val : fmtSigned(val));
+  const cb = (field: string, check: boolean) => tryCheckBox(doc, field, check);
+  const pf1 = (f: string) => `topmostSubform[0].Page1[0].${f}`;
+
+  // Header
+  s(pf1("f1_1[0]"), c["taxpayer_name"]);
+  s(pf1("f1_2[0]"), c["taxpayer_ssn"]);
+  s(pf1("f1_3[0]"), c["farm_principal_product"]);                              // Line A: principal crop
+  s(pf1("CombField_LineB[0].f1_4[0]"), c["farm_naics"]);                       // Line B: NAICS code
+  s(pf1("CombField_LineD[0].f1_5[0]"), c["farm_ein"]);                         // Line D: EIN
+  cb(pf1("LineC_ReadOrder[0].c1_1[0]"), true);                                 // Line C: Cash method
+  cb(pf1("c1_2[0]"), true);                                                    // Line E: Yes, materially participated
+
+  const farmGross = Number(c["farm_gross"] ?? 0);
+  const farmNet   = Number(c["farm_income"] ?? 0);
+  const farmExp   = Number(c["farm_expenses"] ?? 0);
+
+  // Income: Line 2 (raised livestock/crops) + Line 9 (gross total)
+  s(pf1("f1_9[0]"), farmGross);   // Line 2: raised livestock sales
+  s(pf1("f1_22[0]"), farmGross);  // Line 9: gross income total
+
+  // Expenses: Line 33 (total)
+  s(pf1("f1_59[0]"), farmExp);    // Line 33: total farm expenses
+
+  // Net: Line 34 (profit) or negative value (loss)
+  if (farmNet >= 0) {
+    s(pf1("f1_60[0]"), farmNet);  // Line 34: net farm profit
+  } else {
+    ss(pf1("f1_60[0]"), farmNet); // Line 34: net farm loss (negative)
+    cb(pf1("c1_6[0]"), true);     // Line 35a: all investment at risk
+  }
 
   return doc;
 }

@@ -54,6 +54,18 @@ const TAX_YEAR = 2025;
 //  expenses $10,010   derived (gross - net)
 //  net       $9,009   income.self_employment.net_profit
 //
+// SCH F
+//  gross    $35,035   income.farm.gross_revenue
+//  expenses $23,023   derived (gross - net)
+//  net      $12,012   income.farm.net_profit → Sch 1 L6
+//
+// SCH H  (household employment taxes → 1040 L23)
+//  wages    $18,000   household.household_employment.employees[0].total_wages
+//  SS tax    $2,232   wages × 12.4%
+//  Medicare    $522   wages × 2.9%
+//  FUTA         $42   min(wages,$7k) × 0.6%
+//  Total      $2,796  Sch H L26 → 1040 L23
+//
 // SCH D
 //  row 1a  stcg  $7,070
 //  row 8a  ltcg  $8,080
@@ -157,6 +169,18 @@ const sections: Record<string, Record<string, unknown>> = {
     },
 
     dependents: { count: 3 },
+
+    // Household employment: nanny Maria Garcia ($18,000 wages)
+    // SS tax = $18,000 × 12.4% = $2,232  Medicare = $18,000 × 2.9% = $522
+    // FUTA: min($18k, $7k) × 0.6% = $42    Total Sch H = $2,796
+    household_employment: {
+      employees: [
+        { name: "Maria Garcia", ssn: "300-55-7777", total_wages: 18000 },
+      ],
+      state: "TX",
+      state_unemployment_paid: true,
+      total_fed_tax_withheld: 0,
+    },
 
     // est_tax → 1040 L26:  $2,500
     // other_withheld:       $1,515
@@ -296,9 +320,19 @@ const sections: Record<string, Record<string, unknown>> = {
       canceled_debt: 505,
       // Sch 1 L8z: $606  → Line8z_ReadOrder.f1_35 + f1_36
       prizes_awards: 606,
-      farm_income: 0,
+      farm_income: 0,   // overridden by income.farm below
       other_amount: 0,
       other_description: "",
+    },
+
+    // Farm income detail — Sch F → Sch 1 L6:  net $12,012
+    // gross $35,035  expenses $23,023  net $12,012
+    farm: {
+      farm_name: "Sundown Family Farm",
+      principal_product: "Vegetable farming",
+      naics_code: "111210",
+      gross_revenue: 35035,
+      net_profit: 12012,
     },
 
     adjustments_to_income: {

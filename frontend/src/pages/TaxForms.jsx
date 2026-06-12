@@ -151,6 +151,9 @@ function Form1040View({ c, fs }) {
       <Line line="21" label="TOTAL CREDITS" value={c.total_credits} bold highlight="credit" />
       <Line line=""   label="Income tax after credits" value={c.income_tax_after_credits} bold />
       <Line line=""   label="Self-employment tax (Schedule SE)" value={c.se_tax} highlight="tax" />
+      {c.household_employment_tax > 0 && (
+        <Line line=""   label={`Household employment tax (Schedule H) — wages: ${dollar(c.sch_h_total_wages)}`} value={c.household_employment_tax} highlight="tax" indent />
+      )}
       <Divider />
       <Line line="24" label="TOTAL TAX" value={c.total_tax} bold highlight="total" />
 
@@ -296,6 +299,46 @@ function ScheduleSEView({ c }) {
       <Divider />
       <Line line="5" label="Self-employment tax (15.3%)" value={c.se_tax} bold highlight="tax" />
       <Line line="6" label="Deduction: ½ of SE tax (→ Schedule 1)" value={c.se_tax_deduction} highlight="deduct" />
+    </Section>
+  );
+}
+
+function ScheduleHView({ c }) {
+  if (!c._need_sch_h) return null;
+  return (
+    <Section title="Schedule H — Household Employment Taxes" defaultOpen={true} badge={dollar(c.household_employment_tax)}>
+      <Line line="A"  label="Total cash wages paid to household employees" value={c.sch_h_total_wages} highlight="income" />
+      <Divider />
+      <Line line="1"  label="SS wages" value={c.sch_h_ss_wages} />
+      <Line line="2"  label="Social Security tax (12.4%)" value={c.sch_h_ss_tax} highlight="tax" />
+      <Line line="3"  label="Medicare wages" value={c.sch_h_medicare_wages} />
+      <Line line="4"  label="Medicare tax (2.9%)" value={c.sch_h_medicare_tax} highlight="tax" />
+      <Line line="7"  label="Federal income tax withheld" value={c.sch_h_fed_withheld} />
+      <Line line="8"  label="Part I total (SS + Medicare + FIT withheld)" value={c.sch_h_part1_total} bold />
+      <Divider />
+      <Line line="15" label="FUTA wages (first $7,000 per employee)" value={c.sch_h_futa_wages} />
+      <Line line="16" label="FUTA tax (0.6% net rate after state credit)" value={c.sch_h_futa_net} highlight="tax" />
+      <Divider />
+      <Line line="26" label="TOTAL HOUSEHOLD EMPLOYMENT TAX (→ 1040 Line 23)" value={c.household_employment_tax} bold highlight="tax" />
+    </Section>
+  );
+}
+
+function ScheduleFView({ c }) {
+  if (!c._need_sch_f) return null;
+  return (
+    <Section title="Schedule F — Profit or Loss From Farming" defaultOpen={true} badge={dollar(c.farm_income)}>
+      {c.farm_name && <Line line="A"  label="Farm name" value={c.farm_name} />}
+      <Line line="B"  label="Principal crop/activity" value={c.farm_principal_product || "—"} />
+      <Divider />
+      <Line line="2"  label="Gross farm revenue (raised livestock/crops)" value={c.farm_gross} highlight="income" />
+      <Line line="9"  label="Gross income total" value={c.farm_gross} bold />
+      <Line line="33" label="Total farm expenses" value={c.farm_expenses} highlight="deduct" />
+      <Divider />
+      <Line line="34" label="NET FARM PROFIT / (LOSS) (→ Schedule 1 Line 6)" value={c.farm_income} bold highlight="total" />
+      <div className="px-4 py-2 text-xs text-amber-600">
+        [CPA REVIEW] Complete individual expense lines (10–32) from farm records. Vehicle mileage and depreciation schedules required.
+      </div>
     </Section>
   );
 }
@@ -616,6 +659,8 @@ function FilingDetailsWidget({ taxYear }) {
 // ── Form tab helpers ──────────────────────────────────────────────────────────
 
 const FORM_LABELS = {
+  f1040sh:   "Schedule H",
+  f1040sf:   "Schedule F",
   f1040:     "Form 1040",
   f1040s1:   "Schedule 1",
   f1040sa:   "Schedule A",
@@ -649,8 +694,10 @@ function getFormTabs(c) {
       })
     );
   }
-  if (c._need_sch_d) tabs.push({ key: "f1040sd", label: "Schedule D" });
+  if (c._need_sch_d)  tabs.push({ key: "f1040sd",  label: "Schedule D" });
   if (c._need_sch_se) tabs.push({ key: "f1040sse", label: "Schedule SE" });
+  if (c._need_sch_h)  tabs.push({ key: "f1040sh",  label: "Schedule H" });
+  if (c._need_sch_f)  tabs.push({ key: "f1040sf",  label: "Schedule F" });
   return tabs;
 }
 
@@ -838,6 +885,8 @@ export default function TaxForms() {
             <ScheduleDView c={c} />
             <ScheduleEView c={c} />
             <ScheduleSEView c={c} />
+            <ScheduleHView c={c} />
+            <ScheduleFView c={c} />
 
             {/* CPA notes */}
             <div className="border border-amber-900/50 bg-amber-900/10 rounded-lg p-4 mt-2 mb-4">
