@@ -18,6 +18,10 @@ const TAX_YEAR = 2025;
 //
 // 1040 LINE → SEED VALUE
 //  L1a  wages total     $111,111  (Alex $100,100 + Jordan $11,011)
+//  L1b  household emp   $111      other_wages.household_employee_wages
+//  L1c  unreported tips $222      other_wages.tip_income_unreported
+//  L1d  medicaid waiver $333      other_wages.medicaid_waiver_payments
+//  L1h  other earned    $444      other_wages.other_earned_income
 //  L2b  interest        $2,020    investment_income.interest
 //  L3b  ordinary_div    $3,030    investment_income.ordinary_dividends
 //  L3a  qualified_div   $2,929    investment_income.qualified_dividends (≤ L3b)
@@ -160,6 +164,9 @@ const sections: Record<string, Record<string, unknown>> = {
     payments: {
       estimated_tax_payments: 2500,
       other_withholding: 1515,
+      // EIC: test user's income is too high to qualify, but setting $0 confirms
+      // the field is wired correctly (EIC users would enter their IRS table amount)
+      earned_income_credit: 0,
       apply_to_next_year: 750,           // → f2_27
       routing_number: "987654321",       // → RoutingNo.f2_32
       account_number: "1112223334",      // → AccountNo.f2_33
@@ -197,6 +204,14 @@ const sections: Record<string, Record<string, unknown>> = {
       },
     ],
 
+    // Lines 1b–1h: wages not on a W-2
+    other_wages: {
+      household_employee_wages: 111,  // L1b → f1_48
+      tip_income_unreported: 222,     // L1c → f1_49
+      medicaid_waiver_payments: 333,  // L1d → f1_50
+      other_earned_income: 444,       // L1h → f1_54
+    },
+
     self_employment: [
       {
         // Sch C: gross $19,019 / expenses $10,010 / net $9,009
@@ -230,6 +245,10 @@ const sections: Record<string, Record<string, unknown>> = {
       long_term_capital_gains: 8080,
       schedule_d_not_required: true,      // → c1_40[0] Line 7b checkbox
       child_capital_gain_included: true,  // → c1_41[0] Line 7b checkbox
+      // Sch B Part III — foreign account question
+      foreign_financial_account: true,    // → c1_1[0] Yes
+      foreign_account_country: "Switzerland", // → f1_66
+      foreign_trust: false,               // → c1_3[1] No
     },
 
     retirement_distributions: {

@@ -48,6 +48,8 @@ export function computeTaxFigures(userId: string, taxYear: number): TaxFigures {
   c["_need_sch_d"] = Number(c["capital_gains_net"]) !== 0 || Number(c["stcg"]) !== 0 || Number(c["ltcg"]) !== 0;
   c["_need_sch_e"] = Array.isArray(c["schedule_e_records"]) && (c["schedule_e_records"] as unknown[]).length > 0;
   c["_need_sch_se"] = Number(c["se_tax"]) > 0;
+  c["_need_sch3"] = Number(c["schedule3_line8"]) > 0;
+  c["_need_sch8812"] = (Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0;
 
   return {
     tax_year: taxYear,
@@ -91,6 +93,12 @@ export async function buildFormPackage(userId: string, taxYear: number): Promise
   }
   if ((Number(c["taxable_interest"]) + Number(c["ordinary_dividends"])) > 1500) {
     formsIncluded.push("Schedule B — Interest and Ordinary Dividends");
+  }
+  if ((Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0) {
+    formsIncluded.push("Schedule 8812 — Credits for Qualifying Children and Other Dependents");
+  }
+  if (Number(c["schedule3_line8"]) > 0) {
+    formsIncluded.push("Schedule 3 — Additional Credits and Payments");
   }
   for (const biz of schCRecords) {
     formsIncluded.push(`Schedule C — ${biz["business_name"]}`);

@@ -135,11 +135,13 @@ function Form1040View({ c, fs }) {
       <Line line="17" label="INCOME TAX BEFORE CREDITS" value={c.income_tax_before_credits} bold highlight="tax" />
 
       <div className="px-4 py-2 text-[11px] text-gray-500 font-semibold uppercase tracking-wide">Credits</div>
-      <Line line="19" label={`Child Tax Credit (${c.qualifying_children || 0} children × $${(c.p_ctc || 2000).toLocaleString()})`} value={c.child_tax_credit} highlight="credit" />
-      <Line line=""   label="Credit for other dependents" value={c.other_dependent_credit} highlight="credit" indent />
-      <Line line=""   label={`Child & Dependent Care Credit (expenses: ${dollar(c.care_expenses)})`} value={c.child_care_credit} highlight="credit" indent />
-      <Line line=""   label={`Education credit (tuition: ${dollar(c.tuition_expenses)})`} value={c.education_credit} highlight="credit" indent cpa />
-      <Line line=""   label="Clean Vehicle Credit (§30D)" value={c.ev_credit} highlight="credit" indent cpa />
+      <Line line="19" label="Child Tax Credit + Credit for Other Dependents (Schedule 8812)" value={c.ctc_with_odc} highlight="credit" />
+      <Line line=""   label={`  CTC: ${c.qualifying_children || 0} children × $${(c.ctc_per_child || 2000).toLocaleString()}`} value={c.child_tax_credit} highlight="credit" indent />
+      <Line line=""   label="  Credit for other dependents" value={c.other_dependent_credit} highlight="credit" indent />
+      <Line line="20" label="Schedule 3, line 8 (nonrefundable credits)" value={c.schedule3_line8} highlight="credit" />
+      <Line line=""   label={`  Child & Dependent Care Credit (expenses: ${dollar(c.care_expenses)})`} value={c.child_care_credit} highlight="credit" indent />
+      <Line line=""   label={`  Education credit (tuition: ${dollar(c.tuition_expenses)})`} value={c.education_credit} highlight="credit" indent cpa />
+      <Line line=""   label="  Clean Vehicle Credit (§30D)" value={c.ev_credit} highlight="credit" indent cpa />
       <Divider />
       <Line line="21" label="TOTAL CREDITS" value={c.total_credits} bold highlight="credit" />
       <Line line=""   label="Income tax after credits" value={c.income_tax_after_credits} bold />
@@ -151,6 +153,8 @@ function Form1040View({ c, fs }) {
       <Line line="25a" label="Federal income tax withheld (W-2)" value={c.w2_withholding} highlight="payment" />
       <Line line="25b" label="Federal income tax withheld (1099s & other)" value={c.other_withholding} highlight="payment" indent />
       <Line line="26"  label="Estimated tax payments" value={c.estimated_tax_payments} highlight="payment" />
+      <Line line="27"  label="Earned Income Credit" value={c.earned_income_credit} highlight="payment" />
+      <Line line="28"  label="Additional Child Tax Credit (Schedule 8812)" value={c.additional_ctc} highlight="payment" />
       <Divider />
       <Line line="33" label="TOTAL PAYMENTS" value={c.total_payments} bold highlight="payment" />
       <Divider />
@@ -607,18 +611,22 @@ function FilingDetailsWidget({ taxYear }) {
 // ── Form tab helpers ──────────────────────────────────────────────────────────
 
 const FORM_LABELS = {
-  f1040:   "Form 1040",
-  f1040s1: "Schedule 1",
-  f1040sb: "Schedule B",
-  f1040sd: "Schedule D",
-  f1040sse:"Schedule SE",
+  f1040:     "Form 1040",
+  f1040s1:   "Schedule 1",
+  f1040s8812:"Schedule 8812",
+  f1040s3:   "Schedule 3",
+  f1040sb:   "Schedule B",
+  f1040sd:   "Schedule D",
+  f1040sse:  "Schedule SE",
 };
 
 function getFormTabs(c) {
   const tabs = [{ key: "f1040", label: "Form 1040" }];
   const needSch1 = Number(c.total_adjustments ?? 0) > 0 || Number(c.schedule1_additional ?? 0) !== 0;
   if (needSch1) tabs.push({ key: "f1040s1", label: "Schedule 1" });
-  if (c._need_sch_b) tabs.push({ key: "f1040sb", label: "Schedule B" });
+  if (c._need_sch8812) tabs.push({ key: "f1040s8812", label: "Schedule 8812" });
+  if (c._need_sch3)    tabs.push({ key: "f1040s3",    label: "Schedule 3" });
+  if (c._need_sch_b)   tabs.push({ key: "f1040sb",    label: "Schedule B" });
   if (c._need_sch_c) {
     const records = c.schedule_c_records || [];
     records.forEach((biz, i) =>

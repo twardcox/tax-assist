@@ -112,6 +112,7 @@ export class TaxCalculator {
 
   compute(): ComputedValues {
     this.c = {};
+    this._identity();
     this._income();
     this._adjustments();
     this._agi();
@@ -122,6 +123,15 @@ export class TaxCalculator {
     this._payments();
     this._balance();
     return this.c;
+  }
+
+  private _identity(): void {
+    const tp = toObj(toObj(this.data["household"])["taxpayer"]);
+    const firstName = String(tp["first_name"] ?? "");
+    const lastName  = String(tp["last_name"]  ?? "");
+    this.c["taxpayer_name"] = [firstName, lastName].filter(Boolean).join(" ");
+    this.c["taxpayer_ssn"]  = String(tp["ssn"] ?? "");
+    this.c["_fs"] = this.filingStatus();
   }
 
   filingStatus(): FilingStatus {
@@ -151,6 +161,13 @@ export class TaxCalculator {
     c["dependent_care_fsa"] = w2s.reduce((s, w) => s + f(w["dependent_care_fsa"]), 0);
     c["w2_records"] = w2s;
 
+    // Lines 1b–1h: wages not on W-2
+    const ow = toObj(inc["other_wages"]);
+    c["household_employee_wages"] = f(ow["household_employee_wages"]);  // Line 1b
+    c["tip_income_unreported"]    = f(ow["tip_income_unreported"]);     // Line 1c
+    c["medicaid_waiver_payments"] = f(ow["medicaid_waiver_payments"]);  // Line 1d
+    c["other_earned_income"]      = f(ow["other_earned_income"]);       // Line 1h
+
     const inv = toObj(inc["investment_income"]);
     c["taxable_interest"] = f(inv["interest"]);
     c["qualified_dividends"] = f(inv["qualified_dividends"]);
@@ -158,6 +175,10 @@ export class TaxCalculator {
     c["stcg"] = f(inv["short_term_capital_gains"]);
     c["ltcg"] = f(inv["long_term_capital_gains"]);
     c["capital_gains_net"] = this.n("stcg") + this.n("ltcg");
+    // Schedule B Part III flags
+    c["foreign_financial_account"] = Boolean(inv["foreign_financial_account"]);
+    c["foreign_account_country"]   = String(inv["foreign_account_country"] ?? "");
+    c["foreign_trust"]             = Boolean(inv["foreign_trust"]);
 
     const ret = toObj(inc["retirement_distributions"]);
     c["ira_gross"] = f(ret["traditional_ira"]);
@@ -231,7 +252,10 @@ export class TaxCalculator {
     );
 
     c["total_income"] = (
-      this.n("wages") + this.n("taxable_interest") + this.n("ordinary_dividends") +
+      this.n("wages") +
+      this.n("household_employee_wages") + this.n("tip_income_unreported") +
+      this.n("medicaid_waiver_payments") + this.n("other_earned_income") +
+      this.n("taxable_interest") + this.n("ordinary_dividends") +
       this.n("ira_taxable") + this.n("pension_taxable") + this.n("ss_taxable") +
       this.n("capital_gains_net") + this.n("schedule1_additional")
     );
@@ -486,14 +510,18 @@ export class TaxCalculator {
 
     const qualifying = deps.filter((d) => f(d["age_at_year_end"]) < 17);
     c["qualifying_children"] = qualifying.length;
-    const ctcRaw = qualifying.length * this.p.child_tax_credit;
+    const ctcPerChild = this.p.child_tax_credit;
+    const ctcRaw = qualifying.length * ctcPerChild;
     const ctcThresh = this.p.ctc_phaseout[
       fs.includes("jointly") ? "married_filing_jointly" : "single"
     ] ?? 200000;
     const phaseout = Math.max(0, Math.floor((agi - ctcThresh + 999) / 1000)) * 50;
     c["child_tax_credit"] = Math.max(0, ctcRaw - phaseout);
+    c["ctc_per_child"] = ctcPerChild;
+    c["ctc_phaseout_threshold"] = ctcThresh;
 
     const otherDeps = deps.filter((d) => f(d["age_at_year_end"]) >= 17);
+    c["other_dependent_count"] = otherDeps.length;
     c["other_dependent_credit"] = Math.min(otherDeps.length * 500, 1500);
 
     const care = deps.reduce((s, d) => {
@@ -516,17 +544,40 @@ export class TaxCalculator {
     c["ev_credit"] = toObj(this.data["household"])["has_electric_vehicle"] ? 7500 : 0;
     c["saver_credit"] = 0;
 
-    c["total_credits"] = (
-      this.n("child_tax_credit") + this.n("other_dependent_credit") +
+    // Schedule 8812: CTC + ODC together → Form 1040 Line 19
+    c["ctc_with_odc"] = this.n("child_tax_credit") + this.n("other_dependent_credit");
+
+    // Schedule 3 Line 8: child care + education + EV + saver → Form 1040 Line 20
+    c["schedule3_line8"] = (
       this.n("child_care_credit") + this.n("education_credit") +
       this.n("ev_credit") + this.n("saver_credit")
     );
+
+    c["total_credits"] = this.n("ctc_with_odc") + this.n("schedule3_line8");
 
     c["income_tax_after_credits"] = Math.max(
       0,
       this.n("income_tax_before_credits") - this.n("total_credits")
     );
     c["total_tax"] = Math.max(0, this.n("income_tax_after_credits") + this.n("se_tax"));
+
+    // Additional Child Tax Credit (refundable) — simplified Credit Limit Worksheet A.
+    // The credit limit for CTC is the tax before Schedule 3 credits (not after), matching IRS
+    // worksheet A which is applied before other nonrefundable credits reduce the liability.
+    const odc = this.n("other_dependent_credit");
+    const ctcAfterPhaseout = this.n("child_tax_credit");
+    const ctcNonref = Math.min(ctcAfterPhaseout, Math.max(0, this.n("income_tax_before_credits") - odc));
+    const ctcUnused = Math.max(0, ctcAfterPhaseout - ctcNonref);
+    const earnedIncome = (
+      this.n("wages") + this.n("household_employee_wages") +
+      this.n("tip_income_unreported") + this.n("other_earned_income") +
+      Math.max(0, this.n("schedule_c_profit"))
+    );
+    c["earned_income"] = earnedIncome;
+    const actcFromEarned = Math.max(0, earnedIncome - 2500) * 0.15;
+    c["additional_ctc"] = qualifying.length > 0 && ctcUnused > 0
+      ? Math.min(qualifying.length * 1700, actcFromEarned, ctcUnused)
+      : 0;
   }
 
   private _payments(): void {
@@ -536,8 +587,12 @@ export class TaxCalculator {
     c["w2_withholding"] = this.n("federal_withheld");
     c["estimated_tax_payments"] = f(hh["estimated_tax_payments"] ?? payments["estimated_tax_payments"]);
     c["other_withholding"] = f(hh["other_withholding"] ?? payments["other_withholding"]);
+    // EIC is a refundable credit; goes on Form 1040 Line 27 in the payments section
+    c["earned_income_credit"] = f(hh["earned_income_credit"] ?? payments["earned_income_credit"]);
     c["total_payments"] = (
-      this.n("w2_withholding") + this.n("estimated_tax_payments") + this.n("other_withholding")
+      this.n("w2_withholding") + this.n("estimated_tax_payments") +
+      this.n("other_withholding") + this.n("earned_income_credit") +
+      this.n("additional_ctc")
     );
   }
 

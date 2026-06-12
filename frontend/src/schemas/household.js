@@ -395,6 +395,14 @@ export const schema = {
           source: "Form 1099-R Box 4 (IRA/pension withholding), Form 1099-INT/DIV Box 4 (backup withholding). Sum all non-W-2 federal withholding shown on your 1099s.",
         },
         {
+          key: "earned_income_credit",
+          label: "Earned Income Credit (EIC)",
+          type: "currency",
+          description: "Earned Income Tax Credit — a refundable credit for low-to-moderate income workers. Use the IRS EIC table in the Form 1040 instructions or the IRS online EITC assistant to look up your amount based on earned income, filing status, and number of qualifying children. Goes on Form 1040 Line 27.",
+          source: "Form 1040 Line 27. The credit ranges from $649 (no children) to $8,046 (3+ children) for 2025. Phase-out applies at higher incomes. Use the IRS EITC assistant at irs.gov/eitc for your exact amount.",
+          calculate: "Based on the lower of earned income or AGI, filing status, and number of qualifying children. Investment income must be under $11,950 to qualify.",
+        },
+        {
           key: "apply_to_next_year",
           label: "Apply Overpayment to Next Year",
           type: "currency",

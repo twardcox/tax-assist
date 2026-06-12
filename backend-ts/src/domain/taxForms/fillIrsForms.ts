@@ -67,7 +67,11 @@ export async function fillSingleIrsForm(
     const records = (c["schedule_c_records"] as Record<string, unknown>[]) ?? [];
     const biz = records[idx];
     if (!biz) throw new Error(`No Schedule C record at index ${idx}`);
-    doc = await fillScheduleC(biz, displayName);
+    doc = await fillScheduleC(biz, displayName, String(c["taxpayer_ssn"] ?? ""));
+  } else if (formKey === "f1040s3") {
+    doc = await fillSchedule3(c);
+  } else if (formKey === "f1040s8812") {
+    doc = await fillSchedule8812(c);
   } else if (formKey === "f1040sd") {
     doc = await fillScheduleD(c);
   } else if (formKey === "f1040sse") {
@@ -100,9 +104,19 @@ export async function fillIrsForms(
     docs.push(await fillScheduleB(c));
   }
 
+  const needSch8812 = (Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0;
+  if (needSch8812) {
+    docs.push(await fillSchedule8812(c));
+  }
+
+  if (Number(c["schedule3_line8"]) > 0) {
+    docs.push(await fillSchedule3(c));
+  }
+
   const schCRecords = (c["schedule_c_records"] as Record<string, unknown>[]) ?? [];
+  const tpSSNBulk = String(c["taxpayer_ssn"] ?? "");
   for (const biz of schCRecords) {
-    docs.push(await fillScheduleC(biz, displayName));
+    docs.push(await fillScheduleC(biz, displayName, tpSSNBulk));
   }
 
   const needSchD = Number(c["stcg"]) !== 0 || Number(c["ltcg"]) !== 0;
@@ -329,6 +343,10 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
 
   // ── Page 1 ── Income ────────────────────────────────────────────────────────
   s(p(1, "f1_47[0]"), c["wages"]);                // Line 1a  W-2 wages
+  s(p(1, "f1_48[0]"), c["household_employee_wages"]); // Line 1b  household employee wages
+  s(p(1, "f1_49[0]"), c["tip_income_unreported"]);    // Line 1c  tip income not on W-2
+  s(p(1, "f1_50[0]"), c["medicaid_waiver_payments"]); // Line 1d  Medicaid waiver payments
+  s(p(1, "f1_54[0]"), c["other_earned_income"]);      // Line 1h  other earned income
   s(p(1, "f1_55[0]"), c["taxable_interest"]);     // Line 2b  taxable interest
   s(p(1, "f1_56[0]"), c["ordinary_dividends"]);   // Line 3b  ordinary dividends
   s(p(1, "f1_57[0]"), c["qualified_dividends"]);  // Line 3a  qualified dividends
@@ -378,8 +396,9 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   s(p(2, "f2_06[0]"), c["taxable_income"]);            // Line 15   taxable income
 
   // ── Page 2 ── Tax, Credits, Payments ────────────────────────────────────────
-  s(p(2, "f2_07[0]"), c["child_tax_credit"]);          // Line 19  child tax credit
-  s(p(2, "f2_09[0]"), c["total_credits"]);             // Line 21  total credits
+  s(p(2, "f2_07[0]"), c["ctc_with_odc"]);              // Line 19  child tax credit + ODC (via Sch 8812)
+  s(p(2, "f2_08[0]"), c["schedule3_line8"]);           // Line 20  Schedule 3, line 8
+  s(p(2, "f2_09[0]"), c["total_credits"]);             // Line 21  total credits (Lines 19+20)
   s(p(2, "f2_10[0]"), c["income_tax_after_credits"]);  // Line 22  tax after credits
   s(p(2, "f2_11[0]"), c["se_tax"]);                    // Line 23  other taxes (SE tax)
   s(p(2, "f2_12[0]"), c["total_tax"]);                 // Line 24  total tax
@@ -391,6 +410,8 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   // Former spouse SSN for estimated payment allocation (Line 26 footnote — SSN_ReadOrder subform)
   const formerSpouseSSN = String(pay["former_spouse_ssn"] ?? "");
   if (formerSpouseSSN) ts(doc, "topmostSubform[0].Page2[0].SSN_ReadOrder[0].f2_22[0]", formerSpouseSSN);
+  s(p(2, "f2_19[0]"), c["earned_income_credit"]);      // Line 27   Earned Income Credit
+  s(p(2, "f2_20[0]"), c["additional_ctc"]);            // Line 28   Additional Child Tax Credit (Sch 8812)
   s(p(2, "f2_24[0]"), c["total_payments"]);            // Line 33   total payments
 
   if (Number(c["refund"] ?? 0) > 0) {
@@ -423,6 +444,10 @@ async function fillSchedule1(c: ComputedValues): Promise<PDFDocument> {
     ts(doc, field, typeof val === "string" ? val : fmt(val));
   const ss = (field: string, val: unknown) =>
     ts(doc, field, typeof val === "string" ? val : fmtSigned(val));
+
+  // Header: name / SSN
+  ts(doc, p(1, "f1_01[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, p(1, "f1_02[0]"), String(c["taxpayer_ssn"]  ?? ""));
 
   // ── Page 1 ── Part I Additional Income ─────────────────────────────────────
   // Field positions: f1_01/02=name/SSN, f1_03=L1, f1_04=L2a, f1_05=L3(confirmed),
@@ -488,6 +513,10 @@ async function fillScheduleB(c: ComputedValues): Promise<PDFDocument> {
   const s = (field: string, val: unknown) =>
     ts(doc, field, typeof val === "string" ? val : fmt(val));
 
+  // Header: name / SSN
+  ts(doc, p(1, "f1_01[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, p(1, "f1_02[0]"), String(c["taxpayer_ssn"]  ?? ""));
+
   // ── Part I Interest ─────────────────────────────────────────────────────────
   if (Number(c["taxable_interest"] ?? 0) > 0) {
     // Row 1 payer name (nested in Line1_ReadOrder)
@@ -506,12 +535,27 @@ async function fillScheduleB(c: ComputedValues): Promise<PDFDocument> {
     s(p(1, "f1_65[0]"), c["ordinary_dividends"]); // Line 6  total ordinary dividends
   }
 
+  // ── Part III Foreign Accounts and Trusts ────────────────────────────────────
+  // Line 7a: foreign financial account Yes/No
+  const hasForeign = Boolean(c["foreign_financial_account"]);
+  tryCheckBox(doc, `topmostSubform[0].Page1[0].TagcorrectingSubform[0].c1_1[0]`, hasForeign);
+  tryCheckBox(doc, `topmostSubform[0].Page1[0].TagcorrectingSubform[0].c1_1[1]`, !hasForeign);
+  // Line 7b: foreign country name text field
+  if (hasForeign && c["foreign_account_country"]) {
+    ts(doc, p(1, "f1_66[0]"), String(c["foreign_account_country"]));
+  }
+  // Line 8: foreign trust Yes/No
+  const hasForeignTrust = Boolean(c["foreign_trust"]);
+  tryCheckBox(doc, p(1, "c1_3[0]"), hasForeignTrust);
+  tryCheckBox(doc, p(1, "c1_3[1]"), !hasForeignTrust);
+
   return doc;
 }
 
 async function fillScheduleC(
   biz: Record<string, unknown>,
-  displayName: string
+  displayName: string,
+  taxpayerSSN = ""
 ): Promise<PDFDocument> {
   const doc = await loadPdf("f1040sc.pdf");
   const s = (field: string, val: unknown) =>
@@ -525,6 +569,7 @@ async function fillScheduleC(
 
   // Header
   ts(doc, `topmostSubform[0].Page1[0].f1_1[0]`, displayName);
+  ts(doc, `topmostSubform[0].Page1[0].f1_2[0]`, taxpayerSSN);                         // Taxpayer SSN
   ts(doc, `topmostSubform[0].Page1[0].f1_3[0]`, String(biz["naics_code"] ?? ""));     // Line A principal business / NAICS code
   ts(doc, `topmostSubform[0].Page1[0].BComb[0].f1_4[0]`, String(biz["business_name"] ?? ""));
   ts(doc, `topmostSubform[0].Page1[0].DComb[0].f1_6[0]`, String(biz["ein"] ?? ""));   // Line D employer ID (EIN)
@@ -543,10 +588,135 @@ async function fillScheduleC(
   return doc;
 }
 
+async function fillSchedule3(c: ComputedValues): Promise<PDFDocument> {
+  const doc = await loadPdf("f1040s3.pdf");
+  const s = (field: string, val: unknown) =>
+    ts(doc, field, typeof val === "string" ? val : fmt(val));
+
+  // Header: name / SSN
+  ts(doc, p(1, "f1_01[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, p(1, "f1_02[0]"), String(c["taxpayer_ssn"]  ?? ""));
+
+  // ── Part I: Nonrefundable credits ──────────────────────────────────────────
+  // Line 2: Child and dependent care credit (Form 2441)
+  if (Number(c["child_care_credit"] ?? 0) > 0)
+    s(p(1, "f1_04[0]"), c["child_care_credit"]);
+
+  // Line 3: Education credits (Form 8863)
+  if (Number(c["education_credit"] ?? 0) > 0)
+    s(p(1, "f1_05[0]"), c["education_credit"]);
+
+  // Line 6f: Clean vehicle credit (§30D)
+  if (Number(c["ev_credit"] ?? 0) > 0) {
+    s(p(1, "f1_14[0]"), c["ev_credit"]);
+  }
+
+  // Line 7: Sum of Lines 6a–6z (only EV credit for now)
+  const sch3Line7 = Number(c["ev_credit"] ?? 0);
+  if (sch3Line7 > 0) s(p(1, "f1_24[0]"), sch3Line7);
+
+  // Line 8: Lines 1 + 2 + 3 + 4 + 5 + 7 → Form 1040 Line 20
+  s(p(1, "f1_25[0]"), c["schedule3_line8"]);
+
+  return doc;
+}
+
+async function fillSchedule8812(c: ComputedValues): Promise<PDFDocument> {
+  const doc = await loadPdf("f1040s8812.pdf");
+  const s = (field: string, val: unknown) =>
+    ts(doc, field, typeof val === "string" ? val : fmt(val));
+
+  const qualChildren = Number(c["qualifying_children"] ?? 0);
+  const otherDepCount = Number(c["other_dependent_count"] ?? 0);
+  const agi = Number(c["agi"] ?? 0);
+  const ctcThresh = Number(c["ctc_phaseout_threshold"] ?? 200000);
+  const ctcPerChild = Number(c["ctc_per_child"] ?? 2000);
+
+  // Header: name / SSN (Schedule 8812 uses f1_1 not f1_01)
+  ts(doc, p(1, "f1_1[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, p(1, "f1_2[0]"), String(c["taxpayer_ssn"]  ?? ""));
+
+  // ── Page 1 ── Part I: CTC computation ──────────────────────────────────────
+  s(p(1, "f1_3[0]"), c["agi"]);                           // Line 1 — AGI
+
+  const line5 = qualChildren * ctcPerChild;
+  const line7 = otherDepCount * 500;
+  const line8 = line5 + line7;
+
+  s(p(1, "f1_9[0]"), qualChildren);                       // Line 4 — qualifying children count
+  s(p(1, "f1_10[0]"), line5);                             // Line 5 — Line 4 × $2,000
+
+  if (otherDepCount > 0) {
+    ts(doc, p(1, "Line6ReadOrder[0].f1_11[0]"), String(otherDepCount)); // Line 6 — other dependents
+    s(p(1, "f1_12[0]"), line7);                           // Line 7 — Line 6 × $500
+  }
+
+  s(p(1, "f1_13[0]"), line8);                             // Line 8 — total max credit before phaseout
+
+  // Lines 9–12: phaseout
+  s(p(1, "f1_14[0]"), ctcThresh);                         // Line 9 — phaseout threshold
+  const agiExcess = Math.max(0, agi - ctcThresh);
+  const line10 = agiExcess > 0 ? Math.ceil(agiExcess / 1000) * 1000 : 0;
+  const line11 = Math.min(line8, Math.round(line10 * 0.05));
+  const line12 = Math.max(0, line8 - line11);
+
+  if (line10 > 0) s(p(1, "f1_15[0]"), line10);           // Line 10 — excess over threshold
+  if (line11 > 0) s(p(1, "f1_16[0]"), line11);           // Line 11 — Line 10 × 5%
+  s(p(1, "f1_17[0]"), line12);                            // Line 12 — credit after phaseout
+
+  // Line 12 checkbox: "Is line 12 more than zero?"
+  tryCheckBox(doc, p(1, "c1_1[0]"), line12 <= 0);         // No
+  tryCheckBox(doc, p(1, "c1_1[1]"), line12 > 0);          // Yes
+
+  if (line12 <= 0) return doc;
+
+  // Line 13: Credit Limit Worksheet A (simplified — income tax before any credits)
+  const line13 = Number(c["income_tax_before_credits"] ?? 0);
+  const line14 = Math.min(line12, line13);
+  s(p(1, "f1_18[0]"), line13);                            // Line 13 — credit limit
+  s(p(1, "f1_19[0]"), line14);                            // Line 14 → Form 1040 Line 19
+
+  // ── Page 2 ── Part II-A: ACTC computation ──────────────────────────────────
+  const earnedIncome = Number(c["earned_income"] ?? 0);
+  const line16a = Math.max(0, line12 - line14);
+  const line16b = qualChildren * 1700;
+  const line17 = Math.min(line16a, line16b);
+
+  if (line16a > 0) s(p(2, "f2_2[0]"), line16a);          // Line 16a — Line 12 − Line 14
+  s(p(2, "f2_3[0]"), line16b);                            // Line 16b — qualifying × $1,700
+  if (line17 > 0) s(p(2, "f2_4[0]"), line17);            // Line 17 — min(16a, 16b)
+  s(p(2, "f2_5[0]"), earnedIncome);                       // Line 18a — earned income
+
+  // "Is line 16b less than $5,100?" (controls Part II-A vs II-B path)
+  const partA = line16b < 5100;
+  tryCheckBox(doc, p(2, "c2_2[0]"), !partA);              // No → Part II-B
+  tryCheckBox(doc, p(2, "c2_2[1]"), partA);               // Yes → Part II-A
+
+  // Part II-A: "Is earned income more than $2,500?"
+  const earnedOver = earnedIncome > 2500;
+  tryCheckBox(doc, p(2, "c2_1[0]"), !earnedOver);         // No → ACTC = 0
+  tryCheckBox(doc, p(2, "c2_1[1]"), earnedOver);          // Yes → continue
+
+  if (earnedOver) {
+    const line19 = Math.max(0, earnedIncome - 2500);
+    const line20 = Math.round(line19 * 0.15);
+    const line27 = Math.min(line17, line20);
+    s(p(2, "f2_8[0]"), line19);                           // Line 19 — earned − $2,500
+    s(p(2, "f2_9[0]"), line20);                           // Line 20 — Line 19 × 15%
+    if (line27 > 0) s(p(2, "f2_16[0]"), line27);         // Line 27 — ACTC → Form 1040 Line 28
+  }
+
+  return doc;
+}
+
 async function fillScheduleD(c: ComputedValues): Promise<PDFDocument> {
   const doc = await loadPdf("f1040sd.pdf");
   const ss = (field: string, val: unknown) =>
     ts(doc, field, typeof val === "string" ? val : fmtSigned(val));
+
+  // Header: name / SSN
+  ts(doc, `topmostSubform[0].Page1[0].f1_1[0]`, String(c["taxpayer_name"] ?? ""));
+  ts(doc, `topmostSubform[0].Page1[0].f1_2[0]`, String(c["taxpayer_ssn"]  ?? ""));
 
   const stcg = Number(c["stcg"] ?? 0);
   const ltcg = Number(c["ltcg"] ?? 0);
@@ -593,8 +763,9 @@ async function fillScheduleSE(
   const seTax = Number(c["se_tax"] ?? 0);
   const seDeduction = Number(c["se_tax_deduction"] ?? 0);
 
-  // Header
+  // Header: name / SSN
   ts(doc, `topmostSubform[0].Page1[0].f1_1[0]`, displayName);
+  ts(doc, `topmostSubform[0].Page1[0].f1_2[0]`, String(c["taxpayer_ssn"] ?? ""));
 
   // ── Part I Long Schedule SE ─────────────────────────────────────────────────
   s(`topmostSubform[0].Page1[0].f1_5[0]`, seProfit);           // Line 2  Sch C net profit
