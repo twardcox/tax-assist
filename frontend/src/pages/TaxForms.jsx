@@ -613,6 +613,7 @@ function FilingDetailsWidget({ taxYear }) {
 const FORM_LABELS = {
   f1040:     "Form 1040",
   f1040s1:   "Schedule 1",
+  f1040sa:   "Schedule A",
   f1040s8812:"Schedule 8812",
   f1040s3:   "Schedule 3",
   f1040sb:   "Schedule B",
@@ -624,6 +625,7 @@ function getFormTabs(c) {
   const tabs = [{ key: "f1040", label: "Form 1040" }];
   const needSch1 = Number(c.total_adjustments ?? 0) > 0 || Number(c.schedule1_additional ?? 0) !== 0;
   if (needSch1) tabs.push({ key: "f1040s1", label: "Schedule 1" });
+  if ((c.itemized || 0) > 0) tabs.push({ key: "f1040sa", label: "Schedule A" });
   if (c._need_sch8812) tabs.push({ key: "f1040s8812", label: "Schedule 8812" });
   if (c._need_sch3)    tabs.push({ key: "f1040s3",    label: "Schedule 3" });
   if (c._need_sch_b)   tabs.push({ key: "f1040sb",    label: "Schedule B" });

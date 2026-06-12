@@ -236,12 +236,12 @@ describe("scenario 6 · SS only · MFJ · below §86 threshold", () => {
 // ─── 7. Itemized deductions (MFJ) ─────────────────────────────────────────────
 describe("scenario 7 · MFJ · itemized deductions", () => {
   // wages=160000, state_withheld=14000
-  // prop_tax=9000 → SALT = min(23000, 10000) = 10000
+  // prop_tax=9000 → SALT before cap = 23000; 2025 MFJ cap = $40,000 → no cap applies
   // mortgage_interest=24000, charitable=7000
-  // medical_total=22000 → deductible = max(0, 22000-160000×0.075) = 10000
-  // itemized = 10000+24000+7000+10000 = 51000 > standard(30000)
-  // taxable = 160000-51000 = 109000
-  // MFJ tax = 23850×0.10 + 73100×0.12 + 12050×0.22 = 2385+8772+2651 = 13808
+  // medical_total=22000 → deductible = max(0, 22000-160000×0.075) = 22000-12000 = 10000
+  // itemized = 23000+24000+7000+10000 = 64000 > standard(30000)
+  // taxable = 160000-64000 = 96000
+  // MFJ tax = 23850×0.10 + (96000-23850)×0.12 = 2385+8658 = 11043
   const c = run(d({
     fs: "married_filing_jointly",
     w2: [{ wages: 160000, state_withheld: 14000 }],
@@ -250,16 +250,16 @@ describe("scenario 7 · MFJ · itemized deductions", () => {
     healthcare: { out_of_pocket_expenses: 22000 },
   }));
 
-  test("SALT capped at 10000", () => expect(c.salt).toBeCloseTo(10000, 2));
+  test("SALT = 23000 (under 2025 $40k cap, no reduction)", () => expect(c.salt).toBeCloseTo(23000, 2));
   test("mortgage_interest = 24000", () => expect(c.mortgage_interest).toBeCloseTo(24000, 2));
   test("charitable = 7000", () => expect(c.charitable).toBeCloseTo(7000, 2));
   test("medical_deductible = 10000 (above 7.5% floor)", () =>
     expect(c.medical_deductible).toBeCloseTo(10000, 2));
-  test("itemized = 51000", () => expect(c.itemized).toBeCloseTo(51000, 2));
+  test("itemized = 64000", () => expect(c.itemized).toBeCloseTo(64000, 2));
   test("itemized beats standard → using_standard = false", () => expect(c.using_standard).toBe(false));
-  test("deduction = 51000", () => expect(c.deduction).toBeCloseTo(51000, 2));
-  test("taxable_income = 109000", () => expect(c.taxable_income).toBeCloseTo(109000, 2));
-  test("ordinary_tax = 13808", () => expect(c.ordinary_tax).toBeCloseTo(13808, 2));
+  test("deduction = 64000", () => expect(c.deduction).toBeCloseTo(64000, 2));
+  test("taxable_income = 96000", () => expect(c.taxable_income).toBeCloseTo(96000, 2));
+  test("ordinary_tax = 11043", () => expect(c.ordinary_tax).toBeCloseTo(11043, 2));
 });
 
 // ─── 8. NIIT + Additional Medicare (single, >$200k) ──────────────────────────
@@ -476,23 +476,24 @@ describe("scenario 16 · head of household · standard deduction + brackets", ()
   test("total_tax = 1560", () => expect(c.total_tax).toBeCloseTo(1560, 2));
 });
 
-// ─── 17. MFS · SALT cap $5,000 ────────────────────────────────────────────────
-describe("scenario 17 · married filing separately · SALT cap = $5,000", () => {
-  // wages=90000, state_withheld=8000, prop_tax=5000 → SALT=min(13000,5000)=5000
-  // mortgage=15000; itemized=20000 > standard(15000)
-  // taxable = 90000-20000 = 70000
-  // MFS tax = 11925×0.10 + 36550×0.12 + 21525×0.22 = 1192.50+4386+4735.50 = 10314
+// ─── 17. MFS · SALT — 2025 MFS cap $20,000 ───────────────────────────────────
+describe("scenario 17 · married filing separately · SALT (2025 $20k MFS cap)", () => {
+  // wages=90000, state_withheld=8000, prop_tax=5000 → SALT before cap = 13000
+  // 2025 MFS cap = $20,000 → no cap applies (13000 < 20000)
+  // mortgage=15000; itemized = 13000+15000 = 28000 > standard(15000)
+  // taxable = 90000-28000 = 62000
+  // MFS tax = 11925×0.10 + 36550×0.12 + (62000-48475)×0.22 = 1192.50+4386+2975.50 = 8554
   const c = run(d({
     fs: "married_filing_separately",
     w2: [{ wages: 90000, state_withheld: 8000 }],
     properties: [{ financing: { property_tax_paid: 5000, mortgage_interest_paid: 15000 } }],
   }));
 
-  test("SALT capped at 5000 (MFS)", () => expect(c.salt).toBeCloseTo(5000, 2));
-  test("itemized = 20000", () => expect(c.itemized).toBeCloseTo(20000, 2));
+  test("SALT = 13000 (under 2025 $20k MFS cap, no reduction)", () => expect(c.salt).toBeCloseTo(13000, 2));
+  test("itemized = 28000", () => expect(c.itemized).toBeCloseTo(28000, 2));
   test("using_standard = false", () => expect(c.using_standard).toBe(false));
-  test("taxable_income = 70000", () => expect(c.taxable_income).toBeCloseTo(70000, 2));
-  test("ordinary_tax = 10314", () => expect(c.ordinary_tax).toBeCloseTo(10314, 2));
+  test("taxable_income = 62000", () => expect(c.taxable_income).toBeCloseTo(62000, 2));
+  test("ordinary_tax = 8554", () => expect(c.ordinary_tax).toBeCloseTo(8554, 2));
 });
 
 // ─── 18. SE tax — W2 wages exceed SS wage base (Medicare only) ───────────────

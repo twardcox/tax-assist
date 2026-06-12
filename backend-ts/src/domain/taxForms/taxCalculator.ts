@@ -15,6 +15,8 @@ type TaxParams = {
   ctc_phaseout: Record<string, number>;
   niit_threshold: Record<string, number>;
   amt_exemption: Record<string, number>;
+  salt_cap: Record<string, number>;
+  salt_phase_threshold: number | null;
 };
 
 const TAX_PARAMS: Record<number, TaxParams> = {
@@ -46,6 +48,8 @@ const TAX_PARAMS: Record<number, TaxParams> = {
     ctc_phaseout: { single: 200000, married_filing_jointly: 400000 },
     niit_threshold: { single: 200000, married_filing_jointly: 250000 },
     amt_exemption: { single: 85700, married_filing_jointly: 133300 },
+    salt_cap: { single: 10000, married_filing_jointly: 10000, married_filing_separately: 5000, head_of_household: 10000, qualifying_surviving_spouse: 10000 },
+    salt_phase_threshold: null as null | number,
   },
   2025: {
     standard_deduction: {
@@ -75,6 +79,9 @@ const TAX_PARAMS: Record<number, TaxParams> = {
     ctc_phaseout: { single: 200000, married_filing_jointly: 400000 },
     niit_threshold: { single: 200000, married_filing_jointly: 250000 },
     amt_exemption: { single: 88100, married_filing_jointly: 137000 },
+    // 2025: SALT cap raised to $40k/$20k (MFS) by OBBBA, with 5% phase-down above $500k/$250k AGI (floor: $10k/$5k)
+    salt_cap: { single: 40000, married_filing_jointly: 40000, married_filing_separately: 20000, head_of_household: 40000, qualifying_surviving_spouse: 40000 },
+    salt_phase_threshold: 500000 as null | number,
   },
 };
 
@@ -415,7 +422,13 @@ export class TaxCalculator {
       const fin = toObj(p["financing"]);
       return s + f(p["property_tax_annual"] ?? fin["property_tax_paid"]);
     }, 0);
-    const saltCap = fs.includes("separately") ? 5000 : 10000;
+    const saltCapBase = this.p.salt_cap[fs] ?? (fs.includes("separately") ? 5000 : 10000);
+    const saltFloor = fs.includes("separately") ? 5000 : 10000;
+    const saltPhaseThresh = this.p.salt_phase_threshold;
+    const saltPhasedown = saltPhaseThresh != null
+      ? Math.max(0, (agi - (fs.includes("separately") ? saltPhaseThresh / 2 : saltPhaseThresh)) * 0.05)
+      : 0;
+    const saltCap = Math.max(saltFloor, saltCapBase - saltPhasedown);
     c["salt"] = Math.min(stateTax + propTax, saltCap);
     c["prop_tax_paid"] = propTax;
     c["state_tax_paid"] = stateTax;

@@ -68,6 +68,8 @@ export async function fillSingleIrsForm(
     const biz = records[idx];
     if (!biz) throw new Error(`No Schedule C record at index ${idx}`);
     doc = await fillScheduleC(biz, displayName, String(c["taxpayer_ssn"] ?? ""));
+  } else if (formKey === "f1040sa") {
+    doc = await fillScheduleA(c);
   } else if (formKey === "f1040s3") {
     doc = await fillSchedule3(c);
   } else if (formKey === "f1040s8812") {
@@ -97,6 +99,10 @@ export async function fillIrsForms(
   const needSch1 = Number(c["total_adjustments"]) > 0 || Number(c["schedule1_additional"]) !== 0;
   if (needSch1) {
     docs.push(await fillSchedule1(c));
+  }
+
+  if (!c["using_standard"] && Number(c["itemized"]) > 0) {
+    docs.push(await fillScheduleA(c));
   }
 
   const needSchB = (Number(c["taxable_interest"]) + Number(c["ordinary_dividends"])) > 0;
@@ -584,6 +590,61 @@ async function fillScheduleC(
   s(`topmostSubform[0].Page1[0].f1_41[0]`, expenses); // Line 28 total expenses
   ss(`topmostSubform[0].Page1[0].f1_42[0]`, net);     // Line 29 tentative profit
   ss(`topmostSubform[0].Page1[0].f1_45[0]`, net);     // Line 31 net profit or (loss)
+
+  return doc;
+}
+
+async function fillScheduleA(c: ComputedValues): Promise<PDFDocument> {
+  const doc = await loadPdf("f1040sa.pdf");
+  const s = (field: string, val: unknown) =>
+    ts(doc, field, typeof val === "string" ? val : fmt(val));
+
+  // Schedule A uses form1[0] root (not topmostSubform[0])
+  const pa = (field: string) => `form1[0].Page1[0].${field}`;
+
+  // Header: name / SSN
+  ts(doc, pa("f1_1[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, pa("f1_2[0]"), String(c["taxpayer_ssn"]  ?? ""));
+
+  const agi = Number(c["agi"] ?? 0);
+
+  // ── Part I: Medical and Dental Expenses ──────────────────────────────────────
+  s(pa("f1_3[0]"), c["medical_total"]);                        // Line 1  total medical
+  s(pa("Line2_ReadOrder[0].f1_4[0]"), c["agi"]);               // Line 2  AGI (from 1040 line 11)
+  const medFloor = Math.round(agi * 0.075);
+  s(pa("f1_5[0]"), medFloor);                                  // Line 3  AGI × 7.5%
+  s(pa("f1_6[0]"), c["medical_deductible"]);                   // Line 4  deductible medical
+
+  // ── Part II: Taxes You Paid ───────────────────────────────────────────────────
+  s(pa("f1_7[0]"), c["state_tax_paid"]);                       // Line 5a state/local income taxes
+  s(pa("f1_8[0]"), c["prop_tax_paid"]);                        // Line 5b real estate taxes
+  // Line 5c (personal property taxes) not tracked — leave blank
+  const line5d = Number(c["state_tax_paid"] ?? 0) + Number(c["prop_tax_paid"] ?? 0);
+  if (line5d > 0) s(pa("f1_10[0]"), line5d);                  // Line 5d add 5a-5c
+  s(pa("f1_11[0]"), c["salt"]);                                // Line 5e SALT after cap
+  // Line 6 (other taxes) not tracked
+  s(pa("f1_14[0]"), c["salt"]);                                // Line 7  add 5e+6 → total taxes
+
+  // ── Part III: Interest You Paid ───────────────────────────────────────────────
+  if (Number(c["mortgage_interest"] ?? 0) > 0) {
+    s(pa("f1_15[0]"), c["mortgage_interest"]);                 // Line 8a home mortgage interest (Form 1098)
+    s(pa("f1_20[0]"), c["mortgage_interest"]);                 // Line 8e add lines 8a-8c
+    s(pa("f1_22[0]"), c["mortgage_interest"]);                 // Line 10  add 8e+9
+  }
+
+  // ── Part IV: Gifts to Charity ─────────────────────────────────────────────────
+  if (Number(c["charitable"] ?? 0) > 0) {
+    s(pa("f1_23[0]"), c["charitable"]);                        // Line 11  cash/check gifts
+    s(pa("f1_26[0]"), c["charitable"]);                        // Line 14  add lines 11-13
+  }
+
+  // ── Line 17: Total Itemized Deductions → Form 1040 Line 12 ───────────────────
+  s(pa("f1_30[0]"), c["itemized"]);
+
+  // Checkbox: elect to itemize even though standard deduction is larger
+  if (c["using_standard"]) {
+    tryCheckBox(doc, pa("Line18_ReadOrder[0].c1_3[0]"), true);
+  }
 
   return doc;
 }
