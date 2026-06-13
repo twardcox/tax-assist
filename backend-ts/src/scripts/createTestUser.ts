@@ -30,8 +30,9 @@ const TAX_YEAR = 2025;
 //  L6a  SS gross        $6,060    social_security.gross_benefits
 //  L6b  SS taxable      derived   ~85% of $6,060
 //  L7   cap gains       $15,150   stcg $7,070 + ltcg $8,080
-//  L8   Sch1 addl       $12,836   Sch C $9,009 + rental $1,100 + k1 $1,010
-//                                 + k1 rental $909 + gambling $808
+//  L8   Sch1 addl       $27,484   Sch C $9,009 + Sch E $3,019 + Sch F $12,012
+//                                 + unemp $707 + refunds $303 + alimony $919
+//                                 + gambling $808 + canceled $505 + prizes $606 − NOL $404
 //  L25a withholding     $22,020   Alex $20,202 + Jordan $1,818
 //  L25b other withheld  $1,515    household.payments.other_withholding
 //  L26  est. tax        $2,500    household.payments.estimated_tax_payments
@@ -39,7 +40,7 @@ const TAX_YEAR = 2025;
 //
 // SCH 1 ADJUSTMENTS
 //  L11  educator        $300      (hard-capped at $300 by calculator)
-//  L15  SE ded          derived   half of SE tax on $9,009 profit
+//  L15  SE ded          derived   half of SE tax on $21,021 combined ($9,009 Sch C + $12,012 Sch F)
 //  L17  SE health       $4,400    adjustments_to_income.self_employed_health_insurance
 //  L19  alimony paid    $1,414    adjustments_to_income.alimony_paid
 //  L20  IRA deduction   $1,313    adjustments_to_income.ira_deduction
@@ -51,13 +52,29 @@ const TAX_YEAR = 2025;
 //
 // SCH C
 //  gross    $19,019   income.self_employment.gross_revenue
-//  expenses $10,010   derived (gross - net)
+//  expenses $10,010   sum of expense_details below
 //  net       $9,009   income.self_employment.net_profit
+//  Line 8  advertising     $1,001  expense_details.advertising
+//  Line 9  car/truck       $2,002  expense_details.car_truck_expenses
+//  Line 15 insurance       $1,402  expense_details.insurance
+//  Line 17 legal/prof      $1,501  expense_details.legal_professional
+//  Line 18 office          $601    expense_details.office_expense
+//  Line 21 repairs         $901    expense_details.repairs_maintenance
+//  Line 22 supplies        $1,401  expense_details.supplies
+//  Line 25 utilities       $1,201  expense_details.utilities
 //
 // SCH F
 //  gross    $35,035   income.farm.gross_revenue
-//  expenses $23,023   derived (gross - net)
+//  expenses $23,023   sum of expense_details below
 //  net      $12,012   income.farm.net_profit → Sch 1 L6
+//  Line 16 feed            $4,004  expense_details.feed
+//  Line 17 fertilizers     $3,005  expense_details.fertilizers_lime
+//  Line 19 gasoline        $2,006  expense_details.gasoline_fuel_oil
+//  Line 20 insurance       $1,802  expense_details.insurance_farm
+//  Line 22 labor hired     $4,201  expense_details.labor_hired
+//  Line 25 repairs         $2,301  expense_details.repairs_maintenance
+//  Line 28 supplies        $2,702  expense_details.supplies
+//  Line 32 other expenses  $3,002  expense_details.other_expenses
 //
 // SCH H  (household employment taxes → 1040 L23)
 //  wages    $18,000   household.household_employment.employees[0].total_wages
@@ -72,9 +89,9 @@ const TAX_YEAR = 2025;
 //  net           $15,150 (derived)
 //
 // SCH SE
-//  net profit    $9,009
-//  × 0.9235      ~$8,316 (derived)
-//  SE tax        ~$1,272 (derived)
+//  net profit    $21,021   ($9,009 Sch C + $12,012 Sch F combined on Lines 1a/2)
+//  × 0.9235      ~$19,412 (derived)
+//  SE tax        ~$2,970 (derived)  [$2,407 SS + $563 Medicare]
 //
 // 1040 CHECKBOXES & TEXT FIELDS UNDER TEST
 //  header         section_9100_2: true         → c1_1
@@ -244,6 +261,17 @@ const sections: Record<string, Record<string, unknown>> = {
         net_profit: 9009,
         net_profit_loss: 9009,
         se_tax_estimated: 1272,
+        expense_details: {
+          advertising: 1001,         // Line 8
+          car_truck_expenses: 2002,  // Line 9
+          insurance: 1402,           // Line 15
+          legal_professional: 1501,  // Line 17
+          office_expense: 601,       // Line 18
+          repairs_maintenance: 901,  // Line 21
+          supplies: 1401,            // Line 22
+          utilities: 1201,           // Line 25
+          // sum = 10,010 = gross_revenue − net_profit ✓
+        },
       },
     ],
 
@@ -333,6 +361,17 @@ const sections: Record<string, Record<string, unknown>> = {
       naics_code: "111210",
       gross_revenue: 35035,
       net_profit: 12012,
+      expense_details: {
+        feed: 4004,                  // Line 16
+        fertilizers_lime: 3005,      // Line 17
+        gasoline_fuel_oil: 2006,     // Line 19
+        insurance_farm: 1802,        // Line 20
+        labor_hired: 4201,           // Line 22
+        repairs_maintenance: 2301,   // Line 25
+        supplies: 2702,              // Line 28
+        other_expenses: 3002,        // Line 32 other
+        // sum = 23,023 = gross_revenue − net_profit ✓
+      },
     },
 
     adjustments_to_income: {

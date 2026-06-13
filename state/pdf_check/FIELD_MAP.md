@@ -240,7 +240,9 @@ Lines 12 and 18 have no AcroForm field in this PDF.
 ---
 
 ## Schedule C (f1040sc.pdf) — per business
-| Field | Line | Form Label | ComputedValues Key | Status |
+All expense fields verified via markitdown 2026-06-13. Two-column layout: Lines 8-17 in `Lines8-17[0]` subform (X=194); Lines 18-27 in `Lines18-27[0]` subform (X=475).
+
+| Field | Line | Form Label | Data Key | Status |
 |---|---|---|---|---|
 | f1_1[0] | (header) | Proprietor name | `displayName` | ✓ |
 | BComb.f1_4[0] | A | Business name | `biz.business_name` | ✓ |
@@ -248,6 +250,29 @@ Lines 12 and 18 have no AcroForm field in this PDF.
 | f1_12[0] | 3 | Gross receipts less returns | `biz.gross_revenue` | ✓ |
 | f1_14[0] | 5 | Gross profit | `biz.gross_revenue` | ✓ |
 | f1_16[0] | 7 | Gross income | `biz.gross_revenue` | ✓ |
+| **Lines8-17[0].f1_17[0]** | **8** | **Advertising** | `biz.expense_details.advertising` | **✓ md✓** |
+| **Lines8-17[0].f1_18[0]** | **9** | **Car and truck expenses** | `biz.expense_details.car_truck_expenses` | **✓ md✓** |
+| Lines8-17[0].f1_19[0] | 10 | Commissions and fees | `biz.expense_details.commissions_fees` | ✓ (not seeded) |
+| Lines8-17[0].f1_20[0] | 11 | Contract labor | `biz.expense_details.contract_labor` | ✓ (not seeded) |
+| Lines8-17[0].f1_21[0] | 12 | Depletion | `biz.expense_details.depletion` | ✓ (not seeded) |
+| Lines8-17[0].f1_22[0] | 13 | Depreciation and section 179 | `biz.expense_details.depreciation` | ✓ (not seeded) |
+| Lines8-17[0].f1_23[0] | 14 | Employee benefit programs | `biz.expense_details.employee_benefits` | ✓ (not seeded) |
+| **Lines8-17[0].f1_24[0]** | **15** | **Insurance (other than health)** | `biz.expense_details.insurance` | **✓ md✓** |
+| Lines8-17[0].f1_25[0] | 16a | Mortgage interest (paid to banks) | `biz.expense_details.mortgage_interest` | ✓ (not seeded) |
+| Lines8-17[0].f1_26[0] | 16b | Other interest | `biz.expense_details.other_interest` | ✓ (not seeded) |
+| **Lines8-17[0].f1_27[0]** | **17** | **Legal and professional services** | `biz.expense_details.legal_professional` | **✓ md✓** |
+| **Lines18-27[0].f1_28[0]** | **18** | **Office expense** | `biz.expense_details.office_expense` | **✓ md✓** |
+| Lines18-27[0].f1_29[0] | 19 | Pension and profit-sharing plans | `biz.expense_details.pension` | ✓ (not seeded) |
+| Lines18-27[0].f1_30[0] | 20a | Rent or lease — vehicles | `biz.expense_details.rent_lease_vehicle` | ✓ (not seeded) |
+| Lines18-27[0].f1_31[0] | 20b | Rent or lease — other property | `biz.expense_details.rent_lease_other` | ✓ (not seeded) |
+| **Lines18-27[0].f1_32[0]** | **21** | **Repairs and maintenance** | `biz.expense_details.repairs_maintenance` | **✓ md✓** |
+| **Lines18-27[0].f1_33[0]** | **22** | **Supplies** | `biz.expense_details.supplies` | **✓ md✓** |
+| Lines18-27[0].f1_34[0] | 23 | Taxes and licenses | `biz.expense_details.taxes_licenses` | ✓ (not seeded) |
+| Lines18-27[0].f1_35[0] | 24a | Travel | `biz.expense_details.travel` | ✓ (not seeded) |
+| Lines18-27[0].f1_36[0] | 24b | Deductible meals (50%) | `biz.expense_details.meals` | ✓ (not seeded) |
+| **Lines18-27[0].f1_37[0]** | **25** | **Utilities** | `biz.expense_details.utilities` | **✓ md✓** |
+| Lines18-27[0].f1_38[0] | 26 | Wages (less employment credits) | `biz.expense_details.wages` | ✓ (not seeded) |
+| Lines18-27[0].f1_40[0] | 27a | Other expenses (from Part V) | `biz.expense_details.other_expenses` | ✓ (not seeded) |
 | f1_41[0] | 28 | Total expenses | `biz.expenses` | ✓ |
 | f1_42[0] | 29 | Tentative profit | `biz.net_profit_loss` | ✓ |
 | f1_45[0] | 31 | NET PROFIT OR (LOSS) | `biz.net_profit_loss` | ✓ |
@@ -285,3 +310,48 @@ Lines 12 and 18 have no AcroForm field in this PDF.
 | f1_20[0] | 11 | Medicare portion (2.9%) | `medSe` | ✓ |
 | f1_21[0] | 12 | SE TAX TOTAL | `se_tax` | ✓ |
 | f1_22[0] | 13 | Deduction for ½ SE tax | `se_tax_deduction` | ✓ |
+
+---
+
+## Schedule F (f1040sf.pdf)
+All expense fields verified via markitdown 2026-06-13. Two-column layout: Lines 10-23 in `Lines10-22[0]` subform (X=230); Lines 24-32 in top-level fields (X=504). Checkboxes render as "4" in markitdown — expected.
+
+| Field | Line | Form Label | Data Key | Status |
+|---|---|---|---|---|
+| f1_1[0] | (header) | Proprietor name | `taxpayer_name` | ✓ |
+| f1_2[0] | (header) | SSN | `taxpayer_ssn` | ✓ |
+| f1_3[0] | A | Principal crop/activity | `farm_principal_product` | ✓ |
+| CombField_LineB[0].f1_4[0] | B | NAICS code | `farm_naics` | ✓ |
+| CombField_LineD[0].f1_5[0] | D | EIN | `farm_ein` | ✓ |
+| LineC_ReadOrder[0].c1_1[0] | C | Cash method checkbox | always true | ✓ |
+| c1_2[0] | E | Materially participated (Yes) | always true | ✓ |
+| f1_9[0] | 2 | Sales of raised livestock/crops | `farm_gross` | ✓ |
+| f1_22[0] | 9 | Gross income total | `farm_gross` | ✓ |
+| **Lines10-22[0].f1_23[0]** | **10** | **Car and truck expenses** | `farm_expense_details.car_truck` | ✓ (not seeded) |
+| Lines10-22[0].f1_24[0] | 11 | Chemicals | `farm_expense_details.chemicals` | ✓ (not seeded) |
+| Lines10-22[0].f1_25[0] | 12 | Conservation expenses | `farm_expense_details.conservation` | ✓ (not seeded) |
+| Lines10-22[0].f1_26[0] | 13 | Custom hire | `farm_expense_details.custom_hire` | ✓ (not seeded) |
+| Lines10-22[0].f1_27[0] | 14 | Depreciation / section 179 | `farm_expense_details.depreciation` | ✓ (not seeded) |
+| Lines10-22[0].f1_28[0] | 15 | Employee benefit programs | `farm_expense_details.employee_benefits` | ✓ (not seeded) |
+| **Lines10-22[0].f1_29[0]** | **16** | **Feed** | `farm_expense_details.feed` | **✓ md✓** |
+| **Lines10-22[0].f1_30[0]** | **17** | **Fertilizers and lime** | `farm_expense_details.fertilizers_lime` | **✓ md✓** |
+| Lines10-22[0].f1_31[0] | 18 | Freight and trucking | `farm_expense_details.freight` | ✓ (not seeded) |
+| **Lines10-22[0].f1_32[0]** | **19** | **Gasoline, fuel, and oil** | `farm_expense_details.gasoline_fuel_oil` | **✓ md✓** |
+| **Lines10-22[0].f1_33[0]** | **20** | **Insurance (other than health)** | `farm_expense_details.insurance_farm` | **✓ md✓** |
+| Lines10-22[0].f1_34[0] | 21 | Interest | `farm_expense_details.interest_farm` | ✓ (not seeded) |
+| **Lines10-22[0].f1_35[0]** | **22** | **Labor hired (less emp. credits)** | `farm_expense_details.labor_hired` | **✓ md✓** |
+| Lines10-22[0].f1_36[0] | 23 | Pension and profit-sharing | `farm_expense_details.pension_farm` | ✓ (not seeded) |
+| f1_37[0] | 24a | Rent or lease — vehicles | `farm_expense_details.rent_lease_vehicle` | ✓ (not seeded) |
+| **f1_38[0]** | **25** | **Repairs and maintenance** | `farm_expense_details.repairs_maintenance` | **✓ md✓** |
+| f1_39[0] | 26 | Seeds and plants | `farm_expense_details.seeds_plants` | ✓ (not seeded) |
+| f1_40[0] | 27 | Storage and warehousing | `farm_expense_details.storage` | ✓ (not seeded) |
+| **f1_41[0]** | **28** | **Supplies** | `farm_expense_details.supplies` | **✓ md✓** |
+| f1_42[0] | 29 | Taxes | `farm_expense_details.taxes_farm` | ✓ (not seeded) |
+| f1_43[0] | 30 | Utilities | `farm_expense_details.utilities_farm` | ✓ (not seeded) |
+| f1_44[0] | 31 | Veterinary, breeding, medicine | `farm_expense_details.vet_breeding` | ✓ (not seeded) |
+| f1_46[0] | 32b | Other expenses subtotal | `farm_expense_details.other_expenses` | ✓ md✓ |
+| f1_47[0] | 32 desc | Other expense description (row 1) | "Other farm expenses" | ✓ md✓ |
+| **f1_48[0]** | **32 amt** | **Other expense amount (row 1)** | `farm_expense_details.other_expenses` | **✓ md✓** |
+| f1_59[0] | 33 | Total farm expenses | `farm_expenses` | ✓ |
+| f1_60[0] | 34 | Net farm profit or (loss) | `farm_income` | ✓ |
+| c1_6[0] | 35a | All investment at risk (loss case) | conditional | ✓ |

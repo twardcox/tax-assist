@@ -237,6 +237,7 @@ export class TaxCalculator {
     c["farm_income"] = farmNetFromSection !== null ? farmNetFromSection : f(other["farm_income"]);
     c["farm_gross"] = f(farmSection["gross_revenue"] ?? Math.abs(Number(c["farm_income"])));
     c["farm_expenses"] = Math.max(0, Number(c["farm_gross"]) - Number(c["farm_income"]));
+    c["farm_expense_details"] = toObj(farmSection["expense_details"] ?? {});
     c["farm_name"] = String(farmSection["farm_name"] ?? "");
     c["farm_principal_product"] = String(farmSection["principal_product"] ?? "");
     c["farm_naics"] = String(farmSection["naics_code"] ?? "111900");
@@ -315,6 +316,7 @@ export class TaxCalculator {
       const hoObj = toObj(hoRaw);
       const homeOffice = Boolean(hoObj["claimed"] ?? hoRaw);
 
+      const expDetail = toObj(se["expense_details"] ?? biz["expense_details"] ?? {});
       out.push({
         business_name: name,
         entity_type: biz["entity_type"] ?? "",
@@ -324,6 +326,7 @@ export class TaxCalculator {
         expenses: grossRev ? grossRev - netPl : 0,
         net_profit_loss: netPl,
         home_office: homeOffice,
+        expense_details: expDetail,
       });
     }
 
@@ -341,6 +344,7 @@ export class TaxCalculator {
           expenses: f(se["gross_revenue"]) - net,
           net_profit_loss: net,
           home_office: false,
+          expense_details: toObj(se["expense_details"] ?? {}),
         });
       }
     }
@@ -370,8 +374,10 @@ export class TaxCalculator {
     const adj = toObj(inc["adjustments_to_income"]);
 
     const seProfit = this.n("schedule_c_profit");
-    if (seProfit > 0) {
-      const seNet = seProfit * 0.9235;
+    const farmProfit = this.n("farm_income");   // Schedule F net profit flows to SE Line 1a
+    const combinedSe = seProfit + farmProfit;
+    if (combinedSe > 0) {
+      const seNet = combinedSe * 0.9235;
       const ssBase = this.p.se_ss_wage_base;
       const ssWages = Math.min(this.n("wages"), ssBase);
       const ssSe = Math.max(0, Math.min(seNet, ssBase - ssWages) * 0.124);

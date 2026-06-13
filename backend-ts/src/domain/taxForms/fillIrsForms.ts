@@ -603,24 +603,57 @@ async function fillScheduleC(
   const gross = Number(biz["gross_revenue"] ?? 0);
   const expenses = Number(biz["expenses"] ?? 0);
   const net = Number(biz["net_profit_loss"] ?? 0);
+  const ed = typeof biz["expense_details"] === "object" && biz["expense_details"] !== null
+    ? biz["expense_details"] as Record<string, unknown>
+    : {};
+
+  const p1 = (f: string) => `topmostSubform[0].Page1[0].${f}`;
+  const ifSet = (v: unknown, field: string) => { if (Number(v ?? 0) !== 0) s(p1(field), v); };
 
   // Header
-  ts(doc, `topmostSubform[0].Page1[0].f1_1[0]`, displayName);
-  ts(doc, `topmostSubform[0].Page1[0].f1_2[0]`, taxpayerSSN);                         // Taxpayer SSN
-  ts(doc, `topmostSubform[0].Page1[0].f1_3[0]`, String(biz["naics_code"] ?? ""));     // Line A principal business / NAICS code
-  ts(doc, `topmostSubform[0].Page1[0].BComb[0].f1_4[0]`, String(biz["business_name"] ?? ""));
-  ts(doc, `topmostSubform[0].Page1[0].DComb[0].f1_6[0]`, String(biz["ein"] ?? ""));   // Line D employer ID (EIN)
+  ts(doc, p1("f1_1[0]"), displayName);
+  ts(doc, p1("f1_2[0]"), taxpayerSSN);                                       // Taxpayer SSN
+  ts(doc, p1("f1_3[0]"), String(biz["naics_code"] ?? ""));                   // Line A principal business / NAICS code
+  ts(doc, p1("BComb[0].f1_4[0]"), String(biz["business_name"] ?? ""));
+  ts(doc, p1("DComb[0].f1_6[0]"), String(biz["ein"] ?? ""));                 // Line D employer ID (EIN)
 
   // ── Part I Income ───────────────────────────────────────────────────────────
-  s(`topmostSubform[0].Page1[0].f1_10[0]`, gross);  // Line 1  gross receipts
-  s(`topmostSubform[0].Page1[0].f1_12[0]`, gross);  // Line 3  gross receipts less returns
-  s(`topmostSubform[0].Page1[0].f1_14[0]`, gross);  // Line 5  gross profit
-  s(`topmostSubform[0].Page1[0].f1_16[0]`, gross);  // Line 7  gross income
+  s(p1("f1_10[0]"), gross);  // Line 1  gross receipts
+  s(p1("f1_12[0]"), gross);  // Line 3  gross receipts less returns
+  s(p1("f1_14[0]"), gross);  // Line 5  gross profit
+  s(p1("f1_16[0]"), gross);  // Line 7  gross income
 
-  // ── Part II Expenses ────────────────────────────────────────────────────────
-  s(`topmostSubform[0].Page1[0].f1_41[0]`, expenses); // Line 28 total expenses
-  ss(`topmostSubform[0].Page1[0].f1_42[0]`, net);     // Line 29 tentative profit
-  ss(`topmostSubform[0].Page1[0].f1_45[0]`, net);     // Line 31 net profit or (loss)
+  // ── Part II Expenses — Lines 8-17 (left column, subform Lines8-17[0]) ──────
+  ifSet(ed["advertising"],         "Lines8-17[0].f1_17[0]");  // Line 8  advertising
+  ifSet(ed["car_truck_expenses"],  "Lines8-17[0].f1_18[0]");  // Line 9  car and truck
+  ifSet(ed["commissions_fees"],    "Lines8-17[0].f1_19[0]");  // Line 10 commissions
+  ifSet(ed["contract_labor"],      "Lines8-17[0].f1_20[0]");  // Line 11 contract labor
+  ifSet(ed["depletion"],           "Lines8-17[0].f1_21[0]");  // Line 12 depletion
+  ifSet(ed["depreciation"],        "Lines8-17[0].f1_22[0]");  // Line 13 depreciation/179
+  ifSet(ed["employee_benefits"],   "Lines8-17[0].f1_23[0]");  // Line 14 employee benefits
+  ifSet(ed["insurance"],           "Lines8-17[0].f1_24[0]");  // Line 15 insurance
+  ifSet(ed["mortgage_interest"],   "Lines8-17[0].f1_25[0]");  // Line 16a mortgage interest
+  ifSet(ed["other_interest"],      "Lines8-17[0].f1_26[0]");  // Line 16b other interest
+  ifSet(ed["legal_professional"],  "Lines8-17[0].f1_27[0]");  // Line 17 legal/professional
+
+  // ── Part II Expenses — Lines 18-27 (right column, subform Lines18-27[0]) ───
+  ifSet(ed["office_expense"],      "Lines18-27[0].f1_28[0]"); // Line 18 office expense
+  ifSet(ed["pension"],             "Lines18-27[0].f1_29[0]"); // Line 19 pension/profit-sharing
+  ifSet(ed["rent_lease_vehicle"],  "Lines18-27[0].f1_30[0]"); // Line 20a rent/lease vehicles
+  ifSet(ed["rent_lease_other"],    "Lines18-27[0].f1_31[0]"); // Line 20b rent/lease other
+  ifSet(ed["repairs_maintenance"], "Lines18-27[0].f1_32[0]"); // Line 21 repairs
+  ifSet(ed["supplies"],            "Lines18-27[0].f1_33[0]"); // Line 22 supplies
+  ifSet(ed["taxes_licenses"],      "Lines18-27[0].f1_34[0]"); // Line 23 taxes and licenses
+  ifSet(ed["travel"],              "Lines18-27[0].f1_35[0]"); // Line 24a travel
+  ifSet(ed["meals"],               "Lines18-27[0].f1_36[0]"); // Line 24b deductible meals (50%)
+  ifSet(ed["utilities"],           "Lines18-27[0].f1_37[0]"); // Line 25 utilities
+  ifSet(ed["wages"],               "Lines18-27[0].f1_38[0]"); // Line 26 wages
+  ifSet(ed["other_expenses"],      "Lines18-27[0].f1_40[0]"); // Line 27a other expenses (Part V)
+
+  // ── Part II Totals ──────────────────────────────────────────────────────────
+  s(p1("f1_41[0]"), expenses); // Line 28 total expenses
+  ss(p1("f1_42[0]"), net);     // Line 29 tentative profit
+  ss(p1("f1_45[0]"), net);     // Line 31 net profit or (loss)
 
   return doc;
 }
@@ -1046,11 +1079,11 @@ async function fillScheduleD(c: ComputedValues): Promise<PDFDocument> {
     ts(doc, `topmostSubform[0].Page1[0].Table_PartII[0].Row8a[0].f1_23[0]`, "Various");
     ss(`topmostSubform[0].Page1[0].Table_PartII[0].Row8a[0].f1_26[0]`, ltcg);
   }
-  ss(`topmostSubform[0].Page1[0].f1_42[0]`, ltcg);  // Line 14 net long-term gain/(loss)
-  ss(`topmostSubform[0].Page1[0].f1_43[0]`, netCg > 0 ? netCg : 0); // Line 15 carry to 1040
+  // Line 15: net long-term gain/(loss) — just LTCG, not combined with short-term
+  if (ltcg !== 0) ss(`topmostSubform[0].Page1[0].f1_43[0]`, ltcg);
 
   // ── Part III ────────────────────────────────────────────────────────────────
-  ss(`topmostSubform[0].Page2[0].f2_2[0]`, netCg);  // Line 16 combined net gain/(loss)
+  ss(`topmostSubform[0].Page2[0].f2_1[0]`, netCg);  // Line 16 combined net gain/(loss)
 
   return doc;
 }
@@ -1322,8 +1355,8 @@ async function fillScheduleH(c: ComputedValues, data: Record<string, unknown>): 
   }
 
   // Part III: Line 25 (Part I total) and Line 26 (grand total)
-  s(ph2("f2_29[0]"), c["sch_h_part1_total"]);  // Line 25: amount from Line 8
-  s(ph2("f2_30[0]"), c["sch_h_total"]);         // Line 26: total → 1040 Line 23
+  s(ph2("f2_31[0]"), c["sch_h_part1_total"]);  // Line 25: amount from Line 8
+  s(ph2("f2_32[0]"), c["sch_h_total"]);         // Line 26: total → 1040 Line 23
 
   // Line 27: Yes (required to file Form 1040)
   cb(ph2("c2_5[0]"), true);
@@ -1350,10 +1383,47 @@ async function fillScheduleF(c: ComputedValues): Promise<PDFDocument> {
   const farmGross = Number(c["farm_gross"] ?? 0);
   const farmNet   = Number(c["farm_income"] ?? 0);
   const farmExp   = Number(c["farm_expenses"] ?? 0);
+  const fd = typeof c["farm_expense_details"] === "object" && c["farm_expense_details"] !== null
+    ? c["farm_expense_details"] as Record<string, unknown>
+    : {};
+  const FE = (f: string, v: unknown) => { if (Number(v ?? 0) !== 0) s(pf1(f), v); };
 
   // Income: Line 2 (raised livestock/crops) + Line 9 (gross total)
   s(pf1("f1_9[0]"), farmGross);   // Line 2: raised livestock sales
   s(pf1("f1_22[0]"), farmGross);  // Line 9: gross income total
+
+  // ── Part II Expenses — left column (Lines 10-23): subform Lines10-22[0] ───
+  FE("Lines10-22[0].f1_23[0]", fd["car_truck"]);          // Line 10 car and truck
+  FE("Lines10-22[0].f1_24[0]", fd["chemicals"]);           // Line 11 chemicals
+  FE("Lines10-22[0].f1_25[0]", fd["conservation"]);        // Line 12 conservation
+  FE("Lines10-22[0].f1_26[0]", fd["custom_hire"]);         // Line 13 custom hire
+  FE("Lines10-22[0].f1_27[0]", fd["depreciation"]);        // Line 14 depreciation
+  FE("Lines10-22[0].f1_28[0]", fd["employee_benefits"]);   // Line 15 employee benefits
+  FE("Lines10-22[0].f1_29[0]", fd["feed"]);                // Line 16 feed
+  FE("Lines10-22[0].f1_30[0]", fd["fertilizers_lime"]);    // Line 17 fertilizers and lime
+  FE("Lines10-22[0].f1_31[0]", fd["freight"]);             // Line 18 freight and trucking
+  FE("Lines10-22[0].f1_32[0]", fd["gasoline_fuel_oil"]);   // Line 19 gasoline, fuel, oil
+  FE("Lines10-22[0].f1_33[0]", fd["insurance_farm"]);      // Line 20 insurance
+  FE("Lines10-22[0].f1_34[0]", fd["interest_farm"]);       // Line 21 interest
+  FE("Lines10-22[0].f1_35[0]", fd["labor_hired"]);         // Line 22 labor hired
+  FE("Lines10-22[0].f1_36[0]", fd["pension_farm"]);        // Line 23 pension
+
+  // ── Part II Expenses — right column (Lines 24-32) ────────────────────────
+  FE("f1_37[0]", fd["rent_lease_vehicle"]);                // Line 24a rent/lease vehicles
+  FE("f1_38[0]", fd["repairs_maintenance"]);               // Line 25 repairs
+  FE("f1_39[0]", fd["seeds_plants"]);                      // Line 26 seeds and plants
+  FE("f1_40[0]", fd["storage"]);                           // Line 27 storage/warehousing
+  FE("f1_41[0]", fd["supplies"]);                          // Line 28 supplies
+  FE("f1_42[0]", fd["taxes_farm"]);                        // Line 29 taxes
+  FE("f1_43[0]", fd["utilities_farm"]);                    // Line 30 utilities
+  FE("f1_44[0]", fd["vet_breeding"]);                      // Line 31 vet, breeding, medicine
+
+  // Line 32: other expenses — first itemized row + running total
+  if (Number(fd["other_expenses"] ?? 0) !== 0) {
+    ts(doc, pf1("f1_47[0]"), "Other farm expenses");       // Line 32 description (row 1)
+    s(pf1("f1_48[0]"), fd["other_expenses"]);              // Line 32 amount (row 1)
+    s(pf1("f1_46[0]"), fd["other_expenses"]);              // Line 32b: subtotal of other expenses
+  }
 
   // Expenses: Line 33 (total)
   s(pf1("f1_59[0]"), farmExp);    // Line 33: total farm expenses
@@ -1378,7 +1448,9 @@ async function fillScheduleSE(
     ts(doc, field, typeof val === "string" ? val : fmt(val));
 
   const seProfit = Number(c["schedule_c_profit"] ?? 0);
-  const seNet = seProfit * 0.9235;
+  const farmProfit = Number(c["farm_income"] ?? 0);
+  const combinedSe = seProfit + farmProfit;
+  const seNet = Math.max(0, combinedSe * 0.9235);
   const ssBase = 176100; // 2025 SS wage base
   const ssWages = Math.min(Number(c["wages"] ?? 0), ssBase);
   const line9 = Math.max(0, ssBase - ssWages);
@@ -1392,11 +1464,16 @@ async function fillScheduleSE(
   ts(doc, `topmostSubform[0].Page1[0].f1_2[0]`, String(c["taxpayer_ssn"] ?? ""));
 
   // ── Part I Long Schedule SE ─────────────────────────────────────────────────
-  s(`topmostSubform[0].Page1[0].f1_5[0]`, seProfit);           // Line 2  Sch C net profit
-  s(`topmostSubform[0].Page1[0].f1_6[0]`, seProfit);           // Line 3  combine 1a+1b+2
-  s(`topmostSubform[0].Page1[0].f1_7[0]`, Math.max(0, seNet)); // Line 4a ×0.9235
-  s(`topmostSubform[0].Page1[0].f1_9[0]`, Math.max(0, seNet)); // Line 4c net SE earnings
-  s(`topmostSubform[0].Page1[0].f1_12[0]`, Math.max(0, seNet));// Line 6  net SE earnings (min $400 test)
+  if (farmProfit !== 0) {
+    s(`topmostSubform[0].Page1[0].f1_3[0]`, farmProfit);       // Line 1a farm profit (Sch F)
+  }
+  if (seProfit !== 0) {
+    s(`topmostSubform[0].Page1[0].f1_5[0]`, seProfit);         // Line 2  Sch C net profit
+  }
+  s(`topmostSubform[0].Page1[0].f1_6[0]`, combinedSe);         // Line 3  combine 1a+1b+2
+  s(`topmostSubform[0].Page1[0].f1_7[0]`, seNet);              // Line 4a ×0.9235
+  s(`topmostSubform[0].Page1[0].f1_9[0]`, seNet);              // Line 4c net SE earnings
+  s(`topmostSubform[0].Page1[0].f1_12[0]`, seNet);             // Line 6  net SE earnings (min $400 test)
   s(`topmostSubform[0].Page1[0].f1_13[0]`,                     // Line 7  maximum SS wage base
     ssBase.toLocaleString("en-US"));
   // Line 8a: W-2 SS wages (nested path)
