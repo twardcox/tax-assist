@@ -227,15 +227,19 @@ Lines 12 and 18 have no AcroForm field in this PDF.
 ---
 
 ## Schedule B (f1040sb.pdf)
+All fields verified via markitdown 2026-06-13. Header fields filled even though not in original map.
+
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| Line1_ReadOrder.f1_03[0] | 1 (name) | Payer name | "Various payers" | ✓ |
-| f1_04[0] | 1 (amount) | Interest amount | `taxable_interest` | ✓ |
-| f1_33[0] | 2 | Total interest | `taxable_interest` | ✓ |
-| ReadOrderControl.f1_34[0] | 4 | Taxable interest | `taxable_interest` | ✓ |
-| f1_35[0] | Part II (name) | Payer name | "Various payers" | ✓ |
-| f1_36[0] | Part II (amount) | Dividend amount | `ordinary_dividends` | ✓ |
-| f1_65[0] | 6 | Total ordinary dividends | `ordinary_dividends` | ✓ |
+| (header f1_XX) | header | Taxpayer name | `displayName` | ✓ md✓ |
+| (header f1_XX) | header | Taxpayer SSN | `taxpayer_ssn` | ✓ md✓ |
+| Line1_ReadOrder.f1_03[0] | 1 (name) | Payer name | "Various payers" | ✓ md✓ |
+| f1_04[0] | 1 (amount) | Interest amount | `taxable_interest` | ✓ md✓ |
+| f1_33[0] | 2 | Total interest | `taxable_interest` | ✓ md✓ |
+| ReadOrderControl.f1_34[0] | 4 | Taxable interest | `taxable_interest` | ✓ md✓ |
+| f1_35[0] | Part II (name) | Payer name | "Various payers" | ✓ md✓ |
+| f1_36[0] | Part II (amount) | Dividend amount | `ordinary_dividends` | ✓ md✓ |
+| f1_65[0] | 6 | Total ordinary dividends | `ordinary_dividends` | ✓ md✓ |
 
 ---
 
@@ -280,36 +284,43 @@ All expense fields verified via markitdown 2026-06-13. Two-column layout: Lines 
 ---
 
 ## Schedule D (f1040sd.pdf)
+All fields verified via markitdown 2026-06-13. Test values: stcg=7,070 ltcg=8,080 total=15,150.
+
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| Table_PartI.Row1a.f1_3[0] | 1a (desc) | Description | "Various" | ✓ |
-| Table_PartI.Row1a.f1_6[0] | 1a (gain) | Short-term gain/(loss) | `stcg` | ✓ |
-| f1_22[0] | 7 | Net short-term gain/(loss) | `stcg` | ✓ |
-| Table_PartII.Row8a.f1_23[0] | 8a (desc) | Description | "Various" | ✓ |
-| Table_PartII.Row8a.f1_26[0] | 8a (gain) | Long-term gain/(loss) | `ltcg` | ✓ |
-| f1_42[0] | 14 | Net long-term gain/(loss) | `ltcg` | ✓ |
-| f1_43[0] | 15 | Carry to Form 1040 | `ltcg (if > 0)` | ✓ |
-| Page2.f2_2[0] | 16 | Combined net gain/(loss) | `stcg + ltcg` | ✓ |
+| Table_PartI.Row1a.f1_3[0] | 1a (desc) | Description | "Various" | ✓ md✓ |
+| Table_PartI.Row1a.f1_6[0] | 1a (gain) | Short-term gain/(loss) | `stcg` | ✓ md✓ |
+| f1_22[0] | 7 | Net short-term gain/(loss) | `stcg` | ✓ md✓ |
+| Table_PartII.Row8a.f1_23[0] | 8a (desc) | Description | "Various" | ✓ md✓ |
+| Table_PartII.Row8a.f1_26[0] | 8a (gain) | Long-term gain/(loss) | `ltcg` | ✓ md✓ |
+| f1_42[0] | 14 | Net long-term gain/(loss) | `ltcg` | ✓ md✓ |
+| f1_43[0] | 15 | Carry to Form 1040 | `ltcg (if > 0)` | ✓ md✓ |
+| Page2.f2_2[0] | 16 | Combined net gain/(loss) | `stcg + ltcg` | ✓ md✓ |
 
 ---
 
 ## Schedule SE (f1040sse.pdf)
+All fields verified via markitdown 2026-06-13. Test values: farmProfit=12,012 seProfit=9,009 combined=21,021 seNet=19,413 wages=111,111 ssTax=2,407 medTax=563 seTax=2,970 deduction=1,485.
+Note: field f1_3[0] fills Line 1a (farm profit); f1_1[0] is the header name, not Line 1a.
+
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| f1_1[0] | (header) | Name | `displayName` | ✓ |
-| f1_5[0] | 2 | Net profit from Schedule C | `schedule_c_profit` | ✓ |
-| f1_6[0] | 3 | Combine 1a+1b+2 | `schedule_c_profit` | ✓ |
-| f1_7[0] | 4a | × 0.9235 | `seNet` | ✓ |
-| f1_9[0] | 4c | Net SE earnings | `seNet` | ✓ |
-| f1_12[0] | 6 | Net SE earnings (min $400 test) | `seNet` | ✓ |
-| f1_13[0] | 7 | Maximum SS wage base ($176,100) | 176,100 | ✓ |
-| Line8a_ReadOrder.f1_14[0] | 8a | W-2 SS wages | `wages` | ✓ |
-| f1_17[0] | 8d | Total SS wages | `ssWages` | ✓ |
-| f1_18[0] | 9 | Remaining room under SS base | `line9` | ✓ |
-| f1_19[0] | 10 | SS portion (12.4%) | `ssSe` | ✓ |
-| f1_20[0] | 11 | Medicare portion (2.9%) | `medSe` | ✓ |
-| f1_21[0] | 12 | SE TAX TOTAL | `se_tax` | ✓ |
-| f1_22[0] | 13 | Deduction for ½ SE tax | `se_tax_deduction` | ✓ |
+| f1_1[0] | (header) | Name | `displayName` | ✓ md✓ |
+| f1_2[0] | (header) | SSN | `taxpayer_ssn` | ✓ md✓ |
+| f1_3[0] | 1a | Net farm profit (Sch F) | `farm_income` (filled only if ≠ 0) | ✓ md✓ |
+| f1_5[0] | 2 | Net profit from Schedule C | `schedule_c_profit` (filled only if ≠ 0) | ✓ md✓ |
+| f1_6[0] | 3 | Combine 1a+1b+2 | `schedule_c_profit + farm_income` (was wrongly annotated as schedule_c_profit) | ✓ md✓ |
+| f1_7[0] | 4a | × 0.9235 | `seNet` | ✓ md✓ |
+| f1_9[0] | 4c | Net SE earnings | `seNet` | ✓ md✓ |
+| f1_12[0] | 6 | Net SE earnings (min $400 test) | `seNet` | ✓ md✓ |
+| f1_13[0] | 7 | Maximum SS wage base ($176,100) | 176,100 | ✓ md✓ |
+| Line8a_ReadOrder[0].f1_14[0] | 8a | W-2 SS wages | `wages` | ✓ md✓ |
+| f1_17[0] | 8d | Total SS wages | `ssWages` (= min(wages, ssBase)) | ✓ md✓ |
+| f1_18[0] | 9 | Remaining room under SS base | `line9` (= ssBase − ssWages) | ✓ md✓ |
+| f1_19[0] | 10 | SS portion (12.4%) | `ssSe` (= min(seNet, line9) × 0.124) | ✓ md✓ |
+| f1_20[0] | 11 | Medicare portion (2.9%) | `medSe` (= seNet × 0.029) | ✓ md✓ |
+| f1_21[0] | 12 | SE TAX TOTAL | `se_tax` (from TaxCalculator) | ✓ md✓ |
+| f1_22[0] | 13 | Deduction for ½ SE tax | `se_tax_deduction` | ✓ md✓ |
 
 ---
 

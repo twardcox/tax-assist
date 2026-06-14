@@ -2,7 +2,7 @@
 
 Project: `tax-assist`
 Branch: `switch-to-ts`
-Last updated: 2026-06-11
+Last updated: 2026-06-13
 
 ## Current State — Migration Complete + Tax Forms Verified
 
@@ -57,16 +57,18 @@ not the name row). Correct name fields: f1_14–f1_19. Filing status checkboxes 
 (Checkbox_ReadOrder subform for Single/MFJ/MFS; top-level c1_8 for HOH/QSS). Dependents
 now filled from data.dependents.dependents array. Digital assets checkbox fixed to c1_10.
 
-### Schedules not yet verified
-The field mapping for Schedules 1, B, C, D, SE was done from code inspection only — not yet verified via markitdown on the actual filled PDFs. Next step: download each from the new per-form tab, run markitdown, and cross-check against `FIELD_MAP.md`.
+### All schedules verified (2026-06-13)
+All forms verified via markitdown on actual filled PDFs. No field mismatches found.
+One annotation bug fixed in FIELD_MAP.md: Schedule SE Line 3 was documented as `schedule_c_profit` but actually fills `schedule_c_profit + farm_income`. The fill code was always correct; only the annotation was wrong.
+Also added to FIELD_MAP.md: Sch SE `f1_3[0]` (Line 1a farm profit), Sch B header name/SSN fields.
 
 ## Next Sprint Goals
 
-1. **Verify remaining schedules** — download each filled schedule PDF from the new per-form tab, run markitdown, and confirm field positions match `FIELD_MAP.md`
-2. **Add more benefit rules** — extend the library beyond the current 58 benefits
+1. **Add more benefit rules** — extend the library beyond the current 58 benefits
    (see `tax_library/federal/`, `tax_library/state/`, `tax_library/county/`)
-3. **Normalize the DB schema** — migrate `section_data` JSON blobs toward proper relational tables
-4. **Merge to main** — the `switch-to-ts` branch is ready
+2. **Merge to main** — the `switch-to-ts` branch is ready
+   - ✓ Schedule verification complete
+   - ✓ DB schema normalized (9 typed tables)
 
 ## Validation Loop
 
