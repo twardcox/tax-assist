@@ -138,8 +138,8 @@ Tab order does not match visual reading order, but the visual grouping is defini
 ### Credits
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| f2_07[0] | 19 | Child tax credit or credit for other dependents | `child_tax_credit` | ✓ |
-| f2_08[0] | 20 | Amount from Schedule 3, line 8 | — | not filled (zero) |
+| f2_07[0] | 19 | Child tax credit or credit for other dependents | `ctc_with_odc` (CTC + ODC from Sch 8812) | ✓ FIXED 2026-06-13 |
+| f2_08[0] | 20 | Amount from Schedule 3, line 8 | `schedule3_line8` | ✓ FIXED 2026-06-13 |
 | f2_09[0] | 21 | TOTAL CREDITS | `total_credits` | ✓ |
 | f2_10[0] | 22 | Tax after credits | `income_tax_after_credits` | ✓ |
 | f2_11[0] | 23 | Other taxes including SE tax | `se_tax` | ✓ |
