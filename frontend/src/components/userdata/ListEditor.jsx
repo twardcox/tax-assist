@@ -7,7 +7,7 @@ function itemTitle(item, itemLabel, index) {
   return name ? `${itemLabel} — ${name}` : `${itemLabel} ${index + 1}`;
 }
 
-export default function ListEditor({ fieldDef, items, onChange }) {
+export default function ListEditor({ fieldDef, items, onChange, sectionData }) {
   const { addLabel, itemLabel, itemGroups, description, source, calculate } = fieldDef;
   const list = Array.isArray(items) ? items : [];
   const [openCards, setOpenCards] = useState({});
@@ -100,6 +100,7 @@ export default function ListEditor({ fieldDef, items, onChange }) {
                   label={group.label}
                   fields={group.fields}
                   data={item}
+                  sectionData={sectionData}
                   onChange={(updated) => updateItem(i, updated)}
                   path={group.path}
                   defaultOpen={group.defaultOpen ?? !group.advanced}

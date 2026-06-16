@@ -19,7 +19,7 @@ function setNestedValue(obj, path, value) {
   return result;
 }
 
-export default function FieldGroup({ label, fields, data, onChange, path, defaultOpen = true, advanced = false, showIf, forceOpen = false }) {
+export default function FieldGroup({ label, fields, data, onChange, path, defaultOpen = true, advanced = false, showIf, forceOpen = false, sectionData }) {
   const [open, setOpen] = useState(defaultOpen);
   const contentId = useId();
   const groupData = path ? (getNestedValue(data, path) ?? {}) : (data ?? {});
@@ -42,7 +42,7 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
     let updated = data;
     let changed = false;
     for (const f of derived) {
-      const computed = f.derivedFrom(groupData, data);
+      const computed = f.derivedFrom(groupData, sectionData ?? data);
       if (computed != null && groupData[f.key] !== computed) {
         updated = setNestedValue(updated, path ? `${path}.${f.key}` : f.key, computed);
         changed = true;
@@ -59,7 +59,7 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
     for (const f of (fields ?? [])) {
       if (typeof f.derivedFrom !== "function") continue;
       const updatedGroup = path ? (getNestedValue(updated, path) ?? {}) : updated;
-      const computed = f.derivedFrom(updatedGroup, updated);
+      const computed = f.derivedFrom(updatedGroup, sectionData ?? updated);
       updated = setNestedValue(updated, path ? `${path}.${f.key}` : f.key, computed);
     }
     onChange(updated);
@@ -98,7 +98,7 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
           )}
           {fields.map((f) => {
             if (typeof f.derivedFrom === "function") {
-              const computed = f.derivedFrom(groupData, data);
+              const computed = f.derivedFrom(groupData, sectionData ?? data);
               if (computed != null) {
                 return (
                   <div key={f.key} className="flex items-center justify-between gap-4 py-1.5">

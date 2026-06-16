@@ -103,6 +103,7 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
                 <ListEditor
                   fieldDef={group}
                   items={formState[group.key]}
+                  sectionData={formState}
                   onChange={(newList) => handleListChange(group.key, newList)}
                 />
               </div>
