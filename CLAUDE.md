@@ -1,8 +1,67 @@
 # Claude Handoff
 
 Project: `tax-assist`
-Branch: `switch-to-ts`
-Last updated: 2026-06-13
+Branch: `my-data` (off `main`, branched at `d16719b`)
+Last updated: 2026-06-16
+
+## In Progress — My Data UX/Accessibility Redesign
+
+User complaint that triggered this: "My Data feels overwhelming, not in logical order — where do I
+even enter my name?" Root cause: in `household.js` the name lived in a group literally called
+"Taxpayer", third of seven groups, mixed in with rare fields like `combat_zone` and
+`presidential_campaign_you`. Full plan (recommended model, rationale, verification steps):
+`C:\Users\tward\.claude\plans\iterative-kindling-rocket.md`.
+
+**Phase A — DONE** (commit `0df4101`): shared component accessibility + the flagship reorder.
+- `FieldInput.jsx` / `FieldGroup.jsx` / `HelpPopover.jsx`: `htmlFor`/`id` label association, visible
+  focus rings (`focus:outline-none` was removed globally — replaced with `focus-visible:ring-2`),
+  `role="switch"`/`role="group"` on toggles, `<fieldset>`/`<legend>`, `aria-expanded`/`aria-controls`
+  on collapsibles, Escape-to-close + `role="tooltip"` on help popovers.
+- `SectionForm.jsx`: field search box (matches label *and* key), `role="status" aria-live="polite"`
+  save message, "Unsaved changes" indicator, new `callout` group type.
+- New `lib/sectionCompleteness.js`: per-section completion signal from `essential`-flagged fields,
+  falling back to a flat non-null ratio for schemas not yet retrofitted.
+- `pages/UserData.jsx`: nav regrouped into categories (About You / Income & Accounts / Business &
+  Property / Planning) with a live status dot per section.
+- `schemas/household.js` fully reordered: **Your Info (name/SSN/DOB) is now the first group on the
+  page**, essentials-first throughout, rare fields (combat zone, presidential campaign, deceased,
+  foreign address, dual-status alien, etc.) swept into a collapsed "Special Situations"-style
+  cluster of advanced groups, each tagged "Rarely needed". `Spouse` group now hidden entirely via
+  `showIf` when filing status is Single/HOH. Killed the redundant manual `dependents.count` field —
+  replaced with a live read-only count + "Manage Dependents →" link (new `callout` group type).
+
+**Phase B — DONE** (commit `43f89d2`): same pattern applied to the 7 other schemas where it fits.
+- `income.js`, `businesses.js`, `real_estate.js`, `investments.js`, `retirement.js`,
+  `healthcare.js`, `dependents.js` — each got essentials-first reordering and/or rare fields
+  demoted to `advanced: true` groups.
+- New conditional capability used here: `real_estate.js` — "Rental Use" only shows for rental
+  property types, "Primary Residence" only for primary residences, via `showIf` keyed on the
+  property's own `property_type` field. `healthcare.js` — "Premium Tax Credit" only shows if
+  `insurance.coverage_type === "marketplace"`.
+- `ListEditor.jsx` updated to thread `advanced`/`showIf`/`defaultOpen` through to per-item
+  `FieldGroup`s (needed so list-based schemas — businesses, real estate, dependents — could use
+  the same mechanics).
+- Deliberately **left unchanged**: `goals.js` (42 fields are all equally-weighted opt-in planning
+  checkboxes — no genuine essential/rare split exists to apply) and `documents_index.js` (not
+  reachable from the My Data nav at all — excluded server-side in `routes/userData.ts:53`).
+- Verified live via Playwright against the real running app at every step (zero console errors);
+  full backend test suite re-confirmed clean (344/344) after this session's combined work.
+
+**Phase C — NOT STARTED, flagged as a separate effort.** Cross-section data redundancy found
+during research, deliberately not touched because it reaches into the tax calculator, not just
+the UI:
+- Capital gains tracked in both `income.js` (`investment_income.short_term_capital_gains` etc.)
+  and `investments.js` (`realized_gains_losses_this_year.short_term_gains` etc.) — unclear which
+  is canonical.
+- HSA contributions tracked in 3 places: `income.js` W-2 list (`hsa_contributions_through_payroll`),
+  `income.js` adjustments (`hsa_contributions_outside_payroll`), and `healthcare.js`
+  (`health_savings_account.contributions_ytd`).
+- Field name mismatch for the same concept: `real_estate.js`'s `rental_use.gross_rental_income`
+  vs. `income.js`'s `rental_income[].gross_rents`.
+- Before starting: re-read the plan file above, trace each duplicated field through
+  `backend-ts/src/domain/taxForms/taxCalculator.ts` to find which one (if any) the calculator
+  actually reads, then decide whether to delete the unused duplicate or reconcile both into one
+  canonical field with a migration.
 
 ## Current State — Migration Complete + Tax Forms Verified
 
