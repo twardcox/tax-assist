@@ -118,7 +118,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
   }
 
   if (type === "boolean") {
-    return row(<BoolToggle id={id} value={!!value} onChange={onChange} label={label} />, { compound: true });
+    return row(<BoolToggle id={id} value={!!value} onChange={onChange} label={label} />);
   }
   if (type === "tristate") {
     return row(<TristateToggle id={id} value={value ?? null} onChange={onChange} label={label} />, { compound: true });
