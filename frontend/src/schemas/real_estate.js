@@ -156,6 +156,13 @@ export const schema = {
           description: "Rental income and expenses for Schedule E are entered in Income > Rental Income. These fields track property-specific usage facts used for the vacation-home test.",
           fields: [
             {
+              key: "gross_rental_income",
+              label: "Gross Rental Income",
+              type: "currency",
+              description: "Total rent received before expenses for this property during the tax year.",
+              source: "Your rental ledger, bank deposits, or 1099-K statements from rental platforms.",
+            },
+            {
               key: "rental_days",
               label: "Days Rented",
               type: "number",
