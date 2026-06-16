@@ -80,19 +80,6 @@ export const schema = {
           advanced: true,
           fields: [
             {
-              key: "tax_classification",
-              label: "Tax Classification",
-              type: "select",
-              options: [
-                { value: "disregarded", label: "Disregarded Entity (Schedule C)" },
-                { value: "partnership", label: "Partnership (Form 1065)" },
-                { value: "s_corp", label: "S Corporation (Form 1120-S)" },
-                { value: "c_corp", label: "C Corporation (Form 1120)" },
-              ],
-              description: "How the IRS treats the entity for tax purposes. An LLC can elect to be taxed as an S-Corp even if formed as an LLC.",
-              source: "Your Form 2553 (S-Corp election) or IRS Form 8832 (entity classification election), or ask your CPA.",
-            },
-            {
               key: "formation_state",
               label: "Formation State",
               type: "text",

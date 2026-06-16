@@ -17,7 +17,13 @@ function countFields(schema, data, { essentialOnly }) {
   let total = 0;
   let filled = 0;
   for (const group of schema.groups ?? []) {
-    if (group.type === "list") continue; // lists get their own "N added" indicator elsewhere
+    if (group.type === "list") {
+      if (essentialOnly) continue;
+      total += 1;
+      const listData = group.path ? getNestedValue(data, group.path) : data?.[group.key];
+      if (Array.isArray(listData) && listData.length > 0) filled += 1;
+      continue;
+    }
     const groupData = group.path ? (getNestedValue(data, group.path) ?? {}) : (data ?? {});
     for (const field of group.fields ?? []) {
       if (essentialOnly && !field.essential) continue;

@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import HelpPopover from "./HelpPopover";
 
 const FOCUS_RING =
@@ -63,6 +63,9 @@ function SsnInput({ id, value, onChange }) {
     value ? String(value).replace(/\D/g, "").slice(0, 9) : ""
   );
   const noFill = useNoAutofill();
+  useEffect(() => {
+    setDigits(value ? String(value).replace(/\D/g, "").slice(0, 9) : "");
+  }, [value]);
   function format(d) {
     if (d.length <= 3) return d;
     if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`;
@@ -94,6 +97,9 @@ function EinInput({ id, value, onChange }) {
     value ? String(value).replace(/\D/g, "").slice(0, 9) : ""
   );
   const noFill = useNoAutofill();
+  useEffect(() => {
+    setDigits(value ? String(value).replace(/\D/g, "").slice(0, 9) : "");
+  }, [value]);
   function format(d) {
     if (d.length <= 2) return d;
     return `${d.slice(0, 2)}-${d.slice(2)}`;
@@ -233,7 +239,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
     return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={9} placeholder="9-digit ABA number" />);
   }
   if (type === "zip") {
-    return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={10} placeholder="XXXXX" />);
+    return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={9} placeholder="XXXXX" />);
   }
   if (type === "naics") {
     return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={6} placeholder="6-digit code" />);
