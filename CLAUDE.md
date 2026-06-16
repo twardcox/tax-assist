@@ -9,8 +9,7 @@ Last updated: 2026-06-16
 User complaint that triggered this: "My Data feels overwhelming, not in logical order — where do I
 even enter my name?" Root cause: in `household.js` the name lived in a group literally called
 "Taxpayer", third of seven groups, mixed in with rare fields like `combat_zone` and
-`presidential_campaign_you`. Full plan (recommended model, rationale, verification steps):
-`C:\Users\tward\.claude\plans\iterative-kindling-rocket.md`.
+`presidential_campaign_you`. Full plan: documented below in this handoff file.
 
 **Phase A — DONE** (commit `0df4101`): shared component accessibility + the flagship reorder.
 - `FieldInput.jsx` / `FieldGroup.jsx` / `HelpPopover.jsx`: `htmlFor`/`id` label association, visible
