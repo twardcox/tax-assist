@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useQueries, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import SectionForm from "../components/userdata/SectionForm";
 import { essentialCompleteness, completionStatus } from "../lib/sectionCompleteness";
@@ -75,26 +75,19 @@ export default function UserData() {
 
   const sectionKeys = sectionsData?.sections ?? [];
 
-  // Fetch every section's parsed data (small payloads) so the nav can show a
-  // completion dot per section, not just whichever one is currently open.
-  const allSectionQueries = useQueries({
-    queries: sectionKeys.map((key) => ({
-      queryKey: ["user-data-parsed", key],
-      queryFn: () => api.getParsedSection(key),
-      enabled: sectionKeys.length > 0,
-    })),
-  });
-
-  const sectionDataByKey = {};
-  sectionKeys.forEach((key, i) => {
-    sectionDataByKey[key] = allSectionQueries[i]?.data?.data;
-  });
-
   const { data: sectionData, isLoading: loadingSection } = useQuery({
     queryKey: ["user-data-parsed", activeSection],
     queryFn: () => api.getParsedSection(activeSection),
     enabled: !!activeSection,
   });
+
+  const sectionDataByKey = {};
+  sectionKeys.forEach((key) => {
+    sectionDataByKey[key] = qc.getQueryData(["user-data-parsed", key])?.data;
+  });
+  if (activeSection && sectionData?.data) {
+    sectionDataByKey[activeSection] = sectionData.data;
+  }
 
   const saveMutation = useMutation({
     mutationFn: ({ section, formState }) => api.updateSection(section, formState),
