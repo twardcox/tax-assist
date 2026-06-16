@@ -35,23 +35,6 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
   // not relevant to the current data (e.g. filing status is Single).
   if (showIf && !showIf(data)) return null;
 
-  // On mount, sync any derived fields whose stored value is stale or missing.
-  useEffect(() => {
-    const derived = (fields ?? []).filter(f => typeof f.derivedFrom === "function");
-    if (!derived.length) return;
-    let updated = data;
-    let changed = false;
-    for (const f of derived) {
-      const computed = f.derivedFrom(groupData, sectionData ?? data);
-      if (computed != null && groupData[f.key] !== computed) {
-        updated = setNestedValue(updated, path ? `${path}.${f.key}` : f.key, computed);
-        changed = true;
-      }
-    }
-    if (changed) onChange(updated);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   function handleFieldChange(fieldKey, value) {
     const fullPath = path ? `${path}.${fieldKey}` : fieldKey;
     let updated = setNestedValue(data, fullPath, value);
