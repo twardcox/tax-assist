@@ -1,3 +1,14 @@
+function ageAsOfYearEnd(dob) {
+  if (!dob) return null;
+  const taxYear = new Date().getFullYear();
+  const birth = new Date(dob + "T00:00:00");
+  const dec31 = new Date(taxYear, 11, 31);
+  let age = dec31.getFullYear() - birth.getFullYear();
+  const m = dec31.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && dec31.getDate() < birth.getDate())) age--;
+  return age >= 0 ? age : null;
+}
+
 export const schema = {
   label: "Dependents",
   description: "Each person you claim as a dependent. Affects the Child Tax Credit, EITC, Dependent Care Credit, and education credits.",
@@ -54,8 +65,9 @@ export const schema = {
               key: "age_at_year_end",
               label: "Age at Year End",
               type: "number",
-              description: "Their age on December 31 of the tax year. Under 17 qualifies for the Child Tax Credit; under 13 for Dependent Care Credit.",
-              source: "Calculated from date of birth.",
+              derivedFrom: (groupData) => ageAsOfYearEnd(groupData?.date_of_birth),
+              description: "Their age on December 31. Auto-calculated from Date of Birth. Under 17 qualifies for the Child Tax Credit; under 13 for Dependent Care Credit.",
+              source: "Calculated automatically from Date of Birth.",
             },
             {
               key: "ssn_obtained",

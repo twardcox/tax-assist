@@ -1,32 +1,54 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 
 export default function HelpPopover({ fieldDef, describedById }) {
   const { description, source, calculate } = fieldDef;
   if (!description && !source && !calculate) return null;
 
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [pos, setPos] = useState(null);
+  const btnRef = useRef(null);
+  const panelRef = useRef(null);
   const panelId = describedById ?? `help-panel-${fieldDef.key ?? "field"}`;
+
+  // Compute fixed position every time the popover opens.
+  // Using fixed positioning bypasses the scroll-container's overflow clipping.
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current) { setPos(null); return; }
+    const rect = btnRef.current.getBoundingClientRect();
+    const W = 288; // matches w-72
+    const GAP = 8;
+    const vw = window.innerWidth;
+
+    // Prefer opening to the right of the button; flip left if it overflows.
+    let left = rect.right + GAP;
+    if (left + W > vw - GAP) {
+      left = rect.left - W - GAP;
+    }
+    setPos({ top: rect.top, left: Math.max(GAP, left) });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    function onDown(e) {
+      if (btnRef.current?.contains(e.target)) return;
+      if (panelRef.current?.contains(e.target)) return;
+      setOpen(false);
     }
-    function handleKeyDown(e) {
+    function onKey(e) {
       if (e.key === "Escape") setOpen(false);
     }
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
   return (
-    <span className="relative inline-block ml-1" ref={ref}>
+    <span className="inline-block ml-1">
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-400 hover:text-gray-200 text-[10px] font-bold leading-none flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
@@ -36,11 +58,13 @@ export default function HelpPopover({ fieldDef, describedById }) {
       >
         ?
       </button>
-      {open && (
+      {open && pos && (
         <div
+          ref={panelRef}
           id={panelId}
           role="tooltip"
-          className="absolute z-50 left-5 top-0 w-72 bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-3 text-xs text-gray-300 space-y-2"
+          style={{ position: "fixed", top: pos.top, left: pos.left, width: "18rem", zIndex: 9999 }}
+          className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-3 text-xs text-gray-300 space-y-2"
         >
           {description && (
             <div>

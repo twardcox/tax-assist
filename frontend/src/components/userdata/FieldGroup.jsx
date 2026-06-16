@@ -35,9 +35,34 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
   // not relevant to the current data (e.g. filing status is Single).
   if (showIf && !showIf(data)) return null;
 
+  // On mount, sync any derived fields whose stored value is stale or missing.
+  useEffect(() => {
+    const derived = (fields ?? []).filter(f => typeof f.derivedFrom === "function");
+    if (!derived.length) return;
+    let updated = data;
+    let changed = false;
+    for (const f of derived) {
+      const computed = f.derivedFrom(groupData, data);
+      if (computed != null && groupData[f.key] !== computed) {
+        updated = setNestedValue(updated, path ? `${path}.${f.key}` : f.key, computed);
+        changed = true;
+      }
+    }
+    if (changed) onChange(updated);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleFieldChange(fieldKey, value) {
     const fullPath = path ? `${path}.${fieldKey}` : fieldKey;
-    onChange(setNestedValue(data, fullPath, value));
+    let updated = setNestedValue(data, fullPath, value);
+    // Recompute all derived siblings after any field change.
+    for (const f of (fields ?? [])) {
+      if (typeof f.derivedFrom !== "function") continue;
+      const updatedGroup = path ? (getNestedValue(updated, path) ?? {}) : updated;
+      const computed = f.derivedFrom(updatedGroup, updated);
+      updated = setNestedValue(updated, path ? `${path}.${f.key}` : f.key, computed);
+    }
+    onChange(updated);
   }
 
   return (
@@ -71,14 +96,29 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
           {advanced && (
             <p className="text-xs text-gray-600 py-2">Only fill these in if they apply to you.</p>
           )}
-          {fields.map((f) => (
-            <FieldInput
-              key={f.key}
-              fieldDef={f}
-              value={groupData[f.key] ?? null}
-              onChange={(v) => handleFieldChange(f.key, v)}
-            />
-          ))}
+          {fields.map((f) => {
+            if (typeof f.derivedFrom === "function") {
+              const computed = f.derivedFrom(groupData, data);
+              if (computed != null) {
+                return (
+                  <div key={f.key} className="flex items-center justify-between gap-4 py-1.5">
+                    <span className="text-sm text-gray-400 flex-shrink-0 truncate max-w-[45%]">{f.label}</span>
+                    <span className="text-sm font-medium text-emerald-400 bg-gray-800 px-2 py-0.5 rounded tabular-nums">
+                      {computed}
+                    </span>
+                  </div>
+                );
+              }
+            }
+            return (
+              <FieldInput
+                key={f.key}
+                fieldDef={f}
+                value={groupData[f.key] ?? null}
+                onChange={(v) => handleFieldChange(f.key, v)}
+              />
+            );
+          })}
         </div>
       )}
     </fieldset>

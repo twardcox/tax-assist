@@ -10,6 +10,7 @@ function CurrencyInput({ id, value, onChange }) {
   const [raw, setRaw] = useState(
     value != null && value !== "" ? String(value) : ""
   );
+  const noFill = useNoAutofill();
 
   function handleChange(e) {
     const v = e.target.value.replace(/[^0-9.]/g, "");
@@ -24,6 +25,7 @@ function CurrencyInput({ id, value, onChange }) {
   }
 
   function handleFocus() {
+    noFill.onFocus();
     if (raw) setRaw(raw.replace(/,/g, ""));
   }
 
@@ -38,6 +40,7 @@ function CurrencyInput({ id, value, onChange }) {
         onChange={handleChange}
         onBlur={handleBlur}
         onFocus={handleFocus}
+        readOnly={noFill.readOnly}
         className={BASE_INPUT + " pl-5"}
         placeholder="0"
         {...NO_FILL}
@@ -48,10 +51,18 @@ function CurrencyInput({ id, value, onChange }) {
 
 const NO_FILL = { autoComplete: "off", "data-lpignore": "true", "data-form-type": "other" };
 
+// Password managers skip readOnly inputs. Start readOnly, flip on first focus —
+// the user never notices but the manager never injects.
+function useNoAutofill() {
+  const [ro, setRo] = useState(true);
+  return { readOnly: ro, onFocus: () => setRo(false) };
+}
+
 function SsnInput({ id, value, onChange }) {
   const [digits, setDigits] = useState(() =>
     value ? String(value).replace(/\D/g, "").slice(0, 9) : ""
   );
+  const noFill = useNoAutofill();
   function format(d) {
     if (d.length <= 3) return d;
     if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`;
@@ -73,6 +84,7 @@ function SsnInput({ id, value, onChange }) {
       maxLength={11}
       className={BASE_INPUT}
       {...NO_FILL}
+      {...noFill}
     />
   );
 }
@@ -81,6 +93,7 @@ function EinInput({ id, value, onChange }) {
   const [digits, setDigits] = useState(() =>
     value ? String(value).replace(/\D/g, "").slice(0, 9) : ""
   );
+  const noFill = useNoAutofill();
   function format(d) {
     if (d.length <= 2) return d;
     return `${d.slice(0, 2)}-${d.slice(2)}`;
@@ -101,11 +114,13 @@ function EinInput({ id, value, onChange }) {
       maxLength={10}
       className={BASE_INPUT}
       {...NO_FILL}
+      {...noFill}
     />
   );
 }
 
 function DigitsInput({ id, value, onChange, maxLen, placeholder }) {
+  const noFill = useNoAutofill();
   function handleChange(e) {
     const d = e.target.value.replace(/\D/g, "").slice(0, maxLen);
     onChange(d || null);
@@ -121,6 +136,7 @@ function DigitsInput({ id, value, onChange, maxLen, placeholder }) {
       maxLength={maxLen}
       className={BASE_INPUT}
       {...NO_FILL}
+      {...noFill}
     />
   );
 }
@@ -178,6 +194,7 @@ function BoolToggle({ id, value, onChange, label }) {
 export default function FieldInput({ fieldDef, value, onChange }) {
   const { type, options, placeholder, label } = fieldDef;
   const id = useId();
+  const noFill = useNoAutofill();
 
   // `htmlFor` only applies cleanly to a single focusable control. Compound
   // widgets (tristate) supply their own aria-label on the group instead, so
@@ -248,6 +265,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
         placeholder={placeholder ?? ""}
         className={BASE_INPUT}
         {...NO_FILL}
+        {...noFill}
       />
     );
   }
@@ -260,7 +278,9 @@ export default function FieldInput({ fieldDef, value, onChange }) {
         onChange={(e) => onChange(e.target.value || null)}
         className={BASE_INPUT}
         style={{ colorScheme: "dark" }}
-        {...NO_FILL}
+        autoComplete="off"
+        data-lpignore="true"
+        data-form-type="other"
       />
     );
   }
@@ -279,6 +299,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
           placeholder={placeholder ?? ""}
           className={BASE_INPUT + " resize-none"}
           {...NO_FILL}
+          {...noFill}
         />
       </div>
     );
@@ -293,6 +314,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
       placeholder={placeholder ?? ""}
       className={BASE_INPUT}
       {...NO_FILL}
+      {...noFill}
     />
   );
 }

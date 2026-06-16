@@ -1,6 +1,17 @@
 const SPOUSE_FILING_STATUSES = ["married_filing_jointly", "married_filing_separately", "qualifying_surviving_spouse"];
 const hasSpouse = (data) => SPOUSE_FILING_STATUSES.includes(data?.filing_status);
 
+function ageAsOfYearEnd(dob, sectionData) {
+  if (!dob) return null;
+  const taxYear = Number(sectionData?.tax_year) || new Date().getFullYear();
+  const birth = new Date(dob + "T00:00:00");
+  const dec31 = new Date(taxYear, 11, 31);
+  let age = dec31.getFullYear() - birth.getFullYear();
+  const m = dec31.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && dec31.getDate() < birth.getDate())) age--;
+  return age > 0 ? age : null;
+}
+
 export const schema = {
   label: "Household & Filing",
   description: "Your filing status, residence, and family situation. These fields affect nearly every calculation in the scanner.",
@@ -43,8 +54,9 @@ export const schema = {
           key: "age",
           label: "Age",
           type: "number",
-          description: "Your age as of December 31 of the tax year. Determines catch-up contribution eligibility (age 50+), IRA deductibility, Medicare, and senior additional standard deduction (age 65+).",
-          source: "Your date of birth. The age that matters is your age on December 31 of the tax year.",
+          derivedFrom: (groupData, sectionData) => ageAsOfYearEnd(groupData?.dob, sectionData),
+          description: "Your age as of December 31 of the tax year. Auto-calculated from Date of Birth. Determines catch-up contribution eligibility (age 50+), IRA deductibility, Medicare, and senior additional standard deduction (age 65+).",
+          source: "Calculated automatically from your Date of Birth.",
         },
       ],
     },
@@ -202,8 +214,9 @@ export const schema = {
           key: "age",
           label: "Spouse Age",
           type: "number",
-          description: "Spouse's age as of December 31. Determines catch-up contributions and senior standard deduction.",
-          source: "Spouse's date of birth, age on December 31.",
+          derivedFrom: (groupData, sectionData) => ageAsOfYearEnd(groupData?.dob, sectionData),
+          description: "Spouse's age as of December 31. Auto-calculated from Spouse Date of Birth. Determines catch-up contributions and senior standard deduction.",
+          source: "Calculated automatically from Spouse Date of Birth.",
         },
         {
           key: "employed",
