@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState, useEffect } from "react";
 import FieldInput from "./FieldInput";
 
 function getNestedValue(obj, path) {
@@ -19,9 +19,21 @@ function setNestedValue(obj, path, value) {
   return result;
 }
 
-export default function FieldGroup({ label, fields, data, onChange, path, defaultOpen = true }) {
+export default function FieldGroup({ label, fields, data, onChange, path, defaultOpen = true, advanced = false, showIf, forceOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
+  const contentId = useId();
   const groupData = path ? (getNestedValue(data, path) ?? {}) : (data ?? {});
+
+  // `forceOpen` (e.g. a search match) must reopen an already-collapsed group.
+  // `useState(defaultOpen)` only reads its argument on the initial render, so
+  // a later prop change alone wouldn't do it — this effect is required.
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
+
+  // `showIf` lets a schema hide an entire group (e.g. "Spouse") when it's
+  // not relevant to the current data (e.g. filing status is Single).
+  if (showIf && !showIf(data)) return null;
 
   function handleFieldChange(fieldKey, value) {
     const fullPath = path ? `${path}.${fieldKey}` : fieldKey;
@@ -29,17 +41,36 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
   }
 
   return (
-    <div className="border border-gray-800 rounded-lg overflow-hidden">
+    <fieldset
+      className={`border rounded-lg overflow-hidden ${advanced ? "border-gray-900" : "border-gray-800"}`}
+    >
+      <legend className="sr-only">{label}</legend>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-850 hover:bg-gray-800 transition-colors text-left"
+        aria-expanded={open}
+        aria-controls={contentId}
+        className={`w-full flex items-center justify-between px-4 py-2.5 transition-colors text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
+          advanced ? "bg-gray-950 hover:bg-gray-900" : "bg-gray-900 hover:bg-gray-800"
+        }`}
       >
-        <span className="text-xs font-semibold text-gray-300 uppercase tracking-wide">{label}</span>
-        <span className="text-gray-600 text-xs">{open ? "▲" : "▼"}</span>
+        <span className="flex items-center gap-2">
+          <span className={`text-xs font-semibold uppercase tracking-wide ${advanced ? "text-gray-500" : "text-gray-300"}`}>
+            {label}
+          </span>
+          {advanced && (
+            <span className="text-[10px] normal-case font-normal text-gray-600 border border-gray-700 rounded px-1.5 py-0.5">
+              Rarely needed
+            </span>
+          )}
+        </span>
+        <span aria-hidden="true" className="text-gray-600 text-xs">{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div className="px-4 py-1 divide-y divide-gray-800">
+        <div id={contentId} className="px-4 py-1 divide-y divide-gray-800">
+          {advanced && (
+            <p className="text-xs text-gray-600 py-2">Only fill these in if they apply to you.</p>
+          )}
           {fields.map((f) => (
             <FieldInput
               key={f.key}
@@ -50,6 +81,6 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
           ))}
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }
