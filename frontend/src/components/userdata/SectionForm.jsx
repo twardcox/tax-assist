@@ -22,9 +22,10 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
     setSearch("");
   }, [data]);
 
+  const pristine = useMemo(() => JSON.stringify(data ?? {}), [data]);
   const isDirty = useMemo(
-    () => JSON.stringify(formState) !== JSON.stringify(deepClone(data)),
-    [formState, data]
+    () => JSON.stringify(formState) !== pristine,
+    [formState, pristine]
   );
 
   function handleGroupChange(newData) {
