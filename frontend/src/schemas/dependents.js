@@ -199,6 +199,7 @@ export const schema = {
         {
           label: "Adoption",
           path: "adoption",
+          advanced: true,
           fields: [
             {
               key: "adopted_this_year",

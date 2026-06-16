@@ -1,3 +1,7 @@
+const RENTAL_TYPES = ["rental_residential", "rental_commercial", "mixed_use"];
+const isRentalProperty = (property) => RENTAL_TYPES.includes(property?.property_type);
+const isPrimaryResidence = (property) => property?.property_type === "primary_residence";
+
 export const schema = {
   label: "Real Estate",
   description: "Each real property you own, including your primary home, second homes, and rental properties. Used for mortgage interest, depreciation, rental loss, and §121 exclusion calculations.",
@@ -148,6 +152,7 @@ export const schema = {
         {
           label: "Rental Use",
           path: "rental_use",
+          showIf: isRentalProperty,
           fields: [
             {
               key: "rental_days",
@@ -175,6 +180,7 @@ export const schema = {
         {
           label: "Primary Residence",
           path: "primary_residence",
+          showIf: isPrimaryResidence,
           fields: [
             {
               key: "years_lived_in",
@@ -201,6 +207,7 @@ export const schema = {
         },
         {
           label: "Special Categories",
+          advanced: true,
           fields: [
             {
               key: "opportunity_zone",
@@ -216,6 +223,11 @@ export const schema = {
               description: "Whether the property is a certified historic structure. Rehabilitation expenses may qualify for the 20% Historic Tax Credit.",
               source: "National Park Service historic register or your state Historic Preservation Office.",
             },
+          ],
+        },
+        {
+          label: "Notes",
+          fields: [
             {
               key: "notes",
               label: "Notes",

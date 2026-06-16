@@ -102,7 +102,9 @@ export default function ListEditor({ fieldDef, items, onChange }) {
                   data={item}
                   onChange={(updated) => updateItem(i, updated)}
                   path={group.path}
-                  defaultOpen={true}
+                  defaultOpen={group.defaultOpen ?? !group.advanced}
+                  advanced={group.advanced}
+                  showIf={group.showIf}
                 />
               ))}
             </div>

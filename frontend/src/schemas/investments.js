@@ -138,6 +138,7 @@ export const schema = {
     },
     {
       label: "Unrealized Positions",
+      advanced: true,
       fields: [
         {
           key: "unrealized_gains",
@@ -158,6 +159,7 @@ export const schema = {
     {
       label: "Tax-Loss Harvesting",
       path: "tax_loss_harvesting",
+      advanced: true,
       fields: [
         {
           key: "opportunities_identified",
@@ -238,6 +240,7 @@ export const schema = {
       label: "Opportunity Zone Investments",
       type: "list",
       key: "opportunity_zone_investments",
+      advanced: true,
       addLabel: "Add OZ Investment",
       itemLabel: "OZ Investment",
       description: "Qualified Opportunity Fund investments. These provide capital gains deferral and potential exclusion for gains after 10 years.",

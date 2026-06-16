@@ -76,40 +76,6 @@ export const schema = {
       ],
     },
     {
-      label: "Other Wages",
-      path: "other_wages",
-      fields: [
-        {
-          key: "household_employee_wages",
-          label: "Household Employee Wages (Line 1b)",
-          type: "currency",
-          description: "Wages you received as a household employee (e.g., nanny, housekeeper) that your employer did NOT report on a W-2. Goes on Form 1040 Line 1b.",
-          source: "If your employer failed to give you a W-2, report the cash wages here. Schedule H is filed by the employer, not you.",
-        },
-        {
-          key: "tip_income_unreported",
-          label: "Tip Income Not Reported on W-2 (Line 1c)",
-          type: "currency",
-          description: "Tips you received but did not report to your employer, or tips allocated to you by your employer but not on your W-2 (Form 4137). Goes on Form 1040 Line 1c.",
-          source: "Form 4137 Line 6. Common for servers and other tip-earning workers whose W-2 Box 1 did not include all tips.",
-        },
-        {
-          key: "medicaid_waiver_payments",
-          label: "Medicaid Waiver Payments (Line 1d)",
-          type: "currency",
-          description: "Certain Medicaid waiver payments that you elected to include in earned income under IRS Notice 2014-7 (e.g., payments for caring for a disabled family member at home). Goes on Form 1040 Line 1d.",
-          source: "IRS Notice 2014-7. Most home care providers under a Medicaid waiver program can exclude these; enter only if electing to include for EITC purposes.",
-        },
-        {
-          key: "other_earned_income",
-          label: "Other Earned Income (Line 1h)",
-          type: "currency",
-          description: "Any other earned income not captured above — such as taxable disability payments before minimum retirement age, income from an Indian tribal government, or other unusual earned income. Goes on Form 1040 Line 1h.",
-          source: "Form 1040 Line 1h instructions. Rarely needed; most earned income is covered by W-2 wages or the fields above.",
-        },
-      ],
-    },
-    {
       label: "Self-Employment",
       type: "list",
       key: "self_employment",
@@ -231,6 +197,13 @@ export const schema = {
           description: "Gains from assets held more than 1 year. Taxed at preferential 0%, 15%, or 20% rates.",
           source: "Form 1099-B or Schedule D. Sum all long-term net gains.",
         },
+      ],
+    },
+    {
+      label: "Foreign Accounts & Special Elections",
+      path: "investment_income",
+      advanced: true,
+      fields: [
         {
           key: "schedule_d_not_required",
           label: "Schedule D Not Required",
@@ -390,6 +363,13 @@ export const schema = {
           source: "Form 1099-G Box 2 from your state tax authority.",
         },
         {
+          key: "unemployment_compensation",
+          label: "Unemployment Compensation",
+          type: "currency",
+          description: "All unemployment compensation is fully taxable. Goes on Schedule 1 Line 7.",
+          source: "Form 1099-G Box 1 from your state unemployment office.",
+        },
+        {
           key: "alimony_received",
           label: "Alimony Received",
           type: "currency",
@@ -404,12 +384,19 @@ export const schema = {
           description: "Date of the most recent divorce decree or separation agreement. Required on Schedule 1 Line 2b if you received alimony. Determines whether alimony is taxable (pre-2019) or not (post-2018).",
           source: "Your divorce or separation agreement.",
         },
+      ],
+    },
+    {
+      label: "Less Common Income",
+      path: "other_income",
+      advanced: true,
+      fields: [
         {
-          key: "unemployment_compensation",
-          label: "Unemployment Compensation",
+          key: "farm_income",
+          label: "Farm Income / (Loss)",
           type: "currency",
-          description: "All unemployment compensation is fully taxable. Goes on Schedule 1 Line 7.",
-          source: "Form 1099-G Box 1 from your state unemployment office.",
+          description: "Net farm income or loss from Schedule F. Goes on Schedule 1 Line 6.",
+          source: "Schedule F Line 34 (net farm profit or loss).",
         },
         {
           key: "net_operating_loss",
@@ -438,13 +425,6 @@ export const schema = {
           type: "currency",
           description: "Taxable prizes, awards, and contest winnings. Goes on Schedule 1 Line 8z (Other income).",
           source: "Form 1099-MISC box 3, or Form 1099-NEC.",
-        },
-        {
-          key: "farm_income",
-          label: "Farm Income / (Loss)",
-          type: "currency",
-          description: "Net farm income or loss from Schedule F. Goes on Schedule 1 Line 6.",
-          source: "Schedule F Line 34 (net farm profit or loss).",
         },
         {
           key: "other_amount",
@@ -481,11 +461,18 @@ export const schema = {
           source: "Form 5498-SA or your HSA account statements.",
         },
         {
-          key: "moving_expenses_military",
-          label: "Military Moving Expenses",
+          key: "ira_deduction",
+          label: "IRA Deduction",
           type: "currency",
-          description: "Moving expenses for active-duty military members ordered to a new permanent station. Only members of the Armed Forces on active duty qualify. Schedule 1 Line 14.",
-          source: "Form 3903 (Moving Expenses). Only available for military members under orders.",
+          description: "Deductible traditional IRA contributions (subject to income limits if you or a spouse have an employer plan). Schedule 1 Line 20.",
+          source: "Your IRA contribution records. Deductibility depends on your AGI and retirement plan access.",
+        },
+        {
+          key: "student_loan_interest",
+          label: "Student Loan Interest",
+          type: "currency",
+          description: "Interest paid on qualified student loans. Up to $2,500 deductible (phases out at higher AGI). Schedule 1 Line 21.",
+          source: "Form 1098-E from your loan servicer.",
         },
         {
           key: "self_employed_se_tax_deduction",
@@ -508,12 +495,19 @@ export const schema = {
           description: "Health, dental, and long-term care insurance premiums paid for yourself and family as a self-employed person. Deductible above the line. Schedule 1 Line 17.",
           source: "Your insurance premium statements. Must not exceed your business net profit.",
         },
+      ],
+    },
+    {
+      label: "Less Common Adjustments",
+      path: "adjustments_to_income",
+      advanced: true,
+      fields: [
         {
-          key: "ira_deduction",
-          label: "IRA Deduction",
+          key: "moving_expenses_military",
+          label: "Military Moving Expenses",
           type: "currency",
-          description: "Deductible traditional IRA contributions (subject to income limits if you or a spouse have an employer plan). Schedule 1 Line 20.",
-          source: "Your IRA contribution records. Deductibility depends on your AGI and retirement plan access.",
+          description: "Moving expenses for active-duty military members ordered to a new permanent station. Only members of the Armed Forces on active duty qualify. Schedule 1 Line 14.",
+          source: "Form 3903 (Moving Expenses). Only available for military members under orders.",
         },
         {
           key: "alimony_paid",
@@ -531,13 +525,6 @@ export const schema = {
           source: "Your ex-spouse's SSN (from prior returns or divorce records).",
         },
         {
-          key: "student_loan_interest",
-          label: "Student Loan Interest",
-          type: "currency",
-          description: "Interest paid on qualified student loans. Up to $2,500 deductible (phases out at higher AGI). Schedule 1 Line 21.",
-          source: "Form 1098-E from your loan servicer.",
-        },
-        {
           key: "other_adjustments_amount",
           label: "Other Adjustments Amount",
           type: "currency",
@@ -550,6 +537,41 @@ export const schema = {
           type: "text",
           description: "Brief description of the other adjustment on Line 24z.",
           source: "Your own description.",
+        },
+      ],
+    },
+    {
+      label: "Uncommon Earned Income",
+      path: "other_wages",
+      advanced: true,
+      fields: [
+        {
+          key: "household_employee_wages",
+          label: "Household Employee Wages (Line 1b)",
+          type: "currency",
+          description: "Wages you received as a household employee (e.g., nanny, housekeeper) that your employer did NOT report on a W-2. Goes on Form 1040 Line 1b.",
+          source: "If your employer failed to give you a W-2, report the cash wages here. Schedule H is filed by the employer, not you.",
+        },
+        {
+          key: "tip_income_unreported",
+          label: "Tip Income Not Reported on W-2 (Line 1c)",
+          type: "currency",
+          description: "Tips you received but did not report to your employer, or tips allocated to you by your employer but not on your W-2 (Form 4137). Goes on Form 1040 Line 1c.",
+          source: "Form 4137 Line 6. Common for servers and other tip-earning workers whose W-2 Box 1 did not include all tips.",
+        },
+        {
+          key: "medicaid_waiver_payments",
+          label: "Medicaid Waiver Payments (Line 1d)",
+          type: "currency",
+          description: "Certain Medicaid waiver payments that you elected to include in earned income under IRS Notice 2014-7 (e.g., payments for caring for a disabled family member at home). Goes on Form 1040 Line 1d.",
+          source: "IRS Notice 2014-7. Most home care providers under a Medicaid waiver program can exclude these; enter only if electing to include for EITC purposes.",
+        },
+        {
+          key: "other_earned_income",
+          label: "Other Earned Income (Line 1h)",
+          type: "currency",
+          description: "Any other earned income not captured above — such as taxable disability payments before minimum retirement age, income from an Indian tribal government, or other unusual earned income. Goes on Form 1040 Line 1h.",
+          source: "Form 1040 Line 1h instructions. Rarely needed; most earned income is covered by W-2 wages or the fields above.",
         },
       ],
     },

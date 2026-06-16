@@ -1,3 +1,5 @@
+const isMarketplaceCoverage = (data) => data?.insurance?.coverage_type === "marketplace";
+
 export const schema = {
   label: "Healthcare",
   description: "Health insurance, HSA, FSA, medical expenses, and related tax items. Accurate healthcare data unlocks HSA deductions, medical expense itemization, and self-employed health insurance deductions.",
@@ -231,6 +233,7 @@ export const schema = {
     {
       label: "Premium Tax Credit (Marketplace)",
       path: "premium_tax_credit",
+      showIf: isMarketplaceCoverage,
       fields: [
         {
           key: "marketplace_coverage",

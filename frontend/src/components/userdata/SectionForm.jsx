@@ -87,9 +87,17 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
         {visibleGroups.map(({ group, fields }) => {
           if (group.type === "list") {
             return (
-              <div key={group.key} className="border border-gray-800 rounded-lg p-4">
-                <h3 className="text-xs font-semibold text-gray-300 uppercase tracking-wide mb-3">
-                  {group.label}
+              <div
+                key={group.key}
+                className={`border rounded-lg p-4 ${group.advanced ? "border-gray-900" : "border-gray-800"}`}
+              >
+                <h3 className="flex items-center gap-2 text-xs font-semibold text-gray-300 uppercase tracking-wide mb-3">
+                  <span className={group.advanced ? "text-gray-500" : ""}>{group.label}</span>
+                  {group.advanced && (
+                    <span className="text-[10px] normal-case font-normal text-gray-600 border border-gray-700 rounded px-1.5 py-0.5">
+                      Rarely needed
+                    </span>
+                  )}
                 </h3>
                 <ListEditor
                   fieldDef={group}
