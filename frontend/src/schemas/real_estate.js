@@ -153,7 +153,7 @@ export const schema = {
           label: "Rental Use",
           path: "rental_use",
           showIf: isRentalProperty,
-          description: "Rental income and expenses for Schedule E are entered in Income > Rental Income. These fields track property-specific usage facts used for the vacation-home test.",
+          description: "Use these property-level fields for rental fact tracking (including gross rent). Enter the same gross rent amount here and in Income > Rental Income so both stay in sync.",
           fields: [
             {
               key: "gross_rental_income",
