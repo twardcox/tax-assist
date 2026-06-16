@@ -24,8 +24,7 @@ export const schema = {
             {
               key: "ein",
               label: "EIN",
-              type: "text",
-              placeholder: "XX-XXXXXXX",
+              type: "ein",
               description: "Employer Identification Number. Sole proprietors without employees can use their SSN instead.",
               source: "Your IRS EIN confirmation letter (CP-575) or prior tax return.",
             },
@@ -70,8 +69,7 @@ export const schema = {
             {
               key: "naics_code",
               label: "NAICS Code",
-              type: "text",
-              placeholder: "e.g., 541511",
+              type: "naics",
               description: "6-digit industry code. Helps classify the business type for QBI and other calculations.",
               source: "Schedule C Line B, or look up at census.gov/naics.",
             },

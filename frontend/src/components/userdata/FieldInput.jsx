@@ -40,8 +40,88 @@ function CurrencyInput({ id, value, onChange }) {
         onFocus={handleFocus}
         className={BASE_INPUT + " pl-5"}
         placeholder="0"
+        {...NO_FILL}
       />
     </div>
+  );
+}
+
+const NO_FILL = { autoComplete: "off", "data-lpignore": "true", "data-form-type": "other" };
+
+function SsnInput({ id, value, onChange }) {
+  const [digits, setDigits] = useState(() =>
+    value ? String(value).replace(/\D/g, "").slice(0, 9) : ""
+  );
+  function format(d) {
+    if (d.length <= 3) return d;
+    if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`;
+    return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`;
+  }
+  function handleChange(e) {
+    const d = e.target.value.replace(/\D/g, "").slice(0, 9);
+    setDigits(d);
+    onChange(d.length > 0 ? format(d) : null);
+  }
+  return (
+    <input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      value={format(digits)}
+      onChange={handleChange}
+      placeholder="XXX-XX-XXXX"
+      maxLength={11}
+      className={BASE_INPUT}
+      {...NO_FILL}
+    />
+  );
+}
+
+function EinInput({ id, value, onChange }) {
+  const [digits, setDigits] = useState(() =>
+    value ? String(value).replace(/\D/g, "").slice(0, 9) : ""
+  );
+  function format(d) {
+    if (d.length <= 2) return d;
+    return `${d.slice(0, 2)}-${d.slice(2)}`;
+  }
+  function handleChange(e) {
+    const d = e.target.value.replace(/\D/g, "").slice(0, 9);
+    setDigits(d);
+    onChange(d.length > 0 ? format(d) : null);
+  }
+  return (
+    <input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      value={format(digits)}
+      onChange={handleChange}
+      placeholder="XX-XXXXXXX"
+      maxLength={10}
+      className={BASE_INPUT}
+      {...NO_FILL}
+    />
+  );
+}
+
+function DigitsInput({ id, value, onChange, maxLen, placeholder }) {
+  function handleChange(e) {
+    const d = e.target.value.replace(/\D/g, "").slice(0, maxLen);
+    onChange(d || null);
+  }
+  return (
+    <input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      value={value ?? ""}
+      onChange={handleChange}
+      placeholder={placeholder ?? ""}
+      maxLength={maxLen}
+      className={BASE_INPUT}
+      {...NO_FILL}
+    />
   );
 }
 
@@ -126,6 +206,21 @@ export default function FieldInput({ fieldDef, value, onChange }) {
   if (type === "currency") {
     return row(<CurrencyInput id={id} value={value} onChange={onChange} />);
   }
+  if (type === "ssn") {
+    return row(<SsnInput id={id} value={value} onChange={onChange} />);
+  }
+  if (type === "ein") {
+    return row(<EinInput id={id} value={value} onChange={onChange} />);
+  }
+  if (type === "routing") {
+    return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={9} placeholder="9-digit ABA number" />);
+  }
+  if (type === "zip") {
+    return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={10} placeholder="XXXXX" />);
+  }
+  if (type === "naics") {
+    return row(<DigitsInput id={id} value={value} onChange={onChange} maxLen={6} placeholder="6-digit code" />);
+  }
   if (type === "select") {
     return row(
       <select
@@ -133,6 +228,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
         className={BASE_SELECT}
+        {...NO_FILL}
       >
         <option value="">— select —</option>
         {options?.map((o) => (
@@ -151,6 +247,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
         onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
         placeholder={placeholder ?? ""}
         className={BASE_INPUT}
+        {...NO_FILL}
       />
     );
   }
@@ -162,6 +259,8 @@ export default function FieldInput({ fieldDef, value, onChange }) {
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
         className={BASE_INPUT}
+        style={{ colorScheme: "dark" }}
+        {...NO_FILL}
       />
     );
   }
@@ -179,6 +278,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
           rows={3}
           placeholder={placeholder ?? ""}
           className={BASE_INPUT + " resize-none"}
+          {...NO_FILL}
         />
       </div>
     );
@@ -192,6 +292,7 @@ export default function FieldInput({ fieldDef, value, onChange }) {
       onChange={(e) => onChange(e.target.value || null)}
       placeholder={placeholder ?? ""}
       className={BASE_INPUT}
+      {...NO_FILL}
     />
   );
 }

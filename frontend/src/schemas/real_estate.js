@@ -153,6 +153,7 @@ export const schema = {
           label: "Rental Use",
           path: "rental_use",
           showIf: isRentalProperty,
+          description: "Rental income and expenses for Schedule E are entered in Income > Rental Income. These fields track property-specific usage facts used for the vacation-home test.",
           fields: [
             {
               key: "rental_days",
@@ -167,13 +168,6 @@ export const schema = {
               type: "number",
               description: "Days you used the property personally. If personal use > 14 days AND > 10% of rental days, the property is treated as a vacation home with limited loss deductions.",
               source: "Your own records. Days you stayed at the property.",
-            },
-            {
-              key: "gross_rental_income",
-              label: "Gross Rental Income",
-              type: "currency",
-              description: "Total rent received before expenses.",
-              source: "Your rental ledger, bank deposits, or platform payout history.",
             },
           ],
         },

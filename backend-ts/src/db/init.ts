@@ -161,6 +161,23 @@ CREATE TABLE IF NOT EXISTS section_data (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS households (
+  user_id TEXT NOT NULL,
+  tax_year INTEGER NOT NULL,
+  updated_at TEXT NOT NULL,
+  pec_fund_taxpayer INTEGER NOT NULL DEFAULT 0,
+  pec_fund_spouse INTEGER NOT NULL DEFAULT 0,
+  direct_deposit_routing TEXT,
+  direct_deposit_account TEXT,
+  direct_deposit_type TEXT,
+  allow_third_party INTEGER NOT NULL DEFAULT 0,
+  designee_name TEXT,
+  designee_phone TEXT,
+  designee_pin TEXT,
+  PRIMARY KEY (user_id, tax_year),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

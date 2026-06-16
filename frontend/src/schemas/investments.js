@@ -103,38 +103,13 @@ export const schema = {
       ],
     },
     {
-      label: "Realized Gains & Losses",
-      path: "realized_gains_losses_this_year",
-      fields: [
-        {
-          key: "short_term_gains",
-          label: "Short-Term Gains",
-          type: "currency",
-          description: "Gains from assets sold after holding 1 year or less. Taxed as ordinary income.",
-          source: "Form 1099-B or your brokerage's year-end tax statement. Also on Schedule D.",
-        },
-        {
-          key: "short_term_losses",
-          label: "Short-Term Losses",
-          type: "currency",
-          description: "Losses from short-term sales. Offset short-term gains first, then long-term gains, then up to $3,000 of ordinary income.",
-          source: "Form 1099-B or Schedule D.",
-        },
-        {
-          key: "long_term_gains",
-          label: "Long-Term Gains",
-          type: "currency",
-          description: "Gains from assets held more than 1 year. Taxed at 0%, 15%, or 20% depending on income.",
-          source: "Form 1099-B or Schedule D.",
-        },
-        {
-          key: "long_term_losses",
-          label: "Long-Term Losses",
-          type: "currency",
-          description: "Losses from long-term sales. Offset long-term gains first, then short-term gains, then up to $3,000 of ordinary income.",
-          source: "Form 1099-B or Schedule D.",
-        },
-      ],
+      label: "Capital Gains & Losses",
+      type: "callout",
+      goToSection: "income",
+      actionLabel: "Go to Income →",
+      text: () =>
+        "Capital gains and losses for tax reporting (Schedule D) are entered in the Income section under Investment Income. " +
+        "Enter your net short-term and long-term amounts there — that is what flows into your tax calculation.",
     },
     {
       label: "Unrealized Positions",

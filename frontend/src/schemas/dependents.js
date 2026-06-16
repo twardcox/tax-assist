@@ -24,8 +24,7 @@ export const schema = {
             {
               key: "ssn",
               label: "Social Security Number",
-              type: "text",
-              placeholder: "XXX-XX-XXXX",
+              type: "ssn",
               description: "The dependent's SSN is required to claim the Child Tax Credit, EITC, and other dependent-based credits. Stored locally only.",
               source: "Their Social Security card. Apply at ssa.gov if not yet obtained.",
             },

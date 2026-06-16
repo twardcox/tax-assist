@@ -74,15 +74,15 @@ export const schema = {
           key: "contributions_ytd",
           label: "Contributions YTD",
           type: "currency",
-          description: "HSA contributions you made directly this year (outside of payroll). Direct HSA contributions are deductible on Schedule 1. Add to payroll contributions (W-2 Box 12, Code W) for total.",
+          description: "Total direct HSA contributions you made this year (outside of payroll). Used here for contribution limit tracking and planning analysis. To claim the Schedule 1 deduction, also enter this amount in Income → Adjustments → HSA Contributions (Outside Payroll).",
           source: "Your HSA account statements or contribution records.",
         },
         {
           key: "employer_contributions_ytd",
           label: "Employer Contributions YTD",
           type: "currency",
-          description: "Contributions your employer made to your HSA. Excluded from your income. Count toward the annual contribution limit.",
-          source: "W-2 Box 12, Code W (includes both employee payroll and employer contributions).",
+          description: "Contributions your employer made to your HSA this year. Excluded from your income. Counts toward the annual limit (2025: $4,300 self / $8,550 family). Reported on W-2 Box 12, Code W.",
+          source: "W-2 Box 12, Code W (includes both employer and employee payroll contributions).",
         },
         {
           key: "distributions_this_year",

@@ -24,8 +24,7 @@ export const schema = {
             {
               key: "employer_ein",
               label: "Employer EIN",
-              type: "text",
-              placeholder: "XX-XXXXXXX",
+              type: "ein",
               description: "Your employer's federal tax ID number. Used for verification and some state returns.",
               source: "W-2 Box b (Employer identification number).",
             },
@@ -379,8 +378,7 @@ export const schema = {
         {
           key: "alimony_date_of_divorce",
           label: "Date of Divorce / Separation Agreement",
-          type: "text",
-          placeholder: "MM/DD/YYYY",
+          type: "date",
           description: "Date of the most recent divorce decree or separation agreement. Required on Schedule 1 Line 2b if you received alimony. Determines whether alimony is taxable (pre-2019) or not (post-2018).",
           source: "Your divorce or separation agreement.",
         },
@@ -519,8 +517,7 @@ export const schema = {
         {
           key: "alimony_recipient_ssn",
           label: "Alimony Recipient SSN",
-          type: "text",
-          placeholder: "XXX-XX-XXXX",
+          type: "ssn",
           description: "Social Security Number of the person who received the alimony you paid. Required on Schedule 1 Line 19b if you deducted alimony paid.",
           source: "Your ex-spouse's SSN (from prior returns or divorce records).",
         },

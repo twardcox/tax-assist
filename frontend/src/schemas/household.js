@@ -28,8 +28,7 @@ export const schema = {
         {
           key: "ssn",
           label: "Social Security Number",
-          type: "text",
-          placeholder: "XXX-XX-XXXX",
+          type: "ssn",
           description: "Your SSN is required on Form 1040 and all schedules. Stored locally only — never transmitted to third parties.",
           source: "Your Social Security card.",
         },
@@ -145,7 +144,7 @@ export const schema = {
         {
           key: "zip",
           label: "ZIP Code",
-          type: "text",
+          type: "zip",
           placeholder: "78701",
           description: "Five-digit ZIP code. Used to identify local tax jurisdictions.",
           source: "Your mailing address.",
@@ -188,8 +187,7 @@ export const schema = {
         {
           key: "ssn",
           label: "Spouse SSN",
-          type: "text",
-          placeholder: "XXX-XX-XXXX",
+          type: "ssn",
           description: "Spouse's Social Security Number. Required on Form 1040 for joint and MFS returns. Stored locally only.",
           source: "Spouse's Social Security card.",
         },
@@ -269,8 +267,7 @@ export const schema = {
         {
           key: "routing_number",
           label: "Bank Routing Number",
-          type: "text",
-          placeholder: "9 digits",
+          type: "routing",
           description: "Your bank's 9-digit ABA routing number for direct deposit of your refund. The routing number is the first 9 digits at the bottom-left of a check.",
           source: "Form 1040 Line 35b. Your check or online banking account details.",
         },
@@ -477,8 +474,7 @@ export const schema = {
         {
           key: "former_spouse_ssn",
           label: "Former Spouse SSN",
-          type: "text",
-          placeholder: "XXX-XX-XXXX",
+          type: "ssn",
           description: "If you made 2025 estimated tax payments jointly with a former spouse and are now filing separately, enter their Social Security Number so the IRS can allocate the payments correctly.",
           source: "Form 1040 Line 26 footnote field. Only required if estimated payments were made jointly with a former spouse on a joint 2024 return and you are now filing separately.",
         },
