@@ -1,6 +1,6 @@
-function ageAsOfYearEnd(dob) {
+function ageAsOfYearEnd(dob, sectionData) {
   if (!dob) return null;
-  const taxYear = new Date().getFullYear();
+  const taxYear = Number(sectionData?.tax_year) || new Date().getFullYear();
   const birth = new Date(dob + "T00:00:00");
   const dec31 = new Date(taxYear, 11, 31);
   let age = dec31.getFullYear() - birth.getFullYear();
