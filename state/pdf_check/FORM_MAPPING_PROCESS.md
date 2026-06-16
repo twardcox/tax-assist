@@ -27,6 +27,7 @@ that JavaScript. Every calculated field must be filled explicitly by our code.
 | `mapFieldPositions.mjs [form.pdf]` | Lists every field sorted by page → Y (top→bottom) → X (left→right) |
 | `labelAllForms.mjs` | Fills every text field with its own short name; saves `labeled_all_*.pdf` |
 | `flattenLabeledForms.mjs` | Flattens the labeled PDFs → `flat_labeled_*.pdf` so markitdown can read them |
+| `verifyFields.mjs <userId> <taxYear> <formKey>` | Fills a form from real DB data with flatten() neutralized, dumps live field name→value pairs — the most reliable verification method (see Step 9a) |
 
 Run all four in sequence when starting a new form:
 
@@ -212,19 +213,49 @@ coordinates to verify checkbox positions visually against the form image.
 
 ## Step 9 — Verify with test data
 
+There are two ways to verify a filled form against seeded test data. **Prefer the live field
+dump (9a)** — it reads the actual AcroForm field values with zero ambiguity. Form 1040's
+two-column layout is dense enough that markitdown's text extraction can scramble which value
+appears next to which line label (confirmed 2026-06-16), so treat markitdown output (9b) as a
+secondary cross-check for checkbox positions and visual layout, not as ground truth for values.
+
+### Step 9a — Live AcroForm field dump (preferred)
+
+```
+cd backend-ts
+node -e "import('node:sqlite').then(({DatabaseSync}) => {
+  const db = new DatabaseSync('d:\\\\programs\\\\tax-assist\\\\state\\\\transactions.db');
+  console.log(JSON.stringify(db.prepare('SELECT id FROM users WHERE email = ?').get('alex.carter@example.com')));
+})"
+npx tsx scripts/verifyFields.mjs <userId> 2025 <formKey>
+```
+
+This loads the seeded user's data straight from the DB (the same `loadAllUserData` +
+`computeTaxFigures` path the API route uses), calls `fillSingleIrsForm` with the internal
+`flatten()` call neutralized, and prints every non-empty field as `fieldName\tvalue`. Compare
+each value directly against:
+- The traceability comments in `backend-ts/src/scripts/createTestUser.ts`
+  (each seed value is globally unique so it's easy to grep)
+- The expected values from `GET /api/tax-forms/compute?tax_year=2025` (the `computed` object)
+
+Fix any mismatches in `fillIrsForms.ts` and repeat until every field is correct.
+
+### Step 9b — markitdown on the downloaded PDF (secondary / visual cross-check)
+
 1. Start the app: `npm run dev` in `backend-ts` and `frontend`
 2. Log in as `alex.carter@example.com` / `TestUser123!`
-3. Navigate to **Tax Forms** and open the new form tab
-4. Click **Download PDF**
-5. Run markitdown on the downloaded file:
+3. Navigate to **Tax Forms** and open the new form tab, or call
+   `GET /api/tax-forms/preview-pdf?form=<formKey>` directly
+4. Run markitdown on the downloaded file:
    ```
    python -m markitdown ~/Downloads/<form>.pdf
    ```
-6. Compare every filled value against:
-   - The traceability comments in `backend-ts/src/scripts/createTestUser.ts`
-     (each seed value is globally unique so it's easy to grep)
-   - The expected values from the tax calculator output
-7. Fix any mismatches in `fillIrsForms.ts` and repeat until every field is correct
+5. For simple single-column forms (B, C, D, SE, F, H) the label-to-value association is
+   reliable. For Form 1040's two-column income/credits sections, only trust that a value is
+   *present somewhere* in the output — don't trust which line label it's printed next to.
+6. Checkboxes are not readable via markitdown at all — use `mapFieldPositions.mjs` X,Y
+   coordinates to verify checkbox positions visually against the form image, or check them in
+   the Step 9a field dump (`[X]` / empty).
 
 ---
 

@@ -57,10 +57,25 @@ not the name row). Correct name fields: f1_14–f1_19. Filing status checkboxes 
 (Checkbox_ReadOrder subform for Single/MFJ/MFS; top-level c1_8 for HOH/QSS). Dependents
 now filled from data.dependents.dependents array. Digital assets checkbox fixed to c1_10.
 
-### All schedules verified (2026-06-13)
-All forms verified via markitdown on actual filled PDFs. No field mismatches found.
-One annotation bug fixed in FIELD_MAP.md: Schedule SE Line 3 was documented as `schedule_c_profit` but actually fills `schedule_c_profit + farm_income`. The fill code was always correct; only the annotation was wrong.
-Also added to FIELD_MAP.md: Sch SE `f1_3[0]` (Line 1a farm profit), Sch B header name/SSN fields.
+### All schedules verified — live AcroForm field dump (2026-06-16)
+Initial pass used markitdown text-extraction, but Form 1040's two-column layout scrambles
+which value appears next to which line label in markitdown's output — unreliable for ground
+truth. Re-verified all 8 forms (1040, Sch 1, B, C, D, SE, F, H) by calling `fillSingleIrsForm`
+directly against the seeded test user's real DB data, with the internal `flatten()` neutralized
+so the AcroForm fields stay live and readable unambiguously via `pdf-lib`. New permanent tool:
+`backend-ts/scripts/verifyFields.mjs <userId> <taxYear> <formKey>` (see `FORM_MAPPING_PROCESS.md`
+Step 9a). Every field on every form matched the seeded data and computed values exactly.
+
+Annotation bugs found and fixed in FIELD_MAP.md (the fill code was already correct in all cases —
+only the documentation was stale):
+- Sch SE Line 3: was documented as `schedule_c_profit`, actually fills `schedule_c_profit + farm_income`
+- Form 1040 Line 19: was documented as `child_tax_credit`, actually fills `ctc_with_odc`
+- Form 1040 Line 20: was documented "not filled (zero)", actually fills `schedule3_line8`
+- Form 1040 Line 35a/36: refund is split against `household.payments.apply_to_next_year`, not a flat mirror of Line 34
+- Sch D Line 14 (`f1_42`): is correctly left blank (no LT loss carryover seeded); the actual LTCG output is Line 15 (`f1_43`)
+- Sch D Page 2 field is `f2_1[0]`, not `f2_2[0]`
+- Sch SE `f1_3[0]` (Line 1a) and Sch B header name/SSN fields were missing from the map; added
+- Sch H section was entirely undocumented; added in full
 
 ## Next Sprint Goals
 

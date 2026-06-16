@@ -160,7 +160,8 @@ Tab order does not match visual reading order, but the visual grouping is defini
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
 | f2_25[0] | 34 | Amount overpaid | `refund` | ✓ |
-| f2_26[0] | 35a | Amount of line 34 to refund | `refund` | ✓ FIXED |
+| f2_26[0] | 35a | Amount of line 34 to refund | `refund − apply_to_next_year` (direct refund) | ✓ verified live 2026-06-16 |
+| f2_27[0] | 36 | Amount applied to 2026 estimated tax | `household.payments.apply_to_next_year` | ✓ verified live 2026-06-16 |
 | f2_28[0] | 37 | Amount owed | `amount_owed` | ✓ |
 
 ---
@@ -284,18 +285,22 @@ All expense fields verified via markitdown 2026-06-13. Two-column layout: Lines 
 ---
 
 ## Schedule D (f1040sd.pdf)
-All fields verified via markitdown 2026-06-13. Test values: stcg=7,070 ltcg=8,080 total=15,150.
+Verified via live AcroForm field dump 2026-06-16 (pdf-lib, fields read directly — no markitdown
+text-extraction ambiguity). Test values: stcg=7,070 ltcg=8,080 total=15,150.
+Two stale annotations fixed: f1_42[0] is NOT filled by the code — it's Line 14 (long-term capital
+loss carryover), which this test user has none of, so it's correctly blank. The actual "net
+long-term gain/(loss)" output is Line 15 (f1_43[0]). Also Page 2 field is `f2_1[0]`, not `f2_2[0]`.
 
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| Table_PartI.Row1a.f1_3[0] | 1a (desc) | Description | "Various" | ✓ md✓ |
-| Table_PartI.Row1a.f1_6[0] | 1a (gain) | Short-term gain/(loss) | `stcg` | ✓ md✓ |
-| f1_22[0] | 7 | Net short-term gain/(loss) | `stcg` | ✓ md✓ |
-| Table_PartII.Row8a.f1_23[0] | 8a (desc) | Description | "Various" | ✓ md✓ |
-| Table_PartII.Row8a.f1_26[0] | 8a (gain) | Long-term gain/(loss) | `ltcg` | ✓ md✓ |
-| f1_42[0] | 14 | Net long-term gain/(loss) | `ltcg` | ✓ md✓ |
-| f1_43[0] | 15 | Carry to Form 1040 | `ltcg (if > 0)` | ✓ md✓ |
-| Page2.f2_2[0] | 16 | Combined net gain/(loss) | `stcg + ltcg` | ✓ md✓ |
+| Table_PartI[0].Row1a[0].f1_3[0] | 1a (desc) | Description | "Various" | ✓ live✓ |
+| Table_PartI[0].Row1a[0].f1_6[0] | 1a (gain) | Short-term gain/(loss) | `stcg` | ✓ live✓ |
+| f1_22[0] | 7 | Net short-term gain/(loss) | `stcg` | ✓ live✓ |
+| Table_PartII[0].Row8a[0].f1_23[0] | 8a (desc) | Description | "Various" | ✓ live✓ |
+| Table_PartII[0].Row8a[0].f1_26[0] | 8a (gain) | Long-term gain/(loss) | `ltcg` | ✓ live✓ |
+| f1_42[0] | 14 | Long-term capital loss carryover | — (not filled; no carryover data) | not filled (correct) |
+| f1_43[0] | 15 | Net long-term gain/(loss), carries to Form 1040 | `ltcg` (if ≠ 0) | ✓ live✓ FIXED |
+| Page2[0].f2_1[0] | 16 | Combined net gain/(loss) | `stcg + ltcg` | ✓ live✓ FIXED (was annotated f2_2[0]) |
 
 ---
 
@@ -321,6 +326,36 @@ Note: field f1_3[0] fills Line 1a (farm profit); f1_1[0] is the header name, not
 | f1_20[0] | 11 | Medicare portion (2.9%) | `medSe` (= seNet × 0.029) | ✓ md✓ |
 | f1_21[0] | 12 | SE TAX TOTAL | `se_tax` (from TaxCalculator) | ✓ md✓ |
 | f1_22[0] | 13 | Deduction for ½ SE tax | `se_tax_deduction` | ✓ md✓ |
+
+---
+
+## Schedule H (f1040sh.pdf)
+Verified via live AcroForm field dump 2026-06-16 (added to this map for the first time — was previously
+undocumented). Test values: ssWages=18,000 ssTax=2,232 medicareWages=18,000 medicareTax=522
+part1Total=2,754 state=TX stateContr=378 futaWages=7,000 futaTax=42 total=2,796.
+
+| Field | Line | Form Label | ComputedValues Key | Status |
+|---|---|---|---|---|
+| f1_1[0] | (header) | Name | `taxpayer_name` | ✓ live✓ |
+| f1_2[0] | (header) | SSN | `taxpayer_ssn` | ✓ live✓ |
+| c1_1[0] | A | Cash wages ≥ $2,800 (Yes) | `sch_h_total_wages >= 2800` | ✓ live✓ |
+| f1_4[0] | 1 | Total cash wages subject to SS tax | `sch_h_ss_wages` | ✓ live✓ |
+| f1_5[0] | 2 | SS tax (×12.4%) | `sch_h_ss_tax` | ✓ live✓ |
+| f1_6[0] | 3 | Total cash wages subject to Medicare tax | `sch_h_medicare_wages` | ✓ live✓ |
+| f1_7[0] | 4 | Medicare tax (×2.9%) | `sch_h_medicare_tax` | ✓ live✓ |
+| f1_10[0] | 7 | Federal income tax withheld | `sch_h_fed_withheld` | ✓ (not seeded, $0) |
+| f1_11[0] | 8 | Total SS+Medicare+FIT (Lines 2+4+6+7) | `sch_h_part1_total` | ✓ live✓ |
+| c1_4[0] | 9 | FUTA wages ≥ $1,000 in any quarter (Yes) | `sch_h_futa_wages > 0` | ✓ live✓ |
+| Page2.Line10[0].c2_1[0] | 10 | Paid state UI in one state only (Yes) | always true if FUTA applies | ✓ live✓ |
+| Page2.c2_2[0] | 11 | Paid all state UI by Form 1040 due date (Yes) | always true if FUTA applies | ✓ live✓ |
+| Page2.c2_3[0] | 12 | All wages taxable for FUTA (Yes) | always true if FUTA applies | ✓ live✓ |
+| Page2.f2_1[0] | 13 | State abbreviation | `sch_h_state` | ✓ live✓ |
+| Page2.f2_2[0] | 14 | State unemployment contributions | `sch_h_state_contr` | ✓ live✓ |
+| Page2.f2_3[0] | 15 | Total FUTA-taxable wages | `sch_h_futa_wages` | ✓ live✓ |
+| Page2.f2_4[0] | 16 | FUTA tax (×0.6%) | `sch_h_futa_net` | ✓ live✓ |
+| Page2.f2_31[0] | 25 | Amount from Line 8 | `sch_h_part1_total` | ✓ live✓ |
+| Page2.f2_32[0] | 26 | Total household employment tax → 1040 Line 23 | `sch_h_total` | ✓ live✓ |
+| Page2.c2_5[0] | 27 | Required to file Form 1040 (Yes) | always true | ✓ live✓ |
 
 ---
 
