@@ -65,7 +65,7 @@ export const schema = {
               key: "age_at_year_end",
               label: "Age at Year End",
               type: "number",
-              derivedFrom: (groupData) => ageAsOfYearEnd(groupData?.date_of_birth),
+              derivedFrom: (groupData, sectionData) => ageAsOfYearEnd(groupData?.date_of_birth, sectionData),
               description: "Their age on December 31. Auto-calculated from Date of Birth. Under 17 qualifies for the Child Tax Credit; under 13 for Dependent Care Credit.",
               source: "Calculated automatically from Date of Birth.",
             },
