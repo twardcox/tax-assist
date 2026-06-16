@@ -6,10 +6,9 @@ function ageAsOfYearEnd(dob, sectionData) {
   const taxYear = Number(sectionData?.tax_year) || new Date().getFullYear();
   const birth = new Date(dob + "T00:00:00");
   const dec31 = new Date(taxYear, 11, 31);
-  let age = dec31.getFullYear() - birth.getFullYear();
   const m = dec31.getMonth() - birth.getMonth();
   if (m < 0 || (m === 0 && dec31.getDate() < birth.getDate())) age--;
-  return age > 0 ? age : null;
+  return age >= 0 ? age : null;
 }
 
 export const schema = {
