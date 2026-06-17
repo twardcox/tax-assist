@@ -4,31 +4,31 @@ import { AppError } from "../lib/errors";
 import { createUser, getUserByEmail } from "../db/authRepo";
 import { createAccessToken, hashPassword, logoutToken, verifyPassword } from "../auth/service";
 
+const EmailSchema = z.string().trim().toLowerCase().email().max(254);
+const PasswordSchema = z.string().min(8).max(128);
+const DisplayNameSchema = z.string().trim().max(120);
+
 const RegisterBodySchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-  display_name: z.string().default("")
-});
+  email: EmailSchema,
+  password: PasswordSchema,
+  display_name: DisplayNameSchema.default("")
+}).strict();
 
 const LoginBodySchema = z.object({
-  email: z.string().email(),
-  password: z.string()
-});
+  email: EmailSchema,
+  password: PasswordSchema
+}).strict();
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post("/auth/register", { config: { unauthenticated: true } }, async (request, reply) => {
     const body = RegisterBodySchema.parse(request.body);
-
-    if (body.password.length < 8) {
-      throw new AppError(422, "Password must be at least 8 characters");
-    }
 
     if (getUserByEmail(body.email)) {
       throw new AppError(409, "Email already registered");
     }
 
     const userId = createUser(body.email, hashPassword(body.password), body.display_name);
-    const token = createAccessToken(userId, body.email.toLowerCase().trim());
+    const token = createAccessToken(userId, body.email);
 
     return reply.status(201).send({
       token,

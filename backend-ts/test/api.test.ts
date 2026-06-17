@@ -118,6 +118,73 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("auth routes reject invalid auth payload shapes and weak password", async () => {
+    const app = buildApp();
+
+    const registerUnknownFieldRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "test-unknown@example.com",
+        password: "Test1234!",
+        display_name: "Strict User",
+        role: "admin"
+      }
+    });
+
+    expect(registerUnknownFieldRes.statusCode).toBe(422);
+
+    const registerShortPasswordRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "test-short@example.com",
+        password: "short",
+        display_name: "Short"
+      }
+    });
+
+    expect(registerShortPasswordRes.statusCode).toBe(422);
+
+    const registerOkRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "  MiXeD@Example.com  ",
+        password: "Test1234!",
+        display_name: "  Mixed User  "
+      }
+    });
+
+    expect(registerOkRes.statusCode).toBe(201);
+
+    const loginUnknownFieldRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "mixed@example.com",
+        password: "Test1234!",
+        remember_me: true
+      }
+    });
+
+    expect(loginUnknownFieldRes.statusCode).toBe(422);
+
+    const loginTrimmedEmailRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "  MIXED@example.com  ",
+        password: "Test1234!"
+      }
+    });
+
+    expect(loginTrimmedEmailRes.statusCode).toBe(200);
+    expect(loginTrimmedEmailRes.json()).toHaveProperty("display_name", "Mixed User");
+
+    await app.close();
+  });
+
   test("user-data list and parsed read works without auth", async () => {
     const app = buildApp();
 
