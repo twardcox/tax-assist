@@ -10,7 +10,14 @@ function CurrencyInput({ id, value, onChange }) {
   const [raw, setRaw] = useState(
     value != null && value !== "" ? String(value) : ""
   );
+  const [isEditing, setIsEditing] = useState(false);
   const noFill = useNoAutofill();
+
+  useEffect(() => {
+    if (!isEditing) {
+      setRaw(value != null && value !== "" ? String(value) : "");
+    }
+  }, [value, isEditing]);
 
   function handleChange(e) {
     const v = e.target.value.replace(/[^0-9.]/g, "");
@@ -20,11 +27,13 @@ function CurrencyInput({ id, value, onChange }) {
   }
 
   function handleBlur() {
+    setIsEditing(false);
     const n = parseFloat(raw);
     if (!isNaN(n)) setRaw(n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }));
   }
 
   function handleFocus() {
+    setIsEditing(true);
     noFill.onFocus();
     if (raw) setRaw(raw.replace(/,/g, ""));
   }
