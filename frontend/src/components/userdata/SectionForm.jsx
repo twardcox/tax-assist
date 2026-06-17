@@ -6,6 +6,67 @@ function deepClone(v) {
   return JSON.parse(JSON.stringify(v ?? {}));
 }
 
+function getNestedValue(obj, path) {
+  if (!path) return obj;
+  return path.split(".").reduce((acc, k) => (acc && typeof acc === "object" ? acc[k] : undefined), obj);
+}
+
+function setNestedValue(obj, path, value) {
+  if (!path) return value;
+  const keys = path.split(".");
+  const result = { ...(obj ?? {}) };
+  let cur = result;
+  for (let i = 0; i < keys.length - 1; i++) {
+    cur[keys[i]] = { ...(cur[keys[i]] ?? {}) };
+    cur = cur[keys[i]];
+  }
+  cur[keys[keys.length - 1]] = value;
+  return result;
+}
+
+// Recompute every derivedFrom field across all groups (including list item groups)
+// so the saved payload is consistent with the UI regardless of which groups were edited.
+function computeAllDerived(state, schema) {
+  let updated = deepClone(state);
+  for (const group of schema.groups ?? []) {
+    if (group.type === "callout") continue;
+    if (group.type === "list") {
+      const items = updated[group.key];
+      if (!Array.isArray(items)) continue;
+      updated[group.key] = items.map((item) => {
+        let updatedItem = { ...item };
+        for (const itemGroup of group.itemGroups ?? []) {
+          for (const f of itemGroup.fields ?? []) {
+            if (typeof f.derivedFrom !== "function") continue;
+            const itemGroupData = itemGroup.path
+              ? (getNestedValue(updatedItem, itemGroup.path) ?? {})
+              : updatedItem;
+            const computed = f.derivedFrom(itemGroupData, updated);
+            updatedItem = setNestedValue(
+              updatedItem,
+              itemGroup.path ? `${itemGroup.path}.${f.key}` : f.key,
+              computed
+            );
+          }
+        }
+        return updatedItem;
+      });
+    } else {
+      for (const f of group.fields ?? []) {
+        if (typeof f.derivedFrom !== "function") continue;
+        const groupData = group.path ? (getNestedValue(updated, group.path) ?? {}) : updated;
+        const computed = f.derivedFrom(groupData, updated);
+        updated = setNestedValue(
+          updated,
+          group.path ? `${group.path}.${f.key}` : f.key,
+          computed
+        );
+      }
+    }
+  }
+  return updated;
+}
+
 function matchesSearch(field, term) {
   // Match the display label ("Social Security Number") and the raw field
   // key ("ssn") so abbreviation searches find spelled-out labels too.
@@ -174,7 +235,7 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
         </button>
         <button
           type="button"
-          onClick={() => onSave(formState)}
+          onClick={() => onSave(computeAllDerived(formState, schema))}
           disabled={isSaving}
           className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white px-4 py-1.5 rounded text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1 focus-visible:ring-offset-gray-950"
         >
