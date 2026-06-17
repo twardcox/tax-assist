@@ -4,9 +4,41 @@ import { AppError } from "../lib/errors";
 import { createUser, getUserByEmail } from "../db/authRepo";
 import { createAccessToken, hashPassword, logoutToken, verifyPassword } from "../auth/service";
 
+const REGISTER_MAX_REQUESTS = 5;
+const REGISTER_WINDOW_MS = 5 * 60 * 1000;
+const LOGIN_MAX_REQUESTS = 10;
+const LOGIN_WINDOW_MS = 60 * 1000;
+
 const EmailSchema = z.string().trim().toLowerCase().email().max(254);
 const PasswordSchema = z.string().min(8).max(128);
 const DisplayNameSchema = z.string().trim().max(120);
+
+type RateLimitBucket = {
+  count: number;
+  windowStart: number;
+};
+
+const rateLimitBuckets = new Map<string, RateLimitBucket>();
+
+function enforceRateLimit(key: string, maxRequests: number, windowMs: number): void {
+  const now = Date.now();
+  const bucket = rateLimitBuckets.get(key);
+
+  if (!bucket || now - bucket.windowStart >= windowMs) {
+    rateLimitBuckets.set(key, { count: 1, windowStart: now });
+    return;
+  }
+
+  if (bucket.count >= maxRequests) {
+    throw new AppError(429, "Too many auth attempts. Please try again later.");
+  }
+
+  bucket.count += 1;
+}
+
+export function __resetAuthRateLimitForTest(): void {
+  rateLimitBuckets.clear();
+}
 
 const RegisterBodySchema = z.object({
   email: EmailSchema,
@@ -22,6 +54,7 @@ const LoginBodySchema = z.object({
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post("/auth/register", { config: { unauthenticated: true } }, async (request, reply) => {
     const body = RegisterBodySchema.parse(request.body);
+    enforceRateLimit(`register:${request.ip}`, REGISTER_MAX_REQUESTS, REGISTER_WINDOW_MS);
 
     if (getUserByEmail(body.email)) {
       throw new AppError(409, "Email already registered");
@@ -39,6 +72,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   app.post("/auth/login", { config: { unauthenticated: true } }, async (request) => {
     const body = LoginBodySchema.parse(request.body);
+    enforceRateLimit(`login:${request.ip}`, LOGIN_MAX_REQUESTS, LOGIN_WINDOW_MS);
     const user = getUserByEmail(body.email);
 
     if (!user || !verifyPassword(body.password, user.password_hash)) {

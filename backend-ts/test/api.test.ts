@@ -7,12 +7,14 @@ import { initDb } from "../src/db/init";
 import { addTransaction } from "../src/db/transactionsRepo";
 import { __setDocumentAiExtractionOverrideForTest } from "../src/domain/documents/aiExecutor";
 import { __setScanAiNarrativeOverrideForTest } from "../src/domain/scanner/aiAdvisor";
+import { __resetAuthRateLimitForTest } from "../src/routes/auth";
 import { __setTaxLawUpdateRunningForTest } from "../src/routes/taxLaw";
 
 beforeEach(() => {
   initDb();
   __setDocumentAiExtractionOverrideForTest(null);
   __setScanAiNarrativeOverrideForTest(null);
+  __resetAuthRateLimitForTest();
   const db = getDb();
   db.exec("DELETE FROM transactions;");
   db.exec("DELETE FROM section_data;");
@@ -114,6 +116,79 @@ describe("API baseline", () => {
 
     expect(meAfterLogoutRes.statusCode).toBe(401);
     expect(meAfterLogoutRes.json()).toEqual({ detail: "Token revoked" });
+
+    await app.close();
+  });
+
+  test("auth login is rate limited after repeated failed attempts", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "ratelimit-login@example.com",
+        password: "Test1234!",
+        display_name: "Rate Limit Login"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+
+    for (let i = 0; i < 10; i += 1) {
+      const loginRes = await app.inject({
+        method: "POST",
+        url: "/api/auth/login",
+        payload: {
+          email: "ratelimit-login@example.com",
+          password: "WrongPassword123!"
+        }
+      });
+      expect(loginRes.statusCode).toBe(401);
+    }
+
+    const throttledRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "ratelimit-login@example.com",
+        password: "WrongPassword123!"
+      }
+    });
+
+    expect(throttledRes.statusCode).toBe(429);
+    expect(throttledRes.json()).toEqual({ detail: "Too many auth attempts. Please try again later." });
+
+    await app.close();
+  });
+
+  test("auth register is rate limited after repeated attempts", async () => {
+    const app = buildApp();
+
+    for (let i = 0; i < 5; i += 1) {
+      const registerRes = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: {
+          email: `ratelimit-register-${i}@example.com`,
+          password: "Test1234!",
+          display_name: "Rate Limit Register"
+        }
+      });
+      expect(registerRes.statusCode).toBe(201);
+    }
+
+    const throttledRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "ratelimit-register-final@example.com",
+        password: "Test1234!",
+        display_name: "Rate Limit Register"
+      }
+    });
+
+    expect(throttledRes.statusCode).toBe(429);
+    expect(throttledRes.json()).toEqual({ detail: "Too many auth attempts. Please try again later." });
 
     await app.close();
   });
