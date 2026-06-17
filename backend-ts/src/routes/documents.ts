@@ -48,24 +48,24 @@ const JobParamsSchema = z.object({
 });
 
 const UpdateInstructionSchema = z.object({
-  label: z.string().optional(),
-  section: z.string().optional(),
-  yaml_file: z.string().optional(),
-  dot_path: z.string().min(1),
+  label: z.string().max(200).optional(),
+  section: z.string().regex(/^[A-Za-z0-9_]+$/).max(64).optional(),
+  yaml_file: z.string().regex(/^[A-Za-z0-9_]+$/).max(64).optional(),
+  dot_path: z.string().min(1).max(240),
   operation: z.enum(["set", "add"]).default("set"),
   value: z.unknown()
 }).passthrough();
 
 const ApplyMetaSchema = z.object({
-  file_id: z.string().optional(),
-  filename: z.string().optional(),
-  date: z.string().optional(),
-  merchant: z.string().optional(),
-  total_amount: z.number().optional(),
-  deductible_pct: z.number().optional(),
-  tax_category: z.string().optional(),
-  benefit_ids: z.array(z.string()).optional(),
-  form_line: z.string().optional()
+  file_id: z.string().max(64).optional(),
+  filename: z.string().max(200).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  merchant: z.string().max(120).optional(),
+  total_amount: z.number().finite().min(0).max(1_000_000_000).optional(),
+  deductible_pct: z.number().finite().min(0).max(1).optional(),
+  tax_category: z.string().max(80).optional(),
+  benefit_ids: z.array(z.string().max(120)).max(50).optional(),
+  form_line: z.string().max(80).optional()
 }).passthrough();
 
 const ApplyBodySchema = z.union([

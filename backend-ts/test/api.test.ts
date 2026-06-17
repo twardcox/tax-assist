@@ -629,6 +629,32 @@ describe("API baseline", () => {
     expect(applyRes.statusCode).toBe(422);
     expect((applyRes.json() as { detail: string }).detail).toBe("Validation error");
 
+    const invalidMetaRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/apply",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      payload: {
+        meta: {
+          date: "2026/01/01",
+          deductible_pct: 1.2
+        },
+        updates: [
+          {
+            section: "household",
+            dot_path: "expenses.office_supplies",
+            operation: "add",
+            value: 10
+          }
+        ]
+      }
+    });
+
+    expect(invalidMetaRes.statusCode).toBe(422);
+    expect((invalidMetaRes.json() as { detail: string }).detail).toBe("Validation error");
+
     await app.close();
   });
 
@@ -2823,6 +2849,19 @@ describe("API baseline", () => {
     });
     expect(invalidBodyRes.statusCode).toBe(422);
     expect((invalidBodyRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidFilingFormatRes = await app.inject({
+      method: "PUT",
+      url: "/api/filing-details?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        direct_deposit_routing: "123",
+        direct_deposit_type: "brokerage",
+        designee_phone: "***"
+      }
+    });
+    expect(invalidFilingFormatRes.statusCode).toBe(422);
+    expect((invalidFilingFormatRes.json() as { detail: string }).detail).toBe("Validation error");
 
     await app.close();
   });

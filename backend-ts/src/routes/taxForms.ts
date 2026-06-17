@@ -32,16 +32,21 @@ const JobParamsSchema = z.object({
   jobId: z.string().min(1)
 });
 
+const NullableStringSchema = (inner: z.ZodString) => z.preprocess(
+  (value) => (value === "" ? null : value),
+  z.union([inner, z.null()])
+);
+
 const FilingDetailsBodySchema = z.object({
   pec_fund_taxpayer: z.boolean().optional(),
   pec_fund_spouse: z.boolean().optional(),
-  direct_deposit_routing: z.union([z.string(), z.null()]).optional(),
-  direct_deposit_account: z.union([z.string(), z.null()]).optional(),
-  direct_deposit_type: z.union([z.string(), z.null()]).optional(),
+  direct_deposit_routing: NullableStringSchema(z.string().regex(/^\d{9}$/)).optional(),
+  direct_deposit_account: NullableStringSchema(z.string().regex(/^\d{4,17}$/)).optional(),
+  direct_deposit_type: z.union([z.enum(["checking", "savings"]), z.null()]).optional(),
   allow_third_party: z.boolean().optional(),
-  designee_name: z.union([z.string(), z.null()]).optional(),
-  designee_phone: z.union([z.string(), z.null()]).optional(),
-  designee_pin: z.union([z.string(), z.null()]).optional()
+  designee_name: NullableStringSchema(z.string().max(80)).optional(),
+  designee_phone: NullableStringSchema(z.string().regex(/^[0-9()+.\s-]{7,25}$/)).optional(),
+  designee_pin: NullableStringSchema(z.string().regex(/^\d{4,5}$/)).optional()
 }).strict();
 
 async function buildPreviewPdfBytes(userId: string, taxYear: number): Promise<Uint8Array> {
