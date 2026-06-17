@@ -18,6 +18,7 @@ function computeTooltipPos(btnEl) {
 export default function HelpPopover({ fieldDef, describedById }) {
   const { description, source, calculate } = fieldDef;
   if (!description && !source && !calculate) return null;
+  const helpTarget = fieldDef.label ?? fieldDef.itemLabel ?? fieldDef.key ?? "field";
 
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
@@ -64,7 +65,7 @@ export default function HelpPopover({ fieldDef, describedById }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="w-4 h-4 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-400 hover:text-gray-200 text-[10px] font-bold leading-none flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-        aria-label="Help"
+        aria-label={`Help for ${helpTarget}`}
         aria-expanded={open}
         aria-describedby={open ? panelId : undefined}
       >
