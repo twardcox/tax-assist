@@ -15,17 +15,29 @@ const DisplayNameSchema = z.string().trim().max(120);
 
 type RateLimitBucket = {
   count: number;
-  windowStart: number;
+  expiresAt: number;
 };
 
 const rateLimitBuckets = new Map<string, RateLimitBucket>();
 
+let nextRateLimitCleanupAt = 0;
+const RATE_LIMIT_CLEANUP_INTERVAL_MS = 60 * 1000;
+
 function enforceRateLimit(key: string, maxRequests: number, windowMs: number): void {
   const now = Date.now();
+  if (now >= nextRateLimitCleanupAt) {
+    for (const [bucketKey, bucket] of rateLimitBuckets) {
+      if (now >= bucket.expiresAt) {
+        rateLimitBuckets.delete(bucketKey);
+      }
+    }
+    nextRateLimitCleanupAt = now + RATE_LIMIT_CLEANUP_INTERVAL_MS;
+  }
+
   const bucket = rateLimitBuckets.get(key);
 
-  if (!bucket || now - bucket.windowStart >= windowMs) {
-    rateLimitBuckets.set(key, { count: 1, windowStart: now });
+  if (!bucket || now >= bucket.expiresAt) {
+    rateLimitBuckets.set(key, { count: 1, expiresAt: now + windowMs });
     return;
   }
 
