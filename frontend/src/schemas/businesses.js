@@ -24,8 +24,7 @@ export const schema = {
             {
               key: "ein",
               label: "EIN",
-              type: "text",
-              placeholder: "XX-XXXXXXX",
+              type: "ein",
               description: "Employer Identification Number. Sole proprietors without employees can use their SSN instead.",
               source: "Your IRS EIN confirmation letter (CP-575) or prior tax return.",
             },
@@ -60,6 +59,27 @@ export const schema = {
               source: "Your Form 2553 (S-Corp election) or IRS Form 8832 (entity classification election), or ask your CPA.",
             },
             {
+              key: "industry",
+              label: "Industry",
+              type: "text",
+              placeholder: "e.g., Software consulting",
+              description: "Brief description of the business. Used to determine if it may be a Specified Service Trade or Business (SSTB), which limits QBI deduction at higher incomes.",
+              source: "Your Schedule C Line B description.",
+            },
+            {
+              key: "naics_code",
+              label: "NAICS Code",
+              type: "naics",
+              description: "6-digit industry code. Helps classify the business type for QBI and other calculations.",
+              source: "Schedule C Line B, or look up at census.gov/naics.",
+            },
+          ],
+        },
+        {
+          label: "Tax Classification Details",
+          advanced: true,
+          fields: [
+            {
               key: "formation_state",
               label: "Formation State",
               type: "text",
@@ -74,22 +94,6 @@ export const schema = {
               placeholder: "TX, CA, NY",
               description: "States where this business earns income, has employees, or maintains a physical presence (tax nexus). Used to evaluate state PTE elections and multi-state tax obligations. The formation state (e.g., DE) is often NOT an operating state. Separate multiple states with commas.",
               source: "States where you file a business or personal state return attributable to this business's activity. Ask your CPA if unsure.",
-            },
-            {
-              key: "industry",
-              label: "Industry",
-              type: "text",
-              placeholder: "e.g., Software consulting",
-              description: "Brief description of the business. Used to determine if it may be a Specified Service Trade or Business (SSTB), which limits QBI deduction at higher incomes.",
-              source: "Your Schedule C Line B description.",
-            },
-            {
-              key: "naics_code",
-              label: "NAICS Code",
-              type: "text",
-              placeholder: "e.g., 541511",
-              description: "6-digit industry code. Helps classify the business type for QBI and other calculations.",
-              source: "Schedule C Line B, or look up at census.gov/naics.",
             },
             {
               key: "qbi_eligible",
@@ -265,6 +269,7 @@ export const schema = {
         {
           label: "Retirement Plans",
           path: "retirement_plans",
+          advanced: true,
           fields: [
             {
               key: "sep_ira",

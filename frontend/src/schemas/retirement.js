@@ -199,6 +199,7 @@ export const schema = {
     {
       label: "Roth Conversion",
       path: "roth_conversion",
+      advanced: true,
       fields: [
         {
           key: "conversions_this_year",

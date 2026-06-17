@@ -1,3 +1,7 @@
+const RENTAL_TYPES = ["rental_residential", "rental_commercial", "mixed_use"];
+const isRentalProperty = (property) => RENTAL_TYPES.includes(property?.property_type);
+const isPrimaryResidence = (property) => property?.property_type === "primary_residence";
+
 export const schema = {
   label: "Real Estate",
   description: "Each real property you own, including your primary home, second homes, and rental properties. Used for mortgage interest, depreciation, rental loss, and §121 exclusion calculations.",
@@ -148,7 +152,16 @@ export const schema = {
         {
           label: "Rental Use",
           path: "rental_use",
+          showIf: isRentalProperty,
+          description: "Use these property-level fields for rental fact tracking (including gross rent). Enter the same gross rent amount here and in Income > Rental Income so both stay in sync.",
           fields: [
+            {
+              key: "gross_rental_income",
+              label: "Gross Rental Income",
+              type: "currency",
+              description: "Total rent received before expenses for this property during the tax year.",
+              source: "Your rental ledger, bank deposits, or 1099-K statements from rental platforms.",
+            },
             {
               key: "rental_days",
               label: "Days Rented",
@@ -163,18 +176,12 @@ export const schema = {
               description: "Days you used the property personally. If personal use > 14 days AND > 10% of rental days, the property is treated as a vacation home with limited loss deductions.",
               source: "Your own records. Days you stayed at the property.",
             },
-            {
-              key: "gross_rental_income",
-              label: "Gross Rental Income",
-              type: "currency",
-              description: "Total rent received before expenses.",
-              source: "Your rental ledger, bank deposits, or platform payout history.",
-            },
           ],
         },
         {
           label: "Primary Residence",
           path: "primary_residence",
+          showIf: isPrimaryResidence,
           fields: [
             {
               key: "years_lived_in",
@@ -201,6 +208,7 @@ export const schema = {
         },
         {
           label: "Special Categories",
+          advanced: true,
           fields: [
             {
               key: "opportunity_zone",
@@ -216,6 +224,11 @@ export const schema = {
               description: "Whether the property is a certified historic structure. Rehabilitation expenses may qualify for the 20% Historic Tax Credit.",
               source: "National Park Service historic register or your state Historic Preservation Office.",
             },
+          ],
+        },
+        {
+          label: "Notes",
+          fields: [
             {
               key: "notes",
               label: "Notes",

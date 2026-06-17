@@ -1,70 +1,55 @@
-# Business Entity Facts
-# Add one entry per business entity. Copy and paste the block to add more.
-
 tax_year: 2025
-
 businesses:
-
-  - name:
-    ein:                       # Employer Identification Number (if any)
-    entity_type:               # sole_prop | llc_single | llc_multi | s_corp | c_corp | partnership | lp | llp
-    tax_classification:        # disregarded | partnership | s_corp | c_corp
-    formation_state:
-    operating_states:          # list of states where business operates
-    industry:
-    naics_code:
-
+  - name: null
+    ein: null
+    entity_type: null
+    tax_classification: null
+    formation_state: null
+    operating_states: null
+    industry: null
+    naics_code: null
     owners:
-      - name:
-        ownership_percent:
+      - name: null
+        ownership_percent: null
         active_participant: true
-
     financials:
-      gross_revenue:
-      cost_of_goods_sold:
-      gross_profit:
-      operating_expenses:
-      net_profit_loss:
-      assets_total:
-      liabilities_total:
-
+      gross_revenue: null
+      cost_of_goods_sold: null
+      gross_profit: null
+      operating_expenses: null
+      net_profit_loss: null
+      assets_total: null
+      liabilities_total: null
     employees:
-      w2_employees_count:
-      w2_wages_total:
-      owner_w2_salary:         # S Corp only — reasonable compensation amount
+      w2_employees_count: null
+      w2_wages_total: null
+      owner_w2_salary: null
       independent_contractors: false
       payroll_tax_deposits: false
-
     home_office:
       claimed: false
-      method:                  # simplified | regular
-      square_footage:
-      home_total_sqft:
-
+      method: null
+      square_footage: null
+      home_total_sqft: null
     vehicle:
       business_vehicle: false
-      business_miles:
-      total_miles:
+      business_miles: null
+      total_miles: null
       actual_expense_method: false
       standard_mileage_method: false
-
     retirement_plans:
       sep_ira: false
       simple_ira: false
       solo_401k: false
       defined_benefit: false
-
     health_insurance:
       owner_health_insurance_deducted: false
-      premium_amount:
-
+      premium_amount: null
     depreciation:
       section_179_claimed: false
       bonus_depreciation_claimed: false
       assets_placed_in_service: []
-
-    qbi_eligible: null         # Qualified Business Income — null means system will evaluate
-    specified_service_trade: null  # SSTB — affects QBI phaseout
-
+    qbi_eligible: null
+    specified_service_trade: null
     notes: |
       Add any relevant business notes here.

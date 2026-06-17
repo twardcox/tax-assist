@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import SectionForm from "../components/userdata/SectionForm";
+import { essentialCompleteness, completionStatus } from "../lib/sectionCompleteness";
 
 import { schema as householdSchema } from "../schemas/household";
 import { schema as incomeSchema } from "../schemas/income";
@@ -28,7 +29,7 @@ const SCHEMAS = {
 };
 
 const SECTION_LABELS = {
-  household: "Household",
+  household: "Household & Family",
   income: "Income",
   businesses: "Businesses",
   real_estate: "Real Estate",
@@ -36,8 +37,30 @@ const SECTION_LABELS = {
   retirement: "Retirement",
   healthcare: "Healthcare",
   dependents: "Dependents",
-  goals: "Goals",
+  goals: "Goals & Planning",
   documents_index: "Documents",
+};
+
+// Groups sections by the user's mental model ("about me", "my money", "my
+// stuff", "planning", "paperwork") rather than schema/insertion order.
+const CATEGORIES = [
+  { label: "About You", sections: ["household", "dependents"] },
+  { label: "Income & Accounts", sections: ["income", "investments", "retirement"] },
+  { label: "Business & Property", sections: ["businesses", "real_estate"] },
+  { label: "Planning", sections: ["healthcare", "goals"] },
+  { label: "Records", sections: ["documents_index"] },
+];
+
+const STATUS_DOT = {
+  empty: "bg-gray-700",
+  partial: "bg-amber-500",
+  complete: "bg-emerald-500",
+};
+
+const STATUS_TEXT = {
+  empty: "not started",
+  partial: "in progress",
+  complete: "complete",
 };
 
 export default function UserData() {
@@ -50,11 +73,21 @@ export default function UserData() {
     queryFn: api.listSections,
   });
 
+  const sectionKeys = sectionsData?.sections ?? [];
+
   const { data: sectionData, isLoading: loadingSection } = useQuery({
     queryKey: ["user-data-parsed", activeSection],
     queryFn: () => api.getParsedSection(activeSection),
     enabled: !!activeSection,
   });
+
+  const sectionDataByKey = {};
+  sectionKeys.forEach((key) => {
+    sectionDataByKey[key] = qc.getQueryData(["user-data-parsed", key])?.data;
+  });
+  if (activeSection && sectionData?.data) {
+    sectionDataByKey[activeSection] = sectionData.data;
+  }
 
   const saveMutation = useMutation({
     mutationFn: ({ section, formState }) => api.updateSection(section, formState),
@@ -78,32 +111,68 @@ export default function UserData() {
 
   const schema = activeSection ? SCHEMAS[activeSection] : null;
 
+  // Build the category list from whatever the backend actually reports,
+  // falling back to an "Other" bucket for any section not yet categorized
+  // above so nothing silently disappears from the nav.
+  const categorized = CATEGORIES
+    .map((cat) => ({ ...cat, sections: cat.sections.filter((s) => sectionKeys.includes(s)) }))
+    .filter((cat) => cat.sections.length > 0);
+  const categorizedKeys = new Set(categorized.flatMap((c) => c.sections));
+  const uncategorized = sectionKeys.filter((s) => !categorizedKeys.has(s));
+  if (uncategorized.length > 0) {
+    categorized.push({ label: "Other", sections: uncategorized });
+  }
+
+  const dependentsCount = sectionDataByKey.dependents?.dependents ? sectionDataByKey.dependents.dependents.length : null;
+
   return (
     <div className="flex gap-6 h-[calc(100vh-140px)]">
       {/* Section list */}
-      <div className="w-48 flex-shrink-0">
-        <h2 className="text-xs text-gray-500 uppercase mb-3">Sections</h2>
+      <nav aria-label="My Data sections" className="w-52 flex-shrink-0 overflow-y-auto">
         {loadingSections ? (
           <p className="text-gray-600 text-xs">Loading…</p>
         ) : (
-          <ul className="space-y-1">
-            {sectionsData?.sections?.map((s) => (
-              <li key={s}>
-                <button
-                  onClick={() => handleSectionClick(s)}
-                  className={`w-full text-left px-3 py-1.5 rounded text-sm transition-colors ${
-                    activeSection === s
-                      ? "bg-gray-800 text-white"
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-900"
-                  }`}
-                >
-                  {SECTION_LABELS[s] ?? s}
-                </button>
-              </li>
-            ))}
-          </ul>
+          categorized.map((cat) => (
+            <div key={cat.label} className="mb-4">
+              <h2 aria-hidden="true" className="text-xs text-gray-500 uppercase mb-1.5 px-3">
+                {cat.label}
+              </h2>
+              <ul className="space-y-1">
+                {cat.sections.map((s) => {
+                  const sectionSchema = SCHEMAS[s];
+                  const data = sectionDataByKey[s];
+                  const hasData = !!(sectionSchema && data);
+                  const { filled, total, mode } = hasData
+                    ? essentialCompleteness(sectionSchema, data)
+                    : { filled: 0, total: 0, mode: "unknown" };
+                  const status = hasData ? completionStatus({ filled, total }) : "empty";
+                  const noun = mode === "essential" ? "essential fields" : "fields";
+                  const statusLabel = hasData
+                    ? (total ? `${STATUS_TEXT[status]} — ${filled} of ${total} ${noun}` : STATUS_TEXT[status])
+                    : "status unavailable until opened";
+                  return (
+                    <li key={s}>
+                      <button
+                        onClick={() => handleSectionClick(s)}
+                        aria-label={`${SECTION_LABELS[s] ?? s} — ${statusLabel}`}
+                        aria-current={activeSection === s ? "page" : undefined}
+                        className={`w-full flex items-center gap-2 text-left px-3 py-1.5 rounded text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                          activeSection === s
+                            ? "bg-gray-800 text-white"
+                            : "text-gray-400 hover:text-gray-200 hover:bg-gray-900"
+                        }`}
+                      >
+                        <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${STATUS_DOT[status]}`} />
+                        <span className="truncate">{SECTION_LABELS[s] ?? s}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
         )}
-      </div>
+      </nav>
 
       {/* Form pane */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -133,6 +202,8 @@ export default function UserData() {
                 onSave={handleSave}
                 isSaving={saveMutation.isPending}
                 saveMsg={saveMsg}
+                crossSectionData={{ dependentsCount }}
+                onGoToSection={handleSectionClick}
               />
             )}
           </>

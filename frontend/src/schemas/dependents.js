@@ -1,3 +1,5 @@
+import { ageAsOfYearEnd } from "../lib/dateDerived.js";
+
 export const schema = {
   label: "Dependents",
   description: "Each person you claim as a dependent. Affects the Child Tax Credit, EITC, Dependent Care Credit, and education credits.",
@@ -24,8 +26,7 @@ export const schema = {
             {
               key: "ssn",
               label: "Social Security Number",
-              type: "text",
-              placeholder: "XXX-XX-XXXX",
+              type: "ssn",
               description: "The dependent's SSN is required to claim the Child Tax Credit, EITC, and other dependent-based credits. Stored locally only.",
               source: "Their Social Security card. Apply at ssa.gov if not yet obtained.",
             },
@@ -55,8 +56,9 @@ export const schema = {
               key: "age_at_year_end",
               label: "Age at Year End",
               type: "number",
-              description: "Their age on December 31 of the tax year. Under 17 qualifies for the Child Tax Credit; under 13 for Dependent Care Credit.",
-              source: "Calculated from date of birth.",
+              derivedFrom: (groupData, sectionData) => ageAsOfYearEnd(groupData?.date_of_birth, sectionData),
+              description: "Their age on December 31. Auto-calculated from Date of Birth. Under 17 qualifies for the Child Tax Credit; under 13 for Dependent Care Credit.",
+              source: "Calculated automatically from Date of Birth.",
             },
             {
               key: "ssn_obtained",
@@ -199,6 +201,7 @@ export const schema = {
         {
           label: "Adoption",
           path: "adoption",
+          advanced: true,
           fields: [
             {
               key: "adopted_this_year",
