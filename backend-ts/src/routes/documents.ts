@@ -47,11 +47,32 @@ const JobParamsSchema = z.object({
   jobId: z.string().min(1)
 });
 
+const UpdateInstructionSchema = z.object({
+  label: z.string().optional(),
+  section: z.string().optional(),
+  yaml_file: z.string().optional(),
+  dot_path: z.string().min(1),
+  operation: z.enum(["set", "add"]).default("set"),
+  value: z.unknown()
+}).passthrough();
+
+const ApplyMetaSchema = z.object({
+  file_id: z.string().optional(),
+  filename: z.string().optional(),
+  date: z.string().optional(),
+  merchant: z.string().optional(),
+  total_amount: z.number().optional(),
+  deductible_pct: z.number().optional(),
+  tax_category: z.string().optional(),
+  benefit_ids: z.array(z.string()).optional(),
+  form_line: z.string().optional()
+}).passthrough();
+
 const ApplyBodySchema = z.union([
-  z.array(z.record(z.unknown())),
+  z.array(UpdateInstructionSchema),
   z.object({
-    updates: z.array(z.record(z.unknown())).optional(),
-    meta: z.record(z.unknown()).optional()
+    updates: z.array(UpdateInstructionSchema).optional(),
+    meta: ApplyMetaSchema.optional()
   })
 ]);
 

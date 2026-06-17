@@ -32,7 +32,17 @@ const JobParamsSchema = z.object({
   jobId: z.string().min(1)
 });
 
-const FilingDetailsBodySchema = z.record(z.unknown());
+const FilingDetailsBodySchema = z.object({
+  pec_fund_taxpayer: z.boolean().optional(),
+  pec_fund_spouse: z.boolean().optional(),
+  direct_deposit_routing: z.union([z.string(), z.null()]).optional(),
+  direct_deposit_account: z.union([z.string(), z.null()]).optional(),
+  direct_deposit_type: z.union([z.string(), z.null()]).optional(),
+  allow_third_party: z.boolean().optional(),
+  designee_name: z.union([z.string(), z.null()]).optional(),
+  designee_phone: z.union([z.string(), z.null()]).optional(),
+  designee_pin: z.union([z.string(), z.null()]).optional()
+}).strict();
 
 async function buildPreviewPdfBytes(userId: string, taxYear: number): Promise<Uint8Array> {
   const data = loadAllUserData(userId, taxYear);

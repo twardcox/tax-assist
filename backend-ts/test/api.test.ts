@@ -547,6 +547,45 @@ describe("API baseline", () => {
     }
   });
 
+  test("documents apply rejects invalid update payload shape", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "doc-invalid-apply@example.com",
+        password: "Test1234!",
+        display_name: "Doc Invalid Apply"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const applyRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/apply",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      payload: {
+        updates: [
+          {
+            section: "household",
+            operation: "multiply",
+            value: 123
+          }
+        ]
+      }
+    });
+
+    expect(applyRes.statusCode).toBe(422);
+    expect((applyRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
+  });
+
   test("transactions list and summary work with auth and filters", async () => {
     const app = buildApp();
 
@@ -2727,6 +2766,17 @@ describe("API baseline", () => {
     });
     expect(invalidFormRes.statusCode).toBe(422);
     expect((invalidFormRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidBodyRes = await app.inject({
+      method: "PUT",
+      url: "/api/filing-details?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        pec_fund_taxpayer: "yes"
+      }
+    });
+    expect(invalidBodyRes.statusCode).toBe(422);
+    expect((invalidBodyRes.json() as { detail: string }).detail).toBe("Validation error");
 
     await app.close();
   });
