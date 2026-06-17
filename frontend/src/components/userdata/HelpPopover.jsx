@@ -1,5 +1,20 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
 
+const TOOLTIP_WIDTH = 288; // matches w-72
+const TOOLTIP_GAP = 8;
+
+function computeTooltipPos(btnEl) {
+  if (!btnEl) return null;
+  const rect = btnEl.getBoundingClientRect();
+  const vw = window.innerWidth;
+  // Prefer opening to the right of the button; flip left if it overflows.
+  let left = rect.right + TOOLTIP_GAP;
+  if (left + TOOLTIP_WIDTH > vw - TOOLTIP_GAP) {
+    left = rect.left - TOOLTIP_WIDTH - TOOLTIP_GAP;
+  }
+  return { top: rect.top, left: Math.max(TOOLTIP_GAP, left) };
+}
+
 export default function HelpPopover({ fieldDef, describedById }) {
   const { description, source, calculate } = fieldDef;
   if (!description && !source && !calculate) return null;
@@ -13,18 +28,8 @@ export default function HelpPopover({ fieldDef, describedById }) {
   // Compute fixed position every time the popover opens.
   // Using fixed positioning bypasses the scroll-container's overflow clipping.
   useLayoutEffect(() => {
-    if (!open || !btnRef.current) { setPos(null); return; }
-    const rect = btnRef.current.getBoundingClientRect();
-    const W = 288; // matches w-72
-    const GAP = 8;
-    const vw = window.innerWidth;
-
-    // Prefer opening to the right of the button; flip left if it overflows.
-    let left = rect.right + GAP;
-    if (left + W > vw - GAP) {
-      left = rect.left - W - GAP;
-    }
-    setPos({ top: rect.top, left: Math.max(GAP, left) });
+    if (!open) { setPos(null); return; }
+    setPos(computeTooltipPos(btnRef.current));
   }, [open]);
 
   useEffect(() => {
@@ -37,11 +42,18 @@ export default function HelpPopover({ fieldDef, describedById }) {
     function onKey(e) {
       if (e.key === "Escape") setOpen(false);
     }
+    function recomputePos() {
+      setPos(computeTooltipPos(btnRef.current));
+    }
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", recomputePos, true);
+    window.addEventListener("resize", recomputePos);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", recomputePos, true);
+      window.removeEventListener("resize", recomputePos);
     };
   }, [open]);
 
