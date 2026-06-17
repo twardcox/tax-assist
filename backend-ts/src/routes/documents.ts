@@ -19,6 +19,7 @@ import {
 } from "../db/documentsRepo";
 
 const ALLOWED_EXTENSIONS = new Set([".pdf", ".jpg", ".jpeg", ".png", ".heic", ".tiff", ".csv"]);
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 type MultipartLikeFile = {
   filename: string;
@@ -78,6 +79,12 @@ const ApplyBodySchema = z.union([
 
 function toBuffer(value: string | Buffer): Buffer {
   return Buffer.isBuffer(value) ? value : Buffer.from(value, "utf8");
+}
+
+function assertUploadSize(content: Buffer): void {
+  if (content.length > MAX_UPLOAD_BYTES) {
+    throw new AppError(413, "Uploaded file exceeds 20 MB limit");
+  }
 }
 
 function safeName(name: string): string {
@@ -145,7 +152,9 @@ function applyDotPath(data: Record<string, unknown>, dotPath: string, operation:
 async function readUpload(request: FastifyRequest): Promise<{ filename: string; content: Buffer } | null> {
   const body = UploadPayloadSchema.optional().parse(request.body);
   if (body?.filename && body.content != null) {
-    return { filename: safeName(body.filename), content: toBuffer(body.content) };
+    const content = toBuffer(body.content);
+    assertUploadSize(content);
+    return { filename: safeName(body.filename), content };
   }
 
   const multipartRequest = request as FastifyRequest & { file: () => Promise<MultipartLikeFile | undefined> };
@@ -153,7 +162,9 @@ async function readUpload(request: FastifyRequest): Promise<{ filename: string; 
   if (!file) {
     return null;
   }
-  return { filename: safeName(file.filename), content: await file.toBuffer() };
+  const content = await file.toBuffer();
+  assertUploadSize(content);
+  return { filename: safeName(file.filename), content };
 }
 
 async function runExtraction(jobId: string, userId: string, fileId: string, filename: string, content: Buffer): Promise<void> {

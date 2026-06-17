@@ -7,12 +7,14 @@ import { initDb } from "../src/db/init";
 import { addTransaction } from "../src/db/transactionsRepo";
 import { __setDocumentAiExtractionOverrideForTest } from "../src/domain/documents/aiExecutor";
 import { __setScanAiNarrativeOverrideForTest } from "../src/domain/scanner/aiAdvisor";
+import { __resetAuthRateLimitForTest } from "../src/routes/auth";
 import { __setTaxLawUpdateRunningForTest } from "../src/routes/taxLaw";
 
 beforeEach(() => {
   initDb();
   __setDocumentAiExtractionOverrideForTest(null);
   __setScanAiNarrativeOverrideForTest(null);
+  __resetAuthRateLimitForTest();
   const db = getDb();
   db.exec("DELETE FROM transactions;");
   db.exec("DELETE FROM section_data;");
@@ -114,6 +116,202 @@ describe("API baseline", () => {
 
     expect(meAfterLogoutRes.statusCode).toBe(401);
     expect(meAfterLogoutRes.json()).toEqual({ detail: "Token revoked" });
+
+    await app.close();
+  });
+
+  test("auth login is rate limited after repeated failed attempts", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "ratelimit-login@example.com",
+        password: "Test1234!",
+        display_name: "Rate Limit Login"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+
+    for (let i = 0; i < 10; i += 1) {
+      const loginRes = await app.inject({
+        method: "POST",
+        url: "/api/auth/login",
+        payload: {
+          email: "ratelimit-login@example.com",
+          password: "WrongPassword123!"
+        }
+      });
+      expect(loginRes.statusCode).toBe(401);
+    }
+
+    const throttledRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "ratelimit-login@example.com",
+        password: "WrongPassword123!"
+      }
+    });
+
+    expect(throttledRes.statusCode).toBe(429);
+    expect(throttledRes.json()).toEqual({ detail: "Too many auth attempts. Please try again later." });
+
+    await app.close();
+  });
+
+  test("auth middleware handles malformed authorization headers safely", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "header-check@example.com",
+        password: "Test1234!",
+        display_name: "Header Check"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const whitespaceAuthRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/me",
+      headers: {
+        authorization: `   Bearer   ${token}   `
+      }
+    });
+
+    expect(whitespaceAuthRes.statusCode).toBe(200);
+    expect(whitespaceAuthRes.json()).toEqual({
+      id: expect.any(String),
+      email: "header-check@example.com",
+      display_name: "Header Check"
+    });
+
+    const malformedAuthRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/me",
+      headers: {
+        authorization: `Bearer${token}`
+      }
+    });
+
+    expect(malformedAuthRes.statusCode).toBe(401);
+    expect(malformedAuthRes.json()).toEqual({ detail: "Not authenticated" });
+
+    const wrongSchemeRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/me",
+      headers: {
+        authorization: `Token ${token}`
+      }
+    });
+
+    expect(wrongSchemeRes.statusCode).toBe(401);
+    expect(wrongSchemeRes.json()).toEqual({ detail: "Not authenticated" });
+
+    await app.close();
+  });
+
+  test("auth register is rate limited after repeated attempts", async () => {
+    const app = buildApp();
+
+    for (let i = 0; i < 5; i += 1) {
+      const registerRes = await app.inject({
+        method: "POST",
+        url: "/api/auth/register",
+        payload: {
+          email: `ratelimit-register-${i}@example.com`,
+          password: "Test1234!",
+          display_name: "Rate Limit Register"
+        }
+      });
+      expect(registerRes.statusCode).toBe(201);
+    }
+
+    const throttledRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "ratelimit-register-final@example.com",
+        password: "Test1234!",
+        display_name: "Rate Limit Register"
+      }
+    });
+
+    expect(throttledRes.statusCode).toBe(429);
+    expect(throttledRes.json()).toEqual({ detail: "Too many auth attempts. Please try again later." });
+
+    await app.close();
+  });
+
+  test("auth routes reject invalid auth payload shapes and weak password", async () => {
+    const app = buildApp();
+
+    const registerUnknownFieldRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "test-unknown@example.com",
+        password: "Test1234!",
+        display_name: "Strict User",
+        role: "admin"
+      }
+    });
+
+    expect(registerUnknownFieldRes.statusCode).toBe(422);
+
+    const registerShortPasswordRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "test-short@example.com",
+        password: "short",
+        display_name: "Short"
+      }
+    });
+
+    expect(registerShortPasswordRes.statusCode).toBe(422);
+
+    const registerOkRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "  MiXeD@Example.com  ",
+        password: "Test1234!",
+        display_name: "  Mixed User  "
+      }
+    });
+
+    expect(registerOkRes.statusCode).toBe(201);
+
+    const loginUnknownFieldRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "mixed@example.com",
+        password: "Test1234!",
+        remember_me: true
+      }
+    });
+
+    expect(loginUnknownFieldRes.statusCode).toBe(422);
+
+    const loginTrimmedEmailRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/login",
+      payload: {
+        email: "  MIXED@example.com  ",
+        password: "Test1234!"
+      }
+    });
+
+    expect(loginTrimmedEmailRes.statusCode).toBe(200);
+    expect(loginTrimmedEmailRes.json()).toHaveProperty("display_name", "Mixed User");
 
     await app.close();
   });
@@ -591,6 +789,43 @@ describe("API baseline", () => {
       process.env.ANTHROPIC_API_KEY = previousKey;
       await app.close();
     }
+  });
+
+  test("documents upload rejects oversized JSON content payloads", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "doc-oversized@example.com",
+        password: "Test1234!",
+        display_name: "Doc Oversized"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const oversizedContent = "a".repeat(20 * 1024 * 1024 + 1);
+
+    const uploadRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/upload",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      payload: {
+        filename: "oversized-receipt.pdf",
+        content: oversizedContent
+      }
+    });
+
+    expect(uploadRes.statusCode).toBe(413);
+    expect(uploadRes.json()).toEqual({ detail: "Uploaded file exceeds 20 MB limit" });
+
+    await app.close();
   });
 
   test("documents apply rejects invalid update payload shape", async () => {

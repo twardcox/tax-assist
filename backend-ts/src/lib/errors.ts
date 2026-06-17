@@ -16,7 +16,7 @@ export function registerErrorHandler(app: {
   ) => void;
 }): void {
   app.setErrorHandler((error, _request, reply) => {
-    let statusCode = 500;
+    let statusCode = (error as { statusCode?: number }).statusCode ?? 500;
     let detail = error.message || "Internal Server Error";
 
     if (error instanceof AppError) {

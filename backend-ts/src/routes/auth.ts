@@ -4,31 +4,76 @@ import { AppError } from "../lib/errors";
 import { createUser, getUserByEmail } from "../db/authRepo";
 import { createAccessToken, hashPassword, logoutToken, verifyPassword } from "../auth/service";
 
+const REGISTER_MAX_REQUESTS = 5;
+const REGISTER_WINDOW_MS = 5 * 60 * 1000;
+const LOGIN_MAX_REQUESTS = 10;
+const LOGIN_WINDOW_MS = 60 * 1000;
+
+const EmailSchema = z.string().trim().toLowerCase().email().max(254);
+const PasswordSchema = z.string().min(8).max(128);
+const DisplayNameSchema = z.string().trim().max(120);
+
+type RateLimitBucket = {
+  count: number;
+  expiresAt: number;
+};
+
+const rateLimitBuckets = new Map<string, RateLimitBucket>();
+
+let nextRateLimitCleanupAt = 0;
+const RATE_LIMIT_CLEANUP_INTERVAL_MS = 60 * 1000;
+
+function enforceRateLimit(key: string, maxRequests: number, windowMs: number): void {
+  const now = Date.now();
+  if (now >= nextRateLimitCleanupAt) {
+    for (const [bucketKey, bucket] of rateLimitBuckets) {
+      if (now >= bucket.expiresAt) {
+        rateLimitBuckets.delete(bucketKey);
+      }
+    }
+    nextRateLimitCleanupAt = now + RATE_LIMIT_CLEANUP_INTERVAL_MS;
+  }
+
+  const bucket = rateLimitBuckets.get(key);
+
+  if (!bucket || now >= bucket.expiresAt) {
+    rateLimitBuckets.set(key, { count: 1, expiresAt: now + windowMs });
+    return;
+  }
+
+  if (bucket.count >= maxRequests) {
+    throw new AppError(429, "Too many auth attempts. Please try again later.");
+  }
+
+  bucket.count += 1;
+}
+
+export function __resetAuthRateLimitForTest(): void {
+  rateLimitBuckets.clear();
+}
+
 const RegisterBodySchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-  display_name: z.string().default("")
-});
+  email: EmailSchema,
+  password: PasswordSchema,
+  display_name: DisplayNameSchema.default("")
+}).strict();
 
 const LoginBodySchema = z.object({
-  email: z.string().email(),
-  password: z.string()
-});
+  email: EmailSchema,
+  password: PasswordSchema
+}).strict();
 
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post("/auth/register", { config: { unauthenticated: true } }, async (request, reply) => {
     const body = RegisterBodySchema.parse(request.body);
-
-    if (body.password.length < 8) {
-      throw new AppError(422, "Password must be at least 8 characters");
-    }
+    enforceRateLimit(`register:${request.ip}`, REGISTER_MAX_REQUESTS, REGISTER_WINDOW_MS);
 
     if (getUserByEmail(body.email)) {
       throw new AppError(409, "Email already registered");
     }
 
     const userId = createUser(body.email, hashPassword(body.password), body.display_name);
-    const token = createAccessToken(userId, body.email.toLowerCase().trim());
+    const token = createAccessToken(userId, body.email);
 
     return reply.status(201).send({
       token,
@@ -38,6 +83,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/auth/login", { config: { unauthenticated: true } }, async (request) => {
+    enforceRateLimit(`login:${request.ip}`, LOGIN_MAX_REQUESTS, LOGIN_WINDOW_MS);
     const body = LoginBodySchema.parse(request.body);
     const user = getUserByEmail(body.email);
 
