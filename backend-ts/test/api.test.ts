@@ -247,7 +247,7 @@ describe("API baseline", () => {
     await app.close();
   });
 
-  test("user-data save returns cross-section mismatch warnings without failing save", async () => {
+  test("user-data save returns HSA, rental, and capital-gains mismatch warnings without failing save", async () => {
     const app = buildApp();
 
     const registerRes = await app.inject({
@@ -280,6 +280,46 @@ describe("API baseline", () => {
 
     expect(healthcareWrite.statusCode).toBe(200);
 
+    const realEstateWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          properties: [
+            {
+              address: "123 Rental St",
+              rental_use: {
+                gross_rental_income: 8000
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    expect(realEstateWrite.statusCode).toBe(200);
+
+    const investmentsWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/investments",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          realized_gains_losses_this_year: {
+            short_term_gains: 1200,
+            long_term_gains: 3400
+          }
+        }
+      }
+    });
+
+    expect(investmentsWrite.statusCode).toBe(200);
+
     const incomeWrite = await app.inject({
       method: "PUT",
       url: "/api/user-data/income",
@@ -288,6 +328,16 @@ describe("API baseline", () => {
       },
       payload: {
         data: {
+          rental_income: [
+            {
+              property_address: "123 Rental St",
+              gross_rents: 5000
+            }
+          ],
+          investment_income: {
+            short_term_capital_gains: 100,
+            long_term_capital_gains: 200
+          },
           adjustments_to_income: {
             hsa_contributions_outside_payroll: 1000
           }
@@ -300,6 +350,8 @@ describe("API baseline", () => {
     expect(savePayload).toMatchObject({ section: "income", saved: true });
     expect(savePayload.warnings).toBeDefined();
     expect(savePayload.warnings?.some((w) => w.includes("HSA contribution mismatch"))).toBe(true);
+    expect(savePayload.warnings?.some((w) => w.includes("Rental income mismatch"))).toBe(true);
+    expect(savePayload.warnings?.some((w) => w.includes("Capital gains mismatch"))).toBe(true);
 
     const incomeRead = await app.inject({
       method: "GET",
