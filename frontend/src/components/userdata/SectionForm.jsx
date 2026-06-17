@@ -14,6 +14,7 @@ function getNestedValue(obj, path) {
 function setNestedValue(obj, path, value) {
   if (!path) return value;
   const keys = path.split(".");
+  if (keys.some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) return obj ?? {};
   const result = { ...(obj ?? {}) };
   let cur = result;
   for (let i = 0; i < keys.length - 1; i++) {
