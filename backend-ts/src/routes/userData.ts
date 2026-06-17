@@ -335,28 +335,31 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
 
         fs.writeFileSync(filePath, yaml.dump(data, { noRefs: true, lineWidth: -1 }), "utf8");
 
-        const readSection = (name: string): Record<string, unknown> => {
-          if (name === section) return data;
-          const fp = sectionFilePath(name);
-          if (!fs.existsSync(fp)) return {};
-          const raw = fs.readFileSync(fp, "utf8");
-          return raw.trim() ? parseYamlContent(raw) : {};
-        };
-
-        const dataBySection: Record<string, Record<string, unknown>> = {
-          income: readSection("income"),
-          real_estate: readSection("real_estate"),
-          healthcare: readSection("healthcare"),
-          investments: readSection("investments")
-        };
-
-        const warnings = buildCrossSectionWarnings(section, dataBySection);
-        if (warnings.length > 0) {
-          return {
-            section,
-            saved: true,
-            warnings
+        const shouldWarn = section === "income" || section === "real_estate" || section === "healthcare" || section === "investments";
+        if (shouldWarn) {
+          const readSection = (name: string): Record<string, unknown> => {
+            if (name === section) return data;
+            const fp = sectionFilePath(name);
+            if (!fs.existsSync(fp)) return {};
+            const raw = fs.readFileSync(fp, "utf8");
+            return raw.trim() ? parseYamlContent(raw) : {};
           };
+
+          const dataBySection: Record<string, Record<string, unknown>> = {
+            income: readSection("income"),
+            real_estate: readSection("real_estate"),
+            healthcare: readSection("healthcare"),
+            investments: readSection("investments")
+          };
+
+          const warnings = buildCrossSectionWarnings(section, dataBySection);
+          if (warnings.length > 0) {
+            return {
+              section,
+              saved: true,
+              warnings
+            };
+          }
         }
       }
 
