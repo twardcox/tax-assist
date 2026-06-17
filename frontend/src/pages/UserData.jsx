@@ -123,7 +123,7 @@ export default function UserData() {
     categorized.push({ label: "Other", sections: uncategorized });
   }
 
-  const dependentsCount = sectionDataByKey.dependents?.dependents?.length ?? 0;
+  const dependentsCount = sectionDataByKey.dependents?.dependents ? sectionDataByKey.dependents.dependents.length : null;
 
   return (
     <div className="flex gap-6 h-[calc(100vh-140px)]">
