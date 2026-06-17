@@ -247,6 +247,79 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("user-data save returns cross-section mismatch warnings without failing save", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "warnings-user@example.com",
+        password: "Test1234!",
+        display_name: "Warnings User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const healthcareWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/healthcare",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          health_savings_account: {
+            contributions_ytd: 5000
+          }
+        }
+      }
+    });
+
+    expect(healthcareWrite.statusCode).toBe(200);
+
+    const incomeWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          adjustments_to_income: {
+            hsa_contributions_outside_payroll: 1000
+          }
+        }
+      }
+    });
+
+    expect(incomeWrite.statusCode).toBe(200);
+    const savePayload = incomeWrite.json() as { section: string; saved: boolean; warnings?: string[] };
+    expect(savePayload).toMatchObject({ section: "income", saved: true });
+    expect(savePayload.warnings).toBeDefined();
+    expect(savePayload.warnings?.some((w) => w.includes("HSA contribution mismatch"))).toBe(true);
+
+    const incomeRead = await app.inject({
+      method: "GET",
+      url: "/api/user-data/income/parsed",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(incomeRead.statusCode).toBe(200);
+    const parsed = incomeRead.json() as { data: Record<string, unknown> };
+    expect(parsed.data).toMatchObject({
+      adjustments_to_income: {
+        hsa_contributions_outside_payroll: 1000
+      }
+    });
+
+    await app.close();
+  });
+
   test("documents upload, list, extract, apply, and delete routes work", async () => {
     const previousKey = process.env.ANTHROPIC_API_KEY;
     process.env.ANTHROPIC_API_KEY = "test-key";

@@ -124,6 +124,107 @@ function validateSectionData(section: string, data: Record<string, unknown>): Re
   throw new AppError(422, `Invalid payload for section '${section}' at '${issuePath}': ${issueMsg}`);
 }
 
+function toNumberOrNull(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function getByPath(obj: Record<string, unknown>, dotPath: string): unknown {
+  return dotPath
+    .split(".")
+    .reduce<unknown>((acc, key) => (acc && typeof acc === "object" ? (acc as Record<string, unknown>)[key] : undefined), obj);
+}
+
+function sumIncomeGrossRents(incomeData: Record<string, unknown>): number | null {
+  const rentals = incomeData["rental_income"];
+  if (!Array.isArray(rentals)) return null;
+
+  let total = 0;
+  let found = false;
+  for (const entry of rentals) {
+    if (!entry || typeof entry !== "object") continue;
+    const gross = toNumberOrNull((entry as Record<string, unknown>)["gross_rents"]);
+    if (gross == null) continue;
+    total += gross;
+    found = true;
+  }
+
+  return found ? total : null;
+}
+
+function sumRealEstateGrossRents(realEstateData: Record<string, unknown>): number | null {
+  const properties = realEstateData["properties"];
+  if (!Array.isArray(properties)) return null;
+
+  let total = 0;
+  let found = false;
+  for (const entry of properties) {
+    if (!entry || typeof entry !== "object") continue;
+    const rentalUse = (entry as Record<string, unknown>)["rental_use"];
+    if (!rentalUse || typeof rentalUse !== "object") continue;
+    const gross = toNumberOrNull((rentalUse as Record<string, unknown>)["gross_rental_income"]);
+    if (gross == null) continue;
+    total += gross;
+    found = true;
+  }
+
+  return found ? total : null;
+}
+
+function buildCrossSectionWarnings(
+  currentSection: string,
+  dataBySection: Record<string, Record<string, unknown>>
+): string[] {
+  const warnings: string[] = [];
+  const touched = new Set(["income", "real_estate", "healthcare", "investments"]);
+  if (!touched.has(currentSection)) return warnings;
+
+  const income = dataBySection["income"] ?? {};
+  const realEstate = dataBySection["real_estate"] ?? {};
+  const healthcare = dataBySection["healthcare"] ?? {};
+  const investments = dataBySection["investments"] ?? {};
+
+  const incomeGross = sumIncomeGrossRents(income);
+  const realEstateGross = sumRealEstateGrossRents(realEstate);
+  if (incomeGross != null && realEstateGross != null && Math.abs(incomeGross - realEstateGross) > 0.01) {
+    warnings.push(
+      "Rental income mismatch: Income > rental_income.gross_rents total differs from Real Estate > rental_use.gross_rental_income total. Tax calculations use Income values."
+    );
+  }
+
+  const incomeOutsideHsa = toNumberOrNull(getByPath(income, "adjustments_to_income.hsa_contributions_outside_payroll"));
+  const healthcareHsa = toNumberOrNull(getByPath(healthcare, "health_savings_account.contributions_ytd"));
+  if (incomeOutsideHsa != null && healthcareHsa != null && Math.abs(incomeOutsideHsa - healthcareHsa) > 0.01) {
+    warnings.push(
+      "HSA contribution mismatch: Income > adjustments_to_income.hsa_contributions_outside_payroll differs from Healthcare > health_savings_account.contributions_ytd. Schedule 1 deduction uses Income values."
+    );
+  }
+
+  const incomeShortGains = toNumberOrNull(getByPath(income, "investment_income.short_term_capital_gains"));
+  const incomeLongGains = toNumberOrNull(getByPath(income, "investment_income.long_term_capital_gains"));
+  const investmentsShortGains = toNumberOrNull(getByPath(investments, "realized_gains_losses_this_year.short_term_gains"));
+  const investmentsLongGains = toNumberOrNull(getByPath(investments, "realized_gains_losses_this_year.long_term_gains"));
+
+  if (investmentsShortGains != null) {
+    if (incomeShortGains == null || Math.abs(incomeShortGains - investmentsShortGains) > 0.01) {
+      warnings.push(
+        "Capital gains mismatch: Investments short-term gains differ from Income > investment_income.short_term_capital_gains. Tax calculations use Income values."
+      );
+    }
+  }
+
+  if (investmentsLongGains != null) {
+    if (incomeLongGains == null || Math.abs(incomeLongGains - investmentsLongGains) > 0.01) {
+      warnings.push(
+        "Capital gains mismatch: Investments long-term gains differ from Income > investment_income.long_term_capital_gains. Tax calculations use Income values."
+      );
+    }
+  }
+
+  return warnings;
+}
+
 export async function registerUserDataRoutes(app: FastifyInstance): Promise<void> {
   app.get("/user-data", { preHandler: app.authenticateOptional }, async () => {
     return {
@@ -193,6 +294,21 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
 
       if (request.currentUser) {
         saveSectionData(request.currentUser.id, env.TAX_YEAR, section, data);
+        const dataBySection: Record<string, Record<string, unknown>> = {
+          income: section === "income" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "income"),
+          real_estate: section === "real_estate" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "real_estate"),
+          healthcare: section === "healthcare" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "healthcare"),
+          investments: section === "investments" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "investments")
+        };
+
+        const warnings = buildCrossSectionWarnings(section, dataBySection);
+        if (warnings.length > 0) {
+          return {
+            section,
+            saved: true,
+            warnings
+          };
+        }
       } else {
         const filePath = sectionFilePath(section);
         if (!fs.existsSync(filePath)) {
@@ -200,6 +316,30 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
         }
 
         fs.writeFileSync(filePath, yaml.dump(data, { noRefs: true, lineWidth: -1 }), "utf8");
+
+        const readSection = (name: string): Record<string, unknown> => {
+          if (name === section) return data;
+          const fp = sectionFilePath(name);
+          if (!fs.existsSync(fp)) return {};
+          const raw = fs.readFileSync(fp, "utf8");
+          return raw.trim() ? parseYamlContent(raw) : {};
+        };
+
+        const dataBySection: Record<string, Record<string, unknown>> = {
+          income: readSection("income"),
+          real_estate: readSection("real_estate"),
+          healthcare: readSection("healthcare"),
+          investments: readSection("investments")
+        };
+
+        const warnings = buildCrossSectionWarnings(section, dataBySection);
+        if (warnings.length > 0) {
+          return {
+            section,
+            saved: true,
+            warnings
+          };
+        }
       }
 
       return {
