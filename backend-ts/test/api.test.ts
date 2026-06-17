@@ -2450,6 +2450,26 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("tax law route rejects invalid query value types", async () => {
+    const app = buildApp();
+
+    const invalidLimitTypeRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-law/changes?limit=abc"
+    });
+    expect(invalidLimitTypeRes.statusCode).toBe(422);
+    expect((invalidLimitTypeRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidDryRunRes = await app.inject({
+      method: "POST",
+      url: "/api/tax-law/update?dry_run=maybe"
+    });
+    expect(invalidDryRunRes.statusCode).toBe(422);
+    expect((invalidDryRunRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
+  });
+
   test("reports route lists markdown reports and fetches report content", async () => {
     const app = buildApp();
 
@@ -2673,6 +2693,40 @@ describe("API baseline", () => {
 
     const postRes = await app.inject({ method: "POST", url: "/api/reports/tax-forms?tax_year=2025" });
     expect(postRes.statusCode).toBe(401);
+
+    await app.close();
+  });
+
+  test("tax forms route rejects invalid query values", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "tax-forms-invalid-query@example.com",
+        password: "Test1234!",
+        display_name: "Tax Forms Invalid Query"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const invalidYearRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-forms/compute?tax_year=not_a_number",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(invalidYearRes.statusCode).toBe(422);
+    expect((invalidYearRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidFormRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-forms/preview-pdf?tax_year=2025&form=../../bad",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(invalidFormRes.statusCode).toBe(422);
+    expect((invalidFormRes.json() as { detail: string }).detail).toBe("Validation error");
 
     await app.close();
   });

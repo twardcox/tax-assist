@@ -12,17 +12,17 @@ const KNOWN_SOURCES = new Set<string>(SUPPORTED_TAX_LAW_SOURCES);
 let updateRunning = false;
 
 const ChangesQuerySchema = z.object({
-  limit: z.union([z.string(), z.number()]).optional()
+  limit: z.coerce.number().int().optional()
 });
 
 const UpdateQuerySchema = z.object({
   source: z.string().optional(),
-  days: z.union([z.string(), z.number()]).optional(),
-  dry_run: z.union([z.string(), z.boolean()]).optional()
+  days: z.coerce.number().int().optional(),
+  dry_run: z.union([z.boolean(), z.enum(["true", "false", "1", "0"])]).optional()
 });
 
 const AlertCountQuerySchema = z.object({
-  since_days: z.union([z.string(), z.number()]).optional()
+  since_days: z.coerce.number().int().optional()
 });
 
 export function __setTaxLawUpdateRunningForTest(value: boolean): void {
@@ -38,14 +38,8 @@ function parseInteger(value: unknown, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function parseBoolean(value: unknown): boolean {
-  if (typeof value === "boolean") {
-    return value;
-  }
-  if (typeof value === "string") {
-    return value.toLowerCase() === "true";
-  }
-  return false;
+function parseDryRun(value: boolean | "true" | "false" | "1" | "0" | undefined): boolean {
+  return value === true || value === "true" || value === "1";
 }
 
 export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> {
@@ -90,7 +84,7 @@ export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> 
 
     const source = query.source;
     const days = parseInteger(query.days, 30);
-    const dryRun = parseBoolean(query.dry_run);
+    const dryRun = parseDryRun(query.dry_run);
 
     if (source && !KNOWN_SOURCES.has(source)) {
       throw new AppError(400, `Unknown source '${source}'`);

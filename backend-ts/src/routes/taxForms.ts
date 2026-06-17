@@ -20,12 +20,12 @@ type JobState = {
 const jobs = new Map<string, JobState>();
 
 const TaxYearQuerySchema = z.object({
-  tax_year: z.union([z.string(), z.number()]).optional()
+  tax_year: z.coerce.number().int().optional()
 });
 
 const PreviewQuerySchema = z.object({
-  tax_year: z.union([z.string(), z.number()]).optional(),
-  form: z.string().optional()
+  tax_year: z.coerce.number().int().optional(),
+  form: z.string().regex(/^[A-Za-z0-9_]+$/).optional()
 });
 
 const JobParamsSchema = z.object({
@@ -33,11 +33,6 @@ const JobParamsSchema = z.object({
 });
 
 const FilingDetailsBodySchema = z.record(z.unknown());
-
-function toNumber(value: unknown, fallback: number): number {
-  const parsed = Number(value ?? fallback);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
 
 async function buildPreviewPdfBytes(userId: string, taxYear: number): Promise<Uint8Array> {
   const data = loadAllUserData(userId, taxYear);
@@ -73,7 +68,7 @@ async function runJob(jobId: string, userId: string, taxYear: number): Promise<v
 export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void> {
   app.get("/filing-details", { preHandler: app.authenticate }, async (request) => {
     const query = TaxYearQuerySchema.parse(request.query ?? {});
-    const taxYear = toNumber(query.tax_year, 2025);
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
@@ -83,7 +78,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
 
   app.put("/filing-details", { preHandler: app.authenticate }, async (request) => {
     const query = TaxYearQuerySchema.parse(request.query ?? {});
-    const taxYear = toNumber(query.tax_year, 2025);
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
@@ -96,7 +91,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
 
   app.get("/tax-forms/preview-pdf", { preHandler: app.authenticate }, async (request, reply) => {
     const query = PreviewQuerySchema.parse(request.query ?? {});
-    const taxYear = toNumber(query.tax_year, 2025);
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) throw new AppError(401, "Authentication required");
 
@@ -120,7 +115,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
 
   app.get("/tax-forms/compute", { preHandler: app.authenticate }, async (request) => {
     const query = TaxYearQuerySchema.parse(request.query ?? {});
-    const taxYear = toNumber(query.tax_year, 2025);
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
@@ -136,7 +131,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
 
   app.post("/reports/tax-forms", { preHandler: app.authenticate }, async (request) => {
     const query = TaxYearQuerySchema.parse(request.query ?? {});
-    const taxYear = toNumber(query.tax_year, 2025);
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required to generate tax forms");
