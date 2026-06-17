@@ -94,8 +94,9 @@ export default function UserData() {
 
   const saveMutation = useMutation({
     mutationFn: ({ section, formState }) => api.updateSection(section, formState),
-    onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: ["user-data-parsed", activeSection] });
+    onSuccess: (result, { section }) => {
+      qc.invalidateQueries({ queryKey: ["user-data-parsed", section] });
+      if (activeSection !== section) return;
       const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
       setSaveWarnings(warnings);
       setSaveMsg(warnings.length > 0 ? "Saved with warnings" : "Saved");
