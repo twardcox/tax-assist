@@ -35,12 +35,15 @@ function computeAllDerived(state, schema) {
   let updated = deepClone(state);
   for (const group of schema.groups ?? []) {
     if (group.type === "callout") continue;
+    if (typeof group.showIf === "function" && !group.showIf(updated ?? {})) continue;
+
     if (group.type === "list") {
       const items = updated[group.key];
       if (!Array.isArray(items)) continue;
       updated[group.key] = items.map((item) => {
         let updatedItem = { ...item };
         for (const itemGroup of group.itemGroups ?? []) {
+          if (typeof itemGroup.showIf === "function" && !itemGroup.showIf(updatedItem ?? {})) continue;
           for (const f of itemGroup.fields ?? []) {
             if (typeof f.derivedFrom !== "function") continue;
             const itemGroupData = itemGroup.path
