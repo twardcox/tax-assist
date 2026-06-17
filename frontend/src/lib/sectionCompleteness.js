@@ -17,6 +17,8 @@ function countFields(schema, data, { essentialOnly }) {
   let total = 0;
   let filled = 0;
   for (const group of schema.groups ?? []) {
+    if (typeof group.showIf === "function" && !group.showIf(data ?? {})) continue;
+
     if (group.type === "list") {
       if (essentialOnly) continue;
       total += 1;
@@ -24,8 +26,10 @@ function countFields(schema, data, { essentialOnly }) {
       if (Array.isArray(listData) && listData.length > 0) filled += 1;
       continue;
     }
+
     const groupData = group.path ? (getNestedValue(data, group.path) ?? {}) : (data ?? {});
     for (const field of group.fields ?? []) {
+      if (typeof field.derivedFrom === "function") continue;
       if (essentialOnly && !field.essential) continue;
       total += 1;
       if (isFilled(groupData[field.key])) filled += 1;
