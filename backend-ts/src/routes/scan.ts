@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { runScan } from "../domain/scanner/scan";
@@ -16,6 +17,19 @@ type JobState = {
 
 const aiJobs = new Map<string, JobState>();
 
+const ScanQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional()
+});
+
+const ScanAiQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional(),
+  mode: z.string().optional()
+});
+
+const JobParamsSchema = z.object({
+  jobId: z.string().min(1)
+});
+
 function nowStamp(): string {
   return new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
 }
@@ -26,7 +40,7 @@ function nowPretty(): string {
 
 export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
   app.post("/scan", { preHandler: app.authenticateOptional }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = ScanQuerySchema.parse(request.query ?? {});
     const taxYear = Number(query.tax_year ?? 2025);
     const userId = request.currentUser?.id ?? null;
 
@@ -38,7 +52,7 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/scan/ai-analysis", { preHandler: app.authenticateOptional }, async (request) => {
-    const query = request.query as { tax_year?: string | number; mode?: string };
+    const query = ScanAiQuerySchema.parse(request.query ?? {});
     const taxYear = Number(query.tax_year ?? 2025);
     const mode = (query.mode ?? "opportunities") as ScanAiMode;
     const userId = request.currentUser?.id ?? null;
@@ -82,7 +96,7 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get("/scan/ai-analysis/:jobId", async (request) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = aiJobs.get(jobId);
     if (!job) {
       throw new AppError(404, `Job '${jobId}' not found`);

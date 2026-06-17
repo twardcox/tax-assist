@@ -1,5 +1,10 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { runScan } from "../domain/scanner/scan";
+
+const PlanningQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional()
+});
 
 type DeadlineEntry = {
   date: "12-31" | "04-15";
@@ -186,7 +191,7 @@ function urgencyCounts(actions: Array<Record<string, unknown>>) {
 // domain logic is ported in later milestones.
 export async function registerPlanningRoutes(app: FastifyInstance): Promise<void> {
   app.get("/planning/year-end", { preHandler: app.authenticateOptional }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = PlanningQuerySchema.parse(request.query ?? {});
     const taxYear = Number(query.tax_year ?? 2025);
     const userId = request.currentUser?.id ?? null;
 

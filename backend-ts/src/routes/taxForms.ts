@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { getFilingDetails, saveFilingDetails, type FilingDetails } from "../db/filingDetailsRepo";
@@ -18,10 +19,35 @@ type JobState = {
 
 const jobs = new Map<string, JobState>();
 
-function toNumber(value: unknown, fallback: number): number {
-  const parsed = Number(value ?? fallback);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
+const TaxYearQuerySchema = z.object({
+  tax_year: z.coerce.number().int().optional()
+});
+
+const PreviewQuerySchema = z.object({
+  tax_year: z.coerce.number().int().optional(),
+  form: z.string().regex(/^[A-Za-z0-9_]+$/).optional()
+});
+
+const JobParamsSchema = z.object({
+  jobId: z.string().min(1)
+});
+
+const NullableStringSchema = (inner: z.ZodString) => z.preprocess(
+  (value) => (value === "" ? null : value),
+  z.union([inner, z.null()])
+);
+
+const FilingDetailsBodySchema = z.object({
+  pec_fund_taxpayer: z.boolean().optional(),
+  pec_fund_spouse: z.boolean().optional(),
+  direct_deposit_routing: NullableStringSchema(z.string().regex(/^\d{9}$/)).optional(),
+  direct_deposit_account: NullableStringSchema(z.string().regex(/^\d{4,17}$/)).optional(),
+  direct_deposit_type: z.union([z.enum(["checking", "savings"]), z.null()]).optional(),
+  allow_third_party: z.boolean().optional(),
+  designee_name: NullableStringSchema(z.string().max(80)).optional(),
+  designee_phone: NullableStringSchema(z.string().regex(/^[0-9()+.\s-]{7,25}$/)).optional(),
+  designee_pin: NullableStringSchema(z.string().regex(/^\d{4,5}$/)).optional()
+}).strict();
 
 async function buildPreviewPdfBytes(userId: string, taxYear: number): Promise<Uint8Array> {
   const data = loadAllUserData(userId, taxYear);
@@ -56,8 +82,8 @@ async function runJob(jobId: string, userId: string, taxYear: number): Promise<v
 
 export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void> {
   app.get("/filing-details", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
-    const taxYear = toNumber(query.tax_year, 2025);
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
@@ -66,21 +92,21 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.put("/filing-details", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
-    const taxYear = toNumber(query.tax_year, 2025);
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
     }
 
-    const payload = (request.body ?? {}) as FilingDetails;
+    const payload = FilingDetailsBodySchema.parse(request.body ?? {}) as FilingDetails;
     saveFilingDetails(userId, taxYear, payload);
     return { ok: true };
   });
 
   app.get("/tax-forms/preview-pdf", { preHandler: app.authenticate }, async (request, reply) => {
-    const query = request.query as { tax_year?: string | number; form?: string };
-    const taxYear = toNumber(query.tax_year, 2025);
+    const query = PreviewQuerySchema.parse(request.query ?? {});
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) throw new AppError(401, "Authentication required");
 
@@ -103,8 +129,8 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/tax-forms/compute", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
-    const taxYear = toNumber(query.tax_year, 2025);
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
@@ -119,8 +145,8 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.post("/reports/tax-forms", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
-    const taxYear = toNumber(query.tax_year, 2025);
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
+    const taxYear = query.tax_year ?? 2025;
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required to generate tax forms");
@@ -141,7 +167,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/reports/tax-forms/:jobId", async (request) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = jobs.get(jobId);
     if (!job) {
       throw new AppError(404, `Job '${jobId}' not found`);
@@ -156,7 +182,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/reports/tax-forms/:jobId/download", async (request, reply) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = jobs.get(jobId);
     if (!job) {
       throw new AppError(404, "Job not found");

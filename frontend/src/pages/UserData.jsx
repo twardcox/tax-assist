@@ -52,12 +52,14 @@ const CATEGORIES = [
 ];
 
 const STATUS_DOT = {
+  unknown: "bg-slate-500",
   empty: "bg-gray-700",
   partial: "bg-amber-500",
   complete: "bg-emerald-500",
 };
 
 const STATUS_TEXT = {
+  unknown: "status unavailable",
   empty: "not started",
   partial: "in progress",
   complete: "complete",
@@ -67,6 +69,7 @@ export default function UserData() {
   const qc = useQueryClient();
   const [activeSection, setActiveSection] = useState(null);
   const [saveMsg, setSaveMsg] = useState(null);
+  const [saveWarnings, setSaveWarnings] = useState([]);
 
   const { data: sectionsData, isLoading: loadingSections } = useQuery({
     queryKey: ["user-data-sections"],
@@ -91,18 +94,25 @@ export default function UserData() {
 
   const saveMutation = useMutation({
     mutationFn: ({ section, formState }) => api.updateSection(section, formState),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["user-data-parsed", activeSection] });
-      setSaveMsg("Saved");
+    onSuccess: (result, { section }) => {
+      qc.invalidateQueries({ queryKey: ["user-data-parsed", section] });
+      if (activeSection !== section) return;
+      const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+      setSaveWarnings(warnings);
+      setSaveMsg(warnings.length > 0 ? "Saved with warnings" : "Saved");
       setTimeout(() => setSaveMsg(null), 2500);
     },
-    onError: (e) => setSaveMsg(`Error: ${e.message}`),
+    onError: (e) => {
+      setSaveWarnings([]);
+      setSaveMsg(`Error: ${e.message}`);
+    },
   });
 
   function handleSectionClick(section) {
     if (section === activeSection) return;
     setActiveSection(section);
     setSaveMsg(null);
+    setSaveWarnings([]);
   }
 
   function handleSave(formState) {
@@ -145,11 +155,11 @@ export default function UserData() {
                   const { filled, total, mode } = hasData
                     ? essentialCompleteness(sectionSchema, data)
                     : { filled: 0, total: 0, mode: "unknown" };
-                  const status = hasData ? completionStatus({ filled, total }) : "empty";
+                  const status = hasData ? completionStatus({ filled, total }) : "unknown";
                   const noun = mode === "essential" ? "essential fields" : "fields";
                   const statusLabel = hasData
                     ? (total ? `${STATUS_TEXT[status]} — ${filled} of ${total} ${noun}` : STATUS_TEXT[status])
-                    : "status unavailable until opened";
+                    : STATUS_TEXT.unknown;
                   return (
                     <li key={s}>
                       <button
@@ -202,6 +212,7 @@ export default function UserData() {
                 onSave={handleSave}
                 isSaving={saveMutation.isPending}
                 saveMsg={saveMsg}
+                saveWarnings={saveWarnings}
                 crossSectionData={{ dependentsCount }}
                 onGoToSection={handleSectionClick}
               />

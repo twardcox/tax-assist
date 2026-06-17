@@ -6,6 +6,7 @@
 # ── Database (contains user financial data) ───────────────────────────────────
 state/transactions.db
 state/*.db
+state/*.db-*
 state/update_state.json
 
 # ── User-uploaded documents ───────────────────────────────────────────────────

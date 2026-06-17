@@ -210,6 +210,214 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("user-data rejects malformed section payload shapes", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "invalid-shape@example.com",
+        password: "Test1234!",
+        display_name: "Invalid Shape"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const writeRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          // Must be an array of objects, not an object.
+          w2_employment: { employer_name: "Acme" }
+        }
+      }
+    });
+
+    expect(writeRes.statusCode).toBe(422);
+    const payload = writeRes.json() as { detail: string };
+    expect(payload.detail).toContain("Invalid payload for section 'income'");
+
+    await app.close();
+  });
+
+  test("user-data write requires exactly one of data or content", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "user-data-contract@example.com",
+        password: "Test1234!",
+        display_name: "User Data Contract"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const neitherRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {}
+    });
+
+    expect(neitherRes.statusCode).toBe(422);
+    expect((neitherRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const bothRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: { filing_status: "single" },
+        content: "filing_status: married_filing_jointly"
+      }
+    });
+
+    expect(bothRes.statusCode).toBe(422);
+    expect((bothRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
+  });
+
+  test("user-data save returns HSA, rental, and capital-gains mismatch warnings without failing save", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "warnings-user@example.com",
+        password: "Test1234!",
+        display_name: "Warnings User"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const healthcareWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/healthcare",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          health_savings_account: {
+            contributions_ytd: 5000
+          }
+        }
+      }
+    });
+
+    expect(healthcareWrite.statusCode).toBe(200);
+
+    const realEstateWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/real_estate",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          properties: [
+            {
+              address: "123 Rental St",
+              rental_use: {
+                gross_rental_income: 8000
+              }
+            }
+          ]
+        }
+      }
+    });
+
+    expect(realEstateWrite.statusCode).toBe(200);
+
+    const investmentsWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/investments",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          realized_gains_losses_this_year: {
+            short_term_gains: 1200,
+            long_term_gains: 3400
+          }
+        }
+      }
+    });
+
+    expect(investmentsWrite.statusCode).toBe(200);
+
+    const incomeWrite = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          rental_income: [
+            {
+              property_address: "123 Rental St",
+              gross_rents: 5000
+            }
+          ],
+          investment_income: {
+            short_term_capital_gains: 100,
+            long_term_capital_gains: 200
+          },
+          adjustments_to_income: {
+            hsa_contributions_outside_payroll: 1000
+          }
+        }
+      }
+    });
+
+    expect(incomeWrite.statusCode).toBe(200);
+    const savePayload = incomeWrite.json() as { section: string; saved: boolean; warnings?: string[] };
+    expect(savePayload).toMatchObject({ section: "income", saved: true });
+    expect(savePayload.warnings).toBeDefined();
+    expect(savePayload.warnings?.some((w) => w.includes("HSA contribution mismatch"))).toBe(true);
+    expect(savePayload.warnings?.some((w) => w.includes("Rental income mismatch"))).toBe(true);
+    expect(savePayload.warnings?.some((w) => w.includes("Capital gains mismatch"))).toBe(true);
+
+    const incomeRead = await app.inject({
+      method: "GET",
+      url: "/api/user-data/income/parsed",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(incomeRead.statusCode).toBe(200);
+    const parsed = incomeRead.json() as { data: Record<string, unknown> };
+    expect(parsed.data).toMatchObject({
+      adjustments_to_income: {
+        hsa_contributions_outside_payroll: 1000
+      }
+    });
+
+    await app.close();
+  });
+
   test("documents upload, list, extract, apply, and delete routes work", async () => {
     const previousKey = process.env.ANTHROPIC_API_KEY;
     process.env.ANTHROPIC_API_KEY = "test-key";
@@ -383,6 +591,71 @@ describe("API baseline", () => {
       process.env.ANTHROPIC_API_KEY = previousKey;
       await app.close();
     }
+  });
+
+  test("documents apply rejects invalid update payload shape", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "doc-invalid-apply@example.com",
+        password: "Test1234!",
+        display_name: "Doc Invalid Apply"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const applyRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/apply",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      payload: {
+        updates: [
+          {
+            section: "household",
+            operation: "multiply",
+            value: 123
+          }
+        ]
+      }
+    });
+
+    expect(applyRes.statusCode).toBe(422);
+    expect((applyRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidMetaRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/apply",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      payload: {
+        meta: {
+          date: "2026/01/01",
+          deductible_pct: 1.2
+        },
+        updates: [
+          {
+            section: "household",
+            dot_path: "expenses.office_supplies",
+            operation: "add",
+            value: 10
+          }
+        ]
+      }
+    });
+
+    expect(invalidMetaRes.statusCode).toBe(422);
+    expect((invalidMetaRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
   });
 
   test("transactions list and summary work with auth and filters", async () => {
@@ -2288,6 +2561,26 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("tax law route rejects invalid query value types", async () => {
+    const app = buildApp();
+
+    const invalidLimitTypeRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-law/changes?limit=abc"
+    });
+    expect(invalidLimitTypeRes.statusCode).toBe(422);
+    expect((invalidLimitTypeRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidDryRunRes = await app.inject({
+      method: "POST",
+      url: "/api/tax-law/update?dry_run=maybe"
+    });
+    expect(invalidDryRunRes.statusCode).toBe(422);
+    expect((invalidDryRunRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
+  });
+
   test("reports route lists markdown reports and fetches report content", async () => {
     const app = buildApp();
 
@@ -2511,6 +2804,64 @@ describe("API baseline", () => {
 
     const postRes = await app.inject({ method: "POST", url: "/api/reports/tax-forms?tax_year=2025" });
     expect(postRes.statusCode).toBe(401);
+
+    await app.close();
+  });
+
+  test("tax forms route rejects invalid query values", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "tax-forms-invalid-query@example.com",
+        password: "Test1234!",
+        display_name: "Tax Forms Invalid Query"
+      }
+    });
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const invalidYearRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-forms/compute?tax_year=not_a_number",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(invalidYearRes.statusCode).toBe(422);
+    expect((invalidYearRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidFormRes = await app.inject({
+      method: "GET",
+      url: "/api/tax-forms/preview-pdf?tax_year=2025&form=../../bad",
+      headers: { authorization: `Bearer ${token}` }
+    });
+    expect(invalidFormRes.statusCode).toBe(422);
+    expect((invalidFormRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidBodyRes = await app.inject({
+      method: "PUT",
+      url: "/api/filing-details?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        pec_fund_taxpayer: "yes"
+      }
+    });
+    expect(invalidBodyRes.statusCode).toBe(422);
+    expect((invalidBodyRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const invalidFilingFormatRes = await app.inject({
+      method: "PUT",
+      url: "/api/filing-details?tax_year=2025",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        direct_deposit_routing: "123",
+        direct_deposit_type: "brokerage",
+        designee_phone: "***"
+      }
+    });
+    expect(invalidFilingFormatRes.statusCode).toBe(422);
+    expect((invalidFilingFormatRes.json() as { detail: string }).detail).toBe("Validation error");
 
     await app.close();
   });

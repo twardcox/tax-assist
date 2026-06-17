@@ -3,6 +3,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import yaml from "js-yaml";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { addTransaction, fileAlreadyApplied } from "../db/transactionsRepo";
@@ -24,12 +25,6 @@ type MultipartLikeFile = {
   toBuffer: () => Promise<Buffer>;
 };
 
-type UploadPayload = {
-  filename?: string;
-  content?: string;
-  category?: string;
-};
-
 type ExtractionJobState = {
   status: "running" | "complete" | "error";
   extracted: Record<string, unknown> | null;
@@ -37,6 +32,49 @@ type ExtractionJobState = {
 };
 
 const extractionJobs = new Map<string, ExtractionJobState>();
+
+const UploadPayloadSchema = z.object({
+  filename: z.string().optional(),
+  content: z.string().optional(),
+  category: z.string().optional()
+});
+
+const FileParamsSchema = z.object({
+  fileId: z.string().min(1)
+});
+
+const JobParamsSchema = z.object({
+  jobId: z.string().min(1)
+});
+
+const UpdateInstructionSchema = z.object({
+  label: z.string().max(200).optional(),
+  section: z.string().regex(/^[A-Za-z0-9_]+$/).max(64).optional(),
+  yaml_file: z.string().regex(/^[A-Za-z0-9_]+$/).max(64).optional(),
+  dot_path: z.string().min(1).max(240),
+  operation: z.enum(["set", "add"]).default("set"),
+  value: z.unknown()
+}).passthrough();
+
+const ApplyMetaSchema = z.object({
+  file_id: z.string().max(64).optional(),
+  filename: z.string().max(200).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  merchant: z.string().max(120).optional(),
+  total_amount: z.number().finite().min(0).max(1_000_000_000).optional(),
+  deductible_pct: z.number().finite().min(0).max(1).optional(),
+  tax_category: z.string().max(80).optional(),
+  benefit_ids: z.array(z.string().max(120)).max(50).optional(),
+  form_line: z.string().max(80).optional()
+}).passthrough();
+
+const ApplyBodySchema = z.union([
+  z.array(UpdateInstructionSchema),
+  z.object({
+    updates: z.array(UpdateInstructionSchema).optional(),
+    meta: ApplyMetaSchema.optional()
+  })
+]);
 
 function toBuffer(value: string | Buffer): Buffer {
   return Buffer.isBuffer(value) ? value : Buffer.from(value, "utf8");
@@ -105,7 +143,7 @@ function applyDotPath(data: Record<string, unknown>, dotPath: string, operation:
 }
 
 async function readUpload(request: FastifyRequest): Promise<{ filename: string; content: Buffer } | null> {
-  const body = request.body as UploadPayload | undefined;
+  const body = UploadPayloadSchema.optional().parse(request.body);
   if (body?.filename && body.content != null) {
     return { filename: safeName(body.filename), content: toBuffer(body.content) };
   }
@@ -174,7 +212,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
       throw new AppError(401, "Authentication required");
     }
 
-    const { fileId } = request.params as { fileId: string };
+    const { fileId } = FileParamsSchema.parse(request.params ?? {});
     const deleted = deleteDocumentRecord(userId, fileId);
     if (!deleted) {
       throw new AppError(404, `Document '${fileId}' not found`);
@@ -193,7 +231,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
       throw new AppError(401, "Authentication required");
     }
 
-    const { fileId } = request.params as { fileId: string };
+    const { fileId } = FileParamsSchema.parse(request.params ?? {});
     const doc = getDocumentContent(userId, fileId);
     if (!doc.content) {
       throw new AppError(404, `Document '${fileId}' not found`);
@@ -208,7 +246,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
   });
 
   app.get("/documents/extract/:jobId", async (request) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = extractionJobs.get(jobId);
     if (!job) {
       throw new AppError(404, `Extraction job '${jobId}' not found`);
@@ -218,7 +256,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
   });
 
   app.post("/documents/apply", { preHandler: app.authenticateOptional }, async (request) => {
-    const body = (request.body ?? {}) as Array<Record<string, unknown>> | { updates?: Array<Record<string, unknown>>; meta?: Record<string, unknown> };
+    const body = ApplyBodySchema.parse(request.body ?? {});
     const updates = Array.isArray(body) ? body : (body.updates ?? []);
     const meta = Array.isArray(body) ? {} : (body.meta ?? {});
 

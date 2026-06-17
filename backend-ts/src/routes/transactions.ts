@@ -1,6 +1,17 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { getSummary, getTransactions, reverseTransaction } from "../db/transactionsRepo";
+
+const TransactionsQuerySchema = z.object({
+  benefit_id: z.string().optional(),
+  tax_category: z.string().optional(),
+  status: z.string().optional()
+});
+
+const TransactionParamsSchema = z.object({
+  txnId: z.string().min(1)
+});
 
 export async function registerTransactionsRoutes(app: FastifyInstance): Promise<void> {
   app.get("/transactions", { preHandler: app.authenticateOptional }, async (request) => {
@@ -9,11 +20,7 @@ export async function registerTransactionsRoutes(app: FastifyInstance): Promise<
       return { transactions: [] };
     }
 
-    const query = request.query as {
-      benefit_id?: string;
-      tax_category?: string;
-      status?: string;
-    };
+    const query = TransactionsQuerySchema.parse(request.query ?? {});
 
     return {
       transactions: getTransactions(user.id, {
@@ -45,7 +52,7 @@ export async function registerTransactionsRoutes(app: FastifyInstance): Promise<
       throw new AppError(401, "User not found");
     }
 
-    const { txnId } = request.params as { txnId: string };
+    const { txnId } = TransactionParamsSchema.parse(request.params ?? {});
     const reversed = reverseTransaction(txnId, user.id);
     if (!reversed) {
       throw new AppError(404, `Transaction '${txnId}' not found`);
