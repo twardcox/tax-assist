@@ -71,8 +71,8 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post("/auth/login", { config: { unauthenticated: true } }, async (request) => {
-    const body = LoginBodySchema.parse(request.body);
     enforceRateLimit(`login:${request.ip}`, LOGIN_MAX_REQUESTS, LOGIN_WINDOW_MS);
+    const body = LoginBodySchema.parse(request.body);
     const user = getUserByEmail(body.email);
 
     if (!user || !verifyPassword(body.password, user.password_hash)) {
