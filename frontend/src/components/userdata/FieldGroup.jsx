@@ -1,14 +1,24 @@
 import { useId, useState, useEffect } from "react";
 import FieldInput from "./FieldInput";
 
+const UNSAFE_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function isSafeKey(k) {
+  return !UNSAFE_KEYS.has(k);
+}
+
 function getNestedValue(obj, path) {
   if (!path) return obj;
-  return path.split(".").reduce((acc, k) => (acc && typeof acc === "object" ? acc[k] : undefined), obj);
+  return path.split(".").reduce((acc, k) => (acc && typeof acc === "object" && isSafeKey(k) ? acc[k] : undefined), obj);
 }
 
 function setNestedValue(obj, path, value) {
   if (!path) return value;
   const keys = path.split(".");
+  if (keys.some((k) => !isSafeKey(k))) {
+    console.warn("setNestedValue: unsafe key in path", path);
+    return obj ?? {};
+  }
   const result = { ...(obj ?? {}) };
   let cur = result;
   for (let i = 0; i < keys.length - 1; i++) {
