@@ -52,12 +52,14 @@ const CATEGORIES = [
 ];
 
 const STATUS_DOT = {
+  unknown: "bg-slate-500",
   empty: "bg-gray-700",
   partial: "bg-amber-500",
   complete: "bg-emerald-500",
 };
 
 const STATUS_TEXT = {
+  unknown: "status unavailable",
   empty: "not started",
   partial: "in progress",
   complete: "complete",
@@ -145,11 +147,11 @@ export default function UserData() {
                   const { filled, total, mode } = hasData
                     ? essentialCompleteness(sectionSchema, data)
                     : { filled: 0, total: 0, mode: "unknown" };
-                  const status = hasData ? completionStatus({ filled, total }) : "empty";
+                  const status = hasData ? completionStatus({ filled, total }) : "unknown";
                   const noun = mode === "essential" ? "essential fields" : "fields";
                   const statusLabel = hasData
                     ? (total ? `${STATUS_TEXT[status]} — ${filled} of ${total} ${noun}` : STATUS_TEXT[status])
-                    : "status unavailable until opened";
+                    : STATUS_TEXT.unknown;
                   return (
                     <li key={s}>
                       <button

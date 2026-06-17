@@ -210,6 +210,43 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("user-data rejects malformed section payload shapes", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "invalid-shape@example.com",
+        password: "Test1234!",
+        display_name: "Invalid Shape"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const writeRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/income",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: {
+          // Must be an array of objects, not an object.
+          w2_employment: { employer_name: "Acme" }
+        }
+      }
+    });
+
+    expect(writeRes.statusCode).toBe(422);
+    const payload = writeRes.json() as { detail: string };
+    expect(payload.detail).toContain("Invalid payload for section 'income'");
+
+    await app.close();
+  });
+
   test("documents upload, list, extract, apply, and delete routes work", async () => {
     const previousKey = process.env.ANTHROPIC_API_KEY;
     process.env.ANTHROPIC_API_KEY = "test-key";

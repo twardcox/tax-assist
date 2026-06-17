@@ -10,7 +10,20 @@ import {
   type UserRow
 } from "../db/authRepo";
 
-const SECRET = env.JWT_SECRET_KEY ?? "dev-secret-change-me-in-production-32ch";
+function resolveJwtSecret(): string {
+  if (env.JWT_SECRET_KEY && env.JWT_SECRET_KEY.trim().length > 0) {
+    return env.JWT_SECRET_KEY;
+  }
+
+  // Keep tests self-contained while preventing insecure defaults in runtime.
+  if (env.NODE_ENV === "test") {
+    return "test-only-jwt-secret-change-before-shared-use";
+  }
+
+  throw new Error("JWT_SECRET_KEY is required outside test mode");
+}
+
+const SECRET = resolveJwtSecret();
 const ALGORITHM: jwt.Algorithm = "HS256";
 const ACCESS_TOKEN_EXPIRE_MINUTES = 60;
 
