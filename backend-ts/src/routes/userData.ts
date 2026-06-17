@@ -310,20 +310,22 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
 
       if (request.currentUser) {
         saveSectionData(request.currentUser.id, env.TAX_YEAR, section, data);
-        const dataBySection: Record<string, Record<string, unknown>> = {
-          income: section === "income" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "income"),
-          real_estate: section === "real_estate" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "real_estate"),
-          healthcare: section === "healthcare" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "healthcare"),
-          investments: section === "investments" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "investments")
-        };
-
-        const warnings = buildCrossSectionWarnings(section, dataBySection);
-        if (warnings.length > 0) {
-          return {
-            section,
-            saved: true,
-            warnings
+        if (section === "income" || section === "real_estate" || section === "healthcare" || section === "investments") {
+          const dataBySection: Record<string, Record<string, unknown>> = {
+            income: section === "income" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "income"),
+            real_estate: section === "real_estate" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "real_estate"),
+            healthcare: section === "healthcare" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "healthcare"),
+            investments: section === "investments" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "investments")
           };
+
+          const warnings = buildCrossSectionWarnings(section, dataBySection);
+          if (warnings.length > 0) {
+            return {
+              section,
+              saved: true,
+              warnings
+            };
+          }
         }
       } else {
         const filePath = sectionFilePath(section);
