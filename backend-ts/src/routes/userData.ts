@@ -292,10 +292,7 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
       if (body.data !== undefined) {
         data = body.data;
       } else {
-        const { content } = body;
-        if (content === undefined) {
-          throw new AppError(422, "Provide exactly one of 'data' (JSON) or 'content' (YAML string)");
-        }
+        const content = body.content as string;
         try {
           data = parseYamlContent(content);
         } catch (error) {
