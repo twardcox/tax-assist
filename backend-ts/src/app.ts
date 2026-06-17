@@ -29,7 +29,10 @@ export function buildApp() {
   migrateSectionDataIfNeeded();
   bootstrapYamlIfNeeded();
 
-  const app = Fastify({ logger: true });
+  const app = Fastify({
+    logger: true,
+    bodyLimit: 21 * 1024 * 1024
+  });
 
   registerErrorHandler(app);
 

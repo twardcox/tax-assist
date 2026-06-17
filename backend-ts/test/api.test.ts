@@ -791,6 +791,43 @@ describe("API baseline", () => {
     }
   });
 
+  test("documents upload rejects oversized JSON content payloads", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "doc-oversized@example.com",
+        password: "Test1234!",
+        display_name: "Doc Oversized"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const oversizedContent = "a".repeat(20 * 1024 * 1024 + 1);
+
+    const uploadRes = await app.inject({
+      method: "POST",
+      url: "/api/documents/upload",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      },
+      payload: {
+        filename: "oversized-receipt.pdf",
+        content: oversizedContent
+      }
+    });
+
+    expect(uploadRes.statusCode).toBe(413);
+    expect(uploadRes.json()).toEqual({ detail: "Uploaded file exceeds 20 MB limit" });
+
+    await app.close();
+  });
+
   test("documents apply rejects invalid update payload shape", async () => {
     const app = buildApp();
 
