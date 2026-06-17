@@ -74,7 +74,7 @@ export function extractBearerToken(authorization?: string): string | null {
     return null;
   }
 
-  const match = authorization.match(/^\s*bearer\s+(.+?)\s*$/i);
+  const match = authorization.match(/^\s*bearer\s+(\S+)\s*$/i);
   if (!match) {
     return null;
   }
