@@ -247,6 +247,52 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("user-data write requires exactly one of data or content", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "user-data-contract@example.com",
+        password: "Test1234!",
+        display_name: "User Data Contract"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const neitherRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {}
+    });
+
+    expect(neitherRes.statusCode).toBe(422);
+    expect((neitherRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    const bothRes = await app.inject({
+      method: "PUT",
+      url: "/api/user-data/household",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        data: { filing_status: "single" },
+        content: "filing_status: married_filing_jointly"
+      }
+    });
+
+    expect(bothRes.statusCode).toBe(422);
+    expect((bothRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
+  });
+
   test("user-data save returns HSA, rental, and capital-gains mismatch warnings without failing save", async () => {
     const app = buildApp();
 

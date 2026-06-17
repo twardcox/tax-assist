@@ -24,6 +24,16 @@ const VALID_SECTIONS = new Set([
 const DataBodySchema = z.object({
   data: z.record(z.unknown()).optional(),
   content: z.string().optional()
+}).superRefine((value, ctx) => {
+  const hasData = value.data !== undefined;
+  const hasContent = value.content !== undefined;
+
+  if (hasData === hasContent) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Provide exactly one of 'data' (JSON) or 'content' (YAML string)"
+    });
+  }
 });
 
 const LooseObjectSchema = z.object({}).catchall(z.unknown());
@@ -279,19 +289,21 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
       const body = DataBodySchema.parse(request.body ?? {});
 
       let data: Record<string, unknown>;
-      if (body.data) {
+      if (body.data !== undefined) {
         data = body.data;
-      } else if (typeof body.content === "string") {
+      } else {
+        const { content } = body;
+        if (content === undefined) {
+          throw new AppError(422, "Provide exactly one of 'data' (JSON) or 'content' (YAML string)");
+        }
         try {
-          data = parseYamlContent(body.content);
+          data = parseYamlContent(content);
         } catch (error) {
           if (error instanceof AppError) {
             throw error;
           }
           throw new AppError(422, `Invalid YAML: ${(error as Error).message}`);
         }
-      } else {
-        throw new AppError(422, "Provide either 'data' (JSON) or 'content' (YAML string)");
       }
 
       data = validateSectionData(section, data);
