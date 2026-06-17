@@ -240,7 +240,8 @@ export const schema = {
       goToSection: "dependents",
       actionLabel: "Manage Dependents →",
       text: (cross) => {
-        const n = cross?.dependentsCount ?? 0;
+        const n = cross?.dependentsCount;
+        if (n == null) return "Dependents count available after opening the Dependents section.";
         return n === 1 ? "1 dependent on file." : `${n} dependents on file.`;
       },
     },
