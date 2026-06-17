@@ -14,14 +14,18 @@ function getNestedValue(obj, path) {
 function setNestedValue(obj, path, value) {
   if (!path) return value;
   const keys = path.split(".");
-  if (keys.some((k) => k === "__proto__" || k === "constructor" || k === "prototype")) return obj ?? {};
   const result = { ...(obj ?? {}) };
   let cur = result;
   for (let i = 0; i < keys.length - 1; i++) {
-    cur[keys[i]] = { ...(cur[keys[i]] ?? {}) };
-    cur = cur[keys[i]];
+    const k = keys[i];
+    if (k === "__proto__" || k === "constructor" || k === "prototype") return obj ?? {};
+    cur[k] = { ...(cur[k] ?? {}) };
+    cur = cur[k];
   }
-  cur[keys[keys.length - 1]] = value;
+  const last = keys[keys.length - 1];
+  if (last !== "__proto__" && last !== "constructor" && last !== "prototype") {
+    cur[last] = value;
+  }
   return result;
 }
 
