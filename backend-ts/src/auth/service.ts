@@ -74,12 +74,12 @@ export function extractBearerToken(authorization?: string): string | null {
     return null;
   }
 
-  const [scheme, token] = authorization.split(" ");
-  if (scheme?.toLowerCase() !== "bearer" || !token) {
+  const match = authorization.match(/^\s*bearer\s+(.+?)\s*$/i);
+  if (!match) {
     return null;
   }
 
-  return token;
+  return match[1] ?? null;
 }
 
 export function getCurrentUserFromToken(token: string): UserRow {

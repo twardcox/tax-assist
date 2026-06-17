@@ -161,6 +161,62 @@ describe("API baseline", () => {
     await app.close();
   });
 
+  test("auth middleware handles malformed authorization headers safely", async () => {
+    const app = buildApp();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: {
+        email: "header-check@example.com",
+        password: "Test1234!",
+        display_name: "Header Check"
+      }
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+    const token = (registerRes.json() as { token: string }).token;
+
+    const whitespaceAuthRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/me",
+      headers: {
+        authorization: `   Bearer   ${token}   `
+      }
+    });
+
+    expect(whitespaceAuthRes.statusCode).toBe(200);
+    expect(whitespaceAuthRes.json()).toEqual({
+      id: expect.any(String),
+      email: "header-check@example.com",
+      display_name: "Header Check"
+    });
+
+    const malformedAuthRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/me",
+      headers: {
+        authorization: `Bearer${token}`
+      }
+    });
+
+    expect(malformedAuthRes.statusCode).toBe(401);
+    expect(malformedAuthRes.json()).toEqual({ detail: "Not authenticated" });
+
+    const wrongSchemeRes = await app.inject({
+      method: "GET",
+      url: "/api/auth/me",
+      headers: {
+        authorization: `Token ${token}`
+      }
+    });
+
+    expect(wrongSchemeRes.statusCode).toBe(401);
+    expect(wrongSchemeRes.json()).toEqual({ detail: "Not authenticated" });
+
+    await app.close();
+  });
+
   test("auth register is rate limited after repeated attempts", async () => {
     const app = buildApp();
 
