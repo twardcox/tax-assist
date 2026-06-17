@@ -112,8 +112,10 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
   // are considered a match if any of their item-group fields match.
   const visibleGroups = schema.groups
     .map((group) => {
+      if (typeof group.showIf === "function" && !group.showIf(formState ?? {})) {
+        return { group, fields: null, hasMatch: false };
+      }
       const groupLabelMatches = isSearching && group.label?.toLowerCase().includes(term);
-
       if (group.type === "callout") {
         return { group, fields: null, hasMatch: !isSearching || groupLabelMatches };
       }
