@@ -69,6 +69,7 @@ export default function UserData() {
   const qc = useQueryClient();
   const [activeSection, setActiveSection] = useState(null);
   const [saveMsg, setSaveMsg] = useState(null);
+  const [saveWarnings, setSaveWarnings] = useState([]);
 
   const { data: sectionsData, isLoading: loadingSections } = useQuery({
     queryKey: ["user-data-sections"],
@@ -93,18 +94,24 @@ export default function UserData() {
 
   const saveMutation = useMutation({
     mutationFn: ({ section, formState }) => api.updateSection(section, formState),
-    onSuccess: () => {
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ["user-data-parsed", activeSection] });
-      setSaveMsg("Saved");
+      const warnings = Array.isArray(result?.warnings) ? result.warnings : [];
+      setSaveWarnings(warnings);
+      setSaveMsg(warnings.length > 0 ? "Saved with warnings" : "Saved");
       setTimeout(() => setSaveMsg(null), 2500);
     },
-    onError: (e) => setSaveMsg(`Error: ${e.message}`),
+    onError: (e) => {
+      setSaveWarnings([]);
+      setSaveMsg(`Error: ${e.message}`);
+    },
   });
 
   function handleSectionClick(section) {
     if (section === activeSection) return;
     setActiveSection(section);
     setSaveMsg(null);
+    setSaveWarnings([]);
   }
 
   function handleSave(formState) {
@@ -204,6 +211,7 @@ export default function UserData() {
                 onSave={handleSave}
                 isSaving={saveMutation.isPending}
                 saveMsg={saveMsg}
+                saveWarnings={saveWarnings}
                 crossSectionData={{ dependentsCount }}
                 onGoToSection={handleSectionClick}
               />

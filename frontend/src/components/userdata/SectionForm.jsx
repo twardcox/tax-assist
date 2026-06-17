@@ -81,7 +81,7 @@ function matchesSearch(field, term) {
   return field.label?.toLowerCase().includes(term) || field.key?.toLowerCase().includes(term);
 }
 
-export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, crossSectionData, onGoToSection }) {
+export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, saveWarnings = [], crossSectionData, onGoToSection }) {
   const [formState, setFormState] = useState(() => deepClone(data));
   const [search, setSearch] = useState("");
 
@@ -227,30 +227,42 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
       </div>
 
       {/* Save bar */}
-      <div className="flex items-center justify-end gap-3 pt-3 mt-3 border-t border-gray-800 flex-shrink-0">
-        <span role="status" aria-live="polite" className="text-xs">
-          {saveMsg && (
-            <span className={saveMsg.startsWith("Error") ? "text-red-400" : "text-emerald-400"}>
-              {saveMsg}
-            </span>
-          )}
-          {!saveMsg && isDirty && <span className="text-amber-400">Unsaved changes</span>}
-        </span>
-        <button
-          type="button"
-          onClick={() => setFormState(deepClone(data))}
-          className="text-xs text-gray-500 hover:text-gray-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded px-1"
-        >
-          Reset
-        </button>
-        <button
-          type="button"
-          onClick={() => onSave(computeAllDerived(formState, schema))}
-          disabled={isSaving}
-          className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white px-4 py-1.5 rounded text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1 focus-visible:ring-offset-gray-950"
-        >
-          {isSaving ? "Saving…" : "Save"}
-        </button>
+      <div className="pt-3 mt-3 border-t border-gray-800 flex-shrink-0 space-y-2">
+        <div className="flex items-center justify-end gap-3">
+          <span role="status" aria-live="polite" className="text-xs">
+            {saveMsg && (
+              <span className={saveMsg.startsWith("Error") ? "text-red-400" : "text-emerald-400"}>
+                {saveMsg}
+              </span>
+            )}
+            {!saveMsg && isDirty && <span className="text-amber-400">Unsaved changes</span>}
+          </span>
+          <button
+            type="button"
+            onClick={() => setFormState(deepClone(data))}
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded px-1"
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            onClick={() => onSave(computeAllDerived(formState, schema))}
+            disabled={isSaving}
+            className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white px-4 py-1.5 rounded text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-1 focus-visible:ring-offset-gray-950"
+          >
+            {isSaving ? "Saving…" : "Save"}
+          </button>
+        </div>
+        {saveWarnings.length > 0 && (
+          <div className="rounded border border-amber-700/60 bg-amber-950/40 px-3 py-2" role="status" aria-live="polite">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-300 mb-1">Data consistency warnings</p>
+            <ul className="list-disc pl-4 space-y-1">
+              {saveWarnings.map((warning, idx) => (
+                <li key={idx} className="text-xs text-amber-200">{warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );
