@@ -82,16 +82,17 @@ export default function FieldGroup({ label, fields, data, onChange, path, defaul
           {fields.map((f) => {
             if (typeof f.derivedFrom === "function") {
               const computed = f.derivedFrom(groupData, sectionData ?? data);
-              if (computed != null) {
-                return (
-                  <div key={f.key} className="flex items-center justify-between gap-4 py-1.5">
-                    <span className="text-sm text-gray-400 flex-shrink-0 truncate max-w-[45%]">{f.label}</span>
-                    <span className="text-sm font-medium text-emerald-400 bg-gray-800 px-2 py-0.5 rounded tabular-nums">
-                      {computed}
-                    </span>
-                  </div>
-                );
-              }
+              const empty = computed == null || computed === "";
+              return (
+                <div key={f.key} className="flex items-center justify-between gap-4 py-1.5">
+                  <span className="text-sm text-gray-400 flex-shrink-0 truncate max-w-[45%]">{f.label}</span>
+                  <span
+                    className={`text-sm font-medium bg-gray-800 px-2 py-0.5 rounded tabular-nums ${empty ? "text-gray-500" : "text-emerald-400"}`}
+                  >
+                    {empty ? "—" : computed}
+                  </span>
+                </div>
+              );
             }
             return (
               <FieldInput
