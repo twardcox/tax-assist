@@ -39,17 +39,22 @@ export default function SectionForm({ schema, data, onSave, isSaving, saveMsg, c
   const term = search.trim().toLowerCase();
   const isSearching = term.length > 0;
 
-  // When searching, only render groups that contain a matching field (list
-  // and callout groups have no fields to search — they stay visible if their
-  // own label matches) and only the matching fields within each group,
-  // forced open so the result is immediately visible. A match on the group's
-  // own label (e.g. searching "dependents") shows the whole group untouched.
+  // When searching, only render groups that contain a matching field. List groups
+  // are considered a match if any of their item-group fields match.
   const visibleGroups = schema.groups
     .map((group) => {
       const groupLabelMatches = isSearching && group.label?.toLowerCase().includes(term);
-      if (group.type === "list" || group.type === "callout") {
+
+      if (group.type === "callout") {
         return { group, fields: null, hasMatch: !isSearching || groupLabelMatches };
       }
+
+      if (group.type === "list") {
+        const itemFields = (group.itemGroups ?? []).flatMap((g) => g.fields ?? []);
+        const itemFieldMatches = isSearching && itemFields.some((f) => matchesSearch(f, term));
+        return { group, fields: null, hasMatch: !isSearching || groupLabelMatches || itemFieldMatches };
+      }
+
       if (!isSearching) return { group, fields: group.fields, hasMatch: true };
       const fields = groupLabelMatches ? group.fields : group.fields.filter((f) => matchesSearch(f, term));
       return { group, fields, hasMatch: groupLabelMatches || fields.length > 0 };
