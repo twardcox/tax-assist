@@ -141,14 +141,15 @@ export default function UserData() {
                 {cat.sections.map((s) => {
                   const sectionSchema = SCHEMAS[s];
                   const data = sectionDataByKey[s];
-                  const { filled, total, mode } = sectionSchema && data
+                  const hasData = !!(sectionSchema && data);
+                  const { filled, total, mode } = hasData
                     ? essentialCompleteness(sectionSchema, data)
-                    : { filled: 0, total: 0, mode: "flat" };
-                  const status = completionStatus({ filled, total });
+                    : { filled: 0, total: 0, mode: "unknown" };
+                  const status = hasData ? completionStatus({ filled, total }) : "empty";
                   const noun = mode === "essential" ? "essential fields" : "fields";
-                  const statusLabel = total
-                    ? `${STATUS_TEXT[status]} — ${filled} of ${total} ${noun}`
-                    : STATUS_TEXT[status];
+                  const statusLabel = hasData
+                    ? (total ? `${STATUS_TEXT[status]} — ${filled} of ${total} ${noun}` : STATUS_TEXT[status])
+                    : "status unavailable until opened";
                   return (
                     <li key={s}>
                       <button
