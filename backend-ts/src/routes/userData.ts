@@ -90,6 +90,10 @@ const SECTION_DATA_SCHEMAS: Record<string, z.ZodType<Record<string, unknown>>> =
   documents_index: LooseObjectSchema
 };
 
+const SectionParamsSchema = z.object({
+  section: z.string().min(1)
+});
+
 function sectionFilePath(section: string): string {
   return path.join(projectPaths.userData, `${section}.yaml`);
 }
@@ -236,7 +240,7 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
     "/user-data/:section",
     { preHandler: app.authenticateOptional },
     async (request) => {
-      const section = (request.params as { section: string }).section;
+      const { section } = SectionParamsSchema.parse(request.params ?? {});
       assertSection(section);
 
       if (request.currentUser) {
@@ -267,7 +271,7 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
     "/user-data/:section",
     { preHandler: app.authenticateOptional },
     async (request) => {
-      const section = (request.params as { section: string }).section;
+      const { section } = SectionParamsSchema.parse(request.params ?? {});
       if (!VALID_SECTIONS.has(section)) {
         throw new AppError(400, `'${section}' is not an editable section`);
       }
@@ -353,7 +357,7 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
     "/user-data/:section/parsed",
     { preHandler: app.authenticateOptional },
     async (request) => {
-      const section = (request.params as { section: string }).section;
+      const { section } = SectionParamsSchema.parse(request.params ?? {});
       assertSection(section);
 
       if (request.currentUser) {

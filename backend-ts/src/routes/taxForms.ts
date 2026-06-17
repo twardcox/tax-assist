@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { getFilingDetails, saveFilingDetails, type FilingDetails } from "../db/filingDetailsRepo";
@@ -17,6 +18,21 @@ type JobState = {
 };
 
 const jobs = new Map<string, JobState>();
+
+const TaxYearQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional()
+});
+
+const PreviewQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional(),
+  form: z.string().optional()
+});
+
+const JobParamsSchema = z.object({
+  jobId: z.string().min(1)
+});
+
+const FilingDetailsBodySchema = z.record(z.unknown());
 
 function toNumber(value: unknown, fallback: number): number {
   const parsed = Number(value ?? fallback);
@@ -56,7 +72,7 @@ async function runJob(jobId: string, userId: string, taxYear: number): Promise<v
 
 export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void> {
   app.get("/filing-details", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
     const taxYear = toNumber(query.tax_year, 2025);
     const userId = request.currentUser?.id;
     if (!userId) {
@@ -66,20 +82,20 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.put("/filing-details", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
     const taxYear = toNumber(query.tax_year, 2025);
     const userId = request.currentUser?.id;
     if (!userId) {
       throw new AppError(401, "Authentication required");
     }
 
-    const payload = (request.body ?? {}) as FilingDetails;
+    const payload = FilingDetailsBodySchema.parse(request.body ?? {}) as FilingDetails;
     saveFilingDetails(userId, taxYear, payload);
     return { ok: true };
   });
 
   app.get("/tax-forms/preview-pdf", { preHandler: app.authenticate }, async (request, reply) => {
-    const query = request.query as { tax_year?: string | number; form?: string };
+    const query = PreviewQuerySchema.parse(request.query ?? {});
     const taxYear = toNumber(query.tax_year, 2025);
     const userId = request.currentUser?.id;
     if (!userId) throw new AppError(401, "Authentication required");
@@ -103,7 +119,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/tax-forms/compute", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
     const taxYear = toNumber(query.tax_year, 2025);
     const userId = request.currentUser?.id;
     if (!userId) {
@@ -119,7 +135,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.post("/reports/tax-forms", { preHandler: app.authenticate }, async (request) => {
-    const query = request.query as { tax_year?: string | number };
+    const query = TaxYearQuerySchema.parse(request.query ?? {});
     const taxYear = toNumber(query.tax_year, 2025);
     const userId = request.currentUser?.id;
     if (!userId) {
@@ -141,7 +157,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/reports/tax-forms/:jobId", async (request) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = jobs.get(jobId);
     if (!job) {
       throw new AppError(404, `Job '${jobId}' not found`);
@@ -156,7 +172,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
   });
 
   app.get("/reports/tax-forms/:jobId/download", async (request, reply) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = jobs.get(jobId);
     if (!job) {
       throw new AppError(404, "Job not found");

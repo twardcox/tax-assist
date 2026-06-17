@@ -1,6 +1,16 @@
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { SCENARIOS, runScenario } from "../domain/scenarios/scenarios";
+
+const ScenarioParamsSchema = z.object({
+  key: z.string().min(1)
+});
+
+const ScenarioQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional(),
+  with_ai: z.union([z.string(), z.boolean()]).optional()
+});
 
 function parseBoolean(value: unknown): boolean {
   if (typeof value === "boolean") return value;
@@ -14,8 +24,8 @@ export async function registerScenariosRoutes(app: FastifyInstance): Promise<voi
   }));
 
   app.post("/scenarios/:key", { preHandler: app.authenticateOptional }, async (request) => {
-    const { key } = request.params as { key: string };
-    const query = request.query as { tax_year?: string | number; with_ai?: string | boolean };
+    const { key } = ScenarioParamsSchema.parse(request.params ?? {});
+    const query = ScenarioQuerySchema.parse(request.query ?? {});
     const taxYear = Number(query.tax_year ?? 2025);
     const withAi = parseBoolean(query.with_ai);
     const userId = request.currentUser?.id ?? null;

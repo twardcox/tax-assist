@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { runScan } from "../domain/scanner/scan";
@@ -15,6 +16,19 @@ type JobState = {
 };
 
 const cpaJobs = new Map<string, JobState>();
+
+const ReportNameParamsSchema = z.object({
+  name: z.string().min(1)
+});
+
+const CpaPacketQuerySchema = z.object({
+  tax_year: z.union([z.string(), z.number()]).optional(),
+  with_ai: z.union([z.string(), z.boolean()]).optional()
+});
+
+const JobParamsSchema = z.object({
+  jobId: z.string().min(1)
+});
 
 function buildAiSummaryPlaceholder(taxYear: number, withAi: boolean): string {
   const label = withAi ? "AI-assisted" : "Standard";
@@ -86,7 +100,7 @@ export async function registerReportsRoutes(app: FastifyInstance): Promise<void>
   });
 
   app.get("/reports/:name", async (request) => {
-    const { name } = request.params as { name: string };
+    const { name } = ReportNameParamsSchema.parse(request.params ?? {});
     if (name.includes("..") || name.includes("/") || name.includes("\\")) {
       throw new AppError(400, "Invalid report name");
     }
@@ -100,7 +114,7 @@ export async function registerReportsRoutes(app: FastifyInstance): Promise<void>
   });
 
   app.post("/reports/cpa-packet", { preHandler: app.authenticateOptional }, async (request) => {
-    const query = request.query as { tax_year?: string | number; with_ai?: string | boolean };
+    const query = CpaPacketQuerySchema.parse(request.query ?? {});
     const taxYear = parseInteger(query.tax_year, 2025);
     const withAi = parseBoolean(query.with_ai);
     const userId = request.currentUser?.id ?? null;
@@ -114,7 +128,7 @@ export async function registerReportsRoutes(app: FastifyInstance): Promise<void>
   });
 
   app.get("/reports/cpa-packet/:jobId", async (request) => {
-    const { jobId } = request.params as { jobId: string };
+    const { jobId } = JobParamsSchema.parse(request.params ?? {});
     const job = cpaJobs.get(jobId);
     if (!job) {
       throw new AppError(404, `Job '${jobId}' not found`);

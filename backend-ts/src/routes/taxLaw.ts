@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import yaml from "js-yaml";
 import type { FastifyInstance } from "fastify";
+import { z } from "zod";
 import { AppError } from "../lib/errors";
 import { projectPaths } from "../lib/paths";
 import { runTaxLawUpdate, SUPPORTED_TAX_LAW_SOURCES } from "../domain/taxLaw/updater";
@@ -9,6 +10,20 @@ import { runTaxLawUpdate, SUPPORTED_TAX_LAW_SOURCES } from "../domain/taxLaw/upd
 const KNOWN_SOURCES = new Set<string>(SUPPORTED_TAX_LAW_SOURCES);
 
 let updateRunning = false;
+
+const ChangesQuerySchema = z.object({
+  limit: z.union([z.string(), z.number()]).optional()
+});
+
+const UpdateQuerySchema = z.object({
+  source: z.string().optional(),
+  days: z.union([z.string(), z.number()]).optional(),
+  dry_run: z.union([z.string(), z.boolean()]).optional()
+});
+
+const AlertCountQuerySchema = z.object({
+  since_days: z.union([z.string(), z.number()]).optional()
+});
 
 export function __setTaxLawUpdateRunningForTest(value: boolean): void {
   updateRunning = value;
@@ -35,7 +50,7 @@ function parseBoolean(value: unknown): boolean {
 
 export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> {
   app.get("/tax-law/changes", async (request) => {
-    const query = request.query as { limit?: string | number };
+    const query = ChangesQuerySchema.parse(request.query ?? {});
     const limit = parseInteger(query.limit, 20);
 
     if (limit < 1 || limit > 100) {
@@ -71,11 +86,7 @@ export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> 
   });
 
   app.post("/tax-law/update", async (request) => {
-    const query = request.query as {
-      source?: string;
-      days?: string | number;
-      dry_run?: string | boolean;
-    };
+    const query = UpdateQuerySchema.parse(request.query ?? {});
 
     const source = query.source;
     const days = parseInteger(query.days, 30);
@@ -119,7 +130,7 @@ export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> 
   app.get("/tax-law/status", async () => ({ running: updateRunning }));
 
   app.get("/tax-law/alert-count", async (request) => {
-    const query = request.query as { since_days?: string | number };
+    const query = AlertCountQuerySchema.parse(request.query ?? {});
     const sinceDays = parseInteger(query.since_days, 30);
 
     if (sinceDays < 1 || sinceDays > 365) {
