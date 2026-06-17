@@ -17,7 +17,7 @@ function CurrencyInput({ id, value, onChange }) {
     if (!isEditing) {
       setRaw(value != null && value !== "" ? String(value) : "");
     }
-  }, [value]);
+  }, [value, isEditing]);
 
   function handleChange(e) {
     const v = e.target.value.replace(/[^0-9.]/g, "");
