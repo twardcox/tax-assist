@@ -9,35 +9,58 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: tax_assist
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tax_assist"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      POSTGRES_DB: tax_assist
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
 
     steps:
       - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v5
-
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: pnpm
+          cache: npm
+          cache-dependency-path: |
+            backend-ts/package-lock.json
+            frontend/package-lock.json
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install backend dependencies
+        run: npm ci --prefix backend-ts
 
-      - name: Lint
-        run: pnpm run lint
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
 
-      - name: Format check
-        run: pnpm run format
+      - name: Backend tests
+        run: npm test --prefix backend-ts
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@${{ env.POSTGRES_HOST }}:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
 
-      - name: Type check
-        run: |
-          if [ -f "tsconfig.json" ]; then
-            pnpm exec tsc --noEmit
-          else
-            echo "No tsconfig.json found - skipping type check"
-          fi
+      - name: Backend lint
+        run: npm run lint --prefix backend-ts
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@${{ env.POSTGRES_HOST }}:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
 
-      - name: Build
-        run: pnpm run build
+      - name: Backend build
+        run: npm run build --prefix backend-ts
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@${{ env.POSTGRES_HOST }}:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
 
-      - name: Unit tests
-        run: pnpm run test:unit
+      - name: Frontend build
+        run: npm run build --prefix frontend

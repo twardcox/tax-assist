@@ -83,14 +83,19 @@ utbis/
 
 ## Getting Started
 
-1. Start the TypeScript backend:
+1. Start a local Postgres instance before running the backend or tests. The default config expects database `tax_assist` on `localhost:5432` with username `postgres` and password `postgres`.
+	- Example with Docker: `docker run --rm --name tax-assist-postgres -e POSTGRES_DB=tax_assist -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16`
+	- If you use a different instance, export `DATABASE_URL` first.
+2. Start the TypeScript backend:
 	- `cd backend-ts && npm install && npm run dev`
-2. Start the frontend:
+3. Start the frontend:
 	- `cd frontend && npm install && npm run dev`
-3. Open the app at `http://localhost:5173` (API health at `http://localhost:8000/api/health`)
-4. Seed the canonical scanner test profile when needed:
+4. Open the app at `http://localhost:5173` (API health at `http://localhost:8000/api/health`)
+5. Seed the canonical scanner test profile when needed:
 	- `cd backend-ts && npm run seed:test-user`
-5. Legacy Python scripts in `scripts/` remain available during migration, but the primary runtime path is `backend-ts`.
+6. Run backend tests against the same Postgres instance:
+	- `cd backend-ts && npm test`
+7. Legacy Python scripts in `scripts/` remain available during migration, but the primary runtime path is `backend-ts`.
 
 ## Eligibility Status Legend
 
