@@ -60,8 +60,6 @@
 | -------- | ----------- | ------- | ---------- |
 | [Risk 1] | [H/M/L]     | [H/M/L] | [Strategy] |
 
-```
-
 #### Quality Gate: SOW+ Approval
 
 **Checklist:**
