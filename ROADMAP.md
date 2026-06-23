@@ -68,7 +68,6 @@ Goal: Add Claude-powered natural language analysis on top of rule results.
 
 Goal: Keep the benefit library current automatically.
 
-- [ ] Implement `scripts/update_tax_law.py` source fetching
 - [ ] IRS news RSS/scrape integration
 - [ ] IRS publication change detection
 - [ ] Internal Revenue Bulletin parser
