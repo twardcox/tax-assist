@@ -1,5 +1,13 @@
 # Claude Handoff
 
+## Local Workspace Setup
+
+- The local agent and workflow bundle lives in [ce/](ce/).
+- For Claude Code, use this file first, then [ce/README.md](ce/README.md) and the relevant docs under [ce/agents/](ce/agents/) and [ce/templates/](ce/templates/).
+- For GitHub Copilot in VS Code, use [.github/copilot-instructions.md](.github/copilot-instructions.md) as the repo-level instruction file.
+- Treat the bundle as tracker-neutral: do not depend on Jira-specific workflow files or transitions unless they are explicitly reintroduced.
+- When you need planning or agent guidance, prefer the local `ce/` docs over any external framework reference.
+
 Project: `tax-assist`
 Branch: `my-data` (off `main`, branched at `d16719b`)
 Last updated: 2026-06-16

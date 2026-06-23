@@ -10,8 +10,8 @@ import { UserFacts } from "../src/domain/scanner/userFacts";
 const repoRoot = path.resolve(process.cwd(), "..");
 const userDataDir = path.join(repoRoot, "user_data");
 
-beforeAll(() => {
-  initDb();
+beforeAll(async () => {
+  await initDb();
 });
 
 describe("eligibility parity", () => {
@@ -34,16 +34,16 @@ describe("eligibility parity", () => {
     expect(library.some((benefit) => benefit.id === "home-office-deduction")).toBe(true);
   });
 
-  test("missing user facts behave like blank eligibility input", () => {
-    const facts = UserFacts.fromUserSections("missing-user", 2025);
+  test("missing user facts behave like blank eligibility input", async () => {
+    const facts = await UserFacts.fromUserSections("missing-user", 2025);
 
     expect(facts.hasSelfEmployment()).toBe(false);
     expect(facts.hasRentalProperty()).toBe(false);
     expect(facts.hasAnyRealEstate()).toBe(false);
   });
 
-  test("scanner runs against blank user sections without error", () => {
-    const scan = runScan(2025, "missing-user");
+  test("scanner runs against blank user sections without error", async () => {
+    const scan = await runScan(2025, "missing-user");
 
     expect(scan.results.length).toBeLessThanOrEqual(loadBenefitLibrary().length);
     expect(scan.results.every((r) => r.status !== "unknown")).toBe(true);

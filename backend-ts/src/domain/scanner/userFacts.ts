@@ -96,10 +96,10 @@ export class UserFacts {
     return new UserFacts(data, taxYear);
   }
 
-  static fromUserSections(userId: string, taxYear: number): UserFacts {
+  static async fromUserSections(userId: string, taxYear: number): Promise<UserFacts> {
     const data: FactsData = {};
     for (const section of SCAN_SECTIONS) {
-      data[section] = getSectionData(userId, taxYear, section);
+      data[section] = await getSectionData(userId, taxYear, section);
     }
     return new UserFacts(data, taxYear);
   }

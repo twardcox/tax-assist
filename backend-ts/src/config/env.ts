@@ -12,7 +12,8 @@ const EnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   CLAUDE_MODEL: z.string().optional(),
   CONGRESS_API_KEY: z.string().optional(),
-  TAX_YEAR: z.coerce.number().int().default(2025)
+  TAX_YEAR: z.coerce.number().int().default(2025),
+  DATABASE_URL: z.string().default("postgresql://postgres:postgres@localhost:5432/tax_assist")
 });
 
 export type AppEnv = z.infer<typeof EnvSchema>;

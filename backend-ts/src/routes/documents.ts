@@ -96,7 +96,7 @@ function fileId(userId: string, filename: string, content: Buffer): string {
   return crypto.createHash("sha256").update(`${userId}:${filename}:${digest}`).digest("hex").slice(0, 12);
 }
 
-function normalizeDocument(row: ReturnType<typeof getDocumentsForUser>[number]): Record<string, unknown> {
+function normalizeDocument(row: Awaited<ReturnType<typeof getDocumentsForUser>>[number]): Record<string, unknown> {
   return row;
 }
 
@@ -170,7 +170,7 @@ async function readUpload(request: FastifyRequest): Promise<{ filename: string; 
 async function runExtraction(jobId: string, userId: string, fileId: string, filename: string, content: Buffer): Promise<void> {
   try {
     const extracted = await extractWithAiBytes(content, filename);
-    saveDocumentExtraction(userId, fileId, extracted);
+    await saveDocumentExtraction(userId, fileId, extracted);
     extractionJobs.set(jobId, { status: "complete", extracted, error: null });
   } catch (error) {
     extractionJobs.set(jobId, { status: "error", extracted: null, error: (error as Error).message });
@@ -194,7 +194,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
     const info = classifyFilename(uploaded.filename, uploaded.content.length);
 
     if (request.currentUser) {
-      upsertDocument(request.currentUser.id, id, uploaded.filename, uploaded.content, info);
+      await upsertDocument(request.currentUser.id, id, uploaded.filename, uploaded.content, info);
     }
 
     return {
@@ -214,7 +214,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
       return { files: [] };
     }
 
-    return { files: getDocumentsForUser(request.currentUser.id).map(normalizeDocument) };
+    return { files: (await getDocumentsForUser(request.currentUser.id)).map(normalizeDocument) };
   });
 
   app.delete("/documents/:fileId", { preHandler: app.authenticate }, async (request) => {
@@ -224,7 +224,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
     }
 
     const { fileId } = FileParamsSchema.parse(request.params ?? {});
-    const deleted = deleteDocumentRecord(userId, fileId);
+    const deleted = await deleteDocumentRecord(userId, fileId);
     if (!deleted) {
       throw new AppError(404, `Document '${fileId}' not found`);
     }
@@ -243,7 +243,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
     }
 
     const { fileId } = FileParamsSchema.parse(request.params ?? {});
-    const doc = getDocumentContent(userId, fileId);
+    const doc = await getDocumentContent(userId, fileId);
     if (!doc.content) {
       throw new AppError(404, `Document '${fileId}' not found`);
     }
@@ -275,7 +275,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
     const userId = request.currentUser?.id ?? null;
     const deductiblePct = Math.max(0, Math.min(1, Number(meta.deductible_pct ?? 1)));
 
-    if (fileId && userId && fileAlreadyApplied(userId, fileId)) {
+    if (fileId && userId && await fileAlreadyApplied(userId, fileId)) {
       return { applied: [], skipped: updates.map((u) => String(u.label ?? "")), duplicate: true };
     }
 
@@ -300,7 +300,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
 
       let success = false;
       if (userId) {
-        success = applyDotPathToSection(userId, 2025, section, dotPath, operation, value);
+        success = await applyDotPathToSection(userId, 2025, section, dotPath, operation, value);
       } else {
         const yamlPath = path.join(projectPaths.userData, `${section}.yaml`);
         if (fs.existsSync(yamlPath)) {
@@ -317,7 +317,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
         applied.push(label);
         if (fileId && userId) {
           const totalAmount = typeof rawValue === "number" ? rawValue : 0;
-          addTransaction({
+          await addTransaction({
             user_id: userId,
             file_id: fileId,
             filename: String(meta.filename ?? ""),

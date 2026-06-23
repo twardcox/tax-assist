@@ -2,7 +2,7 @@ import { buildApp } from "./app";
 import { env } from "./config/env";
 
 async function start(): Promise<void> {
-  const app = buildApp();
+  const app = await buildApp();
 
   try {
     await app.listen({
@@ -15,4 +15,8 @@ async function start(): Promise<void> {
   }
 }
 
-void start();
+void start().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error(error);
+  process.exit(1);
+});

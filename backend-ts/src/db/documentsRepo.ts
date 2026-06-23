@@ -1,4 +1,4 @@
-import { getDb } from "./client";
+import { query, queryOne, execute } from "./client";
 
 export type DocumentRow = {
   id: string;
@@ -32,55 +32,55 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-export function upsertDocument(
+export async function upsertDocument(
   userId: string,
   fileId: string,
   filename: string,
   content: Buffer,
   info: { category: string; confidence: string; note: string }
-): void {
-  const db = getDb();
+): Promise<void> {
   const subdir = info.category || "uploads";
   const filePath = `${subdir}/${fileId}/${filename}`;
 
-  db.prepare(
+  await execute(
     `INSERT INTO documents
       (id, user_id, filename, subdir, path, category, confidence, document_type, note, size, extracted, extraction_json, content, uploaded_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 0, NULL, $11, $12)
      ON CONFLICT(id) DO UPDATE SET
-       filename = excluded.filename,
-       subdir = excluded.subdir,
-       path = excluded.path,
-       category = excluded.category,
-       confidence = excluded.confidence,
-       document_type = excluded.document_type,
-       note = excluded.note,
-       size = excluded.size,
-       content = excluded.content`
-  ).run(
-    fileId,
-    userId,
-    filename,
-    subdir,
-    filePath,
-    info.category,
-    info.confidence,
-    info.category,
-    info.note,
-    content.length,
-    content,
-    nowIso()
+       filename = EXCLUDED.filename,
+       subdir = EXCLUDED.subdir,
+       path = EXCLUDED.path,
+       category = EXCLUDED.category,
+       confidence = EXCLUDED.confidence,
+       document_type = EXCLUDED.document_type,
+       note = EXCLUDED.note,
+       size = EXCLUDED.size,
+       content = EXCLUDED.content`,
+    [
+      fileId,
+      userId,
+      filename,
+      subdir,
+      filePath,
+      info.category,
+      info.confidence,
+      info.category,
+      info.note,
+      content.length,
+      content,
+      nowIso(),
+    ]
   );
 }
 
-export function getDocumentsForUser(userId: string): DocumentSummary[] {
-  const db = getDb();
-  const rows = db.prepare(
+export async function getDocumentsForUser(userId: string): Promise<DocumentSummary[]> {
+  const rows = await query<Record<string, unknown>>(
     `SELECT id, filename, category, confidence, note, size, extracted, uploaded_at
      FROM documents
-     WHERE user_id = ?
-     ORDER BY uploaded_at DESC`
-  ).all(userId) as Array<Record<string, unknown>>;
+     WHERE user_id = $1
+     ORDER BY uploaded_at DESC`,
+    [userId]
+  );
 
   return rows.map((row) => ({
     file_id: String(row.id),
@@ -90,34 +90,36 @@ export function getDocumentsForUser(userId: string): DocumentSummary[] {
     size: Number(row.size ?? 0),
     note: String(row.note ?? ""),
     extracted: row.extracted === 1,
-    uploaded_at: String(row.uploaded_at ?? "")
+    uploaded_at: String(row.uploaded_at ?? ""),
   }));
 }
 
-export function deleteDocumentRecord(userId: string, fileId: string): boolean {
-  const db = getDb();
-  const result = db.prepare("DELETE FROM documents WHERE user_id = ? AND id = ?").run(userId, fileId);
-  return result.changes > 0;
+export async function deleteDocumentRecord(userId: string, fileId: string): Promise<boolean> {
+  const affected = await execute(
+    "DELETE FROM documents WHERE user_id = $1 AND id = $2",
+    [userId, fileId]
+  );
+  return affected > 0;
 }
 
-export function getDocumentContent(userId: string, fileId: string): { content: Buffer | null; filename: string } {
-  const db = getDb();
-  const row = db.prepare(
-    "SELECT filename, content FROM documents WHERE user_id = ? AND id = ?"
-  ).get(userId, fileId) as { filename?: string; content?: Buffer | null } | undefined;
+export async function getDocumentContent(userId: string, fileId: string): Promise<{ content: Buffer | null; filename: string }> {
+  const row = await queryOne<{ filename?: string; content?: Buffer | null }>(
+    "SELECT filename, content FROM documents WHERE user_id = $1 AND id = $2",
+    [userId, fileId]
+  );
 
   return {
     content: row?.content ?? null,
-    filename: row?.filename ?? ""
+    filename: row?.filename ?? "",
   };
 }
 
-export function saveDocumentExtraction(userId: string, fileId: string, extraction: Record<string, unknown>): void {
-  const db = getDb();
-  db.prepare(
+export async function saveDocumentExtraction(userId: string, fileId: string, extraction: Record<string, unknown>): Promise<void> {
+  await execute(
     `UPDATE documents
      SET extracted = 1,
-         extraction_json = ?
-     WHERE user_id = ? AND id = ?`
-  ).run(JSON.stringify(extraction), userId, fileId);
+         extraction_json = $1
+     WHERE user_id = $2 AND id = $3`,
+    [JSON.stringify(extraction), userId, fileId]
+  );
 }

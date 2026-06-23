@@ -229,7 +229,7 @@ export async function runScenario(key: string, taxYear: number, userId?: string 
     return null;
   }
 
-  const baselineFacts = UserFacts.fromUserSections(userId ?? "", taxYear);
+  const baselineFacts = await UserFacts.fromUserSections(userId ?? "", taxYear);
   const baseline = evaluateFacts(taxYear, baselineFacts);
   const patched = applyOverrides(cloneData(baselineFacts.data), scenario.fact_changes);
   const scenarioFacts = UserFacts.fromData(patched, taxYear);

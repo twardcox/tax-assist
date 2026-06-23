@@ -50,8 +50,8 @@ const FilingDetailsBodySchema = z.object({
 }).strict();
 
 async function buildPreviewPdfBytes(userId: string, taxYear: number): Promise<Uint8Array> {
-  const data = loadAllUserData(userId, taxYear);
-  const figures = computeTaxFigures(userId, taxYear);
+  const data = await loadAllUserData(userId, taxYear);
+  const figures = await computeTaxFigures(userId, taxYear);
   return fillIrsForms(figures.computed, figures.display_name, taxYear, data);
 }
 
@@ -88,7 +88,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
     if (!userId) {
       throw new AppError(401, "Authentication required");
     }
-    return getFilingDetails(userId, taxYear);
+    return await getFilingDetails(userId, taxYear);
   });
 
   app.put("/filing-details", { preHandler: app.authenticate }, async (request) => {
@@ -100,7 +100,7 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
     }
 
     const payload = FilingDetailsBodySchema.parse(request.body ?? {}) as FilingDetails;
-    saveFilingDetails(userId, taxYear, payload);
+    await saveFilingDetails(userId, taxYear, payload);
     return { ok: true };
   });
 
@@ -111,8 +111,8 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
     if (!userId) throw new AppError(401, "Authentication required");
 
     if (query.form) {
-      const data = loadAllUserData(userId, taxYear);
-      const figures = computeTaxFigures(userId, taxYear);
+      const data = await loadAllUserData(userId, taxYear);
+      const figures = await computeTaxFigures(userId, taxYear);
       const pdfBytes = await fillSingleIrsForm(query.form, figures.computed, figures.display_name, taxYear, data);
       const filename = `${query.form}_${taxYear}.pdf`;
       return reply
@@ -136,10 +136,10 @@ export async function registerTaxFormsRoutes(app: FastifyInstance): Promise<void
       throw new AppError(401, "Authentication required");
     }
 
-    const figures = computeTaxFigures(userId, taxYear);
+    const figures = await computeTaxFigures(userId, taxYear);
     return {
       ...figures,
-      filing_details: getFilingDetails(userId, taxYear),
+      filing_details: await getFilingDetails(userId, taxYear),
       summary: { counts: {} },
     };
   });

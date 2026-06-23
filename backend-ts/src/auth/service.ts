@@ -23,7 +23,11 @@ function resolveJwtSecret(): string {
   throw new Error("JWT_SECRET_KEY is required outside test mode");
 }
 
-const SECRET = resolveJwtSecret();
+// Lazy so scripts that import hashPassword/verifyPassword but never issue
+// tokens (e.g. the seed script) don't fail when JWT_SECRET_KEY is absent.
+let _secret: string | undefined;
+const getSecret = (): string => (_secret ??= resolveJwtSecret());
+
 const ALGORITHM: jwt.Algorithm = "HS256";
 const ACCESS_TOKEN_EXPIRE_MINUTES = 60;
 
@@ -55,7 +59,7 @@ export function createAccessToken(userId: string, email: string): string {
     jti
   };
 
-  return jwt.sign(payload, SECRET, {
+  return jwt.sign(payload, getSecret(), {
     algorithm: ALGORITHM,
     expiresIn: `${ACCESS_TOKEN_EXPIRE_MINUTES}m`
   });
@@ -63,7 +67,7 @@ export function createAccessToken(userId: string, email: string): string {
 
 export function decodeRaw(token: string): AuthTokenPayload {
   try {
-    return jwt.verify(token, SECRET, { algorithms: [ALGORITHM] }) as AuthTokenPayload;
+    return jwt.verify(token, getSecret(), { algorithms: [ALGORITHM] }) as AuthTokenPayload;
   } catch {
     throw new AppError(401, "Invalid or expired token");
   }
@@ -82,14 +86,14 @@ export function extractBearerToken(authorization?: string): string | null {
   return match[1] ?? null;
 }
 
-export function getCurrentUserFromToken(token: string): UserRow {
+export async function getCurrentUserFromToken(token: string): Promise<UserRow> {
   const payload = decodeRaw(token);
 
-  if (isTokenRevoked(payload.jti)) {
+  if (await isTokenRevoked(payload.jti)) {
     throw new AppError(401, "Token revoked");
   }
 
-  const user = getUserById(payload.sub);
+  const user = await getUserById(payload.sub);
   if (!user || !user.is_active) {
     throw new AppError(401, "User not found");
   }
@@ -97,11 +101,11 @@ export function getCurrentUserFromToken(token: string): UserRow {
   return user;
 }
 
-export function logoutToken(token: string): void {
+export async function logoutToken(token: string): Promise<void> {
   try {
     const payload = decodeRaw(token);
     const expiresAt = new Date(payload.exp * 1000).toISOString();
-    revokeToken(payload.jti, expiresAt);
+    await revokeToken(payload.jti, expiresAt);
   } catch {
     // ignore invalid token during logout; mirrors Python behavior
   }

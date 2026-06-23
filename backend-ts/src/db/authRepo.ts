@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { getDb } from "./client";
+import { query, queryOne, execute } from "./client";
 
 export type UserRow = {
   id: string;
@@ -15,53 +15,55 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-export function createUser(email: string, passwordHash: string, displayName = ""): string {
-  const db = getDb();
+export async function createUser(email: string, passwordHash: string, displayName = ""): Promise<string> {
   const id = crypto.randomUUID();
   const normalizedEmail = email.toLowerCase().trim();
   const now = nowIso();
 
-  db.prepare(
+  await execute(
     `INSERT INTO users (id, email, password_hash, display_name, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(id, normalizedEmail, passwordHash, displayName, now, now);
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [id, normalizedEmail, passwordHash, displayName, now, now]
+  );
 
   return id;
 }
 
-export function getUserCount(): number {
-  const db = getDb();
-  const row = db.prepare("SELECT COUNT(*) as n FROM users").get() as { n: number };
-  return row.n;
+export async function getUserCount(): Promise<number> {
+  const row = await queryOne<{ n: string }>(
+    "SELECT COUNT(*)::int as n FROM users"
+  );
+  return Number(row?.n ?? 0);
 }
 
-export function getUserByEmail(email: string): UserRow | null {
-  const db = getDb();
+export async function getUserByEmail(email: string): Promise<UserRow | null> {
   const normalizedEmail = email.toLowerCase().trim();
-
-  return (
-    db
-      .prepare("SELECT * FROM users WHERE email = ? AND is_active = 1")
-      .get(normalizedEmail) ?? null
-  ) as UserRow | null;
+  const row = await queryOne<UserRow>(
+    "SELECT * FROM users WHERE email = $1 AND is_active = 1",
+    [normalizedEmail]
+  );
+  return row ?? null;
 }
 
-export function getUserById(userId: string): UserRow | null {
-  const db = getDb();
-  return (db.prepare("SELECT * FROM users WHERE id = ?").get(userId) ?? null) as UserRow | null;
+export async function getUserById(userId: string): Promise<UserRow | null> {
+  const row = await queryOne<UserRow>(
+    "SELECT * FROM users WHERE id = $1",
+    [userId]
+  );
+  return row ?? null;
 }
 
-export function revokeToken(jti: string, expiresAt: string): void {
-  const db = getDb();
-  db.prepare(
-    "INSERT OR IGNORE INTO revoked_tokens (jti, revoked_at, expires_at) VALUES (?, ?, ?)"
-  ).run(jti, nowIso(), expiresAt);
+export async function revokeToken(jti: string, expiresAt: string): Promise<void> {
+  await execute(
+    "INSERT INTO revoked_tokens (jti, revoked_at, expires_at) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+    [jti, nowIso(), expiresAt]
+  );
 }
 
-export function isTokenRevoked(jti: string): boolean {
-  const db = getDb();
-  const row = db.prepare("SELECT jti FROM revoked_tokens WHERE jti = ?").get(jti) as
-    | { jti: string }
-    | undefined;
+export async function isTokenRevoked(jti: string): Promise<boolean> {
+  const row = await queryOne<{ jti: string }>(
+    "SELECT jti FROM revoked_tokens WHERE jti = $1",
+    [jti]
+  );
   return Boolean(row);
 }

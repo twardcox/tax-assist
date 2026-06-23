@@ -1,0 +1,86 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-config:
+    runs-on: ubuntu-latest
+    env:
+      # Same name as .env / local dev; inject from Actions secret or variable
+      CE_PROJECT_KEY: ${{ secrets.CE_PROJECT_KEY || vars.CE_PROJECT_KEY }}
+      CE_SERVER_URL: ${{ vars.CE_SERVER_URL }}
+      CE_PROJECT_CONFIG_URL: ${{ vars.CE_PROJECT_CONFIG_URL }}
+      CE_PROJECT_TOKEN: ${{ secrets.CE_PROJECT_TOKEN }}
+    outputs:
+      enabled: ${{ steps.config.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check if E2E tests are enabled
+        id: config
+        run: |
+          set -euo pipefail
+          # REST: {CE_SERVER_URL}/projects/{CE_PROJECT_KEY}/.ce-project.json
+          # e.g. https://coherence-engine.fly.dev/projects/BA1631/.ce-project.json
+          if [ -n "${CE_PROJECT_CONFIG_URL:-}" ]; then
+            CONFIG_URL="${CE_PROJECT_CONFIG_URL}"
+          elif [ -n "${CE_PROJECT_KEY:-}" ]; then
+            SERVER="${CE_SERVER_URL:-https://coherence-engine.fly.dev}"
+            SERVER="${SERVER%/}"
+            CONFIG_URL="${SERVER}/projects/${CE_PROJECT_KEY}/.ce-project.json"
+          else
+            echo "::error::Set env CE_PROJECT_KEY (Actions secret or variable, same as .env), or CE_PROJECT_CONFIG_URL for a full GET URL"
+            exit 1
+          fi
+          echo "Fetching project config from: ${CONFIG_URL}"
+          if [ -n "${CE_PROJECT_TOKEN:-}" ]; then
+            curl -fsSL -H "Authorization: Bearer ${CE_PROJECT_TOKEN}" \
+              "${CONFIG_URL}" -o /tmp/.ce-project.json
+          else
+            curl -fsSL "${CONFIG_URL}" -o /tmp/.ce-project.json
+          fi
+          ENABLED=$(CE_PROJECT_CONFIG_PATH=/tmp/.ce-project.json node -e \
+            "const { loadConfig } = require('./ce/lib/load-config.cjs'); console.log(loadConfig().ci.e2eTests ? 'true' : 'false')")
+          echo "enabled=$ENABLED" >> "$GITHUB_OUTPUT"
+          echo "E2E tests enabled: $ENABLED"
+
+  e2e:
+    needs: check-config
+    if: needs.check-config.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Run E2E tests
+        run: pnpm exec playwright test
+        env:
+          CI: true
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

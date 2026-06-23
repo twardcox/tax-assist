@@ -254,7 +254,7 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
       assertSection(section);
 
       if (request.currentUser) {
-        const data = getSectionData(request.currentUser.id, env.TAX_YEAR, section);
+        const data = await getSectionData(request.currentUser.id, env.TAX_YEAR, section);
         const content = Object.keys(data).length
           ? yaml.dump(data, { noRefs: true, lineWidth: -1 })
           : "";
@@ -306,13 +306,14 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
       data = validateSectionData(section, data);
 
       if (request.currentUser) {
-        saveSectionData(request.currentUser.id, env.TAX_YEAR, section, data);
+        await saveSectionData(request.currentUser.id, env.TAX_YEAR, section, data);
         if (section === "income" || section === "real_estate" || section === "healthcare" || section === "investments") {
+          const userId = request.currentUser.id;
           const dataBySection: Record<string, Record<string, unknown>> = {
-            income: section === "income" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "income"),
-            real_estate: section === "real_estate" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "real_estate"),
-            healthcare: section === "healthcare" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "healthcare"),
-            investments: section === "investments" ? data : getSectionData(request.currentUser.id, env.TAX_YEAR, "investments")
+            income: section === "income" ? data : await getSectionData(userId, env.TAX_YEAR, "income"),
+            real_estate: section === "real_estate" ? data : await getSectionData(userId, env.TAX_YEAR, "real_estate"),
+            healthcare: section === "healthcare" ? data : await getSectionData(userId, env.TAX_YEAR, "healthcare"),
+            investments: section === "investments" ? data : await getSectionData(userId, env.TAX_YEAR, "investments")
           };
 
           const warnings = buildCrossSectionWarnings(section, dataBySection);
@@ -375,7 +376,7 @@ export async function registerUserDataRoutes(app: FastifyInstance): Promise<void
       assertSection(section);
 
       if (request.currentUser) {
-        const data = getSectionData(request.currentUser.id, env.TAX_YEAR, section);
+        const data = await getSectionData(request.currentUser.id, env.TAX_YEAR, section);
         return {
           section,
           data

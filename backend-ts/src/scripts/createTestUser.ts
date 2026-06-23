@@ -861,14 +861,14 @@ const STATUS_ORDER = [
   "unknown",
 ] as const;
 
-function main(): void {
+async function main(): Promise<void> {
   ensureRequiredDirectories();
-  initDb();
+  await initDb();
 
-  const existing = getUserByEmail(EMAIL);
+  const existing = await getUserByEmail(EMAIL);
   const userId = existing
     ? existing.id
-    : createUser(EMAIL, hashPassword(PASSWORD), DISPLAY_NAME);
+    : await createUser(EMAIL, hashPassword(PASSWORD), DISPLAY_NAME);
 
   if (existing) {
     process.stdout.write(`User ${EMAIL} already exists (id: ${userId}) — overwriting all sections.\n`);
@@ -877,12 +877,12 @@ function main(): void {
   }
 
   for (const [section, data] of Object.entries(sections)) {
-    saveSectionData(userId, TAX_YEAR, section, data);
+    await saveSectionData(userId, TAX_YEAR, section, data);
     process.stdout.write(`  ✓ ${section}\n`);
   }
 
   process.stdout.write("\nRunning scanner...\n");
-  const scan = runScan(TAX_YEAR, userId);
+  const scan = await runScan(TAX_YEAR, userId);
 
   for (const status of STATUS_ORDER) {
     const group = scan.results.filter((r) => r.status === status);
@@ -898,4 +898,8 @@ function main(): void {
   process.stdout.write(`\nLogin: ${EMAIL} / ${PASSWORD}\n`);
 }
 
-main();
+void main().catch((error) => {
+  // eslint-disable-next-line no-console
+  console.error(error);
+  process.exit(1);
+});

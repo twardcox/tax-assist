@@ -68,11 +68,11 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     const body = RegisterBodySchema.parse(request.body);
     enforceRateLimit(`register:${request.ip}`, REGISTER_MAX_REQUESTS, REGISTER_WINDOW_MS);
 
-    if (getUserByEmail(body.email)) {
+    if (await getUserByEmail(body.email)) {
       throw new AppError(409, "Email already registered");
     }
 
-    const userId = createUser(body.email, hashPassword(body.password), body.display_name);
+    const userId = await createUser(body.email, hashPassword(body.password), body.display_name);
     const token = createAccessToken(userId, body.email);
 
     return reply.status(201).send({
@@ -85,7 +85,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post("/auth/login", { config: { unauthenticated: true } }, async (request) => {
     enforceRateLimit(`login:${request.ip}`, LOGIN_MAX_REQUESTS, LOGIN_WINDOW_MS);
     const body = LoginBodySchema.parse(request.body);
-    const user = getUserByEmail(body.email);
+    const user = await getUserByEmail(body.email);
 
     if (!user || !verifyPassword(body.password, user.password_hash)) {
       throw new AppError(401, "Invalid credentials");
@@ -106,7 +106,7 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
 
   app.post("/auth/logout", { preHandler: app.authenticate }, async (request) => {
     if (request.token) {
-      logoutToken(request.token);
+      await logoutToken(request.token);
     }
 
     return { logged_out: true };

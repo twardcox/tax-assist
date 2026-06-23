@@ -20,7 +20,7 @@ export default function NavBar() {
 
   const { data: alertData } = useQuery({
     queryKey: ["tax-law-alert-count"],
-    queryFn: api.getAlertCount,
+    queryFn: () => api.getAlertCount(),
     refetchInterval: 60_000,
   });
   const alertCount = alertData?.count ?? 0;

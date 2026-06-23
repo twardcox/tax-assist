@@ -26,9 +26,9 @@ function countByStatus(results: ScanResult[]): Record<string, number> {
   return counts;
 }
 
-export function runScan(taxYear: number, userId?: string | null): ScanRun {
+export async function runScan(taxYear: number, userId?: string | null): Promise<ScanRun> {
   const rawBenefits = loadBenefitLibrary();
-  const facts = userId ? UserFacts.fromUserSections(userId, taxYear) : UserFacts.fromYaml(taxYear);
+  const facts = userId ? await UserFacts.fromUserSections(userId, taxYear) : UserFacts.fromYaml(taxYear);
 
   const results: ScanResult[] = rawBenefits
     .map((b) => evaluateBenefit(b, facts))
