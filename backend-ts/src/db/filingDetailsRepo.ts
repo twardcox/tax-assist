@@ -1,4 +1,4 @@
-import { getDb } from "./client";
+import { queryOne, execute } from "./client";
 
 export type FilingDetails = {
   pec_fund_taxpayer?: boolean;
@@ -12,55 +12,56 @@ export type FilingDetails = {
   designee_pin?: string | null;
 };
 
-export function saveFilingDetails(userId: string, taxYear: number, data: FilingDetails): void {
-  const db = getDb();
+export async function saveFilingDetails(userId: string, taxYear: number, data: FilingDetails): Promise<void> {
   const now = new Date().toISOString();
 
-  db.prepare(
+  await execute(
     `INSERT INTO households (user_id, tax_year, updated_at)
-     VALUES (?, ?, ?)
+     VALUES ($1, $2, $3)
      ON CONFLICT(user_id, tax_year)
-     DO UPDATE SET updated_at = excluded.updated_at`
-  ).run(userId, taxYear, now);
+     DO UPDATE SET updated_at = EXCLUDED.updated_at`,
+    [userId, taxYear, now]
+  );
 
-  db.prepare(
+  await execute(
     `UPDATE households SET
-      pec_fund_taxpayer = ?,
-      pec_fund_spouse = ?,
-      direct_deposit_routing = ?,
-      direct_deposit_account = ?,
-      direct_deposit_type = ?,
-      allow_third_party = ?,
-      designee_name = ?,
-      designee_phone = ?,
-      designee_pin = ?,
-      updated_at = ?
-     WHERE user_id = ? AND tax_year = ?`
-  ).run(
-    data.pec_fund_taxpayer ? 1 : 0,
-    data.pec_fund_spouse ? 1 : 0,
-    data.direct_deposit_routing ?? null,
-    data.direct_deposit_account ?? null,
-    data.direct_deposit_type ?? null,
-    data.allow_third_party ? 1 : 0,
-    data.designee_name ?? null,
-    data.designee_phone ?? null,
-    data.designee_pin ?? null,
-    now,
-    userId,
-    taxYear
+      pec_fund_taxpayer = $1,
+      pec_fund_spouse = $2,
+      direct_deposit_routing = $3,
+      direct_deposit_account = $4,
+      direct_deposit_type = $5,
+      allow_third_party = $6,
+      designee_name = $7,
+      designee_phone = $8,
+      designee_pin = $9,
+      updated_at = $10
+     WHERE user_id = $11 AND tax_year = $12`,
+    [
+      data.pec_fund_taxpayer ? 1 : 0,
+      data.pec_fund_spouse ? 1 : 0,
+      data.direct_deposit_routing ?? null,
+      data.direct_deposit_account ?? null,
+      data.direct_deposit_type ?? null,
+      data.allow_third_party ? 1 : 0,
+      data.designee_name ?? null,
+      data.designee_phone ?? null,
+      data.designee_pin ?? null,
+      now,
+      userId,
+      taxYear,
+    ]
   );
 }
 
-export function getFilingDetails(userId: string, taxYear: number): FilingDetails {
-  const db = getDb();
-  const row = db.prepare(
+export async function getFilingDetails(userId: string, taxYear: number): Promise<FilingDetails> {
+  const row = await queryOne<Record<string, unknown>>(
     `SELECT pec_fund_taxpayer, pec_fund_spouse, direct_deposit_routing,
             direct_deposit_account, direct_deposit_type, allow_third_party,
             designee_name, designee_phone, designee_pin
      FROM households
-     WHERE user_id = ? AND tax_year = ?`
-  ).get(userId, taxYear) as Record<string, unknown> | undefined;
+     WHERE user_id = $1 AND tax_year = $2`,
+    [userId, taxYear]
+  );
 
   if (!row) {
     return {};

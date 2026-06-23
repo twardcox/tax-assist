@@ -50,10 +50,10 @@ function parseInteger(value: unknown, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function loadHousehold(userId: string | null | undefined, taxYear: number): HouseholdSummary {
+async function loadHousehold(userId: string | null | undefined, taxYear: number): Promise<HouseholdSummary> {
   if (!userId) return {};
   try {
-    const data = getSectionData(userId, taxYear, "household");
+    const data = await getSectionData(userId, taxYear, "household");
     return {
       filing_status: data.filing_status as string | undefined,
       state: (data.residence as Record<string, unknown> | undefined)?.state as string | undefined,
@@ -64,11 +64,11 @@ function loadHousehold(userId: string | null | undefined, taxYear: number): Hous
   }
 }
 
-function runCpaPacket(jobId: string, taxYear: number, withAi: boolean, userId?: string | null): void {
+async function runCpaPacket(jobId: string, taxYear: number, withAi: boolean, userId?: string | null): Promise<void> {
   try {
-    const scan = runScan(taxYear, userId ?? null);
+    const scan = await runScan(taxYear, userId ?? null);
     const aiSummary = buildAiSummaryPlaceholder(taxYear, withAi);
-    const household = loadHousehold(userId, taxYear);
+    const household = await loadHousehold(userId, taxYear);
     const reportName = writeCpaPacketReport(scan, aiSummary, household);
     cpaJobs.set(jobId, { status: "complete", report_name: reportName, error: null });
   } catch (error) {
@@ -122,7 +122,7 @@ export async function registerReportsRoutes(app: FastifyInstance): Promise<void>
     const jobId = crypto.randomUUID();
     cpaJobs.set(jobId, { status: "running", report_name: null, error: null });
 
-    queueMicrotask(() => runCpaPacket(jobId, taxYear, withAi, userId));
+    void runCpaPacket(jobId, taxYear, withAi, userId);
 
     return { job_id: jobId };
   });

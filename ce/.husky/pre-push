@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+node ".ce/scripts/hook-runner.cjs" pre-push 1>&2

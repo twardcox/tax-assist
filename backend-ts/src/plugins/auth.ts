@@ -13,7 +13,7 @@ const authPlugin: FastifyPluginAsync = async (app) => {
       throw new AppError(401, "Not authenticated");
     }
 
-    const user = getCurrentUserFromToken(token);
+    const user = await getCurrentUserFromToken(token);
     request.currentUser = user;
     request.token = token;
   });
@@ -27,7 +27,7 @@ const authPlugin: FastifyPluginAsync = async (app) => {
     }
 
     try {
-      const user = getCurrentUserFromToken(token);
+      const user = await getCurrentUserFromToken(token);
       request.currentUser = user;
       request.token = token;
     } catch {

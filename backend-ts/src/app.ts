@@ -23,11 +23,11 @@ import { registerReportsRoutes } from "./routes/reports";
 import { registerScenariosRoutes } from "./routes/scenarios";
 import { registerTaxFormsRoutes } from "./routes/taxForms";
 
-export function buildApp() {
+export async function buildApp() {
   ensureRequiredDirectories();
-  initDb();
-  migrateSectionDataIfNeeded();
-  bootstrapYamlIfNeeded();
+  await initDb();
+  await migrateSectionDataIfNeeded();
+  await bootstrapYamlIfNeeded();
 
   const app = Fastify({
     logger: true,

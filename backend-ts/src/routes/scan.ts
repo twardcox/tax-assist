@@ -44,7 +44,7 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
     const taxYear = Number(query.tax_year ?? 2025);
     const userId = request.currentUser?.id ?? null;
 
-    const scan = runScan(taxYear, userId);
+    const scan = await runScan(taxYear, userId);
     if (process.env.VITEST !== "true") {
       writeOpportunityReport(scan);
     }
@@ -70,7 +70,7 @@ export async function registerScanRoutes(app: FastifyInstance): Promise<void> {
 
     queueMicrotask(async () => {
       try {
-        const scan = runScan(taxYear, userId);
+        const scan = await runScan(taxYear, userId);
         const analysis = await generateScanAiNarrative(scan, taxYear, mode);
 
         const timestamp = nowStamp();

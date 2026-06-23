@@ -22,17 +22,17 @@ const TAX_SECTIONS = [
   "goals", "documents_index",
 ] as const;
 
-export function loadAllUserData(userId: string, taxYear: number): Record<string, unknown> {
+export async function loadAllUserData(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   const data: Record<string, unknown> = {};
   for (const section of TAX_SECTIONS) {
-    data[section] = getSectionData(userId, taxYear, section);
+    data[section] = await getSectionData(userId, taxYear, section);
   }
   return data;
 }
 
-export function computeTaxFigures(userId: string, taxYear: number): TaxFigures {
-  const data = loadAllUserData(userId, taxYear);
-  const user = getUserById(userId);
+export async function computeTaxFigures(userId: string, taxYear: number): Promise<TaxFigures> {
+  const data = await loadAllUserData(userId, taxYear);
+  const user = await getUserById(userId);
   const displayName = user?.display_name || user?.email || "";
 
   const calc = new TaxCalculator(data, taxYear);
@@ -65,8 +65,8 @@ export function computeTaxFigures(userId: string, taxYear: number): TaxFigures {
 }
 
 export async function buildFormPackage(userId: string, taxYear: number): Promise<Buffer> {
-  const data = loadAllUserData(userId, taxYear);
-  const user = getUserById(userId);
+  const data = await loadAllUserData(userId, taxYear);
+  const user = await getUserById(userId);
   const displayName = user?.display_name || user?.email || "";
 
   const calc = new TaxCalculator(data, taxYear);
@@ -75,7 +75,7 @@ export async function buildFormPackage(userId: string, taxYear: number): Promise
   c["_fs"] = fs;
   c["p_ctc"] = 2000;
 
-  const fd = getFilingDetails(userId, taxYear);
+  const fd = await getFilingDetails(userId, taxYear);
   c["_routing"] = fd.direct_deposit_routing ?? "";
   c["_account"] = fd.direct_deposit_account ?? "";
   c["_dd_type"] = fd.direct_deposit_type ?? "";

@@ -2,30 +2,25 @@ import { beforeEach, describe, expect, test } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { buildApp } from "../src/app";
-import { getDb } from "../src/db/client";
 import { initDb } from "../src/db/init";
+import { resetTablesForTest } from "../src/db/client";
 import { addTransaction } from "../src/db/transactionsRepo";
 import { __setDocumentAiExtractionOverrideForTest } from "../src/domain/documents/aiExecutor";
 import { __setScanAiNarrativeOverrideForTest } from "../src/domain/scanner/aiAdvisor";
 import { __resetAuthRateLimitForTest } from "../src/routes/auth";
 import { __setTaxLawUpdateRunningForTest } from "../src/routes/taxLaw";
 
-beforeEach(() => {
-  initDb();
+beforeEach(async () => {
+  await initDb();
   __setDocumentAiExtractionOverrideForTest(null);
   __setScanAiNarrativeOverrideForTest(null);
   __resetAuthRateLimitForTest();
-  const db = getDb();
-  db.exec("DELETE FROM transactions;");
-  db.exec("DELETE FROM section_data;");
-  db.exec("DELETE FROM documents;");
-  db.exec("DELETE FROM revoked_tokens;");
-  db.exec("DELETE FROM users;");
+  await resetTablesForTest();
 });
 
 describe("API baseline", () => {
   test("GET /api/health returns ok", async () => {
-    const app = buildApp();
+    const app = await buildApp();
     const response = await app.inject({ method: "GET", url: "/api/health" });
 
     expect(response.statusCode).toBe(200);
@@ -35,7 +30,7 @@ describe("API baseline", () => {
   });
 
   test("GET /api/config returns expected contract keys", async () => {
-    const app = buildApp();
+    const app = await buildApp();
     const response = await app.inject({ method: "GET", url: "/api/config" });
 
     expect(response.statusCode).toBe(200);
@@ -48,7 +43,7 @@ describe("API baseline", () => {
   });
 
   test("auth register, login, me, and logout flow", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -121,7 +116,7 @@ describe("API baseline", () => {
   });
 
   test("auth login is rate limited after repeated failed attempts", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -162,7 +157,7 @@ describe("API baseline", () => {
   });
 
   test("auth middleware handles malformed authorization headers safely", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -218,7 +213,7 @@ describe("API baseline", () => {
   });
 
   test("auth register is rate limited after repeated attempts", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     for (let i = 0; i < 5; i += 1) {
       const registerRes = await app.inject({
@@ -250,7 +245,7 @@ describe("API baseline", () => {
   });
 
   test("auth routes reject invalid auth payload shapes and weak password", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerUnknownFieldRes = await app.inject({
       method: "POST",
@@ -317,7 +312,7 @@ describe("API baseline", () => {
   });
 
   test("user-data list and parsed read works without auth", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const listRes = await app.inject({ method: "GET", url: "/api/user-data" });
     expect(listRes.statusCode).toBe(200);
@@ -341,7 +336,7 @@ describe("API baseline", () => {
   });
 
   test("user-data authenticated write then read uses DB-backed section data", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -409,7 +404,7 @@ describe("API baseline", () => {
   });
 
   test("user-data rejects malformed section payload shapes", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -446,7 +441,7 @@ describe("API baseline", () => {
   });
 
   test("user-data write requires exactly one of data or content", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -492,7 +487,7 @@ describe("API baseline", () => {
   });
 
   test("user-data save returns HSA, rental, and capital-gains mismatch warnings without failing save", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -634,7 +629,7 @@ describe("API baseline", () => {
       notes: "stubbed in API test"
     }));
 
-    const app = buildApp();
+    const app = await buildApp();
 
     try {
       const registerRes = await app.inject({
@@ -792,7 +787,7 @@ describe("API baseline", () => {
   });
 
   test("documents upload rejects oversized JSON content payloads", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -829,7 +824,7 @@ describe("API baseline", () => {
   });
 
   test("documents apply rejects invalid update payload shape", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -894,7 +889,7 @@ describe("API baseline", () => {
   });
 
   test("transactions list and summary work with auth and filters", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -911,7 +906,7 @@ describe("API baseline", () => {
     const token = registerPayload.token;
     const userId = registerPayload.user_id;
 
-    const firstTxnId = addTransaction({
+    const firstTxnId = await addTransaction({
       user_id: userId,
       file_id: "f-1",
       filename: "receipt-1.jpg",
@@ -929,7 +924,7 @@ describe("API baseline", () => {
       label: "Office supplies"
     });
 
-    addTransaction({
+    await addTransaction({
       user_id: userId,
       file_id: "f-2",
       filename: "receipt-2.jpg",
@@ -1009,7 +1004,7 @@ describe("API baseline", () => {
   });
 
   test("transactions endpoints return empty unauthenticated defaults", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const listRes = await app.inject({ method: "GET", url: "/api/transactions" });
     expect(listRes.statusCode).toBe(200);
@@ -1026,7 +1021,7 @@ describe("API baseline", () => {
   });
 
   test("reconciliation combines ledger summary and unprocessed income documents", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1040,7 +1035,7 @@ describe("API baseline", () => {
     expect(registerRes.statusCode).toBe(201);
     const payload = registerRes.json() as { token: string; user_id: string };
 
-    addTransaction({
+    await addTransaction({
       user_id: payload.user_id,
       file_id: "doc-a",
       filename: "w2.pdf",
@@ -1101,7 +1096,7 @@ describe("API baseline", () => {
   });
 
   test("planning route returns contract-compatible payload shape", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const planRes = await app.inject({
       method: "GET",
@@ -1130,7 +1125,7 @@ describe("API baseline", () => {
   });
 
   test("scan route returns dashboard-compatible payload", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const scanRes = await app.inject({
       method: "POST",
@@ -1157,11 +1152,8 @@ describe("API baseline", () => {
   });
 
   test("scan route evaluates real benefit rules for seeded YAML facts", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;");
-    db.exec("DELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1431,7 +1423,7 @@ describe("API baseline", () => {
   });
 
   test("ai analysis endpoint returns 503 when anthropic key is absent", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const aiRes = await app.inject({
       method: "POST",
@@ -1456,7 +1448,7 @@ describe("API baseline", () => {
       `Override narrative for tax year ${taxYear} in ${mode} mode.`
     );
 
-    const app = buildApp();
+    const app = await buildApp();
 
     try {
       const triggerRes = await app.inject({
@@ -1492,10 +1484,8 @@ describe("API baseline", () => {
   });
 
   test("scan route evaluates federal family and education credit rules", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1700,10 +1690,8 @@ describe("API baseline", () => {
   });
 
   test("scan route evaluates premium tax credit and backdoor Roth positive paths", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1801,7 +1789,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the small employer retirement startup credit", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1857,7 +1845,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the work opportunity tax credit", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1907,7 +1895,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the employer childcare credit", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -1957,7 +1945,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the excess fica refund", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2002,7 +1990,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the installment sale opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2052,7 +2040,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the nol carryforward opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2099,7 +2087,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the qlac opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2158,7 +2146,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the qsbs exclusion opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2205,7 +2193,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the conservation easement opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2264,7 +2252,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the net unrealized appreciation opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2326,7 +2314,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the ichra qsehra opportunity", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2387,10 +2375,8 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes a no-income-tax state", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2435,7 +2421,7 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the state EV credit", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2481,10 +2467,8 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes bonus depreciation and state 529 contribution positive paths", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2582,10 +2566,8 @@ describe("API baseline", () => {
   });
 
   test("scan route flags 529 account with zero annual contributions as eligible_if_changed", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2647,10 +2629,8 @@ describe("API baseline", () => {
   });
 
   test("scan route recognizes the 529 to Roth rollover", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
-    const db = getDb();
-    db.exec("DELETE FROM section_data;\nDELETE FROM users;");
 
     const registerRes = await app.inject({
       method: "POST",
@@ -2698,7 +2678,7 @@ describe("API baseline", () => {
   });
 
   test("tax law route exposes changes, status, and alert count contracts", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const changesRes = await app.inject({
       method: "GET",
@@ -2728,7 +2708,7 @@ describe("API baseline", () => {
   });
 
   test("tax law update validates source and starts background update", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const badSourceRes = await app.inject({
       method: "POST",
@@ -2753,7 +2733,7 @@ describe("API baseline", () => {
   });
 
   test("tax law route rejects invalid bounds and surfaces already running state", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const invalidLimitRes = await app.inject({
       method: "GET",
@@ -2797,7 +2777,7 @@ describe("API baseline", () => {
   });
 
   test("tax law route rejects invalid query value types", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const invalidLimitTypeRes = await app.inject({
       method: "GET",
@@ -2817,7 +2797,7 @@ describe("API baseline", () => {
   });
 
   test("reports route lists markdown reports and fetches report content", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const listRes = await app.inject({ method: "GET", url: "/api/reports" });
     expect(listRes.statusCode).toBe(200);
@@ -2839,7 +2819,7 @@ describe("API baseline", () => {
   });
 
   test("reports cpa packet job completes and exposes status", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const triggerRes = await app.inject({
       method: "POST",
@@ -2884,7 +2864,7 @@ describe("API baseline", () => {
   });
 
   test("scenarios route lists scenario contracts and runs a scenario diff", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const listRes = await app.inject({ method: "GET", url: "/api/scenarios" });
     expect(listRes.statusCode).toBe(200);
@@ -2923,7 +2903,7 @@ describe("API baseline", () => {
   });
 
   test("tax forms route saves filing details and returns computed summaries", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",
@@ -3032,7 +3012,7 @@ describe("API baseline", () => {
   });
 
   test("tax forms route rejects unauthenticated access", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const getRes = await app.inject({ method: "GET", url: "/api/filing-details?tax_year=2025" });
     expect(getRes.statusCode).toBe(401);
@@ -3044,7 +3024,7 @@ describe("API baseline", () => {
   });
 
   test("tax forms route rejects invalid query values", async () => {
-    const app = buildApp();
+    const app = await buildApp();
 
     const registerRes = await app.inject({
       method: "POST",

@@ -2,7 +2,7 @@ import { buildApp } from "./app";
 import { env } from "./config/env";
 
 async function start(): Promise<void> {
-  const app = buildApp();
+  const app = await buildApp();
 
   try {
     await app.listen({

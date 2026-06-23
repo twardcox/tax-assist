@@ -1,4 +1,4 @@
-import { getDb } from "./client";
+import { query, queryOne, execute } from "./client";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -34,40 +34,39 @@ function boolCol(val: unknown): number {
 
 // ── Canonical getter: always read from data_json ──────────────────────────────
 
-function readDataJson(table: string, userId: string, taxYear: number): Record<string, unknown> {
-  const db = getDb();
-  const row = db
-    .prepare(`SELECT data_json FROM ${table} WHERE user_id = ? AND tax_year = ?`)
-    .get(userId, taxYear) as { data_json: string } | undefined;
+async function readDataJson(table: string, userId: string, taxYear: number): Promise<Record<string, unknown>> {
+  const row = await queryOne<{ data_json: string }>(
+    `SELECT data_json FROM ${table} WHERE user_id = $1 AND tax_year = $2`,
+    [userId, taxYear]
+  );
   return row ? safeJson(row.data_json, {}) : {};
 }
 
 // ── household_data ────────────────────────────────────────────────────────────
 
-function getHousehold(userId: string, taxYear: number): Record<string, unknown> {
+async function getHousehold(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("household_data", userId, taxYear);
 }
 
-function saveHousehold(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveHousehold(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO household_data (
       user_id, tax_year, data_json,
       filing_status, estimated_agi, prior_year_agi,
       itemizing_deductions, digital_assets, has_electric_vehicle,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      filing_status = excluded.filing_status,
-      estimated_agi = excluded.estimated_agi,
-      prior_year_agi = excluded.prior_year_agi,
-      itemizing_deductions = excluded.itemizing_deductions,
-      digital_assets = excluded.digital_assets,
-      has_electric_vehicle = excluded.has_electric_vehicle,
-      updated_at = excluded.updated_at
-  `).run(
+      data_json = EXCLUDED.data_json,
+      filing_status = EXCLUDED.filing_status,
+      estimated_agi = EXCLUDED.estimated_agi,
+      prior_year_agi = EXCLUDED.prior_year_agi,
+      itemizing_deductions = EXCLUDED.itemizing_deductions,
+      digital_assets = EXCLUDED.digital_assets,
+      has_electric_vehicle = EXCLUDED.has_electric_vehicle,
+      updated_at = EXCLUDED.updated_at
+  `, [
     userId, taxYear,
     JSON.stringify(data),
     String(data["filing_status"] ?? ""),
@@ -77,41 +76,40 @@ function saveHousehold(userId: string, taxYear: number, data: Record<string, unk
     boolCol(data["digital_assets"]),
     boolCol(data["has_electric_vehicle"]),
     now,
-  );
+  ]);
 }
 
 // ── income_data ───────────────────────────────────────────────────────────────
 
-function getIncome(userId: string, taxYear: number): Record<string, unknown> {
+async function getIncome(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("income_data", userId, taxYear);
 }
 
-function saveIncome(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveIncome(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO income_data (
       user_id, tax_year, data_json,
       w2_employment, other_wages, self_employment,
       rental_income, investment_income, retirement_distributions,
       social_security, passive_income, other_income, farm,
       adjustments_to_income, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      w2_employment = excluded.w2_employment,
-      other_wages = excluded.other_wages,
-      self_employment = excluded.self_employment,
-      rental_income = excluded.rental_income,
-      investment_income = excluded.investment_income,
-      retirement_distributions = excluded.retirement_distributions,
-      social_security = excluded.social_security,
-      passive_income = excluded.passive_income,
-      other_income = excluded.other_income,
-      farm = excluded.farm,
-      adjustments_to_income = excluded.adjustments_to_income,
-      updated_at = excluded.updated_at
-  `).run(
+      data_json = EXCLUDED.data_json,
+      w2_employment = EXCLUDED.w2_employment,
+      other_wages = EXCLUDED.other_wages,
+      self_employment = EXCLUDED.self_employment,
+      rental_income = EXCLUDED.rental_income,
+      investment_income = EXCLUDED.investment_income,
+      retirement_distributions = EXCLUDED.retirement_distributions,
+      social_security = EXCLUDED.social_security,
+      passive_income = EXCLUDED.passive_income,
+      other_income = EXCLUDED.other_income,
+      farm = EXCLUDED.farm,
+      adjustments_to_income = EXCLUDED.adjustments_to_income,
+      updated_at = EXCLUDED.updated_at
+  `, [
     userId, taxYear,
     JSON.stringify(data),
     jArr(data["w2_employment"]),
@@ -126,70 +124,67 @@ function saveIncome(userId: string, taxYear: number, data: Record<string, unknow
     jObj(data["farm"]),
     jObj(data["adjustments_to_income"]),
     now,
-  );
+  ]);
 }
 
 // ── businesses_data ───────────────────────────────────────────────────────────
 
-function getBusinesses(userId: string, taxYear: number): Record<string, unknown> {
+async function getBusinesses(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("businesses_data", userId, taxYear);
 }
 
-function saveBusinesses(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveBusinesses(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO businesses_data (user_id, tax_year, data_json, businesses, updated_at)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      businesses = excluded.businesses,
-      updated_at = excluded.updated_at
-  `).run(userId, taxYear, JSON.stringify(data), jArr(data["businesses"]), now);
+      data_json = EXCLUDED.data_json,
+      businesses = EXCLUDED.businesses,
+      updated_at = EXCLUDED.updated_at
+  `, [userId, taxYear, JSON.stringify(data), jArr(data["businesses"]), now]);
 }
 
 // ── real_estate_data ──────────────────────────────────────────────────────────
 
-function getRealEstate(userId: string, taxYear: number): Record<string, unknown> {
+async function getRealEstate(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("real_estate_data", userId, taxYear);
 }
 
-function saveRealEstate(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveRealEstate(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO real_estate_data (user_id, tax_year, data_json, properties, updated_at)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      properties = excluded.properties,
-      updated_at = excluded.updated_at
-  `).run(userId, taxYear, JSON.stringify(data), jArr(data["properties"]), now);
+      data_json = EXCLUDED.data_json,
+      properties = EXCLUDED.properties,
+      updated_at = EXCLUDED.updated_at
+  `, [userId, taxYear, JSON.stringify(data), jArr(data["properties"]), now]);
 }
 
 // ── investments_data ──────────────────────────────────────────────────────────
 
-function getInvestments(userId: string, taxYear: number): Record<string, unknown> {
+async function getInvestments(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("investments_data", userId, taxYear);
 }
 
-function saveInvestments(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveInvestments(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO investments_data (
       user_id, tax_year, data_json,
       taxable_accounts, plans_529, opportunity_zone_investments, crypto,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      taxable_accounts = excluded.taxable_accounts,
-      plans_529 = excluded.plans_529,
-      opportunity_zone_investments = excluded.opportunity_zone_investments,
-      crypto = excluded.crypto,
-      updated_at = excluded.updated_at
-  `).run(
+      data_json = EXCLUDED.data_json,
+      taxable_accounts = EXCLUDED.taxable_accounts,
+      plans_529 = EXCLUDED.plans_529,
+      opportunity_zone_investments = EXCLUDED.opportunity_zone_investments,
+      crypto = EXCLUDED.crypto,
+      updated_at = EXCLUDED.updated_at
+  `, [
     userId, taxYear,
     JSON.stringify(data),
     jArr(data["taxable_accounts"]),
@@ -197,32 +192,31 @@ function saveInvestments(userId: string, taxYear: number, data: Record<string, u
     jArr(data["opportunity_zone_investments"]),
     jObj(data["crypto"]),
     now,
-  );
+  ]);
 }
 
 // ── retirement_data ───────────────────────────────────────────────────────────
 
-function getRetirement(userId: string, taxYear: number): Record<string, unknown> {
+async function getRetirement(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("retirement_data", userId, taxYear);
 }
 
-function saveRetirement(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveRetirement(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO retirement_data (
       user_id, tax_year, data_json,
       employer_plans, individual_retirement_accounts,
       self_employed_plans, roth_conversion, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      employer_plans = excluded.employer_plans,
-      individual_retirement_accounts = excluded.individual_retirement_accounts,
-      self_employed_plans = excluded.self_employed_plans,
-      roth_conversion = excluded.roth_conversion,
-      updated_at = excluded.updated_at
-  `).run(
+      data_json = EXCLUDED.data_json,
+      employer_plans = EXCLUDED.employer_plans,
+      individual_retirement_accounts = EXCLUDED.individual_retirement_accounts,
+      self_employed_plans = EXCLUDED.self_employed_plans,
+      roth_conversion = EXCLUDED.roth_conversion,
+      updated_at = EXCLUDED.updated_at
+  `, [
     userId, taxYear,
     JSON.stringify(data),
     jObj(data["employer_plans"]),
@@ -230,36 +224,35 @@ function saveRetirement(userId: string, taxYear: number, data: Record<string, un
     jObj(data["self_employed_plans"]),
     jObj(data["roth_conversion"]),
     now,
-  );
+  ]);
 }
 
 // ── healthcare_data ───────────────────────────────────────────────────────────
 
-function getHealthcare(userId: string, taxYear: number): Record<string, unknown> {
+async function getHealthcare(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("healthcare_data", userId, taxYear);
 }
 
-function saveHealthcare(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveHealthcare(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO healthcare_data (
       user_id, tax_year, data_json,
       insurance, health_savings_account, flexible_spending_accounts,
       long_term_care, medical_expenses, self_employed_health_insurance,
       premium_tax_credit, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      insurance = excluded.insurance,
-      health_savings_account = excluded.health_savings_account,
-      flexible_spending_accounts = excluded.flexible_spending_accounts,
-      long_term_care = excluded.long_term_care,
-      medical_expenses = excluded.medical_expenses,
-      self_employed_health_insurance = excluded.self_employed_health_insurance,
-      premium_tax_credit = excluded.premium_tax_credit,
-      updated_at = excluded.updated_at
-  `).run(
+      data_json = EXCLUDED.data_json,
+      insurance = EXCLUDED.insurance,
+      health_savings_account = EXCLUDED.health_savings_account,
+      flexible_spending_accounts = EXCLUDED.flexible_spending_accounts,
+      long_term_care = EXCLUDED.long_term_care,
+      medical_expenses = EXCLUDED.medical_expenses,
+      self_employed_health_insurance = EXCLUDED.self_employed_health_insurance,
+      premium_tax_credit = EXCLUDED.premium_tax_credit,
+      updated_at = EXCLUDED.updated_at
+  `, [
     userId, taxYear,
     JSON.stringify(data),
     jObj(data["insurance"]),
@@ -270,54 +263,52 @@ function saveHealthcare(userId: string, taxYear: number, data: Record<string, un
     jObj(data["self_employed_health_insurance"]),
     jObj(data["premium_tax_credit"]),
     now,
-  );
+  ]);
 }
 
 // ── dependents_data ───────────────────────────────────────────────────────────
 
-function getDependents(userId: string, taxYear: number): Record<string, unknown> {
+async function getDependents(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("dependents_data", userId, taxYear);
 }
 
-function saveDependents(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveDependents(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO dependents_data (user_id, tax_year, data_json, dependents, updated_at)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      dependents = excluded.dependents,
-      updated_at = excluded.updated_at
-  `).run(userId, taxYear, JSON.stringify(data), jArr(data["dependents"]), now);
+      data_json = EXCLUDED.data_json,
+      dependents = EXCLUDED.dependents,
+      updated_at = EXCLUDED.updated_at
+  `, [userId, taxYear, JSON.stringify(data), jArr(data["dependents"]), now]);
 }
 
 // ── goals_data ────────────────────────────────────────────────────────────────
 
-function getGoals(userId: string, taxYear: number): Record<string, unknown> {
+async function getGoals(userId: string, taxYear: number): Promise<Record<string, unknown>> {
   return readDataJson("goals_data", userId, taxYear);
 }
 
-function saveGoals(userId: string, taxYear: number, data: Record<string, unknown>): void {
-  const db = getDb();
+async function saveGoals(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO goals_data (
       user_id, tax_year, data_json,
       primary_goals, timeline, risk_tolerance,
       professional_advisors, major_life_events_this_year,
       anticipated_changes_next_year, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     ON CONFLICT(user_id, tax_year) DO UPDATE SET
-      data_json = excluded.data_json,
-      primary_goals = excluded.primary_goals,
-      timeline = excluded.timeline,
-      risk_tolerance = excluded.risk_tolerance,
-      professional_advisors = excluded.professional_advisors,
-      major_life_events_this_year = excluded.major_life_events_this_year,
-      anticipated_changes_next_year = excluded.anticipated_changes_next_year,
-      updated_at = excluded.updated_at
-  `).run(
+      data_json = EXCLUDED.data_json,
+      primary_goals = EXCLUDED.primary_goals,
+      timeline = EXCLUDED.timeline,
+      risk_tolerance = EXCLUDED.risk_tolerance,
+      professional_advisors = EXCLUDED.professional_advisors,
+      major_life_events_this_year = EXCLUDED.major_life_events_this_year,
+      anticipated_changes_next_year = EXCLUDED.anticipated_changes_next_year,
+      updated_at = EXCLUDED.updated_at
+  `, [
     userId, taxYear,
     JSON.stringify(data),
     jObj(data["primary_goals"]),
@@ -327,16 +318,16 @@ function saveGoals(userId: string, taxYear: number, data: Record<string, unknown
     jObj(data["major_life_events_this_year"]),
     jObj(data["anticipated_changes_next_year"]),
     now,
-  );
+  ]);
 }
 
 // ── section_data fallback (documents_index, etc.) ─────────────────────────────
 
-function getSectionBlob(userId: string, taxYear: number, section: string): Record<string, unknown> {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT data_json FROM section_data WHERE user_id = ? AND tax_year = ? AND section = ?")
-    .get(userId, taxYear, section) as { data_json: string } | undefined;
+async function getSectionBlob(userId: string, taxYear: number, section: string): Promise<Record<string, unknown>> {
+  const row = await queryOne<{ data_json: string }>(
+    "SELECT data_json FROM section_data WHERE user_id = $1 AND tax_year = $2 AND section = $3",
+    [userId, taxYear, section]
+  );
 
   if (!row) return {};
   try {
@@ -346,23 +337,22 @@ function getSectionBlob(userId: string, taxYear: number, section: string): Recor
   }
 }
 
-function saveSectionBlob(userId: string, taxYear: number, section: string, data: object): void {
-  const db = getDb();
+async function saveSectionBlob(userId: string, taxYear: number, section: string, data: object): Promise<void> {
   const now = new Date().toISOString();
-  db.prepare(`
+  await execute(`
     INSERT INTO section_data (user_id, tax_year, section, data_json, updated_at)
-    VALUES (?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5)
     ON CONFLICT(user_id, tax_year, section) DO UPDATE SET
-      data_json = excluded.data_json,
-      updated_at = excluded.updated_at
-  `).run(userId, taxYear, section, JSON.stringify(data), now);
+      data_json = EXCLUDED.data_json,
+      updated_at = EXCLUDED.updated_at
+  `, [userId, taxYear, section, JSON.stringify(data), now]);
 }
 
 // ── Dispatch table ────────────────────────────────────────────────────────────
 
 type SectionHandler = {
-  get: (userId: string, taxYear: number) => Record<string, unknown>;
-  save: (userId: string, taxYear: number, data: Record<string, unknown>) => void;
+  get: (userId: string, taxYear: number) => Promise<Record<string, unknown>>;
+  save: (userId: string, taxYear: number, data: Record<string, unknown>) => Promise<void>;
 };
 
 const HANDLERS: Record<string, SectionHandler> = {
@@ -377,21 +367,21 @@ const HANDLERS: Record<string, SectionHandler> = {
   goals:       { get: getGoals,       save: saveGoals       },
 };
 
-// ── Public API (unchanged from callers' perspective) ──────────────────────────
+// ── Public API ────────────────────────────────────────────────────────────────
 
-export function getSectionData(userId: string, taxYear: number, section: string): Record<string, unknown> {
+export async function getSectionData(userId: string, taxYear: number, section: string): Promise<Record<string, unknown>> {
   const handler = HANDLERS[section];
   if (handler) return handler.get(userId, taxYear);
   return getSectionBlob(userId, taxYear, section);
 }
 
-export function saveSectionData(userId: string, taxYear: number, section: string, data: object): void {
+export async function saveSectionData(userId: string, taxYear: number, section: string, data: object): Promise<void> {
   const handler = HANDLERS[section];
   if (handler) {
-    handler.save(userId, taxYear, data as Record<string, unknown>);
+    await handler.save(userId, taxYear, data as Record<string, unknown>);
     return;
   }
-  saveSectionBlob(userId, taxYear, section, data);
+  await saveSectionBlob(userId, taxYear, section, data);
 }
 
 function assignPath(target: Record<string, unknown>, dotPath: string, operation: string, value: unknown): boolean {
@@ -420,17 +410,17 @@ function assignPath(target: Record<string, unknown>, dotPath: string, operation:
   return true;
 }
 
-export function applyDotPathToSection(
+export async function applyDotPathToSection(
   userId: string,
   taxYear: number,
   section: string,
   dotPath: string,
   operation: string,
   value: unknown
-): boolean {
-  const data = getSectionData(userId, taxYear, section);
+): Promise<boolean> {
+  const data = await getSectionData(userId, taxYear, section);
   const updated = { ...data };
   if (!assignPath(updated, dotPath, operation, value)) return false;
-  saveSectionData(userId, taxYear, section, updated);
+  await saveSectionData(userId, taxYear, section, updated);
   return true;
 }

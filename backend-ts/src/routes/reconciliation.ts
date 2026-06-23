@@ -78,8 +78,8 @@ export async function registerReconciliationRoutes(app: FastifyInstance): Promis
       };
     }
 
-    const summary = getSummary(user.id);
-    const documentsIndex = getSectionData(user.id, env.TAX_YEAR, "documents_index");
+    const summary = await getSummary(user.id);
+    const documentsIndex = await getSectionData(user.id, env.TAX_YEAR, "documents_index");
     const unprocessedIncomeDocuments = buildUnprocessedIncomeDocs(documentsIndex);
 
     const ledgerByCategory = Object.fromEntries(

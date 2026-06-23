@@ -23,7 +23,7 @@ export async function registerTransactionsRoutes(app: FastifyInstance): Promise<
     const query = TransactionsQuerySchema.parse(request.query ?? {});
 
     return {
-      transactions: getTransactions(user.id, {
+      transactions: await getTransactions(user.id, {
         benefitId: query.benefit_id,
         taxCategory: query.tax_category,
         status: query.status
@@ -43,7 +43,7 @@ export async function registerTransactionsRoutes(app: FastifyInstance): Promise<
       };
     }
 
-    return getSummary(user.id);
+    return await getSummary(user.id);
   });
 
   app.delete("/transactions/:txnId", { preHandler: app.authenticate }, async (request) => {
@@ -53,7 +53,7 @@ export async function registerTransactionsRoutes(app: FastifyInstance): Promise<
     }
 
     const { txnId } = TransactionParamsSchema.parse(request.params ?? {});
-    const reversed = reverseTransaction(txnId, user.id);
+    const reversed = await reverseTransaction(txnId, user.id);
     if (!reversed) {
       throw new AppError(404, `Transaction '${txnId}' not found`);
     }

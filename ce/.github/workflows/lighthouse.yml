@@ -1,0 +1,66 @@
+name: Lighthouse
+
+on:
+  deployment_status:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'deployment_status' &&
+      github.event.deployment_status.state == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install @lhci/cli
+        run: npm install -g @lhci/cli
+
+      - name: Capture deployment URL
+        id: url
+        run: echo "base=${{ github.event.deployment_status.target_url }}" >> $GITHUB_OUTPUT
+
+      - name: Wait for deployment to be reachable
+        run: |
+          BASE="${{ steps.url.outputs.base }}"
+          echo "Waiting for $BASE"
+
+          for i in {1..60}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE" || echo "000")
+            echo "HTTP $code"
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "Deployment not reachable in time"
+          exit 1
+
+      - name: Build URL list
+        id: urls
+        run: |
+          BASE="${{ steps.url.outputs.base }}"
+          if [ -n "${{ vars.LIGHTHOUSE_PATHS }}" ]; then
+            echo "${{ vars.LIGHTHOUSE_PATHS }}" | sed "s|^|$BASE|g" > urls.txt
+          else
+            echo "$BASE" > urls.txt
+          fi
+
+      - name: Run Lighthouse CI
+        run: |
+          lhci autorun \
+            --collect.numberOfRuns=3 \
+            --collect.url="$(cat urls.txt | tr '\n' ' ')" \
+            --upload.target=temporary-public-storage

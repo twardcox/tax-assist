@@ -2,13 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(process.cwd(), "..");
-const isTestEnv = process.env.NODE_ENV === "test";
-const dbFileName = isTestEnv ? "transactions.test.db" : "transactions.db";
 
 export const projectPaths = {
   root,
   state: path.join(root, "state"),
-  dbPath: path.join(root, "state", dbFileName),
   reports: path.join(root, "reports"),
   userData: path.join(root, "user_data"),
   taxLibrary: path.join(root, "tax_library"),

@@ -1,4 +1,4 @@
-import { getDb } from "./client";
+import { query, execute } from "./client";
 import { saveSectionData } from "./sectionRepo";
 
 const MANAGED_SECTIONS = [
@@ -12,24 +12,17 @@ const MANAGED_SECTIONS = [
  * startup — rows already in the typed tables are untouched, and moved rows
  * are deleted from section_data so the fallback path never returns stale data.
  */
-export function migrateSectionDataIfNeeded(): void {
-  const db = getDb();
-
+export async function migrateSectionDataIfNeeded(): Promise<void> {
   for (const section of MANAGED_SECTIONS) {
     type Row = { user_id: string; tax_year: number; data_json: string };
-    const rows = db
-      .prepare(
-        "SELECT user_id, tax_year, data_json FROM section_data WHERE section = ?"
-      )
-      .all(section) as Row[];
+    const rows = await query<Row>(
+      "SELECT user_id, tax_year, data_json FROM section_data WHERE section = $1",
+      [section]
+    );
 
     if (rows.length === 0) continue;
 
     console.log(`[migrate] Moving ${rows.length} ${section} row(s) from section_data → ${section}_data`);
-
-    const deleteStmt = db.prepare(
-      "DELETE FROM section_data WHERE user_id = ? AND tax_year = ? AND section = ?"
-    );
 
     for (const row of rows) {
       let data: Record<string, unknown>;
@@ -38,15 +31,17 @@ export function migrateSectionDataIfNeeded(): void {
       } catch {
         continue;
       }
-      saveSectionData(row.user_id, row.tax_year, section, data);
-      deleteStmt.run(row.user_id, row.tax_year, section);
+      await saveSectionData(row.user_id, row.tax_year, section, data);
+      await execute(
+        "DELETE FROM section_data WHERE user_id = $1 AND tax_year = $2 AND section = $3",
+        [row.user_id, row.tax_year, section]
+      );
     }
   }
 
-  // Verify section_data only has documents_index (or nothing) left
-  const remaining = db
-    .prepare("SELECT DISTINCT section FROM section_data")
-    .all() as { section: string }[];
+  const remaining = await query<{ section: string }>(
+    "SELECT DISTINCT section FROM section_data"
+  );
 
   const unexpected = remaining
     .map((r) => r.section)
@@ -56,4 +51,3 @@ export function migrateSectionDataIfNeeded(): void {
     console.log(`[migrate] section_data retains unmanaged sections: ${unexpected.join(", ")}`);
   }
 }
-

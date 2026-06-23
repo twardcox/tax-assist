@@ -205,7 +205,7 @@ export async function registerPlanningRoutes(app: FastifyInstance): Promise<void
     const daysUntilDec31 = Math.floor((dec31.getTime() - today.getTime()) / dayMs);
     const daysUntilApr15 = Math.floor((apr15.getTime() - today.getTime()) / dayMs);
 
-    const scan = runScan(taxYear, userId);
+    const scan = await runScan(taxYear, userId);
     const actions = scan.results
       .filter((result) => ACTIONABLE_STATUSES.has(result.status) && Boolean(DEADLINE_MAP[result.benefit_id]))
       .map((result) => {

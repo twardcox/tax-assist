@@ -5,7 +5,7 @@ import { createUser, getUserByEmail, getUserCount } from "./authRepo";
 import { saveSectionData } from "./sectionRepo";
 import { hashPassword } from "../auth/service";
 import { projectPaths } from "../lib/paths";
-import { getDb } from "./client";
+import { execute } from "./client";
 
 const DEFAULT_EMAIL = "admin@localhost.com";
 const DEFAULT_PASSWORD = "Password1!";
@@ -25,8 +25,8 @@ const SECTION_YAML_MAP: Record<string, string> = {
   documents_index: "documents_index.yaml"
 };
 
-export function bootstrapYamlIfNeeded(): void {
-  if (getUserCount() > 0) {
+export async function bootstrapYamlIfNeeded(): Promise<void> {
+  if ((await getUserCount()) > 0) {
     return;
   }
 
@@ -34,9 +34,9 @@ export function bootstrapYamlIfNeeded(): void {
 
   let uid: string;
   try {
-    uid = createUser(DEFAULT_EMAIL, hashPassword(DEFAULT_PASSWORD), DEFAULT_DISPLAY_NAME);
+    uid = await createUser(DEFAULT_EMAIL, hashPassword(DEFAULT_PASSWORD), DEFAULT_DISPLAY_NAME);
   } catch {
-    const existing = getUserByEmail(DEFAULT_EMAIL);
+    const existing = await getUserByEmail(DEFAULT_EMAIL);
     if (!existing) {
       console.error("[bootstrap] ERROR: could not create default user");
       return;
@@ -56,7 +56,7 @@ export function bootstrapYamlIfNeeded(): void {
       const raw = fs.readFileSync(filePath, "utf8");
       const data = yaml.load(raw);
       if (data && typeof data === "object" && !Array.isArray(data)) {
-        saveSectionData(uid, BOOTSTRAP_TAX_YEAR, section, data as Record<string, unknown>);
+        await saveSectionData(uid, BOOTSTRAP_TAX_YEAR, section, data as Record<string, unknown>);
         imported += 1;
       }
     } catch (err) {
@@ -65,8 +65,7 @@ export function bootstrapYamlIfNeeded(): void {
   }
 
   try {
-    const db = getDb();
-    db.prepare("UPDATE transactions SET user_id=? WHERE user_id IS NULL").run(uid);
+    await execute("UPDATE transactions SET user_id=$1 WHERE user_id IS NULL", [uid]);
   } catch (err) {
     console.warn("[bootstrap] WARNING: could not assign orphaned transactions:", err);
   }
