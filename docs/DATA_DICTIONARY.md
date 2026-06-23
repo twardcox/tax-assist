@@ -36,7 +36,7 @@ Same shape as `income_data`. One row per user per tax year per section. `data_js
 ### Schema files
 - Section schemas: `frontend/src/schemas/` — defines field groups, labels, types, `essential`, `advanced`, `showIf`, `defaultOpen`
 - DB migration: `backend-ts/db/migrate.ts`
-- Seed: `backend-ts/scripts/seedTestUser.ts` (alex.carter@example.com / TestUser123!)
+- Seed: `backend-ts/src/scripts/createTestUser.ts` (run: `npm run seed:test-user --prefix backend-ts` / root: `npm run seed`) (alex.carter@example.com / TestUser123!)
 
 ### Known data redundancies (Phase C — not yet resolved)
 - Capital gains: `income_data` (`investment_income.*`) and `investments_data` (`realized_gains_losses_this_year.*`)
