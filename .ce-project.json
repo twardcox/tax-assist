@@ -2,17 +2,17 @@
   "toolkit": {
     "hooks": {
       "preCommit": {
-        "enabled": false
+        "enabled": true
       },
       "commitMsg": {
-        "enabled": false
+        "enabled": true
       },
       "prePush": {
         "enabled": true,
         "validateBranch": false
       },
       "postCheckout": {
-        "enabled": false
+        "enabled": true
       }
     },
     "ci": {
