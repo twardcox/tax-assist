@@ -32,7 +32,7 @@ All user section data flows through typed repo modules in `src/db/` (e.g. `secti
 ## Frontend patterns (`frontend/src/`)
 
 ### Data flow
-React Query manages all server state. All fetch calls go through `src/lib/api.ts`. No direct `fetch()` calls in components.
+React Query manages all server state. All fetch calls go through `src/api.js`. No direct `fetch()` calls in components.
 
 ### Schema-driven UI
 `pages/UserData.jsx` renders sections from schemas in `schemas/`. `SectionForm.jsx` iterates field groups; `FieldGroup.jsx` / `FieldInput.jsx` / `ListEditor.jsx` handle rendering. `showIf`, `advanced`, `defaultOpen` are all evaluated client-side against current section data.
