@@ -12,7 +12,7 @@
 Routes are Fastify plugins registered in `src/routes/`. Each file exports an async plugin function and calls `fastify.register()` in `src/app.ts`.
 
 ### Data access
-All user section data flows through typed repo functions in `src/db/repos/`. Reads return `data_json` parsed as the relevant schema type. Never read raw columns for business logic — `data_json` is canonical.
+All user section data flows through typed repo modules in `src/db/` (e.g. `sectionRepo.ts`). Reads return `data_json` parsed as the relevant schema type. Never read raw columns for business logic — `data_json` is canonical.
 
 ### Scanner
 `src/domain/scanner/scan.ts` → loads all benefits from `tax_library/`, evaluates rules in `rules.ts` against `UserFacts` (`userFacts.ts`), returns `ScanResult[]`. No side effects; pure function.
