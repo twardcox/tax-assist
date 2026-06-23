@@ -24,8 +24,8 @@ All user section data flows through typed repo modules in `src/db/` (e.g. `secti
 `src/domain/taxForms/fillIrsForms.ts` — `fillSingleIrsForm(userId, taxYear, formKey)`. Uses `pdf-lib` to fill AcroForm fields. Field map reference: `state/pdf_check/FIELD_MAP.md`.
 
 ### Testing
-- Framework: Vitest with `supertest` for HTTP integration tests
-- Test DB cleanup: `resetTablesForTest()` in `src/db/testHelpers.ts`
+- Framework: Vitest with Fastify `app.inject()` for HTTP integration tests
+- Test DB cleanup: `resetTablesForTest()` in `src/db/client.ts`
 - Run: `npm test --prefix backend-ts`
 - Validation loop: test → lint → build (in that order)
 
