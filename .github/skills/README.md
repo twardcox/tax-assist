@@ -1,6 +1,6 @@
 # CE Agent Skills (Cross-Tool)
 
-This directory (`ce/.agents/skills/`) contains **tool-agnostic Agent Skills** compatible with any AI tool that reads the `.agents/skills/` convention, including:
+This directory (`.github/skills/`) contains **GitHub Copilot skill wrappers** that mirror the Coherence Engine skill catalog for GitHub-hosted agent surfaces.
 
 - **Gemini CLI** - `.agents/skills/` takes precedence over `.gemini/skills/`
 - **GitHub Copilot CLI** - reads `.agents/skills/` (auto-activation; no explicit slash invoke)
