@@ -71,4 +71,3 @@
 - [ ] Constraints and assumptions documented
 - [ ] Risks identified with mitigation strategies
 - [ ] Executive sponsor approval obtained
-```
