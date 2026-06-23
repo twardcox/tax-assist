@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+node "ce/scripts/hook-runner.cjs" commit-msg "$1" 1>&2

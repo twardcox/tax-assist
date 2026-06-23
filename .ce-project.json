@@ -1,0 +1,26 @@
+{
+  "toolkit": {
+    "hooks": {
+      "preCommit": {
+        "enabled": false
+      },
+      "commitMsg": {
+        "enabled": false
+      },
+      "prePush": {
+        "enabled": true,
+        "validateBranch": false
+      },
+      "postCheckout": {
+        "enabled": false
+      }
+    },
+    "ci": {
+      "linting": true,
+      "formatting": false,
+      "typeCheck": true,
+      "unitTests": true,
+      "e2eTests": false
+    }
+  }
+}
