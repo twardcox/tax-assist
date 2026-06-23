@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-node "ce/scripts/hook-runner.cjs" pre-commit 1>&2
+node "ce/scripts/hook-runner.cjs" pre-commit "$@" 1>&2
