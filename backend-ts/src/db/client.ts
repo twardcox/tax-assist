@@ -5,7 +5,10 @@ let _pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!_pool) {
-    _pool = new Pool({ connectionString: env.DATABASE_URL });
+    _pool = new Pool({
+      connectionString: env.DATABASE_URL,
+      allowExitOnIdle: true,
+    });
   }
   return _pool;
 }
