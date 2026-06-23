@@ -1,8 +1,8 @@
 # Patterns
 
 ## Stack
-- **Backend:** Fastify (TypeScript) in `backend-ts/` — Vitest, ESLint, esbuild
-- **Frontend:** React + Vite (TypeScript) in `frontend/` — Tailwind CSS
+- **Backend:** Fastify (TypeScript) in `backend-ts/` — Vitest, ESLint, TypeScript (tsc/tsx)
+- **Frontend:** React + Vite (JavaScript/JSX) in `frontend/` — Tailwind CSS
 - **Database:** PostgreSQL via `pg` driver; `DATABASE_URL` in `.env`
 - **Runtime:** Node 22; root `package.json` orchestrates via `concurrently`
 
