@@ -21,7 +21,7 @@ All user section data flows through typed repo modules in `src/db/` (e.g. `secti
 `src/domain/taxForms/taxCalculator.ts` — single `TaxCalculator` class; instantiate with `{ household, income, ... }` data blobs. All 2024/2025 parameters inline.
 
 ### IRS form filling
-`src/domain/taxForms/fillIrsForms.ts` — `fillSingleIrsForm(userId, taxYear, formKey)`. Uses `pdf-lib` to fill AcroForm fields. Field map reference: `state/pdf_check/FIELD_MAP.md`.
+`src/domain/taxForms/fillIrsForms.ts` — `fillSingleIrsForm(formKey, computedValues, displayName, taxYear, data?)`. Uses `pdf-lib` to fill AcroForm fields. Field map reference: `state/pdf_check/FIELD_MAP.md`.
 
 ### Testing
 - Framework: Vitest with Fastify `app.inject()` for HTTP integration tests
