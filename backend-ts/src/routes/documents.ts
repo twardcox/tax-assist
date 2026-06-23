@@ -102,6 +102,10 @@ function normalizeDocument(row: Awaited<ReturnType<typeof getDocumentsForUser>>[
 
 function applyDotPath(data: Record<string, unknown>, dotPath: string, operation: string, value: unknown): boolean {
   const parts = dotPath.split(".");
+
+  const BANNED = new Set(["__proto__", "constructor", "prototype"]);
+  if (parts.some(p => BANNED.has(p))) return false;
+
   let current: unknown = data;
 
   try {
