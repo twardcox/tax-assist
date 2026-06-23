@@ -10,10 +10,10 @@ Run pre-flight validation before committing. Configured via `.ce-project.json` `
 
 ## What to do
 
-1. **Run the script** from the project root:
+1. **Run the checks** from the project root:
 
    ```bash
-   node ce/scripts/pre-flight-check.cjs
+   npm test --prefix backend-ts && npm run lint --prefix backend-ts && npm run build --prefix backend-ts
    ```
 
 2. **For this project** (npm monorepo, TS backend is a sub-package), run these directly if needed:
