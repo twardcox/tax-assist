@@ -19,9 +19,9 @@ Run pre-flight validation before committing. Configured via `.ce-project.json` `
 2. **For this project** (npm monorepo, TS backend is a sub-package), run these directly if needed:
 
    ```bash
+   npm test --prefix backend-ts
    npm run lint --prefix backend-ts
    npm run build --prefix backend-ts
-   npm test --prefix backend-ts
    ```
 
 3. **Fix any failures** before committing. Do not use `--no-verify` to bypass.
