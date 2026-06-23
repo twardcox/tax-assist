@@ -1,21 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c \"import pkg_resources; [print\\(p.project_name, p.version\\) for p in pkg_resources.working_set]\")",
-      "Bash(python -m pip list)",
-      "Bash(python -m pip install beautifulsoup4 lxml)",
-      "Bash(python -m pytest tests/ -q)",
-      "Bash(python -c ' *)",
-      "PowerShell(cd d:\\\\programs\\\\tax-assist; $job = Start-Job -ScriptBlock { Set-Location d:\\\\programs\\\\tax-assist; python -m uvicorn api.main:app --port 8001 }; Start-Sleep -Seconds 5; try { $r = Invoke-RestMethod \"http://localhost:8001/api/user-data\" -TimeoutSec 5; Write-Host \"OK: sections = $\\($r.sections -join ', '\\)\" } catch { Write-Host \"Error: $_\" }; Stop-Job $job; Remove-Job $job)",
-      "PowerShell(cd d:\\\\programs\\\\tax-assist; $job = Start-Job -ScriptBlock { Set-Location d:\\\\programs\\\\tax-assist; python -m uvicorn api.main:app --port 8002 }; Start-Sleep -Seconds 5; try { $r = Invoke-RestMethod \"http://localhost:8002/api/scenarios\" -TimeoutSec 5; Write-Host \"Scenarios: $\\($r.scenarios.Count\\) found\"; $r2 = Invoke-RestMethod \"http://localhost:8002/api/reports\" -TimeoutSec 5; Write-Host \"Reports: $\\($r2.reports.Count\\) found\" } catch { Write-Host \"Error: $_\" }; Stop-Job $job; Remove-Job $job)",
-      "Bash(npm install *)",
       "Bash(npm run *)",
-      "Bash(python -m uvicorn api.main:app --reload --port 8000)",
-      "Bash(curl -s http://localhost:8000/api/user-data)",
-      "Bash(python -c \"from scripts.scan_opportunities import BenefitLibrary; lib = BenefitLibrary\\(\\); print\\(f'{len\\(lib.benefits\\)} benefits loaded'\\); [print\\(' -', b['id']\\) for b in lib.benefits]\")",
-      "Bash(python -c \"from scripts.scan_opportunities import BenefitLibrary; lib = BenefitLibrary\\(\\); print\\(f'{len\\(lib.benefits\\)} benefits loaded'\\)\")",
-      "Bash(cd /d d:\\\\programs\\\\tax-assist)",
-      "Bash(python -m pytest tests/ -v)"
+      "Bash(npm install *)",
+      "Bash(npm ci *)",
+      "Bash(npm test *)"
     ]
   }
 }
