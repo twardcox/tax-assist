@@ -1,4 +1,4 @@
-import { query, queryOne, execute } from "./client";
+import { queryOne, execute } from "./client";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -368,7 +368,7 @@ export async function saveSectionData(userId: string, taxYear: number, section: 
   await saveSectionBlob(userId, taxYear, section, data);
 }
 
-function assignPath(target: Record<string, unknown>, dotPath: string, operation: string, value: unknown): boolean {
+function assignPath(target: Record<string, unknown>, dotPath: string, operation: "set" | "add", value: unknown): boolean {
   const parts = dotPath.split(".").filter(Boolean);
   if (parts.length === 0) return false;
 
@@ -376,25 +376,50 @@ function assignPath(target: Record<string, unknown>, dotPath: string, operation:
   if (parts.some(p => BANNED.has(p))) return false;
 
   let current: unknown = target;
-  for (const part of parts.slice(0, -1)) {
-    if (!current || typeof current !== "object" || Array.isArray(current)) return false;
-    const obj = current as Record<string, unknown>;
-    if (!(part in obj) || obj[part] == null || typeof obj[part] !== "object") {
-      obj[part] = {};
+
+  try {
+    for (const part of parts.slice(0, -1)) {
+      if (Array.isArray(current)) {
+        current = current[Number(part)];
+      } else if (current && typeof current === "object") {
+        const obj = current as Record<string, unknown>;
+        if (!(part in obj) || obj[part] == null || typeof obj[part] !== "object") {
+          obj[part] = {};
+        }
+        current = obj[part];
+      } else {
+        return false;
+      }
     }
-    current = obj[part];
-  }
 
-  const last = parts[parts.length - 1];
-  if (!current || typeof current !== "object" || Array.isArray(current)) return false;
+    const last = parts[parts.length - 1];
+    if (Array.isArray(current)) {
+      const index = Number(last);
+      while (current.length <= index) {
+        current.push(null);
+      }
+      if (operation === "add") {
+        current[index] = Number(current[index] ?? 0) + Number(value ?? 0);
+      } else {
+        current[index] = value;
+      }
+      return true;
+    }
 
-  const obj = current as Record<string, unknown>;
-  if (operation === "add") {
-    obj[last] = Number(obj[last] ?? 0) + Number(value ?? 0);
-  } else {
-    obj[last] = value;
+    if (current && typeof current === "object") {
+      const obj = current as Record<string, unknown>;
+      if (operation === "add") {
+        obj[last] = Number(obj[last] ?? 0) + Number(value ?? 0);
+      } else {
+        obj[last] = value;
+      }
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
   }
-  return true;
 }
 
 export async function applyDotPathToSection(
@@ -402,7 +427,7 @@ export async function applyDotPathToSection(
   taxYear: number,
   section: string,
   dotPath: string,
-  operation: string,
+  operation: "set" | "add",
   value: unknown
 ): Promise<boolean> {
   const data = await getSectionData(userId, taxYear, section);

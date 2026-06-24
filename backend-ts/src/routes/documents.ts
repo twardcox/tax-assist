@@ -289,7 +289,7 @@ export async function registerDocumentsRoutes(app: FastifyInstance): Promise<voi
     for (const update of updates) {
       const section = String(update.yaml_file ?? update.section ?? "");
       const dotPath = String(update.dot_path ?? "");
-      const operation = String(update.operation ?? "set");
+      const operation: "set" | "add" = (update.operation ?? "set") as "set" | "add";
       const rawValue = update.value;
       const label = String(update.label ?? dotPath);
 
