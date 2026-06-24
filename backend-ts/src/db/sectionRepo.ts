@@ -374,7 +374,9 @@ function assignPath(target: Record<string, unknown>, dotPath: string, operation:
   try {
     for (const part of parts.slice(0, -1)) {
       if (Array.isArray(current)) {
-        current = current[Number(part)];
+        const index = Number(part);
+        if (!Number.isInteger(index) || index < 0) return false;
+        current = current[index];
       } else if (current && typeof current === "object") {
         const obj = current as Record<string, unknown>;
         if (!(part in obj) || obj[part] == null || typeof obj[part] !== "object") {
