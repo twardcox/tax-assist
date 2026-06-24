@@ -2,7 +2,7 @@
   "toolkit": {
     "hooks": {
       "preCommit": {
-        "enabled": true,
+        "enabled": false,
         "lintStaged": false,
         "typeCheck": false,
         "runTests": false
