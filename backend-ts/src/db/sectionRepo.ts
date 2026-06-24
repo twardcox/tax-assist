@@ -313,13 +313,7 @@ async function getSectionBlob(userId: string, taxYear: number, section: string):
     "SELECT data_json FROM section_data WHERE user_id = $1 AND tax_year = $2 AND section = $3",
     [userId, taxYear, section]
   );
-
-  if (!row) return {};
-  try {
-    return (JSON.parse(row.data_json) as Record<string, unknown>) ?? {};
-  } catch {
-    return {};
-  }
+  return row ? safeJson(row.data_json, {}) : {};
 }
 
 async function saveSectionBlob(userId: string, taxYear: number, section: string, data: object): Promise<void> {
