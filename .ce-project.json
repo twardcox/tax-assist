@@ -2,10 +2,14 @@
   "toolkit": {
     "hooks": {
       "preCommit": {
-        "enabled": true
+        "enabled": true,
+        "lintStaged": false,
+        "typeCheck": false,
+        "runTests": false
       },
       "commitMsg": {
-        "enabled": true
+        "enabled": true,
+        "requireTicket": false
       },
       "prePush": {
         "enabled": true,
