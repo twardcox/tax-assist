@@ -27,7 +27,8 @@ that JavaScript. Every calculated field must be filled explicitly by our code.
 | `mapFieldPositions.mjs [form.pdf]` | Lists every field sorted by page → Y (top→bottom) → X (left→right) |
 | `labelAllForms.mjs` | Fills every text field with its own short name; saves `labeled_all_*.pdf` |
 | `flattenLabeledForms.mjs` | Flattens the labeled PDFs → `flat_labeled_*.pdf` so markitdown can read them |
-| `verifyFields.mjs <userId> <taxYear> <formKey>` | Fills a form from real DB data with flatten() neutralized, dumps live field name→value pairs — the most reliable verification method (see Step 9a) |
+| `checkFieldMappings.mjs <userId> [taxYear]` | Automated pass/fail check: fills all 8 forms live and asserts every mapped field equals its FIELD_MAP.md-documented value (see Step 9a) |
+| `verifyFields.mjs <userId> <taxYear> <formKey>` | Fills a form from real DB data with flatten() neutralized, dumps live field name→value pairs (see Step 9b) |
 
 Run all four in sequence when starting a new form:
 
@@ -213,20 +214,44 @@ coordinates to verify checkbox positions visually against the form image.
 
 ## Step 9 — Verify with test data
 
-There are two ways to verify a filled form against seeded test data. **Prefer the live field
-dump (9a)** — it reads the actual AcroForm field values with zero ambiguity. Form 1040's
-two-column layout is dense enough that markitdown's text extraction can scramble which value
-appears next to which line label (confirmed 2026-06-16), so treat markitdown output (9b) as a
-secondary cross-check for checkbox positions and visual layout, not as ground truth for values.
+Three verification layers, strongest first. **Run the automated check (9a) after any change to
+fillIrsForms.ts, taxCalculator.ts, or the tax parameters.** The live dump (9b) is for mapping
+*new* fields; markitdown (9c) is a visual cross-check only — Form 1040's two-column layout is
+dense enough that markitdown's text extraction can scramble which value appears next to which
+line label (confirmed 2026-06-16).
 
-### Step 9a — Live AcroForm field dump (preferred)
+To find the seeded user id (PostgreSQL — `npm run seed:test-user` first if missing):
 
 ```
 cd backend-ts
-node -e "import('node:sqlite').then(({DatabaseSync}) => {
-  const db = new DatabaseSync('d:\\\\programs\\\\tax-assist\\\\state\\\\transactions.db');
-  console.log(JSON.stringify(db.prepare('SELECT id FROM users WHERE email = ?').get('alex.carter@example.com')));
-})"
+node -e "require('dotenv').config({path:'../.env'}); require('dotenv').config();
+const {Client}=require('pg'); const c=new Client({connectionString:process.env.DATABASE_URL});
+c.connect().then(async()=>{console.log((await c.query(\"SELECT id FROM users WHERE email='alex.carter@example.com'\")).rows[0]?.id); await c.end();});"
+```
+
+### Step 9a — Automated mapping check (run first)
+
+```
+npx tsx scripts/checkFieldMappings.mjs <userId> 2025
+```
+
+Fills all 8 forms live from the seeded user's DB data and asserts every mapped money/value
+field equals its FIELD_MAP.md-documented value (~105 checks). The expectations in the script
+are transcribed from FIELD_MAP.md — not from fillIrsForms.ts — so it catches the fill code
+writing the right value to the wrong field or vice versa. Exit code 1 on any mismatch.
+When a form's mapping changes, update FIELD_MAP.md *and* the expectation table in
+`scripts/checkFieldMappings.mjs` together.
+
+The script first verifies the sha256 of every cached form PDF against the revision the
+mapping was derived from, and exits (code 2) on mismatch. This exists because the IRS
+re-publishes PDFs at the same URL with renumbered fields: the "Created 9/5/25" 1040 revision
+silently shifted every field index after f1_53/f2_06 while the old map still "passed" its own
+checks. If the guard fires: re-derive the mapping for the changed form (widget dump + label
+cross-check + visual render), then update the pinned hash.
+
+### Step 9b — Live AcroForm field dump (for mapping new fields)
+
+```
 npx tsx scripts/verifyFields.mjs <userId> 2025 <formKey>
 ```
 
@@ -240,7 +265,7 @@ each value directly against:
 
 Fix any mismatches in `fillIrsForms.ts` and repeat until every field is correct.
 
-### Step 9b — markitdown on the downloaded PDF (secondary / visual cross-check)
+### Step 9c — markitdown on the downloaded PDF (secondary / visual cross-check)
 
 1. Start the app: `npm run dev` in `backend-ts` and `frontend`
 2. Log in as `alex.carter@example.com` / `TestUser123!`
@@ -255,7 +280,7 @@ Fix any mismatches in `fillIrsForms.ts` and repeat until every field is correct.
    *present somewhere* in the output — don't trust which line label it's printed next to.
 6. Checkboxes are not readable via markitdown at all — use `mapFieldPositions.mjs` X,Y
    coordinates to verify checkbox positions visually against the form image, or check them in
-   the Step 9a field dump (`[X]` / empty).
+   the Step 9b field dump (`[X]` / empty).
 
 ---
 

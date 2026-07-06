@@ -28,8 +28,8 @@ if (!userId || !formKey) {
   process.exit(1);
 }
 
-const data = loadAllUserData(userId, taxYear);
-const figures = computeTaxFigures(userId, taxYear);
+const data = await loadAllUserData(userId, taxYear);
+const figures = await computeTaxFigures(userId, taxYear);
 
 const pdfBytes = await fillSingleIrsForm(formKey, figures.computed, figures.display_name, taxYear, data);
 

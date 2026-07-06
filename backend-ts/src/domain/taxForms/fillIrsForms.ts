@@ -378,33 +378,35 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   if (invInc["child_capital_gain_included"]) tryCheckBox(doc, p(1, "c1_44[0]"), true);
 
   // ── Page 1 ── Income ────────────────────────────────────────────────────────
+  // Field indexes verified against the 2025 form revision "Created 9/5/25"
+  // (see state/pdf_check/FIELD_MAP.md). This revision added checkbox rows
+  // (3c child dividends, 4c/5c rollover blanks, 6c/6d, 7b) and moved lines
+  // 12–18 entirely to page 2, shifting every f1_XX index after f1_53.
   s(p(1, "f1_47[0]"), c["wages"]);                // Line 1a  W-2 wages
   s(p(1, "f1_48[0]"), c["household_employee_wages"]); // Line 1b  household employee wages
   s(p(1, "f1_49[0]"), c["tip_income_unreported"]);    // Line 1c  tip income not on W-2
   s(p(1, "f1_50[0]"), c["medicaid_waiver_payments"]); // Line 1d  Medicaid waiver payments
-  s(p(1, "f1_54[0]"), c["other_earned_income"]);      // Line 1h  other earned income
-  s(p(1, "f1_55[0]"), c["taxable_interest"]);     // Line 2b  taxable interest
-  s(p(1, "f1_56[0]"), c["ordinary_dividends"]);   // Line 3b  ordinary dividends
-  s(p(1, "f1_57[0]"), c["qualified_dividends"]);  // Line 3a  qualified dividends
-  s(p(1, "f1_58[0]"), c["ira_gross"]);            // Line 4a  IRA distributions (gross)
-  s(p(1, "f1_59[0]"), c["ira_taxable"]);          // Line 4b  IRA distributions (taxable)
-  s(p(1, "f1_60[0]"), c["pension_gross"]);        // Line 5a  pensions/annuities (gross)
-  s(p(1, "f1_61[0]"), c["pension_taxable"]);      // Line 5b  pensions/annuities (taxable)
-  s(p(1, "f1_62[0]"), c["ss_gross"]);             // Line 6a  Social Security benefits (gross)
-  s(p(1, "f1_63[0]"), c["ss_taxable"]);           // Line 6b  Social Security benefits (taxable)
-  ss(p(1, "f1_65[0]"), c["capital_gains_net"]);   // Line 7   capital gain or (loss)
-  s(p(1, "f1_66[0]"), c["schedule1_additional"]); // Line 8   other income (Schedule 1 line 10)
-  s(p(1, "f1_67[0]"), c["total_income"]);         // Line 9   total income
-  s(p(1, "f1_68[0]"), c["total_adjustments"]);    // Line 10  adjustments to income
-  s(p(1, "f1_69[0]"), c["agi"]);                  // Line 11  AGI
+  s(p(1, "f1_55[0]"), c["other_earned_income"]);      // Line 1h  amount (f1_54 is the 1h type blank)
+  const line1z = ["wages", "household_employee_wages", "tip_income_unreported",
+    "medicaid_waiver_payments", "other_earned_income"]
+    .reduce((t, k) => t + Number(c[k] ?? 0), 0);
+  s(p(1, "f1_57[0]"), line1z);                    // Line 1z  add lines 1a through 1h
+  s(p(1, "f1_59[0]"), c["taxable_interest"]);     // Line 2b  taxable interest
+  s(p(1, "f1_60[0]"), c["qualified_dividends"]);  // Line 3a  qualified dividends
+  s(p(1, "f1_61[0]"), c["ordinary_dividends"]);   // Line 3b  ordinary dividends
+  s(p(1, "f1_62[0]"), c["ira_gross"]);            // Line 4a  IRA distributions (gross)
+  s(p(1, "f1_63[0]"), c["ira_taxable"]);          // Line 4b  IRA distributions (taxable)
+  s(p(1, "f1_65[0]"), c["pension_gross"]);        // Line 5a  pensions/annuities (gross)
+  s(p(1, "f1_66[0]"), c["pension_taxable"]);      // Line 5b  pensions/annuities (taxable)
+  s(p(1, "f1_68[0]"), c["ss_gross"]);             // Line 6a  Social Security benefits (gross)
+  s(p(1, "f1_69[0]"), c["ss_taxable"]);           // Line 6b  Social Security benefits (taxable)
+  ss(p(1, "f1_70[0]"), c["capital_gains_net"]);   // Line 7a  capital gain or (loss)
+  s(p(1, "f1_72[0]"), c["schedule1_additional"]); // Line 8   other income (Schedule 1 line 10)
+  s(p(1, "f1_73[0]"), c["total_income"]);         // Line 9   total income
+  s(p(1, "f1_74[0]"), c["total_adjustments"]);    // Line 10  adjustments to income
+  s(p(1, "f1_75[0]"), c["agi"]);                  // Line 11a AGI (page 1 ends here in this revision)
 
-  s(p(1, "f1_70[0]"), c["deduction"]);            // Line 12  standard or itemized deduction
-  s(p(1, "f1_71[0]"), c["qbi_deduction"]);        // Line 13  QBI deduction (§199A)
   const line14 = Number(c["deduction"] ?? 0) + Number(c["qbi_deduction"] ?? 0);
-  s(p(1, "f1_72[0]"), line14);                    // Line 14  add lines 12 + 13
-  s(p(1, "f1_73[0]"), c["taxable_income"]);       // Line 15  taxable income
-  s(p(1, "f1_74[0]"), c["income_tax_before_credits"]); // Line 16  tax
-  s(p(1, "f1_75[0]"), c["income_tax_before_credits"]); // Line 18  tax (no AMT in our calc)
 
   // ── Page 2 ── Deductions / taxable income carry-over ─────────────────────────
   // These fields repeat lines 11b-15 on the back page of the printed form
@@ -432,35 +434,42 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   s(p(2, "f2_06[0]"), c["taxable_income"]);            // Line 15   taxable income
 
   // ── Page 2 ── Tax, Credits, Payments ────────────────────────────────────────
-  s(p(2, "f2_07[0]"), c["ctc_with_odc"]);              // Line 19  child tax credit + ODC (via Sch 8812)
-  s(p(2, "f2_08[0]"), c["schedule3_line8"]);           // Line 20  Schedule 3, line 8
-  s(p(2, "f2_09[0]"), c["total_credits"]);             // Line 21  total credits (Lines 19+20)
-  s(p(2, "f2_10[0]"), c["income_tax_after_credits"]);  // Line 22  tax after credits
+  // Revision "Created 9/5/25": f2_07 is the line-16 checkbox-3 text blank, so
+  // every amount field from line 16 on is one-or-more indexes later than the
+  // pre-revision form. Lines 16/18 now exist only on page 2.
+  s(p(2, "f2_08[0]"), c["income_tax_before_credits"]); // Line 16  tax
+  s(p(2, "f2_10[0]"), c["income_tax_before_credits"]); // Line 18  add lines 16+17 (no Schedule 2 modeled)
+  s(p(2, "f2_11[0]"), c["ctc_with_odc"]);              // Line 19  child tax credit + ODC (via Sch 8812)
+  s(p(2, "f2_12[0]"), c["schedule3_line8"]);           // Line 20  Schedule 3, line 8
+  s(p(2, "f2_13[0]"), c["total_credits"]);             // Line 21  total credits (Lines 19+20)
+  s(p(2, "f2_14[0]"), c["income_tax_after_credits"]);  // Line 22  tax after credits
   const otherTaxes = Number(c["se_tax"] ?? 0) + Number(c["household_employment_tax"] ?? 0);
-  s(p(2, "f2_11[0]"), otherTaxes > 0 ? otherTaxes : ""); // Line 23  other taxes (SE + household employment)
-  s(p(2, "f2_12[0]"), c["total_tax"]);                 // Line 24  total tax
-  s(p(2, "f2_13[0]"), c["w2_withholding"]);            // Line 25a federal income tax withheld (W-2)
-  s(p(2, "f2_14[0]"), c["other_withholding"]);         // Line 25b  1099 / other withholding
+  s(p(2, "f2_15[0]"), otherTaxes > 0 ? otherTaxes : ""); // Line 23  other taxes (SE + household employment)
+  s(p(2, "f2_16[0]"), c["total_tax"]);                 // Line 24  total tax
+  s(p(2, "f2_17[0]"), c["w2_withholding"]);            // Line 25a federal income tax withheld (W-2)
+  s(p(2, "f2_18[0]"), c["other_withholding"]);         // Line 25b  1099 / other withholding
   const totalWithholding = Number(c["w2_withholding"] ?? 0) + Number(c["other_withholding"] ?? 0);
-  s(p(2, "f2_17[0]"), totalWithholding);               // Line 25d  total withholding (25a+25b+25c)
-  s(p(2, "f2_18[0]"), c["estimated_tax_payments"]);    // Line 26   estimated tax payments
+  s(p(2, "f2_20[0]"), totalWithholding);               // Line 25d  total withholding (25a+25b+25c)
+  s(p(2, "f2_21[0]"), c["estimated_tax_payments"]);    // Line 26   estimated tax payments
   // Former spouse SSN for estimated payment allocation (Line 26 footnote — SSN_ReadOrder subform)
   const formerSpouseSSN = String(pay["former_spouse_ssn"] ?? "");
   if (formerSpouseSSN) ts(doc, "topmostSubform[0].Page2[0].SSN_ReadOrder[0].f2_22[0]", formerSpouseSSN);
-  s(p(2, "f2_19[0]"), c["earned_income_credit"]);      // Line 27   Earned Income Credit
-  s(p(2, "f2_20[0]"), c["additional_ctc"]);            // Line 28   Additional Child Tax Credit (Sch 8812)
-  s(p(2, "f2_24[0]"), c["total_payments"]);            // Line 33   total payments
+  s(p(2, "f2_23[0]"), c["earned_income_credit"]);      // Line 27a  Earned Income Credit
+  s(p(2, "f2_24[0]"), c["additional_ctc"]);            // Line 28   Additional Child Tax Credit (Sch 8812)
+  const line32 = Number(c["earned_income_credit"] ?? 0) + Number(c["additional_ctc"] ?? 0);
+  s(p(2, "f2_28[0]"), line32);                         // Line 32   total other payments/refundable credits
+  s(p(2, "f2_29[0]"), c["total_payments"]);            // Line 33   total payments
 
   if (Number(c["refund"] ?? 0) > 0) {
-    s(p(2, "f2_25[0]"), c["refund"]);                  // Line 34   refund
+    s(p(2, "f2_30[0]"), c["refund"]);                  // Line 34   refund
     const applyToNext = Number(pay["apply_to_next_year"] ?? 0);
     const directRefund = Math.max(0, Number(c["refund"] ?? 0) - applyToNext);
-    s(p(2, "f2_26[0]"), directRefund || c["refund"]);  // Line 35a  amount to refund (direct)
+    s(p(2, "f2_31[0]"), directRefund || c["refund"]);  // Line 35a  amount to refund (direct)
     if (applyToNext > 0) {
-      s(p(2, "f2_27[0]"), applyToNext);               // Line 36   apply to 2026 estimated tax
+      s(p(2, "f2_34[0]"), applyToNext);               // Line 36   apply to 2026 estimated tax
     }
   } else {
-    s(p(2, "f2_28[0]"), c["amount_owed"]);             // Line 37   amount owed
+    s(p(2, "f2_35[0]"), c["amount_owed"]);             // Line 37   amount owed
   }
 
   // Direct deposit routing / account / type
@@ -987,7 +996,7 @@ async function fillSchedule8812(c: ComputedValues): Promise<PDFDocument> {
   const line8 = line5 + line7;
 
   s(p(1, "f1_9[0]"), qualChildren);                       // Line 4 — qualifying children count
-  s(p(1, "f1_10[0]"), line5);                             // Line 5 — Line 4 × $2,000
+  s(p(1, "f1_10[0]"), line5);                             // Line 5 — Line 4 × per-child credit (params)
 
   if (otherDepCount > 0) {
     ts(doc, p(1, "Line6ReadOrder[0].f1_11[0]"), String(otherDepCount)); // Line 6 — other dependents
