@@ -1,5 +1,6 @@
 import type { ScanResult, ScanStatus } from "./types";
 import { UserFacts } from "./userFacts";
+import { getTaxParamsClosest } from "../taxForms/taxParams";
 
 type RawBenefit = Record<string, unknown>;
 
@@ -224,8 +225,9 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
+    const ctcPerChild = getTaxParamsClosest(facts.taxYear).child_tax_credit;
     if (qualifyingNoSsn.length > 0) {
-      const creditValue = qualifying.length * 2200;
+      const creditValue = qualifying.length * ctcPerChild;
       return {
         status: "nearly_eligible",
         message: `${qualifyingNoSsn.length} child(ren) missing SSN - credit requires SSN by return due date.`,
@@ -234,7 +236,7 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const baseCredit = qualifying.length * 2200;
+    const baseCredit = qualifying.length * ctcPerChild;
     if (agi && agi > cliff) {
       const excess = agi - cliff;
       const reduction = (Math.floor(excess / 1000) + 1) * 50;
@@ -247,7 +249,7 @@ const rules: Record<string, RuleFn> = {
       }
       return {
         status: "eligible_now",
-        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $2,200 = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
+        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $${ctcPerChild.toLocaleString()} = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
         estimated_value: `~$${baseCredit.toLocaleString()}/year`,
         phaseout_note: `AGI $${agi.toLocaleString()} is above the ${cliff.toLocaleString()} phaseout threshold.`
       };
@@ -255,7 +257,7 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $2,200.`,
+      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $${ctcPerChild.toLocaleString()}.`,
       estimated_value: `~$${baseCredit.toLocaleString()}/year`,
       next_steps: ["Report on Schedule 8812", "Up to $1,700 per child may be refundable (ACTC)"]
     };
@@ -1196,12 +1198,13 @@ const rules: Record<string, RuleFn> = {
     const itemizing = facts.itemizing();
 
     if (itemizing === false) {
+      const std = getTaxParamsClosest(facts.taxYear).standard_deduction;
       return {
         status: "eligible_if_changed",
         message: "Not currently itemizing — charitable deduction only applies when itemizing.",
         changes_needed: [
           "Calculate total itemized deductions (mortgage interest + SALT + charitable)",
-          "If total exceeds standard deduction ($31,500 MFJ / $15,750 Single for 2025), itemize",
+          `If total exceeds standard deduction ($${std.married_filing_jointly.toLocaleString()} MFJ / $${std.single.toLocaleString()} Single), itemize`,
           "Consider bunching 2-3 years of giving via a Donor-Advised Fund"
         ]
       };

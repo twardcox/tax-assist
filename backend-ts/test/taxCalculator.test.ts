@@ -497,6 +497,22 @@ describe("scenario 17 · married filing separately · SALT (2025 $20k MFS cap)",
   test("ordinary_tax = 8554", () => expect(c.ordinary_tax).toBeCloseTo(8554, 2));
 });
 
+// ─── 17b. SALT phase-down — OBBBA 30% reduction above $500k AGI ──────────────
+describe("scenario 17b · MFJ · SALT cap phased down to $10k floor above $500k AGI", () => {
+  // wages=650000, state_withheld=50000, prop_tax=10000 → SALT before cap = 60000
+  // phasedown = (650000-500000)×0.30 = 45000; cap = max(10000, 40000-45000) = 10000
+  // itemized = 10000 + mortgage 30000 = 40000 > standard(31500)
+  const c = run(d({
+    fs: "married_filing_jointly",
+    w2: [{ wages: 650000, state_withheld: 50000 }],
+    properties: [{ financing: { property_tax_paid: 10000, mortgage_interest_paid: 30000 } }],
+  }));
+
+  test("SALT capped at the $10k floor", () => expect(c.salt).toBeCloseTo(10000, 2));
+  test("itemized = 40000", () => expect(c.itemized).toBeCloseTo(40000, 2));
+  test("using_standard = false", () => expect(c.using_standard).toBe(false));
+});
+
 // ─── 18. SE tax — W2 wages exceed SS wage base (Medicare only) ───────────────
 describe("scenario 18 · SE tax with W2 wages already consuming SS wage base", () => {
   // wages=200000 (W2), schedule_c net=50000

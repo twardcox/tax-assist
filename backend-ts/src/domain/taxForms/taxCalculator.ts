@@ -1,4 +1,6 @@
-import { AppError } from "../../lib/errors";
+// Tax parameters come from the PolicyEngine-derived snapshot; see taxParams.ts
+// and scripts/updateTaxParams.mjs.
+import { getTaxParams, type TaxParams } from "./taxParams";
 
 type FilingStatus =
   | "single"
@@ -7,101 +9,10 @@ type FilingStatus =
   | "head_of_household"
   | "qualifying_surviving_spouse";
 
-type TaxParams = {
-  standard_deduction: Record<string, number>;
-  extra_deduction_65: { single: number; married: number };
-  brackets: Record<string, Array<[number, number]>>;
-  ltcg_thresholds: Record<string, [number, number]>;
-  se_ss_wage_base: number;
-  child_tax_credit: number;
-  ctc_phaseout: Record<string, number>;
-  niit_threshold: Record<string, number>;
-  amt_exemption: Record<string, number>;
-  salt_cap: Record<string, number>;
-  salt_phase_threshold: number | null;
-};
-
-const TAX_PARAMS: Record<number, TaxParams> = {
-  2024: {
-    standard_deduction: {
-      single: 14600,
-      married_filing_jointly: 29200,
-      married_filing_separately: 14600,
-      head_of_household: 21900,
-      qualifying_surviving_spouse: 29200,
-    },
-    extra_deduction_65: { single: 1950, married: 1550 },
-    brackets: {
-      single: [[11600, 0.10], [47150, 0.12], [100525, 0.22], [191950, 0.24], [243725, 0.32], [609350, 0.35], [1e18, 0.37]],
-      married_filing_jointly: [[23200, 0.10], [94300, 0.12], [201050, 0.22], [383900, 0.24], [487450, 0.32], [731200, 0.35], [1e18, 0.37]],
-      married_filing_separately: [[11600, 0.10], [47150, 0.12], [100525, 0.22], [191950, 0.24], [243725, 0.32], [365600, 0.35], [1e18, 0.37]],
-      head_of_household: [[16550, 0.10], [63100, 0.12], [100500, 0.22], [191950, 0.24], [243700, 0.32], [609350, 0.35], [1e18, 0.37]],
-      qualifying_surviving_spouse: [[23200, 0.10], [94300, 0.12], [201050, 0.22], [383900, 0.24], [487450, 0.32], [731200, 0.35], [1e18, 0.37]],
-    },
-    ltcg_thresholds: {
-      single: [47025, 518900],
-      married_filing_jointly: [94050, 583750],
-      married_filing_separately: [47025, 291850],
-      head_of_household: [63000, 551350],
-      qualifying_surviving_spouse: [94050, 583750],
-    },
-    se_ss_wage_base: 168600,
-    child_tax_credit: 2000,
-    ctc_phaseout: { single: 200000, married_filing_jointly: 400000 },
-    niit_threshold: { single: 200000, married_filing_jointly: 250000 },
-    amt_exemption: { single: 85700, married_filing_jointly: 133300 },
-    salt_cap: { single: 10000, married_filing_jointly: 10000, married_filing_separately: 5000, head_of_household: 10000, qualifying_surviving_spouse: 10000 },
-    salt_phase_threshold: null as null | number,
-  },
-  2025: {
-    // OBBBA (2025): standard deduction raised to $15,750/$31,500/$23,625
-    standard_deduction: {
-      single: 15750,
-      married_filing_jointly: 31500,
-      married_filing_separately: 15750,
-      head_of_household: 23625,
-      qualifying_surviving_spouse: 31500,
-    },
-    extra_deduction_65: { single: 2000, married: 1600 },
-    brackets: {
-      single: [[11925, 0.10], [48475, 0.12], [103350, 0.22], [197300, 0.24], [250525, 0.32], [626350, 0.35], [1e18, 0.37]],
-      married_filing_jointly: [[23850, 0.10], [96950, 0.12], [206700, 0.22], [394600, 0.24], [501050, 0.32], [751600, 0.35], [1e18, 0.37]],
-      married_filing_separately: [[11925, 0.10], [48475, 0.12], [103350, 0.22], [197300, 0.24], [250525, 0.32], [375800, 0.35], [1e18, 0.37]],
-      head_of_household: [[17000, 0.10], [64850, 0.12], [103350, 0.22], [197300, 0.24], [250500, 0.32], [626350, 0.35], [1e18, 0.37]],
-      qualifying_surviving_spouse: [[23850, 0.10], [96950, 0.12], [206700, 0.22], [394600, 0.24], [501050, 0.32], [751600, 0.35], [1e18, 0.37]],
-    },
-    ltcg_thresholds: {
-      single: [48350, 533400],
-      married_filing_jointly: [96700, 600050],
-      married_filing_separately: [48350, 300000],
-      head_of_household: [64750, 566700],
-      qualifying_surviving_spouse: [96700, 600050],
-    },
-    se_ss_wage_base: 176100,
-    // OBBBA (2025): CTC raised to $2,200 per qualifying child
-    child_tax_credit: 2200,
-    ctc_phaseout: { single: 200000, married_filing_jointly: 400000 },
-    niit_threshold: { single: 200000, married_filing_jointly: 250000 },
-    amt_exemption: { single: 88100, married_filing_jointly: 137000 },
-    // 2025: SALT cap raised to $40k/$20k (MFS) by OBBBA, with 5% phase-down above $500k/$250k AGI (floor: $10k/$5k)
-    salt_cap: { single: 40000, married_filing_jointly: 40000, married_filing_separately: 20000, head_of_household: 40000, qualifying_surviving_spouse: 40000 },
-    salt_phase_threshold: 500000 as null | number,
-  },
-};
-
 function f(val: unknown): number {
   if (val == null) return 0;
   const n = Number(val);
   return Number.isFinite(n) ? n : 0;
-}
-
-function getParams(taxYear: number): TaxParams {
-  const params = TAX_PARAMS[taxYear];
-  if (!params) {
-    // Refuse rather than silently compute with another year's numbers.
-    throw new AppError(400, `Tax year ${taxYear} is not supported (supported: ${Object.keys(TAX_PARAMS).join(", ")})`);
-  }
-  return params;
 }
 
 function toObj(val: unknown): Record<string, unknown> {
@@ -134,7 +45,7 @@ export class TaxCalculator {
   constructor(data: Record<string, unknown>, taxYear: number) {
     this.data = data;
     this.taxYear = taxYear;
-    this.p = getParams(taxYear);
+    this.p = getTaxParams(taxYear);
   }
 
   compute(): ComputedValues {
@@ -462,8 +373,10 @@ export class TaxCalculator {
     const saltCapBase = this.p.salt_cap[fs] ?? (fs.includes("separately") ? 5000 : 10000);
     const saltFloor = fs.includes("separately") ? 5000 : 10000;
     const saltPhaseThresh = this.p.salt_phase_threshold;
+    // OBBBA: cap reduced by 30% of MAGI over the threshold, floored at $10k/$5k.
+    const saltPhaseRate = this.p.salt_phase_rate ?? 0;
     const saltPhasedown = saltPhaseThresh != null
-      ? Math.max(0, (agi - (fs.includes("separately") ? saltPhaseThresh / 2 : saltPhaseThresh)) * 0.05)
+      ? Math.max(0, (agi - (fs.includes("separately") ? saltPhaseThresh / 2 : saltPhaseThresh)) * saltPhaseRate)
       : 0;
     const saltCap = Math.max(saltFloor, saltCapBase - saltPhasedown);
     c["salt"] = Math.min(stateTax + propTax, saltCap);
