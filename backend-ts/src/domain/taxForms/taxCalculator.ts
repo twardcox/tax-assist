@@ -1,3 +1,5 @@
+import { AppError } from "../../lib/errors";
+
 type FilingStatus =
   | "single"
   | "married_filing_jointly"
@@ -52,12 +54,13 @@ const TAX_PARAMS: Record<number, TaxParams> = {
     salt_phase_threshold: null as null | number,
   },
   2025: {
+    // OBBBA (2025): standard deduction raised to $15,750/$31,500/$23,625
     standard_deduction: {
-      single: 15000,
-      married_filing_jointly: 30000,
-      married_filing_separately: 15000,
-      head_of_household: 22500,
-      qualifying_surviving_spouse: 30000,
+      single: 15750,
+      married_filing_jointly: 31500,
+      married_filing_separately: 15750,
+      head_of_household: 23625,
+      qualifying_surviving_spouse: 31500,
     },
     extra_deduction_65: { single: 2000, married: 1600 },
     brackets: {
@@ -75,7 +78,8 @@ const TAX_PARAMS: Record<number, TaxParams> = {
       qualifying_surviving_spouse: [96700, 600050],
     },
     se_ss_wage_base: 176100,
-    child_tax_credit: 2000,
+    // OBBBA (2025): CTC raised to $2,200 per qualifying child
+    child_tax_credit: 2200,
     ctc_phaseout: { single: 200000, married_filing_jointly: 400000 },
     niit_threshold: { single: 200000, married_filing_jointly: 250000 },
     amt_exemption: { single: 88100, married_filing_jointly: 137000 },
@@ -92,7 +96,12 @@ function f(val: unknown): number {
 }
 
 function getParams(taxYear: number): TaxParams {
-  return TAX_PARAMS[taxYear] ?? TAX_PARAMS[2025];
+  const params = TAX_PARAMS[taxYear];
+  if (!params) {
+    // Refuse rather than silently compute with another year's numbers.
+    throw new AppError(400, `Tax year ${taxYear} is not supported (supported: ${Object.keys(TAX_PARAMS).join(", ")})`);
+  }
+  return params;
 }
 
 function toObj(val: unknown): Record<string, unknown> {
@@ -563,7 +572,7 @@ export class TaxCalculator {
 
     const otherDeps = deps.filter((d) => f(d["age_at_year_end"]) >= 17);
     c["other_dependent_count"] = otherDeps.length;
-    c["other_dependent_credit"] = Math.min(otherDeps.length * 500, 1500);
+    c["other_dependent_credit"] = otherDeps.length * 500;
 
     // ctc_with_odc must be set before care credit (care credit limit depends on it)
     c["ctc_with_odc"] = this.n("child_tax_credit") + this.n("other_dependent_credit");

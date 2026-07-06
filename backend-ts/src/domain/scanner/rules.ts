@@ -225,7 +225,7 @@ const rules: Record<string, RuleFn> = {
     }
 
     if (qualifyingNoSsn.length > 0) {
-      const creditValue = qualifying.length * 2000;
+      const creditValue = qualifying.length * 2200;
       return {
         status: "nearly_eligible",
         message: `${qualifyingNoSsn.length} child(ren) missing SSN - credit requires SSN by return due date.`,
@@ -234,7 +234,7 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const baseCredit = qualifying.length * 2000;
+    const baseCredit = qualifying.length * 2200;
     if (agi && agi > cliff) {
       const excess = agi - cliff;
       const reduction = (Math.floor(excess / 1000) + 1) * 50;
@@ -247,7 +247,7 @@ const rules: Record<string, RuleFn> = {
       }
       return {
         status: "eligible_now",
-        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $2,000 = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
+        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $2,200 = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
         estimated_value: `~$${baseCredit.toLocaleString()}/year`,
         phaseout_note: `AGI $${agi.toLocaleString()} is above the ${cliff.toLocaleString()} phaseout threshold.`
       };
@@ -255,7 +255,7 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $2,000.`,
+      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $2,200.`,
       estimated_value: `~$${baseCredit.toLocaleString()}/year`,
       next_steps: ["Report on Schedule 8812", "Up to $1,700 per child may be refundable (ACTC)"]
     };
@@ -1201,7 +1201,7 @@ const rules: Record<string, RuleFn> = {
         message: "Not currently itemizing — charitable deduction only applies when itemizing.",
         changes_needed: [
           "Calculate total itemized deductions (mortgage interest + SALT + charitable)",
-          "If total exceeds standard deduction ($30,000 MFJ / $15,000 Single), itemize",
+          "If total exceeds standard deduction ($31,500 MFJ / $15,750 Single for 2025), itemize",
           "Consider bunching 2-3 years of giving via a Donor-Advised Fund"
         ]
       };
@@ -2416,7 +2416,7 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} Entity-level state tax payment can bypass the $10,000 SALT cap at the owner level.`,
+      message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} Entity-level state tax payment can bypass the SALT cap at the owner level ($40,000 for 2025, phasing back toward $10,000 above ~$500k MAGI).`,
       next_steps: nextSteps
     };
   },

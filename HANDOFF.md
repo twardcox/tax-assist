@@ -108,7 +108,7 @@ CLAUDE_MODEL=claude-haiku-4-5-20251001  # Optional: override AI model for docume
 CONGRESS_API_KEY=...              # Optional: Congress.gov scraper (defaults to DEMO_KEY)
 DAWSON_USERNAME=...               # US Tax Court login
 DAWSON_PASSWORD=...               # US Tax Court login
-JWT_SECRET_KEY=...                # Optional: JWT signing secret (defaults to dev key — set in prod)
+JWT_SECRET_KEY=...                # Required outside test mode: JWT signing secret (server refuses to issue tokens without it)
 ```
 
 ---

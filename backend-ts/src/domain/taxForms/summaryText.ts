@@ -131,7 +131,7 @@ export function buildSummaryText(
   // ── CREDITS ──────────────────────────────────────────────────────────────────
   lines.push(section("CREDITS"));
   const ctcKids = Number(c["qualifying_children"] ?? 0);
-  const pCtc = Number(c["p_ctc"] ?? 2000);
+  const pCtc = Number(c["ctc_per_child"] ?? 2200);
   lines.push(line("19", `Child Tax Credit (${ctcKids} qualifying children × $${pCtc.toLocaleString("en-US")})`, d(c["child_tax_credit"])));
   lines.push(line("", "Credit for other dependents", d(c["other_dependent_credit"])));
   const careAmt = Number(c["care_expenses"] ?? 0);

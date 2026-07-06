@@ -34,8 +34,9 @@ jobs:
             SERVER="${SERVER%/}"
             CONFIG_URL="${SERVER}/projects/${CE_PROJECT_KEY}/.ce-project.json"
           else
-            echo "::error::Set env CE_PROJECT_KEY (Actions secret or variable, same as .env), or CE_PROJECT_CONFIG_URL for a full GET URL"
-            exit 1
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CE_PROJECT_KEY not set — E2E tests were SKIPPED, not run"
+            exit 0
           fi
           echo "Fetching project config from: ${CONFIG_URL}"
           if [ -n "${CE_PROJECT_TOKEN:-}" ]; then
