@@ -44,6 +44,38 @@ const FILES = [
   "deductions/itemized/salt_and_real_estate/phase_out/rate.yaml",
 ];
 
+const OBBBA_FILES = {
+  tipsCap: "deductions/tip_income/cap.yaml",
+  tipsPhaseStart: "deductions/tip_income/phase_out/start.yaml",
+  tipsPhaseRate: "deductions/tip_income/phase_out/rate.yaml",
+  overtimeCap: "deductions/overtime_income/cap.yaml",
+  overtimePhaseStart: "deductions/overtime_income/phase_out/start.yaml",
+  overtimePhaseRate: "deductions/overtime_income/phase_out/rate.yaml",
+  carLoanCap: "deductions/auto_loan_interest/cap.yaml",
+  carLoanPhaseStart: "deductions/auto_loan_interest/phase_out/start.yaml",
+  carLoanPhaseIncrement: "deductions/auto_loan_interest/phase_out/increment.yaml",
+  carLoanPhaseStep: "deductions/auto_loan_interest/phase_out/step.yaml",
+  seniorAmount: "deductions/senior_deduction/amount.yaml",
+  seniorPhaseRateJoint: "deductions/senior_deduction/phase_out_rate/joint.yaml",
+  seniorPhaseRateOther: "deductions/senior_deduction/phase_out_rate/other.yaml",
+};
+
+// OBBBA (H.R.1, 119th Congress) statutory values, in effect 2025–2028.
+// §70201 tips, §70202 overtime, §70203 car-loan interest, §70103 senior.
+// Used verbatim when PolicyEngine publishes no parameter path for a value.
+const OBBBA_STATUTORY = {
+  tips_cap: 25000,
+  overtime_cap: { single: 12500, married_filing_jointly: 25000 },
+  tips_overtime_phase_threshold: { single: 150000, married_filing_jointly: 300000 },
+  tips_overtime_phase_rate: 0.10,
+  car_loan_cap: 10000,
+  car_loan_phase_threshold: { single: 100000, married_filing_jointly: 200000 },
+  car_loan_phase_rate: 0.20,
+  senior_amount: 6000,
+  senior_phase_threshold: { single: 75000, married_filing_jointly: 150000 },
+  senior_phase_rate: 0.06,
+};
+
 // PolicyEngine numbers may arrive as "15_750" strings (YAML 1.1 style) or .inf.
 function num(raw) {
   if (typeof raw === "number") return raw;
@@ -100,7 +132,73 @@ async function fetchYaml(ref, file) {
   return yaml.load(await res.text(), { schema: yaml.JSON_SCHEMA });
 }
 
-function buildYear(year, docs) {
+async function fetchYamlOptional(ref, file) {
+  try {
+    return await fetchYaml(ref, file);
+  } catch {
+    return null;
+  }
+}
+
+function thresholdByStatus(node, year) {
+  return {
+    single: valueAt(node.SINGLE, year),
+    married_filing_jointly: valueAt(node.JOINT, year),
+  };
+}
+
+function findPositiveBracket(rateDoc, year) {
+  const brackets = Array.isArray(rateDoc?.brackets) ? rateDoc.brackets : [];
+  let found = null;
+  for (const bracket of brackets) {
+    const threshold = valueAt(bracket.threshold, year);
+    const rate = valueAt(bracket.rate, year);
+    if (rate > 0) found = { threshold, rate };
+  }
+  return found;
+}
+
+function buildObbba(year, docs) {
+  const out = structuredClone(OBBBA_STATUTORY);
+
+  if (docs.tipsCap) out.tips_cap = valueAt(docs.tipsCap, year);
+  if (docs.overtimeCap) out.overtime_cap = thresholdByStatus(docs.overtimeCap, year);
+
+  if (docs.tipsPhaseStart) {
+    out.tips_overtime_phase_threshold = thresholdByStatus(docs.tipsPhaseStart, year);
+  } else if (docs.overtimePhaseStart) {
+    out.tips_overtime_phase_threshold = thresholdByStatus(docs.overtimePhaseStart, year);
+  }
+
+  if (docs.tipsPhaseRate) {
+    out.tips_overtime_phase_rate = valueAt(docs.tipsPhaseRate, year);
+  } else if (docs.overtimePhaseRate) {
+    out.tips_overtime_phase_rate = valueAt(docs.overtimePhaseRate, year);
+  }
+
+  if (docs.carLoanCap) out.car_loan_cap = valueAt(docs.carLoanCap, year);
+  if (docs.carLoanPhaseStart) {
+    out.car_loan_phase_threshold = thresholdByStatus(docs.carLoanPhaseStart, year);
+  }
+  if (docs.carLoanPhaseIncrement && docs.carLoanPhaseStep) {
+    out.car_loan_phase_rate = valueAt(docs.carLoanPhaseStep, year) / valueAt(docs.carLoanPhaseIncrement, year);
+  }
+
+  if (docs.seniorAmount) out.senior_amount = valueAt(docs.seniorAmount, year);
+  const seniorJoint = docs.seniorPhaseRateJoint ? findPositiveBracket(docs.seniorPhaseRateJoint, year) : null;
+  const seniorOther = docs.seniorPhaseRateOther ? findPositiveBracket(docs.seniorPhaseRateOther, year) : null;
+  if (seniorJoint) out.senior_phase_threshold.married_filing_jointly = seniorJoint.threshold;
+  if (seniorOther) out.senior_phase_threshold.single = seniorOther.threshold;
+  if (seniorJoint) {
+    out.senior_phase_rate = seniorJoint.rate;
+  } else if (seniorOther) {
+    out.senior_phase_rate = seniorOther.rate;
+  }
+
+  return out;
+}
+
+function buildYear(year, docs, obbbaDocs) {
   const [
     stdDeduction, agedOrBlind, bracket, cgThresholds, ssCap,
     ctcBase, ctcPhaseOut, niitThreshold, amtExemption,
@@ -153,6 +251,7 @@ function buildYear(year, docs) {
     salt_cap: byStatus(saltCap, year),
     salt_phase_threshold: saltInEffect ? valueAt(saltPhaseThreshold.SINGLE, year) : null,
     salt_phase_rate: saltInEffect ? valueAt(saltPhaseRate, year) : null,
+    obbba_deductions: year >= 2025 ? buildObbba(year, obbbaDocs) : null,
   };
 }
 
@@ -162,10 +261,14 @@ async function main() {
   console.log(`PolicyEngine US @ ${ref.slice(0, 12)} (${head.commit.committer.date})`);
 
   const docs = await Promise.all(FILES.map((f) => fetchYaml(ref, f)));
+  const obbbaDocsEntries = await Promise.all(
+    Object.entries(OBBBA_FILES).map(async ([key, file]) => [key, await fetchYamlOptional(ref, file)])
+  );
+  const obbbaDocs = Object.fromEntries(obbbaDocsEntries);
 
   const params = {};
   for (const year of YEARS) {
-    params[year] = buildYear(year, docs);
+    params[year] = buildYear(year, docs, obbbaDocs);
     console.log(`built ${year}`);
   }
 

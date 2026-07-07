@@ -57,6 +57,26 @@ describe("tax parameter snapshot pins", () => {
     expect(p.salt_phase_rate).toBe(0.3);
   });
 
+  test("2025 OBBBA deductions (H.R.1 §§70201–70203, §70103)", () => {
+    const p = getTaxParams(2025);
+    expect(p.obbba_deductions).toEqual({
+      tips_cap: 25000,
+      overtime_cap: { single: 12500, married_filing_jointly: 25000 },
+      tips_overtime_phase_threshold: { single: 150000, married_filing_jointly: 300000 },
+      tips_overtime_phase_rate: 0.10,
+      car_loan_cap: 10000,
+      car_loan_phase_threshold: { single: 100000, married_filing_jointly: 200000 },
+      car_loan_phase_rate: 0.20,
+      senior_amount: 6000,
+      senior_phase_threshold: { single: 75000, married_filing_jointly: 150000 },
+      senior_phase_rate: 0.06,
+    });
+  });
+
+  test("2024 has no OBBBA deductions", () => {
+    expect(getTaxParams(2024).obbba_deductions).toBeNull();
+  });
+
   test("getTaxParams rejects unsupported years", () => {
     expect(() => getTaxParams(2023)).toThrow("not supported");
     expect(() => getTaxParams(2030)).toThrow("not supported");

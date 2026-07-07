@@ -149,8 +149,8 @@ Tab order does not match visual reading order, but the visual grouping is defini
 | f2_01[0] | 11b | Amount from line 11a (AGI carryover) | `agi` | ✓ verified 2026-07-06 |
 | f2_02[0] | 12e | Standard or itemized deduction | `deduction` | ✓ |
 | f2_03[0] | 13a | QBI deduction (§199A) | `qbi_deduction` | ✓ |
-| f2_04[0] | 13b | Additional deductions (Sch 1-A, line 38) | — | not filled (zero) |
-| f2_05[0] | 14 | Add lines 12e + 13a + 13b | `deduction + qbi_deduction` | ✓ |
+| f2_04[0] | 13b | Additional deductions (Sch 1-A, line 38) | `schedule_1a_total` | ✓ |
+| f2_05[0] | 14 | Add lines 12e + 13a + 13b | `deduction + qbi_deduction + schedule_1a_total` | ✓ |
 | f2_06[0] | 15 | TAXABLE INCOME | `taxable_income` | ✓ |
 | f2_07[0] | 16 | Tax form checkbox-3 text blank | — | not filled |
 | f2_08[0] | 16 | Tax | `income_tax_before_credits` | ✓ |
@@ -427,3 +427,25 @@ All expense fields verified via markitdown 2026-06-13. Two-column layout: Lines 
 | f1_59[0] | 33 | Total farm expenses | `farm_expenses` | ✓ |
 | f1_60[0] | 34 | Net farm profit or (loss) | `farm_income` | ✓ |
 | c1_6[0] | 35a | All investment at risk (loss case) | conditional | ✓ |
+
+---
+
+## Schedule 1-A (f1040s1a.pdf)
+Verified against IRS revision footer: `Cat. No. 95872Q Created 11/4/25`.
+Form path root is `form1[0]` (not `topmostSubform[0]`).
+
+| Field | Line | Form Label | Computed/Data Key | Status |
+|---|---|---|---|---|
+| f1_01[0] | header | Taxpayer name | `taxpayer_name` | ✓ |
+| f1_02[0] | header | SSN | `taxpayer_ssn` | ✓ |
+| f1_03[0] | 1 | 1040 line 11b | `agi` | ✓ |
+| f1_08[0] | 2e | Foreign exclusions total | `0` (unmodeled) | ✓ |
+| f1_09[0] | 3 | MAGI | `schedule_1a_magi` | ✓ |
+| f1_10[0]–f1_21[0] | 4a–13 | No Tax on Tips worksheet | `qualified_tips_*`, `tips_deduction` | ✓ |
+| f1_22[0]–f1_31[0] | 14a–21 | No Tax on Overtime worksheet | `qualified_overtime_total`, `overtime_deduction` | ✓ |
+| f2_01[0], f2_04[0] | 22a/22b (i) | VIN(s) | `car_loan_vin` (first row) | ✓ |
+| f2_02[0], f2_05[0] | 22a/22b (ii) | Interest deducted on C/E/F | currently `0` | ✓ |
+| f2_03[0], f2_06[0] | 22a/22b (iii) | Net QPVLI for each VIN row | `car_loan_interest_paid` (first row) | ✓ |
+| f2_07[0]–f2_14[0] | 23–30 | Car-loan worksheet | `car_loan_interest_paid`, `car_loan_deduction` | ✓ |
+| f2_15[0]–f2_22[0] | 31–37 | Senior deduction worksheet | `senior_count`, `senior_deduction` | ✓ |
+| f2_23[0] | 38 | Total additional deductions | `schedule_1a_total` | ✓ |

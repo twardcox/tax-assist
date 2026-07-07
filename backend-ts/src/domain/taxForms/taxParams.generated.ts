@@ -1,7 +1,7 @@
 // GENERATED FILE — DO NOT EDIT BY HAND.
 // Regenerate with: node scripts/updateTaxParams.mjs
-// Source: https://github.com/PolicyEngine/policyengine-us @ 1207664ef2c010ae08a1f10073d9894f4408bd5b
-// Generated: 2026-07-06
+// Source: https://github.com/PolicyEngine/policyengine-us @ f910f7f3a337e83a929d1237ed81f35521f53acf
+// Generated: 2026-07-07
 // Review the git diff against IRS revenue procedures before committing.
 import type { TaxParams } from "./taxParams";
 
@@ -214,7 +214,8 @@ export const TAX_PARAMS: Record<number, TaxParams> = {
       "qualifying_surviving_spouse": 10000
     },
     "salt_phase_threshold": null,
-    "salt_phase_rate": null
+    "salt_phase_rate": null,
+    "obbba_deductions": null
   },
   "2025": {
     "standard_deduction": {
@@ -424,6 +425,30 @@ export const TAX_PARAMS: Record<number, TaxParams> = {
       "qualifying_surviving_spouse": 40000
     },
     "salt_phase_threshold": 500000,
-    "salt_phase_rate": 0.3
+    "salt_phase_rate": 0.3,
+    "obbba_deductions": {
+      "tips_cap": 25000,
+      "overtime_cap": {
+        "single": 12500,
+        "married_filing_jointly": 25000
+      },
+      "tips_overtime_phase_threshold": {
+        "single": 150000,
+        "married_filing_jointly": 300000
+      },
+      "tips_overtime_phase_rate": 0.1,
+      "car_loan_cap": 10000,
+      "car_loan_phase_threshold": {
+        "single": 100000,
+        "married_filing_jointly": 200000
+      },
+      "car_loan_phase_rate": 0.2,
+      "senior_amount": 6000,
+      "senior_phase_threshold": {
+        "single": 75000,
+        "married_filing_jointly": 150000
+      },
+      "senior_phase_rate": 0.06
+    }
   }
 };

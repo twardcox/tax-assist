@@ -165,7 +165,7 @@ const sections: Record<string, Record<string, unknown>> = {
       last_name: "Carter",
       ssn: "400-65-4321",
       dob: "1985-07-22",
-      age: 40,
+      age: 66,
       employed: true,
       self_employed: false,
       blind: true,                          // → c2_8 "Is blind"
@@ -231,6 +231,9 @@ const sections: Record<string, Record<string, unknown>> = {
         hsa_contributions_through_payroll: 4150,
         retirement_contributions_through_payroll: 12012,
         dependent_care_fsa: 3000,
+        qualified_tips: 4000,
+        qualified_overtime: 3000,
+        tipped_occupation: "Bartender",
       },
       {
         // Jordan W-2 (teacher)
@@ -261,6 +264,7 @@ const sections: Record<string, Record<string, unknown>> = {
         net_profit: 9009,
         net_profit_loss: 9009,
         se_tax_estimated: 1272,
+        qualified_tips: 1200,
         expense_details: {
           advertising: 1001,         // Line 8
           car_truck_expenses: 2002,  // Line 9
@@ -372,6 +376,11 @@ const sections: Record<string, Record<string, unknown>> = {
         other_expenses: 3002,        // Line 32 other
         // sum = 23,023 = gross_revenue − net_profit ✓
       },
+    },
+
+    new_deductions: {
+      car_loan_interest_paid: 2500,
+      vehicle_vin: "1HGCM82633A004352",
     },
 
     adjustments_to_income: {

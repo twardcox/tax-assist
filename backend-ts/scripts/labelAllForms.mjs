@@ -11,6 +11,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const FORMS = [
   "f1040.pdf",
   "f1040s1.pdf",
+  "f1040s1a.pdf",
   "f1040sb.pdf",
   "f1040sc.pdf",
   "f1040sd.pdf",

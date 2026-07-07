@@ -60,6 +60,8 @@ export async function fillSingleIrsForm(
     doc = await fill1040(c, data);
   } else if (formKey === "f1040s1") {
     doc = await fillSchedule1(c);
+  } else if (formKey === "f1040s1a") {
+    doc = await fillSchedule1A(c, data);
   } else if (formKey === "f1040sb") {
     doc = await fillScheduleB(c);
   } else if (formKey.startsWith("f1040sc_")) {
@@ -109,6 +111,10 @@ export async function fillIrsForms(
   const needSch1 = Number(c["total_adjustments"]) > 0 || Number(c["schedule1_additional"]) !== 0;
   if (needSch1) {
     docs.push(await fillSchedule1(c));
+  }
+
+  if (Number(c["schedule_1a_total"]) > 0) {
+    docs.push(await fillSchedule1A(c, data));
   }
 
   if (!c["using_standard"] && Number(c["itemized"]) > 0) {
@@ -406,7 +412,8 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
   s(p(1, "f1_74[0]"), c["total_adjustments"]);    // Line 10  adjustments to income
   s(p(1, "f1_75[0]"), c["agi"]);                  // Line 11a AGI (page 1 ends here in this revision)
 
-  const line14 = Number(c["deduction"] ?? 0) + Number(c["qbi_deduction"] ?? 0);
+  const line14 = Number(c["deduction"] ?? 0) + Number(c["qbi_deduction"] ?? 0)
+    + Number(c["schedule_1a_total"] ?? 0);
 
   // ── Page 2 ── Deductions / taxable income carry-over ─────────────────────────
   // These fields repeat lines 11b-15 on the back page of the printed form
@@ -430,6 +437,7 @@ async function fill1040(c: ComputedValues, data: Record<string, unknown>): Promi
 
   s(p(2, "f2_02[0]"), c["deduction"]);                 // Line 12e  standard or itemized deduction
   s(p(2, "f2_03[0]"), c["qbi_deduction"]);             // Line 13a  QBI deduction (§199A)
+  s(p(2, "f2_04[0]"), c["schedule_1a_total"]);         // Line 13b  Schedule 1-A line 38
   s(p(2, "f2_05[0]"), line14);                         // Line 14   add lines 12e + 13a + 13b
   s(p(2, "f2_06[0]"), c["taxable_income"]);            // Line 15   taxable income
 
@@ -550,6 +558,123 @@ async function fillSchedule1(c: ComputedValues): Promise<PDFDocument> {
     s(p(2, "f2_29[0]"), c["other_adjustments_amount"]);   // Line 25 sum of Line 24 items
   }
   s(p(2, "f2_30[0]"), c["total_adjustments"]);            // Line 26 total adjustments
+
+  return doc;
+}
+
+async function fillSchedule1A(
+  c: ComputedValues,
+  data: Record<string, unknown> = {}
+): Promise<PDFDocument> {
+  const doc = await loadPdf("f1040s1a.pdf");
+  const s = (field: string, val: unknown) => ts(doc, field, fmt(val));
+  const p1 = (field: string) => `form1[0].Page1[0].${field}`;
+  const p2 = (field: string) => `form1[0].Page2[0].${field}`;
+
+  const magi = Number(c["schedule_1a_magi"] ?? c["agi"] ?? 0);
+  const fs = String(c["_fs"] ?? getStr(data, "household.filing_status") ?? "single");
+  const joint = fs === "married_filing_jointly";
+  const tipThreshold = joint ? 300000 : 150000;
+  const overtimeCap = joint ? 25000 : 12500;
+  const carThreshold = joint ? 200000 : 100000;
+  const seniorThreshold = joint ? 150000 : 75000;
+
+  const tipW2 = Number(c["qualified_tips_w2"] ?? 0);
+  const tip4137 = Number(c["tip_income_unreported"] ?? 0);
+  const tipEmployee = tipW2 + tip4137;
+  const tipSelf = Number(c["qualified_tips_se"] ?? 0);
+  const tipTotal = Number(c["qualified_tips_total"] ?? 0);
+  const tipLine7 = Math.min(tipTotal, 25000);
+  const tipLine10 = Math.max(0, magi - tipThreshold);
+  const tipLine11 = Math.floor(tipLine10 / 1000);
+  const tipLine12 = tipLine11 * 100;
+
+  const overtimeTotal = Number(c["qualified_overtime_total"] ?? 0);
+  const overtimeLine15 = Math.min(overtimeTotal, overtimeCap);
+  const overtimeLine18 = Math.max(0, magi - tipThreshold);
+  const overtimeLine19 = Math.floor(overtimeLine18 / 1000);
+  const overtimeLine20 = overtimeLine19 * 100;
+
+  const carPaid = Number(c["car_loan_interest_paid"] ?? 0);
+  const carDeductedElsewhere = 0;
+  const carLine22aIii = Math.max(0, carPaid - carDeductedElsewhere);
+  const carLine23 = carLine22aIii;
+  const carLine24 = Math.min(carLine23, 10000);
+  const carLine27 = Math.max(0, magi - carThreshold);
+  const carLine28 = carLine27 <= 0 ? 0 : Math.ceil(carLine27 / 1000);
+  const carLine29 = carLine28 * 200;
+
+  const seniorLine31 = magi;
+  const seniorLine33 = Math.max(0, seniorLine31 - seniorThreshold);
+  const seniorLine34 = seniorLine33 * 0.06;
+  const seniorLine35 = Math.max(0, 6000 - seniorLine34);
+  const hh = (data["household"] as Record<string, unknown> | undefined) ?? {};
+  const tp = (hh["taxpayer"] as Record<string, unknown> | undefined) ?? {};
+  const sp = (hh["spouse"] as Record<string, unknown> | undefined) ?? {};
+  const tpAge = Number(tp["age"] ?? 0);
+  const spAge = Number(sp["age"] ?? 0);
+  const seniorLine36a = tpAge >= 65 ? seniorLine35 : 0;
+  const seniorLine36b = joint && spAge >= 65 ? seniorLine35 : 0;
+
+  ts(doc, p1("f1_01[0]"), String(c["taxpayer_name"] ?? ""));
+  ts(doc, p1("f1_02[0]"), String(c["taxpayer_ssn"] ?? ""));
+
+  s(p1("f1_03[0]"), c["agi"]);           // 1
+  s(p1("f1_04[0]"), 0);                  // 2a
+  s(p1("f1_05[0]"), 0);                  // 2b
+  s(p1("f1_06[0]"), 0);                  // 2c
+  s(p1("f1_07[0]"), 0);                  // 2d
+  s(p1("f1_08[0]"), 0);                  // 2e
+  s(p1("f1_09[0]"), magi);               // 3
+
+  s(p1("f1_10[0]"), tipEmployee);        // 4a
+  s(p1("f1_11[0]"), tip4137);            // 4b
+  s(p1("f1_12[0]"), tipEmployee);        // 4c
+  s(p1("f1_13[0]"), tipSelf);            // 5
+  s(p1("f1_14[0]"), tipTotal);           // 6
+  s(p1("f1_15[0]"), tipLine7);           // 7
+  s(p1("f1_16[0]"), magi);               // 8
+  s(p1("f1_17[0]"), tipThreshold);       // 9
+  s(p1("f1_18[0]"), tipLine10);          // 10
+  s(p1("f1_19[0]"), tipLine11);          // 11
+  s(p1("f1_20[0]"), tipLine12);          // 12
+  s(p1("f1_21[0]"), c["tips_deduction"]); // 13
+
+  s(p1("f1_22[0]"), overtimeTotal);      // 14a
+  s(p1("f1_23[0]"), 0);                  // 14b
+  s(p1("f1_24[0]"), overtimeTotal);      // 14c
+  s(p1("f1_25[0]"), overtimeLine15);     // 15
+  s(p1("f1_26[0]"), magi);               // 16
+  s(p1("f1_27[0]"), tipThreshold);       // 17
+  s(p1("f1_28[0]"), overtimeLine18);     // 18
+  s(p1("f1_29[0]"), overtimeLine19);     // 19
+  s(p1("f1_30[0]"), overtimeLine20);     // 20
+  s(p1("f1_31[0]"), c["overtime_deduction"]); // 21
+
+  ts(doc, p2("Table_Line22[0].Line22a[0].VIN-1_Comb[0].f2_01[0]"), String(c["car_loan_vin"] ?? ""));
+  s(p2("Table_Line22[0].Line22a[0].f2_02[0]"), carDeductedElsewhere); // 22a(ii)
+  s(p2("Table_Line22[0].Line22a[0].f2_03[0]"), carLine22aIii);         // 22a(iii)
+  ts(doc, p2("Table_Line22[0].Line22b[0].VIN-2_Comb[0].f2_04[0]"), "");
+  s(p2("Table_Line22[0].Line22b[0].f2_05[0]"), 0);                     // 22b(ii)
+  s(p2("Table_Line22[0].Line22b[0].f2_06[0]"), 0);                     // 22b(iii)
+  s(p2("f2_07[0]"), carLine23);               // 23
+  s(p2("f2_08[0]"), carLine24);               // 24
+  s(p2("f2_09[0]"), magi);                    // 25
+  s(p2("f2_10[0]"), carThreshold);            // 26
+  s(p2("f2_11[0]"), carLine27);               // 27
+  s(p2("f2_12[0]"), carLine28);               // 28
+  s(p2("f2_13[0]"), carLine29);               // 29
+  s(p2("f2_14[0]"), c["car_loan_deduction"]); // 30
+
+  s(p2("f2_15[0]"), seniorLine31);            // 31
+  s(p2("f2_16[0]"), seniorThreshold);         // 32
+  s(p2("f2_17[0]"), seniorLine33);            // 33
+  s(p2("f2_18[0]"), seniorLine34);            // 34
+  s(p2("f2_19[0]"), seniorLine35);            // 35
+  s(p2("f2_20[0]"), seniorLine36a);           // 36a
+  s(p2("f2_21[0]"), seniorLine36b);           // 36b
+  s(p2("f2_22[0]"), c["senior_deduction"]);  // 37
+  s(p2("f2_23[0]"), c["schedule_1a_total"]); // 38
 
   return doc;
 }

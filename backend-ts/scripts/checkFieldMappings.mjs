@@ -34,6 +34,7 @@ PDFForm.prototype.flatten = function () { /* keep fields live */ };
 const EXPECTED_SHA256_PREFIX = {
   "f1040.pdf": "3d31c226df0d189c",
   "f1040s1.pdf": "8dafec719f6a4716",
+  "f1040s1a.pdf": "64f97b38ff4218e2",
   "f1040sb.pdf": "dd1ec3719954532b",
   "f1040sc.pdf": "ddf401dbe060467d",
   "f1040sd.pdf": "90564c8b7e492803",
@@ -123,6 +124,11 @@ const biz = (() => {
 })();
 
 const applyToNext = Number(data?.household?.payments?.apply_to_next_year ?? 0);
+const fsJoint = String(c["_fs"] ?? "") === "married_filing_jointly";
+const s1aTipThreshold = fsJoint ? 300000 : 150000;
+const s1aOvertimeCap = fsJoint ? 25000 : 12500;
+const s1aCarThreshold = fsJoint ? 200000 : 100000;
+const s1aSeniorThreshold = fsJoint ? 150000 : 75000;
 
 const EXPECTATIONS = {
   // Form 1040 — revision "Created 9/5/25" (lines 12–18 are page 2 only)
@@ -152,7 +158,8 @@ const EXPECTATIONS = {
     ["f2_01[0]", "11b — AGI carryover", () => fmt(N("agi"))],
     ["f2_02[0]", "12e — deduction", () => fmt(N("deduction"))],
     ["f2_03[0]", "13a — QBI", () => fmt(N("qbi_deduction"))],
-    ["f2_05[0]", "14 — deduction + QBI", () => fmt(N("deduction") + N("qbi_deduction"))],
+    ["f2_04[0]", "13b — Schedule 1-A total", () => fmt(N("schedule_1a_total"))],
+    ["f2_05[0]", "14 — deduction + QBI + Schedule 1-A", () => fmt(N("deduction") + N("qbi_deduction") + N("schedule_1a_total"))],
     ["f2_06[0]", "15 — TAXABLE INCOME", () => fmt(N("taxable_income"))],
     ["f2_08[0]", "16 — tax", () => fmt(N("income_tax_before_credits"))],
     ["f2_10[0]", "18 — add lines 16+17", () => fmt(N("income_tax_before_credits"))],
@@ -194,6 +201,69 @@ const EXPECTATIONS = {
     ["f2_12[0]", "20 — IRA deduction", () => fmt(N("ira_deduction"))],
     ["f2_13[0]", "21 — student loan interest", () => fmt(N("student_loan_interest"))],
     ["f2_30[0]", "26 — total adjustments", () => fmt(N("total_adjustments"))],
+  ],
+
+  f1040s1a: [
+    ["f1_03[0]", "1 — 1040 line 11b (AGI)", () => fmt(N("agi"))],
+    ["f1_08[0]", "2e — foreign exclusions total", () => ""],
+    ["f1_09[0]", "3 — MAGI", () => fmt(N("schedule_1a_magi"))],
+    ["f1_10[0]", "4a — qualified tips from W-2/4137", () => fmt(N("qualified_tips_w2") + N("tip_income_unreported"))],
+    ["f1_11[0]", "4b — Form 4137 tips", () => fmt(N("tip_income_unreported"))],
+    ["f1_12[0]", "4c — employee qualified tips", () => fmt(N("qualified_tips_w2") + N("tip_income_unreported"))],
+    ["f1_13[0]", "5 — self-employment qualified tips", () => fmt(N("qualified_tips_se"))],
+    ["f1_14[0]", "6 — total qualified tips", () => fmt(N("qualified_tips_total"))],
+    ["f1_15[0]", "7 — tips cap", () => fmt(Math.min(N("qualified_tips_total"), 25000))],
+    ["f1_16[0]", "8 — MAGI", () => fmt(N("schedule_1a_magi"))],
+    ["f1_17[0]", "9 — tips threshold", () => fmt(s1aTipThreshold)],
+    ["f1_18[0]", "10 — tips MAGI excess", () => fmt(Math.max(0, N("schedule_1a_magi") - s1aTipThreshold))],
+    ["f1_19[0]", "11 — floor(excess/1000)", () => fmt(Math.floor(Math.max(0, N("schedule_1a_magi") - s1aTipThreshold) / 1000))],
+    ["f1_20[0]", "12 — line 11 × 100", () => fmt(Math.floor(Math.max(0, N("schedule_1a_magi") - s1aTipThreshold) / 1000) * 100)],
+    ["f1_21[0]", "13 — tips deduction", () => fmt(N("tips_deduction"))],
+    ["f1_22[0]", "14a — qualified overtime", () => fmt(N("qualified_overtime_total"))],
+    ["f1_23[0]", "14b — 1099 overtime", () => ""],
+    ["f1_24[0]", "14c — total overtime", () => fmt(N("qualified_overtime_total"))],
+    ["f1_25[0]", "15 — overtime cap", () => fmt(Math.min(N("qualified_overtime_total"), s1aOvertimeCap))],
+    ["f1_26[0]", "16 — MAGI", () => fmt(N("schedule_1a_magi"))],
+    ["f1_27[0]", "17 — overtime threshold", () => fmt(s1aTipThreshold)],
+    ["f1_28[0]", "18 — overtime MAGI excess", () => fmt(Math.max(0, N("schedule_1a_magi") - s1aTipThreshold))],
+    ["f1_29[0]", "19 — floor(excess/1000)", () => fmt(Math.floor(Math.max(0, N("schedule_1a_magi") - s1aTipThreshold) / 1000))],
+    ["f1_30[0]", "20 — line 19 × 100", () => fmt(Math.floor(Math.max(0, N("schedule_1a_magi") - s1aTipThreshold) / 1000) * 100)],
+    ["f1_31[0]", "21 — overtime deduction", () => fmt(N("overtime_deduction"))],
+    ["f2_01[0]", "22a(i) — VIN", () => String(c["car_loan_vin"] ?? "")],
+    ["f2_02[0]", "22a(ii) — interest deducted elsewhere", () => ""],
+    ["f2_03[0]", "22a(iii) — net QPVLI", () => fmt(N("car_loan_interest_paid"))],
+    ["f2_07[0]", "23 — total QPVLI", () => fmt(N("car_loan_interest_paid"))],
+    ["f2_08[0]", "24 — min(line 23, 10000)", () => fmt(Math.min(N("car_loan_interest_paid"), 10000))],
+    ["f2_09[0]", "25 — MAGI", () => fmt(N("schedule_1a_magi"))],
+    ["f2_10[0]", "26 — car-loan threshold", () => fmt(s1aCarThreshold)],
+    ["f2_11[0]", "27 — car-loan MAGI excess", () => fmt(Math.max(0, N("schedule_1a_magi") - s1aCarThreshold))],
+    ["f2_12[0]", "28 — ceil(excess/1000)", () => {
+      const ex = Math.max(0, N("schedule_1a_magi") - s1aCarThreshold);
+      return fmt(ex <= 0 ? 0 : Math.ceil(ex / 1000));
+    }],
+    ["f2_13[0]", "29 — line 28 × 200", () => {
+      const ex = Math.max(0, N("schedule_1a_magi") - s1aCarThreshold);
+      const l28 = ex <= 0 ? 0 : Math.ceil(ex / 1000);
+      return fmt(l28 * 200);
+    }],
+    ["f2_14[0]", "30 — car-loan deduction", () => fmt(N("car_loan_deduction"))],
+    ["f2_15[0]", "31 — MAGI", () => fmt(N("schedule_1a_magi"))],
+    ["f2_16[0]", "32 — senior threshold", () => fmt(s1aSeniorThreshold)],
+    ["f2_17[0]", "33 — senior MAGI excess", () => fmt(Math.max(0, N("schedule_1a_magi") - s1aSeniorThreshold))],
+    ["f2_18[0]", "34 — line 33 × 6%", () => fmt(Math.max(0, N("schedule_1a_magi") - s1aSeniorThreshold) * 0.06)],
+    ["f2_19[0]", "35 — 6000 minus line 34", () => fmt(Math.max(0, 6000 - (Math.max(0, N("schedule_1a_magi") - s1aSeniorThreshold) * 0.06)))],
+    ["f2_20[0]", "36a — taxpayer senior amount", () => {
+      const tpAge = Number(data?.household?.taxpayer?.age ?? 0);
+      const l35 = Math.max(0, 6000 - (Math.max(0, N("schedule_1a_magi") - s1aSeniorThreshold) * 0.06));
+      return fmt(tpAge >= 65 ? l35 : 0);
+    }],
+    ["f2_21[0]", "36b — spouse senior amount", () => {
+      const spAge = Number(data?.household?.spouse?.age ?? 0);
+      const l35 = Math.max(0, 6000 - (Math.max(0, N("schedule_1a_magi") - s1aSeniorThreshold) * 0.06));
+      return fmt(fsJoint && spAge >= 65 ? l35 : 0);
+    }],
+    ["f2_22[0]", "37 — senior deduction", () => fmt(N("senior_deduction"))],
+    ["f2_23[0]", "38 — total additional deductions", () => fmt(N("schedule_1a_total"))],
   ],
 
   f1040sb: [

@@ -663,6 +663,7 @@ const FORM_LABELS = {
   f1040sf:   "Schedule F",
   f1040:     "Form 1040",
   f1040s1:   "Schedule 1",
+  f1040s1a:  "Schedule 1-A",
   f1040sa:   "Schedule A",
   f8863:     "Form 8863",
   f2441:     "Form 2441",
@@ -678,6 +679,7 @@ function getFormTabs(c) {
   const tabs = [{ key: "f1040", label: "Form 1040" }];
   const needSch1 = Number(c.total_adjustments ?? 0) > 0 || Number(c.schedule1_additional ?? 0) !== 0;
   if (needSch1) tabs.push({ key: "f1040s1", label: "Schedule 1" });
+  if (c._need_sch_1a) tabs.push({ key: "f1040s1a", label: "Schedule 1-A" });
   if ((c.itemized || 0) > 0) tabs.push({ key: "f1040sa", label: "Schedule A" });
   if (c._need_f8863)   tabs.push({ key: "f8863",       label: "Form 8863" });
   if (c._need_f2441)   tabs.push({ key: "f2441",       label: "Form 2441" });

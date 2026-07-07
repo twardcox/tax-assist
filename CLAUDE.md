@@ -88,9 +88,10 @@ The Python → TypeScript migration is fully done. Every item in `TS_MIGRATION_T
 
 ### Per-form tabs (just shipped)
 The Tax Forms page now has one tab per applicable form instead of a single merged PDF:
-- **Line Items** | **Form 1040** | **Schedule 1** | **Schedule B** | **Schedule C** | **Schedule D** | **Schedule SE**
+- **Line Items** | **Form 1040** | **Schedule 1** | **Schedule 1-A** | **Schedule B** | **Schedule C** | **Schedule D** | **Schedule SE**
 - Each tab shows the filled IRS PDF embedded in the browser with a **Download PDF** button
 - Tabs are dynamic — only forms that apply to the user's data appear
+- OBBBA 2025-2028 Schedule 1-A deductions are modeled end-to-end (tips, overtime, car-loan interest, senior deduction) and flow to Form 1040 line 13b.
 - Backend: `GET /tax-forms/preview-pdf?form=f1040` (or `f1040s1`, `f1040sb`, `f1040sc_0`, `f1040sd`, `f1040sse`)
 - See `backend-ts/src/domain/taxForms/fillIrsForms.ts` → `fillSingleIrsForm()`
 
