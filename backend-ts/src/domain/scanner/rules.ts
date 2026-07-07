@@ -1336,6 +1336,42 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "nongrantor-dynasty-trust": (_benefit, facts) => {
+    const netWorth = facts.estimatedNetWorth();
+
+    if (netWorth <= 0) {
+      if (facts.transferWealthGoal() === true) {
+        return {
+          status: "nearly_eligible",
+          message: "Wealth-transfer goal set — record estimated net worth to assess whether GST-exempt dynasty trust planning applies (2025 exemption $13.99M per person).",
+          missing_facts: ["household.estimated_net_worth"]
+        };
+      }
+      return {
+        status: "not_applicable",
+        message: "Dynasty trust planning is an estate/GST tool — no wealth-transfer goal or net worth recorded."
+      };
+    }
+
+    if (netWorth < 10000000) {
+      return {
+        status: "not_applicable",
+        message: `Estimated net worth $${netWorth.toLocaleString()} is below estate/GST exemption territory ($13.99M per person in 2025; $15M from 2026 under OBBBA) — a dynasty trust adds cost and complexity without estate-tax benefit at this level.`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Estimated net worth $${netWorth.toLocaleString()} approaches the estate/GST exemption — a GST-exempt dynasty trust locks in today's $13.99M per-person exemption across generations. NOTE: this is estate/GST leverage, NOT income-tax elimination; a non-grantor trust pays compressed-bracket income tax (37% bracket starts ≈ $15,650).`,
+      next_steps: [
+        "Engage an estate attorney — the trust must be irrevocable and GST exemption allocated on Form 709",
+        "Beware promoted \"§643(b) untaxed corpus\" schemes — an IRS Dirty Dozen scam (IR-2023-65); §641 taxes trust income regardless of corpus allocation",
+        "Narrow income-tax uses (trust-level SALT deduction, per-trust QSBS capacity) are constrained by the §643(f) anti-multiplication rule",
+        "Coordinate with a CPA on annual Form 1041 and long-duration state situs (SD, NV, DE, AK)"
+      ]
+    };
+  },
+
   "conservation-easement": (_benefit, facts) => {
     if (!facts.hasAnyRealEstate()) {
       return {

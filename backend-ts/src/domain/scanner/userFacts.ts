@@ -151,6 +151,11 @@ export class UserFacts {
     return agi > 0 ? agi : null;
   }
 
+  estimatedNetWorth(): number {
+    const hh = toObject(this.data.household);
+    return toNumber(hh.estimated_net_worth);
+  }
+
   businesses(): Array<Record<string, unknown>> {
     const businessesSection = toObject(this.data.businesses);
     const list = businessesSection.businesses;

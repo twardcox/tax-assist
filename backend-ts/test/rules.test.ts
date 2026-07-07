@@ -2869,4 +2869,38 @@ describe("strategy-stack benefit rules", () => {
     );
     expect(result.status).toBe("not_applicable");
   });
+
+  test("nongrantor-dynasty-trust eligible now at estate-scale net worth", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({ household: { estimated_net_worth: 18000000 } })
+    );
+    expect(result.status).toBe("eligible_now");
+    expect(result.next_steps.join(" ")).toContain("IR-2023-65");
+  });
+
+  test("nongrantor-dynasty-trust nearly eligible with wealth-transfer goal but no net worth", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({ goals: { primary_goals: { transfer_wealth_to_heirs: true } } })
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.estimated_net_worth");
+  });
+
+  test("nongrantor-dynasty-trust not applicable below estate-exemption territory", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({ household: { estimated_net_worth: 2000000 } })
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("nongrantor-dynasty-trust not applicable with no goal and no net worth", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("not_applicable");
+  });
 });
