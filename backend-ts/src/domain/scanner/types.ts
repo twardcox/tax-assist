@@ -26,9 +26,39 @@ export type ScanResult = {
   review_required: boolean;
 };
 
+export type SequenceStep = {
+  step: number;
+  action: string;
+  timing: string;
+  professional: string;
+};
+
+export type StackMemberResult = {
+  benefit_id: string;
+  role: string;
+  required: boolean;
+  status: ScanStatus;
+};
+
+export type StackResult = {
+  stack_id: string;
+  name: string;
+  target_profile: string;
+  status: ScanStatus;
+  members: StackMemberResult[];
+  blocking: string[];
+  sequence: SequenceStep[];
+  interactions: string;
+  combined_value: string;
+  risk_level: string;
+  abuse_boundary: string;
+  review_required: boolean;
+};
+
 export type ScanRun = {
   tax_year: number;
   total: number;
   counts: Record<string, number>;
   results: ScanResult[];
+  stacks: StackResult[];
 };

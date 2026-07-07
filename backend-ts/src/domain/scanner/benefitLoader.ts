@@ -31,6 +31,9 @@ export function loadBenefitLibrary(): RawBenefit[] {
       const content = fs.readFileSync(filePath, "utf8");
       const parsed = yaml.load(content);
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        if ((parsed as RawBenefit)["kind"] === "strategy_stack") {
+          continue; // stacks are loaded by stacks.ts, not evaluated as benefits
+        }
         const id = (parsed as RawBenefit)["id"] as string | undefined;
         if (id && seenIds.has(id)) {
           console.warn(`[benefitLoader] Duplicate benefit id "${id}" in ${filePath} — skipped`);
