@@ -1,0 +1,64 @@
+id: exit-estate-stack
+kind: strategy_stack
+name: Exit & Estate Stack (§664 CRUT + dynasty trust + §453 installment sale)
+jurisdiction: federal
+target_profile: |
+  Who this fits: owners approaching a business or property exit with estate-scale
+  net worth ($10M+) and multi-generational transfer goals.
+members:
+  - benefit_id: crut-664
+    role: "Divert part of the exit into a CRUT: defer gain, lifetime income, charitable remainder"
+    required: true
+  - benefit_id: nongrantor-dynasty-trust
+    role: "Shelter growth assets from estate/GST tax across generations via GST-exemption allocation"
+    required: true
+  - benefit_id: installment-sale
+    role: "Seller-finance part of the sale to spread gain across lower-bracket years"
+    required: false
+interactions: |
+  These three split one liquidity event three ways, and the split must be set
+  BEFORE a binding sale agreement. The CRUT slice defers gain entirely (taxed as
+  distributed under §664(b)); the installment slice spreads gain over the note's
+  term (§453 — depreciation recapture is still recognized in year one); the
+  dynasty-trust slice is about the estate, not income: gift or sell growth assets
+  to the trust and allocate GST exemption while values are pre-exit low. Conflict
+  to watch: assets already inside the CRUT cannot also fund the dynasty trust —
+  decide the split first, then paper each leg.
+sequence:
+  - step: 1
+    action: "Model the three-way split of the exit (CRUT / installment note / retained-plus-trust) against income needs and estate exposure"
+    timing: "6-12 months before a planned exit"
+    professional: cpa+attorney
+  - step: 2
+    action: "Draft and fund the dynasty trust with growth assets at pre-exit valuation; allocate GST exemption on Form 709"
+    timing: "before any letter of intent — valuation discounts vanish once a deal is on paper"
+    professional: attorney
+  - step: 3
+    action: "Draft and fund the CRUT with its slice BEFORE a binding sale agreement (verify the 10% remainder test at the current §7520 rate)"
+    timing: "60-90 days before signing"
+    professional: cpa+attorney
+  - step: 4
+    action: "Negotiate installment note terms for the retained slice (rate ≥ AFR, security, term matched to the bracket plan)"
+    timing: "at signing"
+    professional: cpa
+  - step: 5
+    action: "Post-close compliance: Form 6252 each payment year; Form 5227 for the CRUT; Form 1041 for the trust; monitor the §453A interest charge if notes exceed $5M"
+    timing: "every filing season"
+    professional: cpa
+combined_value: |
+  Bracket spreading via §453 typically saves $5,000 – $100,000+ lifetime; the CRUT
+  defers the entire gain on its slice and adds a remainder deduction; the dynasty
+  trust removes future appreciation from a 40% estate tax — on $10M of sheltered
+  growth that is $4M+ preserved for heirs. Per-member estimates control; no
+  combined dollar total is computed.
+risk_level: high
+abuse_boundary: |
+  The dynasty-trust member is flagged because of what is promoted online, not what
+  this stack recommends. The "§643(b) trust" pitch — that income allocated to
+  corpus escapes tax — is a scam the IRS named in the 2023 Dirty Dozen
+  (IR-2023-65): §641 taxes trust income no matter what the deed calls corpus. The
+  legitimate version here is estate/GST-exemption leverage plus narrow non-grantor
+  uses, both constrained by §643(f). On the CRUT leg, funding after a binding sale
+  agreement collapses the deferral (assignment of income). Nothing in this stack
+  eliminates income tax.
+review_required: { cpa: true, attorney: true }

@@ -3113,3 +3113,33 @@ describe("API baseline", () => {
     await app.close();
   });
 });
+
+describe("strategy stacks", () => {
+  test("POST /api/scan returns strategy stacks consistent with member statuses", async () => {
+    const app = await buildApp();
+    const response = await app.inject({ method: "POST", url: "/api/scan?tax_year=2025" });
+
+    expect(response.statusCode).toBe(200);
+    const payload = response.json();
+    expect(payload.stacks.map((s: { stack_id: string }) => s.stack_id).sort()).toEqual([
+      "appreciated-asset-charitable-stack",
+      "business-owner-deduction-stack",
+      "exit-estate-stack"
+    ]);
+
+    for (const stack of payload.stacks) {
+      const dead = (s: string) => s === "not_applicable" || s === "expired";
+      const required = stack.members.filter((m: { required: boolean }) => m.required);
+      const expected = required.some((m: { status: string }) => dead(m.status))
+        ? "not_applicable"
+        : required.every((m: { status: string }) => m.status === "eligible_now")
+          ? "eligible_now"
+          : "nearly_eligible";
+      expect(stack.status).toBe(expected);
+      expect(stack.sequence.length).toBeGreaterThan(0);
+      expect(["low", "medium", "high"]).toContain(stack.risk_level);
+    }
+
+    await app.close();
+  });
+});
