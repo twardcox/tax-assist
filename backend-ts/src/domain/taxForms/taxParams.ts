@@ -1,6 +1,19 @@
 import { AppError } from "../../lib/errors";
 import { TAX_PARAMS } from "./taxParams.generated";
 
+export type ObbbaDeductions = {
+  tips_cap: number;
+  overtime_cap: { single: number; married_filing_jointly: number };
+  tips_overtime_phase_threshold: { single: number; married_filing_jointly: number };
+  tips_overtime_phase_rate: number;
+  car_loan_cap: number;
+  car_loan_phase_threshold: { single: number; married_filing_jointly: number };
+  car_loan_phase_rate: number;
+  senior_amount: number;
+  senior_phase_threshold: { single: number; married_filing_jointly: number };
+  senior_phase_rate: number;
+};
+
 export type TaxParams = {
   standard_deduction: Record<string, number>;
   extra_deduction_65: { single: number; married: number };
@@ -14,6 +27,7 @@ export type TaxParams = {
   salt_cap: Record<string, number>;
   salt_phase_threshold: number | null;
   salt_phase_rate: number | null;
+  obbba_deductions: ObbbaDeductions | null;
 };
 
 export const SUPPORTED_TAX_YEARS = Object.keys(TAX_PARAMS).map(Number);

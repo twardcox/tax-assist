@@ -54,6 +54,7 @@ export class TaxCalculator {
     this._income();
     this._adjustments();
     this._agi();
+    this._schedule1A();
     this._deductions();
     this._taxableIncome();
     this._tax();
@@ -334,6 +335,72 @@ export class TaxCalculator {
     this.c["agi"] = Math.max(0, this.n("total_income") - this.n("total_adjustments"));
   }
 
+  // OBBBA §§70201–70203, §70103 — the four Schedule 1-A deductions (2025–2028).
+  // Below the line: they reduce taxable income (1040 Line 13b), never AGI.
+  private _schedule1A(): void {
+    const c = this.c;
+    const ob = this.p.obbba_deductions;
+    c["schedule_1a_total"] = 0;
+    if (!ob) return;
+
+    const fs = this.filingStatus();
+    const joint = fs.includes("jointly");
+    const mfs = fs === "married_filing_separately";
+    // MAGI here = AGI + §911/931/933 foreign exclusions, which this app
+    // doesn't model, so MAGI = AGI.
+    const magi = this.n("agi");
+    const jt = (t: { single: number; married_filing_jointly: number }) =>
+      joint ? t.married_filing_jointly : t.single;
+
+    // Qualified tips (§70201): per-W-2 tips + per-business SE tips (each
+    // limited to that business's net profit) + Form 4137 unreported tips.
+    const inc = toObj(this.data["income"]);
+    const w2s = toObjArr(inc["w2_employment"]);
+    const w2Tips = w2s.reduce((s, w) => s + f(w["qualified_tips"]), 0);
+    const seTips = toObjArr(inc["self_employment"]).reduce((s, se) => {
+      const net = f(se["net_profit"] ?? se["net_profit_loss"]);
+      return s + Math.min(f(se["qualified_tips"]), Math.max(0, net));
+    }, 0);
+    const tipsRaw = w2Tips + seTips + this.n("tip_income_unreported");
+    c["qualified_tips_w2"] = w2Tips;
+    c["qualified_tips_se"] = seTips;
+    c["qualified_tips_total"] = tipsRaw;
+    const phase150 = Math.max(0, magi - jt(ob.tips_overtime_phase_threshold))
+      * ob.tips_overtime_phase_rate;
+    c["tips_deduction"] = mfs ? 0
+      : Math.max(0, Math.min(tipsRaw, ob.tips_cap) - phase150);
+
+    // Qualified overtime premium (§70202): W-2 only; same phase-out as tips.
+    const otRaw = w2s.reduce((s, w) => s + f(w["qualified_overtime"]), 0);
+    c["qualified_overtime_total"] = otRaw;
+    c["overtime_deduction"] = mfs ? 0
+      : Math.max(0, Math.min(otRaw, jt(ob.overtime_cap)) - phase150);
+
+    // New-car loan interest (§70203): MFS allowed, at the single threshold.
+    const nd = toObj(inc["new_deductions"]);
+    const carPaid = f(nd["car_loan_interest_paid"]);
+    c["car_loan_interest_paid"] = carPaid;
+    c["car_loan_vin"] = String(nd["vehicle_vin"] ?? "");
+    const carPhase = Math.max(0, magi - jt(ob.car_loan_phase_threshold))
+      * ob.car_loan_phase_rate;
+    c["car_loan_deduction"] = Math.max(0, Math.min(carPaid, ob.car_loan_cap) - carPhase);
+
+    // Senior deduction (§70103): $6k per spouse 65+; married must file jointly.
+    const hh = toObj(this.data["household"]);
+    let seniors = f(toObj(hh["taxpayer"])["age"]) >= 65 ? 1 : 0;
+    if (fs === "married_filing_jointly" && f(toObj(hh["spouse"])["age"]) >= 65) seniors += 1;
+    c["senior_count"] = seniors;
+    const seniorPhase = Math.max(0, magi - jt(ob.senior_phase_threshold))
+      * ob.senior_phase_rate;
+    c["senior_deduction"] = mfs ? 0
+      : Math.max(0, seniors * ob.senior_amount - seniorPhase);
+
+    c["schedule_1a_magi"] = magi;
+    c["schedule_1a_total"] =
+      this.n("tips_deduction") + this.n("overtime_deduction") +
+      this.n("car_loan_deduction") + this.n("senior_deduction");
+  }
+
   private _deductions(): void {
     const c = this.c;
     const fs = this.filingStatus();
@@ -347,6 +414,12 @@ export class TaxCalculator {
     const extraKey = married ? "married" : "single";
     if (age >= 65) std += p.extra_deduction_65[extraKey];
     if (tp["blind"]) std += p.extra_deduction_65[extraKey];
+    // Spouse extra 65+/blind amounts count on a joint return.
+    if (fs === "married_filing_jointly") {
+      const sp = toObj(toObj(this.data["household"])["spouse"]);
+      if (f(sp["age"]) >= 65) std += p.extra_deduction_65[extraKey];
+      if (sp["blind"]) std += p.extra_deduction_65[extraKey];
+    }
     c["standard_deduction"] = std;
 
     c["itemized"] = this._scheduleA(agi);
@@ -354,7 +427,7 @@ export class TaxCalculator {
     c["deduction"] = Math.max(this.n("standard_deduction"), this.n("itemized"));
 
     const qbi = Math.max(0, this.n("schedule_c_profit") + this.n("k1_ordinary"));
-    const tiBeforeQbi = Math.max(0, agi - this.n("deduction"));
+    const tiBeforeQbi = Math.max(0, agi - this.n("deduction") - this.n("schedule_1a_total"));
     const ordinaryTi = Math.max(0, tiBeforeQbi - this.n("qualified_dividends") - this.n("ltcg"));
     c["qbi_deduction"] = qbi > 0 ? Math.min(qbi * 0.20, ordinaryTi * 0.20) : 0;
   }
@@ -402,7 +475,7 @@ export class TaxCalculator {
   private _taxableIncome(): void {
     this.c["taxable_income"] = Math.max(
       0,
-      this.n("agi") - this.n("deduction") - this.n("qbi_deduction")
+      this.n("agi") - this.n("deduction") - this.n("qbi_deduction") - this.n("schedule_1a_total")
     );
   }
 

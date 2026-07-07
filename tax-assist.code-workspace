@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"/^powershell\\.exe -NoProfile -Command \"Remove-Item -LiteralPath 'D:\\\\programs\\\\tax-assist\\\\ce' -Recurse -Force\"$/": {
+				"approve": true,
+				"matchCommandLine": true
+			}
+		}
+	}
+}

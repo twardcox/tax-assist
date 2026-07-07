@@ -1,0 +1,2091 @@
+{
+  "nodes": [
+    {
+      "id": "domain_taxforms_fillirsforms",
+      "label": "fillIrsForms.ts",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_form_cache",
+      "label": "FORM_CACHE",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L7",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fmt",
+      "label": "fmt()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L10",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fmtsigned",
+      "label": "fmtSigned()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L16",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_loadpdf",
+      "label": "loadPdf()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L22",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_trycheckbox",
+      "label": "tryCheckBox()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L36",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_p",
+      "label": "p()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L46",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "label": "fillSingleIrsForm()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L50",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillirsforms",
+      "label": "fillIrsForms()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L101",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_getstr",
+      "label": "getStr()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L186",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_filing_status_cb",
+      "label": "FILING_STATUS_CB",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L198",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fill1040",
+      "label": "fill1040()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L206",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedule1",
+      "label": "fillSchedule1()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L495",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedule1a",
+      "label": "fillSchedule1A()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L565",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillscheduleb",
+      "label": "fillScheduleB()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L682",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedulec",
+      "label": "fillScheduleC()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L726",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedulea",
+      "label": "fillScheduleA()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L795",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillform8863",
+      "label": "fillForm8863()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L850",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillform2441",
+      "label": "fillForm2441()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L948",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedule3",
+      "label": "fillSchedule3()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1060",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedule8812",
+      "label": "fillSchedule8812()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1101",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillscheduled",
+      "label": "fillScheduleD()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1189",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillform5695",
+      "label": "fillForm5695()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1225",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillscheduleh",
+      "label": "fillScheduleH()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1444",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedulef",
+      "label": "fillScheduleF()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1501",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_fillirsforms_fillschedulese",
+      "label": "fillScheduleSE()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1576",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index",
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index_taxfigures",
+      "label": "TaxFigures",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L12",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index_tax_sections",
+      "label": "TAX_SECTIONS",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L19",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index_loadalluserdata",
+      "label": "loadAllUserData()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L25",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index_computetaxfigures",
+      "label": "computeTaxFigures()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index_buildformpackage",
+      "label": "buildFormPackage()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L68",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_index_buildinstructions",
+      "label": "buildInstructions()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L171",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext",
+      "label": "summaryText.ts",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_d",
+      "label": "d()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L3",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_pct",
+      "label": "pct()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L10",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_line",
+      "label": "line()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L15",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_hr",
+      "label": "hr()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L21",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_heading",
+      "label": "heading()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L25",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_section",
+      "label": "section()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L29",
+      "_origin": "ast"
+    },
+    {
+      "id": "domain_taxforms_summarytext_buildsummarytext",
+      "label": "buildSummaryText()",
+      "file_type": "code",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L33",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_createtestuser",
+      "label": "createTestUser.ts",
+      "file_type": "code",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L1",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_createtestuser_sections",
+      "label": "sections",
+      "file_type": "code",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L124",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_createtestuser_status_order",
+      "label": "STATUS_ORDER",
+      "file_type": "code",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L862",
+      "_origin": "ast"
+    },
+    {
+      "id": "scripts_createtestuser_main",
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L873",
+      "_origin": "ast"
+    }
+  ],
+  "edges": [
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "ref_node_fs",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "ref_node_path",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "ref_pdf_lib",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "d_programs_tax_assist_backend_ts_src_lib_paths_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "d_programs_tax_assist_backend_ts_src_lib_paths_projectpaths",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_computedvalues",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_form_cache",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fmtsigned",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L50",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillirsforms",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_getstr",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L186",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_filing_status_cb",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L198",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fill1040",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L206",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule1",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L495",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule1a",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L565",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillscheduleb",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L682",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulec",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L726",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulea",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L795",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillform8863",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L850",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillform2441",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L948",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule3",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1060",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule8812",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1101",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillscheduled",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1189",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillform5695",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1225",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillscheduleh",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1444",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulef",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1501",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulese",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1576",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fill1040",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedule1",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L62",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedule1a",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillscheduleb",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L66",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedulec",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillform8863",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillform2441",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L76",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedulea",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillform5695",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedule3",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L82",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedule8812",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L84",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillscheduled",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedulese",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillscheduleh",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillsingleirsform",
+      "target": "domain_taxforms_fillirsforms_fillschedulef",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L92",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fill1040",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule1",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L113",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule1a",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulea",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L121",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillscheduleb",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillform8863",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L130",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillform2441",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L134",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule8812",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillform5695",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L143",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedule3",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulec",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L153",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillscheduled",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L158",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulese",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L162",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillscheduleh",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L166",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillirsforms",
+      "target": "domain_taxforms_fillirsforms_fillschedulef",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L170",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fill1040",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L207",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fill1040",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L209",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fill1040",
+      "target": "domain_taxforms_fillirsforms_fmtsigned",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L211",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fill1040",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L221",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fill1040",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L221",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fill1040",
+      "target": "domain_taxforms_fillirsforms_getstr",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L278",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L496",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L498",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1",
+      "target": "domain_taxforms_fillirsforms_fmtsigned",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L500",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L503",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L520",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1a",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L569",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1a",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L570",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule1a",
+      "target": "domain_taxforms_fillirsforms_getstr",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L575",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleb",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L683",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleb",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L685",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleb",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L688",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleb",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L712",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulec",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L731",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulec",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L733",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulec",
+      "target": "domain_taxforms_fillirsforms_fmtsigned",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L735",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulea",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L796",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulea",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L798",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulea",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L844",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform8863",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L851",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform8863",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L855",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform8863",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L930",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform2441",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L949",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform2441",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L952",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform2441",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1006",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule3",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1061",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule3",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1063",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule3",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1066",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule8812",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1102",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule8812",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1104",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule8812",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1113",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedule8812",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1145",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduled",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1190",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduled",
+      "target": "domain_taxforms_fillirsforms_fmtsigned",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1192",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform5695",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1226",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform5695",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1228",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform5695",
+      "target": "domain_taxforms_fillirsforms_p",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1281",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillform5695",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1299",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleh",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1445",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleh",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1446",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillscheduleh",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1447",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulef",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1502",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulef",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1503",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulef",
+      "target": "domain_taxforms_fillirsforms_fmtsigned",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1504",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulef",
+      "target": "domain_taxforms_fillirsforms_trycheckbox",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1505",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulese",
+      "target": "domain_taxforms_fillirsforms_loadpdf",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1580",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_fillirsforms_fillschedulese",
+      "target": "domain_taxforms_fillirsforms_fmt",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/fillIrsForms.ts",
+      "source_location": "L1582",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_db_sectionrepo_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_db_sectionrepo_getsectiondata",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_db_filingdetailsrepo_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_db_filingdetailsrepo_getfilingdetails",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_db_authrepo_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_db_authrepo_getuserbyid",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_taxcalculator",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_computedvalues",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_summarytext",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_summarytext_buildsummarytext",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_zipwriter_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_zipwriter_createzip",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_fillirsforms",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_fillirsforms_fillirsforms",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_index_taxfigures",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_index_tax_sections",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_index_loadalluserdata",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_index_computetaxfigures",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_index_buildformpackage",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L68",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "domain_taxforms_index_buildinstructions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L171",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index_computetaxfigures",
+      "target": "domain_taxforms_index_loadalluserdata",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index_buildformpackage",
+      "target": "domain_taxforms_index_loadalluserdata",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index_buildformpackage",
+      "target": "domain_taxforms_index_buildinstructions",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_computedvalues",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_d",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_pct",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_line",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_hr",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_heading",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_section",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext",
+      "target": "domain_taxforms_summarytext_buildsummarytext",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_heading",
+      "target": "domain_taxforms_summarytext_hr",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_buildsummarytext",
+      "target": "domain_taxforms_summarytext_hr",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_buildsummarytext",
+      "target": "domain_taxforms_summarytext_heading",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L78",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_buildsummarytext",
+      "target": "domain_taxforms_summarytext_section",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_buildsummarytext",
+      "target": "domain_taxforms_summarytext_line",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_buildsummarytext",
+      "target": "domain_taxforms_summarytext_d",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_summarytext_buildsummarytext",
+      "target": "domain_taxforms_summarytext_pct",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/summaryText.ts",
+      "source_location": "L181",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_init_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_init_initdb",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_authrepo_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_authrepo_createuser",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_authrepo_getuserbyemail",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_sectionrepo_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_db_sectionrepo_savesectiondata",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_auth_service_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_auth_service_hashpassword",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_lib_paths_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_lib_paths_ensurerequireddirectories",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_scanner_scan_ts",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_scanner_scan_runscan",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "scripts_createtestuser_sections",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "scripts_createtestuser_status_order",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L862",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser",
+      "target": "scripts_createtestuser_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L873",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index",
+      "target": "d_programs_tax_assist_backend_ts_src_domain_taxforms_taxcalculator_ts",
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index_loadalluserdata",
+      "target": "domain_taxforms_summarytext_section",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index_buildformpackage",
+      "target": "domain_taxforms_summarytext_buildsummarytext",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "domain_taxforms_index_buildformpackage",
+      "target": "domain_taxforms_fillirsforms_fillirsforms",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "domain/taxForms/index.ts",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "scripts_createtestuser_main",
+      "target": "domain_taxforms_summarytext_section",
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "scripts/createTestUser.ts",
+      "source_location": "L889",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

@@ -1,0 +1,3292 @@
+{
+  ".ce-project.json": {
+    "mtime": 1783441021.8211367,
+    "ast_hash": "2d24b087ce95bffc7fddd16428140ca2",
+    "semantic_hash": ""
+  },
+  ".claude/settings.json": {
+    "mtime": 1783441021.8211367,
+    "ast_hash": "a1aad9f7dff58ae81ff4f45b4171cb9d",
+    "semantic_hash": ""
+  },
+  ".claude/settings.local.json": {
+    "mtime": 1780429523.234919,
+    "ast_hash": "7c1fb3d7ae08b415ee8c9cfdd83f0fa8",
+    "semantic_hash": ""
+  },
+  ".husky/_/applypatch-msg": {
+    "mtime": 1782259847.806497,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/commit-msg": {
+    "mtime": 1782259847.804496,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/h": {
+    "mtime": 1782259843.5104103,
+    "ast_hash": "15239a01c5554e56ff745570fb583a91",
+    "semantic_hash": ""
+  },
+  ".husky/_/husky.sh": {
+    "mtime": 1782259847.8120255,
+    "ast_hash": "13871d2ab13e8423790ecb2c01c78c18",
+    "semantic_hash": ""
+  },
+  ".husky/_/post-applypatch": {
+    "mtime": 1782259847.8075008,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/post-checkout": {
+    "mtime": 1782259847.8085008,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/post-commit": {
+    "mtime": 1782259847.8054976,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/post-merge": {
+    "mtime": 1782259847.8100119,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/post-rewrite": {
+    "mtime": 1782259847.8085008,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/pre-applypatch": {
+    "mtime": 1782259847.806497,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/pre-auto-gc": {
+    "mtime": 1782259847.811028,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/pre-commit": {
+    "mtime": 1782259847.8024967,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/pre-merge-commit": {
+    "mtime": 1782259847.8034997,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/pre-push": {
+    "mtime": 1782259847.8100119,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/pre-rebase": {
+    "mtime": 1782259847.8085008,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/_/prepare-commit-msg": {
+    "mtime": 1782259847.8034997,
+    "ast_hash": "0b71c2e7d39daa010985d529f1320b37",
+    "semantic_hash": ""
+  },
+  ".husky/commit-msg": {
+    "mtime": 1782249517.6139443,
+    "ast_hash": "8a78cdc9023ff3cc07f7200b0a06a1fe",
+    "semantic_hash": ""
+  },
+  ".husky/post-checkout": {
+    "mtime": 1782249517.6139443,
+    "ast_hash": "77d47f2910d5604b12c92fe38b952c89",
+    "semantic_hash": ""
+  },
+  ".husky/pre-commit": {
+    "mtime": 1782249517.6149447,
+    "ast_hash": "9c7c7be3dc97717f0d54c90b47b29322",
+    "semantic_hash": ""
+  },
+  ".husky/pre-push": {
+    "mtime": 1782249517.6149447,
+    "ast_hash": "3f557f8c0c46dbfe3dd038712493d0d6",
+    "semantic_hash": ""
+  },
+  "backend-ts/package.json": {
+    "mtime": 1783441021.8251367,
+    "ast_hash": "529ff43161d59bc4f8cf8578ad9aa320",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/annotateFields.mjs": {
+    "mtime": 1781625630.9353733,
+    "ast_hash": "3e73e8273e433aac046d52afad2f976c",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/checkFieldMappings.mjs": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "9a0b063fb19d6e5eb226ea52d8e48e2a",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/checkFilledFields.mjs": {
+    "mtime": 1781625630.936373,
+    "ast_hash": "c6fc69d1fa3910b39d02524664d1ca34",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/findStray4.mjs": {
+    "mtime": 1781625630.936373,
+    "ast_hash": "ade80d860111c6c72bc31331d6ba340d",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/flattenLabeledForms.mjs": {
+    "mtime": 1781625630.9373717,
+    "ast_hash": "27720d74287c099d5abdf3342e986af1",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/inspectFields.mjs": {
+    "mtime": 1781625630.9373717,
+    "ast_hash": "1c1e916db3715441827130ead642e50d",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/inspectPdfFields.ts": {
+    "mtime": 1781625631.3983693,
+    "ast_hash": "c2f89fb11d91ae7fc506e91876a1630a",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/labelAllForms.mjs": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "d5b3825c16dcdf7775f4c300dc18c2b1",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/labelFields.mjs": {
+    "mtime": 1781625631.4003775,
+    "ast_hash": "59f59a1fbc0679c46d15a9d1b14b7fe8",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/labelFields2.mjs": {
+    "mtime": 1781625631.4013705,
+    "ast_hash": "1c8100310b429cf6032f8dae35f9dfb0",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/labelGap.mjs": {
+    "mtime": 1781625631.4013705,
+    "ast_hash": "0ecffa9cea9e5d00a7e2a319da43a019",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/mapFieldPositions.mjs": {
+    "mtime": 1781625631.4023705,
+    "ast_hash": "706e676e4e828260e27c8f6deeb75c2e",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/suggestStacks.mjs": {
+    "mtime": 1783441021.826137,
+    "ast_hash": "6e8cd7fc34736dfcb3c9a02d3408172b",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/updateTaxParams.mjs": {
+    "mtime": 1783442658.8181615,
+    "ast_hash": "1f3fdc65d67eebb99be2c580c2dfb907",
+    "semantic_hash": ""
+  },
+  "backend-ts/scripts/verifyFields.mjs": {
+    "mtime": 1783441021.8271363,
+    "ast_hash": "e77a5b7248ddb2d1a2856cf7b7227860",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/app.ts": {
+    "mtime": 1782237987.0550518,
+    "ast_hash": "3c9f0e9b3f262d3c90fdbd4654061672",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/auth/service.ts": {
+    "mtime": 1782237987.0558114,
+    "ast_hash": "7fb15082338f31c0e7247a7660ff309c",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/config/env.ts": {
+    "mtime": 1783371525.1489098,
+    "ast_hash": "bfc3dcf4e7a21014af187296d549c07f",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/authRepo.ts": {
+    "mtime": 1783441021.8277068,
+    "ast_hash": "ba45ee2ed373707c45fb02b76fda4b27",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/bootstrap.ts": {
+    "mtime": 1782237987.0598407,
+    "ast_hash": "e19c81bfce061b5dde5801018ad4c732",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/client.ts": {
+    "mtime": 1782237987.0598407,
+    "ast_hash": "6960801aaa186758ef0e145c5a8bff13",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/documentsRepo.ts": {
+    "mtime": 1782237987.0598407,
+    "ast_hash": "5e3bf1828c7cccf5e8d791d5968fb447",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/filingDetailsRepo.ts": {
+    "mtime": 1782237987.0618489,
+    "ast_hash": "b4dcb10aecd11fe0938489cb4c50c7b9",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/init.ts": {
+    "mtime": 1782237987.0618489,
+    "ast_hash": "f39f4f90e35010b435efae7e407cd0fc",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/migrate.ts": {
+    "mtime": 1782237987.0638547,
+    "ast_hash": "474b7391e823f69ac5bd5c7ddbd98ac4",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/sectionRepo.ts": {
+    "mtime": 1783441021.8288653,
+    "ast_hash": "d0a328ef8adde683c248e12eba347033",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/db/transactionsRepo.ts": {
+    "mtime": 1782237987.0638547,
+    "ast_hash": "86a328672f7755b8bf7eba3e2194fbcc",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/documents/aiExecutor.ts": {
+    "mtime": 1781625631.4103744,
+    "ast_hash": "403bb37e4d6057642070190855c1e1a6",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/documents/aiRequest.ts": {
+    "mtime": 1781625631.4103744,
+    "ast_hash": "fe25d5ed8fa305cb9a22880d61878ad0",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/documents/aiResponse.ts": {
+    "mtime": 1783441021.8288653,
+    "ast_hash": "71a825bc9a7a41aa7c297ec842e01abf",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/documents/classifier.ts": {
+    "mtime": 1781625631.411374,
+    "ast_hash": "be438b06a2d083e6632049f212093815",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/documents/extraction.ts": {
+    "mtime": 1781625631.4123757,
+    "ast_hash": "ab4ba6c3fd267f9697f5062caf6ad5b6",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/documents/prompts.ts": {
+    "mtime": 1781625631.4123757,
+    "ast_hash": "a5e4c819a85ed35e555946dc2a14df29",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/reports/cpaPacket.ts": {
+    "mtime": 1781625631.4133708,
+    "ast_hash": "d4fb9080c579e512541c4a4f49d5f0e1",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/aiAdvisor.ts": {
+    "mtime": 1781625631.41437,
+    "ast_hash": "b49062a2ff96f2a7cd9782e954087a4e",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/benefitLoader.ts": {
+    "mtime": 1783441021.8298647,
+    "ast_hash": "8ec3d022b6aa147e3a2b71274cc68ee9",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/report.ts": {
+    "mtime": 1781625631.41437,
+    "ast_hash": "ccf776786a8057cf9c7acf61faa67e98",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/rules.ts": {
+    "mtime": 1783441021.8308637,
+    "ast_hash": "11dd3b1bc13f478423510023708e7ef0",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/scan.ts": {
+    "mtime": 1783441021.8318615,
+    "ast_hash": "061850faef4794e634488239fb77bf58",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/stackMiner.ts": {
+    "mtime": 1783441021.8318615,
+    "ast_hash": "6a3c6f260e03c2387aee0c0c7c2a6e76",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/stacks.ts": {
+    "mtime": 1783441021.8328643,
+    "ast_hash": "bb1c15dbbe47ab642067d3a912a23c9e",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/types.ts": {
+    "mtime": 1783441021.833864,
+    "ast_hash": "1b13cc83628004721f8125e5cad413dd",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scanner/userFacts.ts": {
+    "mtime": 1783441021.833864,
+    "ast_hash": "d8b4ce410aab96635795d424bd78b7dc",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/scenarios/scenarios.ts": {
+    "mtime": 1782237987.065863,
+    "ast_hash": "0de920bd628ac2b3051099ffff337faa",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/fillIrsForms.ts": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "aabe8f088fb21469100b45ac37854341",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/index.ts": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "81ec92b31ab34d275d21845d8ff9d5bf",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/summaryText.ts": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "cf3a94dcb0b07c0317d2fa4634d88ff0",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/taxCalculator.ts": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "cb8ff90f0290cc6051379b96e3838dd4",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/taxParams.generated.ts": {
+    "mtime": 1783441478.6409616,
+    "ast_hash": "90c342122c3d777364eba0cc2aed371a",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/taxParams.ts": {
+    "mtime": 1783442658.6978033,
+    "ast_hash": "5a01311e03182c61136a157e6437e07a",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxForms/zipWriter.ts": {
+    "mtime": 1781625631.4213738,
+    "ast_hash": "b3456e6f7d908ca1fdfd84278857455d",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/domain/taxLaw/updater.ts": {
+    "mtime": 1783371525.24191,
+    "ast_hash": "a3781e8b54e58f4a258c74fd1866b236",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/lib/errors.ts": {
+    "mtime": 1782153568.6348739,
+    "ast_hash": "159e9fac00b88120e05d517e226c6bd1",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/lib/paths.ts": {
+    "mtime": 1782237987.067868,
+    "ast_hash": "6f8e20f8a20b03347bc20314dc7db0fc",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/plugins/auth.ts": {
+    "mtime": 1782237987.0698743,
+    "ast_hash": "386c18b5d0155eba41a6dafcddffeee7",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/auth.ts": {
+    "mtime": 1782237987.0708802,
+    "ast_hash": "490e5955ff462d036a97d50156cfdd31",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/config.ts": {
+    "mtime": 1781625631.4253712,
+    "ast_hash": "a23a2923c49ef1c10d18c981abd2b5a4",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/documents.ts": {
+    "mtime": 1783441021.838864,
+    "ast_hash": "39c5c09fe1818cd8da693836d35fff2d",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/health.ts": {
+    "mtime": 1781625631.426371,
+    "ast_hash": "aaba187efc1321544596ae4355a362de",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/planning.ts": {
+    "mtime": 1782237987.072549,
+    "ast_hash": "24cb87ac903a2f7e2e9df0723ee3fea9",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/reconciliation.ts": {
+    "mtime": 1782237987.0738242,
+    "ast_hash": "5468f3fef9a8b790726685afa02b8b05",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/reports.ts": {
+    "mtime": 1782237987.0758338,
+    "ast_hash": "0e8a460d021547cec7487d7cddf080ba",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/scan.ts": {
+    "mtime": 1782237987.0768287,
+    "ast_hash": "7934aa41dbbfb6c2f0d0bbaa5545797e",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/scenarios.ts": {
+    "mtime": 1781735091.794867,
+    "ast_hash": "be73859adb6f333c91920df85d1d726a",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/taxForms.ts": {
+    "mtime": 1782237987.077827,
+    "ast_hash": "f9dfbe85bdaca142092aa1f86ba97742",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/taxLaw.ts": {
+    "mtime": 1783441021.838864,
+    "ast_hash": "be8274352b4f8d87c20421467fbbe2c9",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/transactions.ts": {
+    "mtime": 1782237987.077827,
+    "ast_hash": "daa03bf2827031845b6cb1bd7e3487e5",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/routes/userData.ts": {
+    "mtime": 1782237987.0788245,
+    "ast_hash": "6168b2d7c6341249f8f276c4486f487b",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/scripts/createTestUser.ts": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "ca409966c1023a62fe18be28fa074028",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/server.ts": {
+    "mtime": 1782237987.079826,
+    "ast_hash": "f7306cff21622730c3c62ac342ae77d9",
+    "semantic_hash": ""
+  },
+  "backend-ts/src/types/fastify.d.ts": {
+    "mtime": 1781625631.4333694,
+    "ast_hash": "448733ed8c26d99433776cd38df127ae",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/api.test.ts": {
+    "mtime": 1783441021.839863,
+    "ast_hash": "884a7140260e7c793741aa41ec899e50",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/documentsAiExecutor.test.ts": {
+    "mtime": 1781625631.4353702,
+    "ast_hash": "ca673a6d364efe558c7d7d71ef62492b",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/documentsAiRequest.test.ts": {
+    "mtime": 1781625631.4353702,
+    "ast_hash": "1e0ad48fe868851d851129e8b9b29bea",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/documentsAiResponse.test.ts": {
+    "mtime": 1781625631.4353702,
+    "ast_hash": "d8b098c241bd9128eb5c153e2fb8b1f3",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/documentsClassifier.test.ts": {
+    "mtime": 1781625631.4363701,
+    "ast_hash": "2d858d3b2b31dc17d1d166dd10cd031b",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/documentsExtraction.test.ts": {
+    "mtime": 1781625631.4373734,
+    "ast_hash": "a7c587972c3bcd9ae9377d3cecd94f39",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/eligibility.test.ts": {
+    "mtime": 1782237987.0818243,
+    "ast_hash": "467140f7f87cf9f9f2f6c56926a946d1",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/forms.test.ts": {
+    "mtime": 1781625631.4383712,
+    "ast_hash": "2d798d1e18ccb26f0340e880935c0d71",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/rules.test.ts": {
+    "mtime": 1783441021.8408632,
+    "ast_hash": "3acf54e0fc14b96d763401895b61e392",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/stackMiner.test.ts": {
+    "mtime": 1783441021.8418636,
+    "ast_hash": "ea4b9b322521ddf8fc13986a3aac6420",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/stacks.test.ts": {
+    "mtime": 1783441021.8418636,
+    "ast_hash": "8a447ec5a4e708fd414665d8633a2005",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/taxCalculator.test.ts": {
+    "mtime": 1783442658.819164,
+    "ast_hash": "85309664280d3d832de857d2bfb6661f",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/taxLaw.test.ts": {
+    "mtime": 1781625631.4403696,
+    "ast_hash": "2e5d52c6c811194506655c2b21b3955b",
+    "semantic_hash": ""
+  },
+  "backend-ts/test/taxParams.test.ts": {
+    "mtime": 1783442658.6978033,
+    "ast_hash": "a9a46a632c542d22450054a58196b36f",
+    "semantic_hash": ""
+  },
+  "backend-ts/tsconfig.json": {
+    "mtime": 1781625631.4403696,
+    "ast_hash": "529e07d9bb6257a03b6c0258ae80cac3",
+    "semantic_hash": ""
+  },
+  "backend-ts/vitest.config.ts": {
+    "mtime": 1781625631.44137,
+    "ast_hash": "21792f4e2623a3b4c575cf2957b120a1",
+    "semantic_hash": ""
+  },
+  "ce/.husky/commit-msg": {
+    "mtime": 1782237987.480898,
+    "ast_hash": "a2dc59415a52e744b6e89db39d55720e",
+    "semantic_hash": ""
+  },
+  "ce/.husky/post-checkout": {
+    "mtime": 1782237987.481897,
+    "ast_hash": "024eac1d2c175dc9ec130afb91a71af9",
+    "semantic_hash": ""
+  },
+  "ce/.husky/pre-commit": {
+    "mtime": 1782237987.481897,
+    "ast_hash": "4d4a7ccef2f3ca78c84cda21607dbfe8",
+    "semantic_hash": ""
+  },
+  "ce/.husky/pre-push": {
+    "mtime": 1782237987.4828973,
+    "ast_hash": "2253ab0c9a9c209782ee3822daca4eb3",
+    "semantic_hash": ""
+  },
+  "frontend/package.json": {
+    "mtime": 1780505895.795223,
+    "ast_hash": "d3127703ad0371976c9aac626d352bb2",
+    "semantic_hash": ""
+  },
+  "frontend/postcss.config.js": {
+    "mtime": 1780433752.9400563,
+    "ast_hash": "c735540bb63936a123bc867d950c9f69",
+    "semantic_hash": ""
+  },
+  "frontend/src/App.jsx": {
+    "mtime": 1780703251.7326555,
+    "ast_hash": "5c64cc43c28361e17da39b3f6c854e28",
+    "semantic_hash": ""
+  },
+  "frontend/src/api.js": {
+    "mtime": 1781625631.44237,
+    "ast_hash": "2e88ac5e3d28e62737bce112b6eaa08b",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/NavBar.jsx": {
+    "mtime": 1782237987.5480402,
+    "ast_hash": "c52668a4b8ab8a4e3d3d70c37c3b1ac6",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/ProtectedRoute.jsx": {
+    "mtime": 1780610955.1571448,
+    "ast_hash": "f22d7fbf9591c414a787d8d8a9ae81b5",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/StackCard.jsx": {
+    "mtime": 1783441021.8495882,
+    "ast_hash": "9fa1def13a1ddc53f04eddd452ad8644",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/StatusBadge.jsx": {
+    "mtime": 1783441021.8505886,
+    "ast_hash": "40989ca8d1f67f28a0978ec4016b1093",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/userdata/FieldGroup.jsx": {
+    "mtime": 1781730225.758322,
+    "ast_hash": "72ed48c63bbf93695abdf80a945a004e",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/userdata/FieldInput.jsx": {
+    "mtime": 1781730225.759323,
+    "ast_hash": "270c150e9e1d9393ff332542756c6c30",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/userdata/HelpPopover.jsx": {
+    "mtime": 1781730225.759323,
+    "ast_hash": "10f85c24eabe78a404dd7fe5b24d3fd4",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/userdata/ListEditor.jsx": {
+    "mtime": 1781730225.7603223,
+    "ast_hash": "711d3555bdd3d6db4808930bffa8d05e",
+    "semantic_hash": ""
+  },
+  "frontend/src/components/userdata/SectionForm.jsx": {
+    "mtime": 1781735091.7998707,
+    "ast_hash": "c613a9db09a9f989071bfd84f2261e27",
+    "semantic_hash": ""
+  },
+  "frontend/src/constants.js": {
+    "mtime": 1780690785.5619607,
+    "ast_hash": "c6a3c1d1b0823ac2f488a0642ff05834",
+    "semantic_hash": ""
+  },
+  "frontend/src/contexts/AuthContext.jsx": {
+    "mtime": 1780690785.5619607,
+    "ast_hash": "447e6f7a36d5732e6a5acde548bae5b2",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/dateDerived.js": {
+    "mtime": 1781730225.7623231,
+    "ast_hash": "d03eb4b2b682f4bf0b3d1d014fe78214",
+    "semantic_hash": ""
+  },
+  "frontend/src/lib/sectionCompleteness.js": {
+    "mtime": 1781730225.7623231,
+    "ast_hash": "a6a2d4388878c43af7b585bc6622e34c",
+    "semantic_hash": ""
+  },
+  "frontend/src/main.jsx": {
+    "mtime": 1781730225.7633226,
+    "ast_hash": "6bbceca4162d8015b9a7f3298db05222",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/Dashboard.jsx": {
+    "mtime": 1783441021.8515887,
+    "ast_hash": "491774877d564a63628836c9fe0fd221",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/Documents.jsx": {
+    "mtime": 1780690785.5647273,
+    "ast_hash": "49fec2ab786aa143354d0be19fca5d48",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/Login.jsx": {
+    "mtime": 1780610949.590329,
+    "ast_hash": "83a0c7d610ddb9c93f9fb1a0f6d31693",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/Planning.jsx": {
+    "mtime": 1780513805.9045322,
+    "ast_hash": "ef0c496bbcf741faed1a919d5584d9f0",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/Reports.jsx": {
+    "mtime": 1780703251.7346616,
+    "ast_hash": "906c5a550085fe34e7cd2928dfe0b006",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/Scenarios.jsx": {
+    "mtime": 1780436294.4896643,
+    "ast_hash": "45a94fed5abfb058c10af2dd677a91e8",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/TaxForms.jsx": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "60da102032b1f7856889d35117cac769",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/TaxLaw.jsx": {
+    "mtime": 1780436289.1200159,
+    "ast_hash": "15a6be1aa464f89445aa597d13f82c0f",
+    "semantic_hash": ""
+  },
+  "frontend/src/pages/UserData.jsx": {
+    "mtime": 1781735091.7998707,
+    "ast_hash": "b7d7832844e3bfbbbf4f602b19013fac",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/businesses.js": {
+    "mtime": 1781730225.7653222,
+    "ast_hash": "5af9edd182e40481ded953fd2f7daf90",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/dependents.js": {
+    "mtime": 1781730225.7653222,
+    "ast_hash": "ef0b02b57baab1b4457946986091772d",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/documents_index.js": {
+    "mtime": 1780506464.0818756,
+    "ast_hash": "b0cdb84d6567f99ae3f2ceb73e885c60",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/goals.js": {
+    "mtime": 1780506417.0832562,
+    "ast_hash": "48b995a9620e8113400ba6299424fa91",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/healthcare.js": {
+    "mtime": 1781730225.7663238,
+    "ast_hash": "666424858d25ee5abbcf7b108efcbbc2",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/household.js": {
+    "mtime": 1783441021.8525884,
+    "ast_hash": "d05556c5361b786346dddffac124100c",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/income.js": {
+    "mtime": 1783442658.8426845,
+    "ast_hash": "bd9610c2a50f8a0ed7e307b411cac291",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/investments.js": {
+    "mtime": 1781730225.768323,
+    "ast_hash": "e9fa4e08b6054c23e0fce2aedec3320e",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/real_estate.js": {
+    "mtime": 1781730225.7693224,
+    "ast_hash": "fd1fc914b6b58740b1159076726a38d4",
+    "semantic_hash": ""
+  },
+  "frontend/src/schemas/retirement.js": {
+    "mtime": 1781730225.7693224,
+    "ast_hash": "0440b2503e38bee1330946b314a473db",
+    "semantic_hash": ""
+  },
+  "frontend/tailwind.config.js": {
+    "mtime": 1780433970.5069444,
+    "ast_hash": "e8002f9c49c71c1fc84dabfcdef4cf37",
+    "semantic_hash": ""
+  },
+  "frontend/vite.config.js": {
+    "mtime": 1781625631.4493783,
+    "ast_hash": "8d40a791219af14775d24b7a39660959",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1782249517.6179457,
+    "ast_hash": "a281550fab966dffb79a190d4ea85420",
+    "semantic_hash": ""
+  },
+  "start.ps1": {
+    "mtime": 1781625631.453376,
+    "ast_hash": "e65fe12cd23efc01cef49222b58577dc",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/manifest.json": {
+    "mtime": 1781625631.585234,
+    "ast_hash": "a176fdd49d013e8c95e2279dae0459fa",
+    "semantic_hash": ""
+  },
+  ".agents/skills/README.md": {
+    "mtime": 1782237986.671327,
+    "ast_hash": "ee27ae615e3b9a4ccab20e7ae3a39121",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ai-review/SKILL.md": {
+    "mtime": 1782237986.6725678,
+    "ast_hash": "a22db0c2bf9322a1dc1ce867f31a7fe2",
+    "semantic_hash": ""
+  },
+  ".agents/skills/architecture-check/SKILL.md": {
+    "mtime": 1782237986.6738,
+    "ast_hash": "6e244941b61745e661b00dd9223317cd",
+    "semantic_hash": ""
+  },
+  ".agents/skills/breakdown-milestone/SKILL.md": {
+    "mtime": 1782237986.6748104,
+    "ast_hash": "8cb6ccf0544844b554523292762d99f8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ce-status/SKILL.md": {
+    "mtime": 1782237986.6758022,
+    "ast_hash": "796e21a22d95b90b90398883aef1cd4e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ce/SKILL.md": {
+    "mtime": 1782237986.676798,
+    "ast_hash": "c0081987b7761090825844a97c25cb00",
+    "semantic_hash": ""
+  },
+  ".agents/skills/change-apply/SKILL.md": {
+    "mtime": 1782237986.7385638,
+    "ast_hash": "f6fbb6ea31618931abfeaac72f586103",
+    "semantic_hash": ""
+  },
+  ".agents/skills/change-pass-a/SKILL.md": {
+    "mtime": 1782237986.7391796,
+    "ast_hash": "e1cc8d6c6cc64b306ecef7647bea45bf",
+    "semantic_hash": ""
+  },
+  ".agents/skills/change-pass-b/SKILL.md": {
+    "mtime": 1782237986.7400718,
+    "ast_hash": "537157c7cc211adf44824786eef169f4",
+    "semantic_hash": ""
+  },
+  ".agents/skills/ci-status/SKILL.md": {
+    "mtime": 1782237986.7400718,
+    "ast_hash": "7a62db1d5dd193fc82de6e04785c134e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/commit/SKILL.md": {
+    "mtime": 1782237986.7416716,
+    "ast_hash": "7d01ff553d6fe83498ef547db6d41ed8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/complete-ticket/SKILL.md": {
+    "mtime": 1782237986.7426803,
+    "ast_hash": "ca0eecce6505648f71eb88bab7ef6fb1",
+    "semantic_hash": ""
+  },
+  ".agents/skills/council/SKILL.md": {
+    "mtime": 1782237986.7431877,
+    "ast_hash": "19d241a6ca1b066184ada0c83ee8ac95",
+    "semantic_hash": ""
+  },
+  ".agents/skills/create-milestone-prd/SKILL.md": {
+    "mtime": 1782237986.7436936,
+    "ast_hash": "2bb99433f64743b3b71fd340832c628b",
+    "semantic_hash": ""
+  },
+  ".agents/skills/create-prd-tickets/SKILL.md": {
+    "mtime": 1782237986.7436936,
+    "ast_hash": "83c2a7ad85340d4222d2f8418a5e6608",
+    "semantic_hash": ""
+  },
+  ".agents/skills/create-product-requirement-doc/SKILL.md": {
+    "mtime": 1782237986.7452078,
+    "ast_hash": "770d8b068f7270534ccc05391283dc41",
+    "semantic_hash": ""
+  },
+  ".agents/skills/design-review/SKILL.md": {
+    "mtime": 1782237986.7457142,
+    "ast_hash": "40b9d9f9e19b56ca34e7be51a176e714",
+    "semantic_hash": ""
+  },
+  ".agents/skills/init-project/SKILL.md": {
+    "mtime": 1782237986.7457142,
+    "ast_hash": "56f0ec38da2eb537fa6274958670a9c8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/lightweight-change/SKILL.md": {
+    "mtime": 1782237986.746722,
+    "ast_hash": "98379251820c3451b1990e4ce0d9a297",
+    "semantic_hash": ""
+  },
+  ".agents/skills/merge-pr/SKILL.md": {
+    "mtime": 1782237986.7472274,
+    "ast_hash": "020f863ffd6f4a8a6a19673ec6c8afa8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/milestone-review/SKILL.md": {
+    "mtime": 1782237986.7477336,
+    "ast_hash": "8a1f116f41dc383cb7b9707bb662a640",
+    "semantic_hash": ""
+  },
+  ".agents/skills/milestone-status/SKILL.md": {
+    "mtime": 1782237986.7477336,
+    "ast_hash": "b7bfc76a43973ac6c9e9e269cec3c156",
+    "semantic_hash": ""
+  },
+  ".agents/skills/new-project/SKILL.md": {
+    "mtime": 1782237986.7487428,
+    "ast_hash": "4db6936ecf8270a99b1ee51d378018df",
+    "semantic_hash": ""
+  },
+  ".agents/skills/new-ticket/SKILL.md": {
+    "mtime": 1782237986.749248,
+    "ast_hash": "92b1ed6f847ffd306399b909d35215a2",
+    "semantic_hash": ""
+  },
+  ".agents/skills/pmo-manage/SKILL.md": {
+    "mtime": 1782237986.7497559,
+    "ast_hash": "3975423d41854b40311738f67fce2fbb",
+    "semantic_hash": ""
+  },
+  ".agents/skills/pmo-status/SKILL.md": {
+    "mtime": 1782237986.7497559,
+    "ast_hash": "d391b8578772effb8f958257f179323f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/pr-description/SKILL.md": {
+    "mtime": 1782237986.7507653,
+    "ast_hash": "d106faa890b843fa084fbbc9265e4c7f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/pre-flight/SKILL.md": {
+    "mtime": 1782237986.7507653,
+    "ast_hash": "1f38d12b3fda523a76f2d8d4b9034e7e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/project-snapshot/SKILL.md": {
+    "mtime": 1782237986.7517653,
+    "ast_hash": "b4769bd6a0c9ecb11aec23b84b9e7522",
+    "semantic_hash": ""
+  },
+  ".agents/skills/project-status-report/SKILL.md": {
+    "mtime": 1782237986.7517653,
+    "ast_hash": "56f9f9c987228e6d098ff96d3067b9cf",
+    "semantic_hash": ""
+  },
+  ".agents/skills/pull-request/SKILL.md": {
+    "mtime": 1782237986.7527635,
+    "ast_hash": "a1f44d8675d640e168c818b0844abbd6",
+    "semantic_hash": ""
+  },
+  ".agents/skills/quality-gate/SKILL.md": {
+    "mtime": 1782237986.7537646,
+    "ast_hash": "96ee285d317b93ec660c80b2964ee0d0",
+    "semantic_hash": ""
+  },
+  ".agents/skills/reimplement-clean-branch/SKILL.md": {
+    "mtime": 1782237986.7537646,
+    "ast_hash": "16f8b80ff100e03bf42edae2c45db29d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/sequential-commit/SKILL.md": {
+    "mtime": 1782237986.7547631,
+    "ast_hash": "d2a2654c10014ec4e6fd61ab33b0fde9",
+    "semantic_hash": ""
+  },
+  ".agents/skills/spec-validate/SKILL.md": {
+    "mtime": 1782237986.7547631,
+    "ast_hash": "fb1934201da52a770da856913e978916",
+    "semantic_hash": ""
+  },
+  ".agents/skills/sprint-checkin/SKILL.md": {
+    "mtime": 1782237986.8414629,
+    "ast_hash": "2e3085d479250eeac454e22debb089b6",
+    "semantic_hash": ""
+  },
+  ".agents/skills/sprint-complete/SKILL.md": {
+    "mtime": 1782237986.8424766,
+    "ast_hash": "dcc6a856317385d1db70e8914d2b27da",
+    "semantic_hash": ""
+  },
+  ".agents/skills/start-ticket/SKILL.md": {
+    "mtime": 1782237986.8434901,
+    "ast_hash": "96d96c7c39858f41bd3cf44a23a06dd3",
+    "semantic_hash": ""
+  },
+  ".agents/skills/sync/SKILL.md": {
+    "mtime": 1782237986.8434901,
+    "ast_hash": "f067fbeaf1386cb125ae3cfb5534020c",
+    "semantic_hash": ""
+  },
+  ".agents/skills/test-coverage/SKILL.md": {
+    "mtime": 1782237986.8444974,
+    "ast_hash": "4c4c62bfb0f39b6aacf9f348cda836b0",
+    "semantic_hash": ""
+  },
+  ".agents/skills/troubleshoot-setup/SKILL.md": {
+    "mtime": 1782237986.8450058,
+    "ast_hash": "9456c3078a27e143bd72bf53b025e5dc",
+    "semantic_hash": ""
+  },
+  ".agents/skills/update-config/SKILL.md": {
+    "mtime": 1782237986.845511,
+    "ast_hash": "17ce912a9e775de3f1b4ed171596d5c4",
+    "semantic_hash": ""
+  },
+  ".ai-review-prompt.md": {
+    "mtime": 1783441021.8201377,
+    "ast_hash": "8505343dd76bcab15056af4a7728aac9",
+    "semantic_hash": ""
+  },
+  ".claude/agents/council-adversary.md": {
+    "mtime": 1782249517.6079414,
+    "ast_hash": "00dfa1609c7b98768d2a2b8ea9d02183",
+    "semantic_hash": ""
+  },
+  ".claude/agents/council-designer.md": {
+    "mtime": 1782249517.6089432,
+    "ast_hash": "cf1535ef344d0251068014f45d002e74",
+    "semantic_hash": ""
+  },
+  ".claude/agents/council-developer.md": {
+    "mtime": 1782249517.6089432,
+    "ast_hash": "741e79cd2d25314b2bfdf4e2debef5e6",
+    "semantic_hash": ""
+  },
+  ".claude/agents/council-pmo.md": {
+    "mtime": 1782249517.6089432,
+    "ast_hash": "7b675aecbc74ad59f1f923326c414769",
+    "semantic_hash": ""
+  },
+  ".claude/agents/council-reporter.md": {
+    "mtime": 1782249517.6099417,
+    "ast_hash": "5b761e005b8c6862cb8a776194696a72",
+    "semantic_hash": ""
+  },
+  ".claude/commands/ai-review.md": {
+    "mtime": 1782249517.6109412,
+    "ast_hash": "c77ac7c7293356e021a23aba43126c12",
+    "semantic_hash": ""
+  },
+  ".claude/commands/council.md": {
+    "mtime": 1782249517.6109412,
+    "ast_hash": "4ce39855bf62155e76154fc65b706669",
+    "semantic_hash": ""
+  },
+  ".claude/commands/pre-flight.md": {
+    "mtime": 1782249517.6119432,
+    "ast_hash": "ab63d91e1d0fe0904aa380451236f725",
+    "semantic_hash": ""
+  },
+  ".claude/commands/pull-request.md": {
+    "mtime": 1782249517.6119432,
+    "ast_hash": "aceda93710b743bff925538affeaa73c",
+    "semantic_hash": ""
+  },
+  ".claude/commands/sequential-commit.md": {
+    "mtime": 1782249517.612945,
+    "ast_hash": "52868149c4231c050adc1a1df06724c7",
+    "semantic_hash": ""
+  },
+  ".github/copilot-instructions.md": {
+    "mtime": 1783441994.394419,
+    "ast_hash": "c968ae40c180506088aa9d1d951d0589",
+    "semantic_hash": ""
+  },
+  ".github/skills/README.md": {
+    "mtime": 1782237986.8470254,
+    "ast_hash": "d3be2973eb437dfff57c215f4b128311",
+    "semantic_hash": ""
+  },
+  ".github/skills/ai-review/SKILL.md": {
+    "mtime": 1782237986.8475323,
+    "ast_hash": "a22db0c2bf9322a1dc1ce867f31a7fe2",
+    "semantic_hash": ""
+  },
+  ".github/skills/architecture-check/SKILL.md": {
+    "mtime": 1782237986.8475323,
+    "ast_hash": "6e244941b61745e661b00dd9223317cd",
+    "semantic_hash": ""
+  },
+  ".github/skills/breakdown-milestone/SKILL.md": {
+    "mtime": 1782237986.8485425,
+    "ast_hash": "8cb6ccf0544844b554523292762d99f8",
+    "semantic_hash": ""
+  },
+  ".github/skills/ce-status/SKILL.md": {
+    "mtime": 1782237986.8490477,
+    "ast_hash": "796e21a22d95b90b90398883aef1cd4e",
+    "semantic_hash": ""
+  },
+  ".github/skills/ce/SKILL.md": {
+    "mtime": 1782237986.8495557,
+    "ast_hash": "c0081987b7761090825844a97c25cb00",
+    "semantic_hash": ""
+  },
+  ".github/skills/change-apply/SKILL.md": {
+    "mtime": 1782237986.943916,
+    "ast_hash": "f6fbb6ea31618931abfeaac72f586103",
+    "semantic_hash": ""
+  },
+  ".github/skills/change-pass-a/SKILL.md": {
+    "mtime": 1782237986.943916,
+    "ast_hash": "e1cc8d6c6cc64b306ecef7647bea45bf",
+    "semantic_hash": ""
+  },
+  ".github/skills/change-pass-b/SKILL.md": {
+    "mtime": 1782237986.9449227,
+    "ast_hash": "537157c7cc211adf44824786eef169f4",
+    "semantic_hash": ""
+  },
+  ".github/skills/ci-status/SKILL.md": {
+    "mtime": 1782237986.945428,
+    "ast_hash": "7a62db1d5dd193fc82de6e04785c134e",
+    "semantic_hash": ""
+  },
+  ".github/skills/commit/SKILL.md": {
+    "mtime": 1782237986.9459329,
+    "ast_hash": "7d01ff553d6fe83498ef547db6d41ed8",
+    "semantic_hash": ""
+  },
+  ".github/skills/complete-ticket/SKILL.md": {
+    "mtime": 1782237986.9469402,
+    "ast_hash": "ca0eecce6505648f71eb88bab7ef6fb1",
+    "semantic_hash": ""
+  },
+  ".github/skills/council/SKILL.md": {
+    "mtime": 1782237986.947446,
+    "ast_hash": "19d241a6ca1b066184ada0c83ee8ac95",
+    "semantic_hash": ""
+  },
+  ".github/skills/create-milestone-prd/SKILL.md": {
+    "mtime": 1782237986.9479508,
+    "ast_hash": "2bb99433f64743b3b71fd340832c628b",
+    "semantic_hash": ""
+  },
+  ".github/skills/create-prd-tickets/SKILL.md": {
+    "mtime": 1782237986.9489589,
+    "ast_hash": "83c2a7ad85340d4222d2f8418a5e6608",
+    "semantic_hash": ""
+  },
+  ".github/skills/create-product-requirement-doc/SKILL.md": {
+    "mtime": 1782237986.9494648,
+    "ast_hash": "770d8b068f7270534ccc05391283dc41",
+    "semantic_hash": ""
+  },
+  ".github/skills/design-review/SKILL.md": {
+    "mtime": 1782237986.9499698,
+    "ast_hash": "40b9d9f9e19b56ca34e7be51a176e714",
+    "semantic_hash": ""
+  },
+  ".github/skills/init-project/SKILL.md": {
+    "mtime": 1782237986.9509766,
+    "ast_hash": "56f0ec38da2eb537fa6274958670a9c8",
+    "semantic_hash": ""
+  },
+  ".github/skills/lightweight-change/SKILL.md": {
+    "mtime": 1782237986.9509766,
+    "ast_hash": "98379251820c3451b1990e4ce0d9a297",
+    "semantic_hash": ""
+  },
+  ".github/skills/merge-pr/SKILL.md": {
+    "mtime": 1782237986.9519756,
+    "ast_hash": "020f863ffd6f4a8a6a19673ec6c8afa8",
+    "semantic_hash": ""
+  },
+  ".github/skills/milestone-review/SKILL.md": {
+    "mtime": 1782237986.952977,
+    "ast_hash": "8a1f116f41dc383cb7b9707bb662a640",
+    "semantic_hash": ""
+  },
+  ".github/skills/milestone-status/SKILL.md": {
+    "mtime": 1782237986.952977,
+    "ast_hash": "b7bfc76a43973ac6c9e9e269cec3c156",
+    "semantic_hash": ""
+  },
+  ".github/skills/new-project/SKILL.md": {
+    "mtime": 1782237986.953977,
+    "ast_hash": "4db6936ecf8270a99b1ee51d378018df",
+    "semantic_hash": ""
+  },
+  ".github/skills/new-ticket/SKILL.md": {
+    "mtime": 1782237986.9549804,
+    "ast_hash": "92b1ed6f847ffd306399b909d35215a2",
+    "semantic_hash": ""
+  },
+  ".github/skills/pmo-manage/SKILL.md": {
+    "mtime": 1782237986.9558032,
+    "ast_hash": "3975423d41854b40311738f67fce2fbb",
+    "semantic_hash": ""
+  },
+  ".github/skills/pmo-status/SKILL.md": {
+    "mtime": 1782237986.9558032,
+    "ast_hash": "d391b8578772effb8f958257f179323f",
+    "semantic_hash": ""
+  },
+  ".github/skills/pr-description/SKILL.md": {
+    "mtime": 1782237986.957824,
+    "ast_hash": "d106faa890b843fa084fbbc9265e4c7f",
+    "semantic_hash": ""
+  },
+  ".github/skills/pre-flight/SKILL.md": {
+    "mtime": 1782237986.957824,
+    "ast_hash": "1f38d12b3fda523a76f2d8d4b9034e7e",
+    "semantic_hash": ""
+  },
+  ".github/skills/project-snapshot/SKILL.md": {
+    "mtime": 1782237986.959834,
+    "ast_hash": "b4769bd6a0c9ecb11aec23b84b9e7522",
+    "semantic_hash": ""
+  },
+  ".github/skills/project-status-report/SKILL.md": {
+    "mtime": 1782237986.959834,
+    "ast_hash": "56f9f9c987228e6d098ff96d3067b9cf",
+    "semantic_hash": ""
+  },
+  ".github/skills/pull-request/SKILL.md": {
+    "mtime": 1782237986.959834,
+    "ast_hash": "a1f44d8675d640e168c818b0844abbd6",
+    "semantic_hash": ""
+  },
+  ".github/skills/quality-gate/SKILL.md": {
+    "mtime": 1782237986.959834,
+    "ast_hash": "96ee285d317b93ec660c80b2964ee0d0",
+    "semantic_hash": ""
+  },
+  ".github/skills/reimplement-clean-branch/SKILL.md": {
+    "mtime": 1782237986.96184,
+    "ast_hash": "16f8b80ff100e03bf42edae2c45db29d",
+    "semantic_hash": ""
+  },
+  ".github/skills/sequential-commit/SKILL.md": {
+    "mtime": 1782237986.96184,
+    "ast_hash": "d2a2654c10014ec4e6fd61ab33b0fde9",
+    "semantic_hash": ""
+  },
+  ".github/skills/spec-validate/SKILL.md": {
+    "mtime": 1782237986.96184,
+    "ast_hash": "fb1934201da52a770da856913e978916",
+    "semantic_hash": ""
+  },
+  ".github/skills/sprint-checkin/SKILL.md": {
+    "mtime": 1782237987.0457163,
+    "ast_hash": "2e3085d479250eeac454e22debb089b6",
+    "semantic_hash": ""
+  },
+  ".github/skills/sprint-complete/SKILL.md": {
+    "mtime": 1782237987.046237,
+    "ast_hash": "dcc6a856317385d1db70e8914d2b27da",
+    "semantic_hash": ""
+  },
+  ".github/skills/start-ticket/SKILL.md": {
+    "mtime": 1782237987.04676,
+    "ast_hash": "96d96c7c39858f41bd3cf44a23a06dd3",
+    "semantic_hash": ""
+  },
+  ".github/skills/sync/SKILL.md": {
+    "mtime": 1782237987.0472834,
+    "ast_hash": "f067fbeaf1386cb125ae3cfb5534020c",
+    "semantic_hash": ""
+  },
+  ".github/skills/test-coverage/SKILL.md": {
+    "mtime": 1782237987.0483336,
+    "ast_hash": "4c4c62bfb0f39b6aacf9f348cda836b0",
+    "semantic_hash": ""
+  },
+  ".github/skills/troubleshoot-setup/SKILL.md": {
+    "mtime": 1782237987.0488563,
+    "ast_hash": "9456c3078a27e143bd72bf53b025e5dc",
+    "semantic_hash": ""
+  },
+  ".github/skills/update-config/SKILL.md": {
+    "mtime": 1782237987.0493853,
+    "ast_hash": "17ce912a9e775de3f1b4ed171596d5c4",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci-checks.yml": {
+    "mtime": 1782237987.0499065,
+    "ast_hash": "886f464203914733d333f6190bb72fdf",
+    "semantic_hash": ""
+  },
+  ".github/workflows/e2e-tests.yml": {
+    "mtime": 1783441021.8221366,
+    "ast_hash": "26ce115194bb5f926493ec59d67f7453",
+    "semantic_hash": ""
+  },
+  ".github/workflows/lighthouse.yml": {
+    "mtime": 1782237987.05043,
+    "ast_hash": "7ea8bd91506ad41f4399e58ec8c8da5a",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/council-fixes-plan.md": {
+    "mtime": 1782257672.7299001,
+    "ast_hash": "8c298806702d49dca3cc60d75248a7b5",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/progress.md": {
+    "mtime": 1782261402.834327,
+    "ast_hash": "ecda9034fc15dbbdf609901e0ed3f555",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-1-brief.md": {
+    "mtime": 1782257695.9813943,
+    "ast_hash": "7b0de1b04434cc9fcc0a95c366205da3",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-1-report.md": {
+    "mtime": 1782258122.2728806,
+    "ast_hash": "7fef65605382c02622ac2c3c2ad2bb33",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-2-brief.md": {
+    "mtime": 1782258281.440008,
+    "ast_hash": "8e2ad93748980fd6ce76e7e877972d9f",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-2-report.md": {
+    "mtime": 1782259444.597894,
+    "ast_hash": "ca2f6fa1b8aa120377939333bdf51de9",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-3-brief.md": {
+    "mtime": 1782259708.1532788,
+    "ast_hash": "84a2ace581466620c6acafc95960048c",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-3-report.md": {
+    "mtime": 1782259934.74814,
+    "ast_hash": "db25453e5236fe27e37b916088b7c01b",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-4-brief.md": {
+    "mtime": 1782260131.9063828,
+    "ast_hash": "c954c07b40a52285f6378bfbedc2f1fd",
+    "semantic_hash": ""
+  },
+  ".superpowers/sdd/task-4-report.md": {
+    "mtime": 1782260255.3871403,
+    "ast_hash": "74cb91b711b6771afcb260c3dbfbe655",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1782237987.0509534,
+    "ast_hash": "436cbe9b1ecfacbe47ed9500c5eacbf8",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1782249517.615945,
+    "ast_hash": "90bb7d82ca624162e509478445ac33ac",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "586e8afa7e2f1c259a04b05621b9226a",
+    "semantic_hash": ""
+  },
+  "HANDOFF-COPILOT.md": {
+    "mtime": 1783441021.8231363,
+    "ast_hash": "e62b62d2c2615045a9bd88b9d7ff5d83",
+    "semantic_hash": ""
+  },
+  "HANDOFF.md": {
+    "mtime": 1783441021.824137,
+    "ast_hash": "66038311827fda9ea85c0546d36562c9",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1782237987.0519996,
+    "ast_hash": "4e142f8ff9a69bcf55e6f985bc9dd972",
+    "semantic_hash": ""
+  },
+  "ROADMAP.md": {
+    "mtime": 1782239367.1208282,
+    "ast_hash": "3498bc4ada81466ae058d2d963cb289d",
+    "semantic_hash": ""
+  },
+  "TS_MIGRATION_TRACKER.md": {
+    "mtime": 1781625630.930372,
+    "ast_hash": "f57f01e9e701ee6748d3505c03e33f9e",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/README.md": {
+    "mtime": 1782237987.082824,
+    "ast_hash": "d9391a6bc3b02017193103e97a6d01b9",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/ai-review.md": {
+    "mtime": 1782237987.0838275,
+    "ast_hash": "e7559d2fa3b42b26b390acf673cbbd95",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/architecture-check.md": {
+    "mtime": 1782237987.0838275,
+    "ast_hash": "cf079d17da65c43da6c6f495023bdc2a",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/breakdown-milestone.md": {
+    "mtime": 1782237987.0848267,
+    "ast_hash": "5bb3d918b37bb3a51eb145c38697ff4d",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/ce-status.md": {
+    "mtime": 1782237987.0848267,
+    "ast_hash": "6f6d17c99e15ea21c3828e9f146678f3",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/ce.md": {
+    "mtime": 1782237987.0936553,
+    "ast_hash": "e523e879008a1d7080dff49f290aa438",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/change-apply.md": {
+    "mtime": 1782237987.094654,
+    "ast_hash": "946422c12a7473cfd799d68108382cdd",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/change-pass-a.md": {
+    "mtime": 1782237987.095653,
+    "ast_hash": "079707044f9673797aca580973162400",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/change-pass-b.md": {
+    "mtime": 1782237987.095653,
+    "ast_hash": "9994c84cf07954bf92d610306c3a0965",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/ci-status.md": {
+    "mtime": 1782237987.096658,
+    "ast_hash": "7f0264783b3c3c6d5749aa7da0f12dcd",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/commit.md": {
+    "mtime": 1782237987.096658,
+    "ast_hash": "ff21f61732e61dccf80aa56265f613b5",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/complete-ticket.md": {
+    "mtime": 1782237987.0976534,
+    "ast_hash": "359a009e92690b40c94ab8af4e813e28",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/council.md": {
+    "mtime": 1782237987.0976534,
+    "ast_hash": "4ce39855bf62155e76154fc65b706669",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/create-milestone.md": {
+    "mtime": 1782237987.0986536,
+    "ast_hash": "4873e7094fbbe0d4de3ae37b79b0295e",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/create-prd-tickets.md": {
+    "mtime": 1782237987.0986536,
+    "ast_hash": "a1c8d02865f2a36404f6ae118945e316",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/create-product-requirement-doc.md": {
+    "mtime": 1782237987.0996544,
+    "ast_hash": "6181f5618b7ac22aa1940991d6228937",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/design-review.md": {
+    "mtime": 1782237987.0996544,
+    "ast_hash": "ec22ca8c2265470fd92e32c9f7878d91",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/init-project.md": {
+    "mtime": 1782237987.1006544,
+    "ast_hash": "572dcfb36b87776a97a396e2483eaafa",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/jira-reconcile-docs.md": {
+    "mtime": 1782237987.1006544,
+    "ast_hash": "e3d24c0749c0911c79b39c6650122266",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/lightweight-change.md": {
+    "mtime": 1782237987.101654,
+    "ast_hash": "054a87254c24393f30337ebdd0584200",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/merge-pr.md": {
+    "mtime": 1782237987.101654,
+    "ast_hash": "00e1c5ece3aade224cf390566e2ed8df",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/milestone-review.md": {
+    "mtime": 1782237987.1026537,
+    "ast_hash": "78959baccd7cef03adc1af9ca0107faf",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/milestone-status.md": {
+    "mtime": 1782237987.1026537,
+    "ast_hash": "93efc15ec6860ea8fa2967eaa1d5325d",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/new-project.md": {
+    "mtime": 1782237987.103654,
+    "ast_hash": "869f817f3956fea47bd6eb75febde331",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/new-ticket.md": {
+    "mtime": 1782237987.103654,
+    "ast_hash": "16b585b81775e18a1af248866d24d5bb",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/pmo-manage.md": {
+    "mtime": 1782237987.103654,
+    "ast_hash": "de5e8c21e85df0171c221182ba385263",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/pmo-status.md": {
+    "mtime": 1782237987.1046581,
+    "ast_hash": "65d1d68ec3ca5ff48eb717a08c4c72fe",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/pr-description.md": {
+    "mtime": 1782237987.1046581,
+    "ast_hash": "09329653c37baa148639cea5999c3114",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/pre-flight.md": {
+    "mtime": 1782237987.105657,
+    "ast_hash": "0e84ebf1b383003d837049fff5ff4c2b",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/project-snapshot.md": {
+    "mtime": 1782237987.105657,
+    "ast_hash": "1da492abe8f37fff8830f4613a434564",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/project-status-report.md": {
+    "mtime": 1782237987.1078458,
+    "ast_hash": "e43845b5635c0ac1f95417a48e7ad0f3",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/pull-request.md": {
+    "mtime": 1782237987.109864,
+    "ast_hash": "aceda93710b743bff925538affeaa73c",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/quality-gate.md": {
+    "mtime": 1782237987.109864,
+    "ast_hash": "e0a04a58e4bf21c0a449942d62549790",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/reimplement-clean-branch.md": {
+    "mtime": 1782237987.109864,
+    "ast_hash": "1fc680f7d404bad3bfc099281e5bdde9",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/sequential-commit.md": {
+    "mtime": 1782237987.117888,
+    "ast_hash": "52868149c4231c050adc1a1df06724c7",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/spec-validate.md": {
+    "mtime": 1782237987.117888,
+    "ast_hash": "01e444d2fc4b0b839124409e6c0029a8",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/sprint-checkin.md": {
+    "mtime": 1782237987.119895,
+    "ast_hash": "3cba1a6254f9fda70cb769ffd16e741a",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/sprint-complete.md": {
+    "mtime": 1782237987.119895,
+    "ast_hash": "5bb96f01ac1d40360434f3fa091a1ec2",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/start-ticket.md": {
+    "mtime": 1782237987.119895,
+    "ast_hash": "2817682014cddd4478a710151a686c34",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/sync.md": {
+    "mtime": 1782237987.1216426,
+    "ast_hash": "050e55f2e527c7c461bbd305fbb0f13a",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/test-coverage.md": {
+    "mtime": 1782237987.1216426,
+    "ast_hash": "e0ff8c5c1a9bf21ff4bef0623f24db54",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/troubleshoot-setup.md": {
+    "mtime": 1782237987.122532,
+    "ast_hash": "23d9a102256750adefcc0a5ca5cf003f",
+    "semantic_hash": ""
+  },
+  "ce/.agents/commands/update-config.md": {
+    "mtime": 1782237987.123543,
+    "ast_hash": "ccef869199c7216f2057f8b430099da7",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/README.md": {
+    "mtime": 1782237987.1256874,
+    "ast_hash": "f6eb2cbd5239b97cf0372f580635f81f",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/agent-invocation.md": {
+    "mtime": 1782237987.1266863,
+    "ast_hash": "e3f4c4cb527d94ba24286fa427cdad15",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/ambient-agent.md": {
+    "mtime": 1782237987.1266863,
+    "ast_hash": "7f3081fe93f0c1a1519b3356002a70c3",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/data-dictionary-maintenance.md": {
+    "mtime": 1782237987.1276844,
+    "ast_hash": "c4f38794ef9fb79f6f14a0c1911b16b1",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/default.md": {
+    "mtime": 1782237987.1276844,
+    "ast_hash": "c670c3eeba5115b20148f5963190fc1c",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/interview-ui.md": {
+    "mtime": 1782237987.2325199,
+    "ast_hash": "a1fd39e92773e15f3e2b166c1ec4a5c1",
+    "semantic_hash": ""
+  },
+  "ce/.agents/rules/project-rules.md": {
+    "mtime": 1782237987.2325199,
+    "ast_hash": "d0b39ea6e75c622db53da2a2b15d1dcd",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/README.md": {
+    "mtime": 1782237987.2335212,
+    "ast_hash": "a21005a36ac0260dea14cdaedba365eb",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/ai-review/SKILL.md": {
+    "mtime": 1782237987.2345197,
+    "ast_hash": "a22db0c2bf9322a1dc1ce867f31a7fe2",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/architecture-check/SKILL.md": {
+    "mtime": 1782237987.2345197,
+    "ast_hash": "6e244941b61745e661b00dd9223317cd",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/breakdown-milestone/SKILL.md": {
+    "mtime": 1782237987.2355216,
+    "ast_hash": "8cb6ccf0544844b554523292762d99f8",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/ce-status/SKILL.md": {
+    "mtime": 1782237987.2355216,
+    "ast_hash": "796e21a22d95b90b90398883aef1cd4e",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/ce/SKILL.md": {
+    "mtime": 1782237987.2365205,
+    "ast_hash": "c0081987b7761090825844a97c25cb00",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/change-apply/SKILL.md": {
+    "mtime": 1782237987.346423,
+    "ast_hash": "f6fbb6ea31618931abfeaac72f586103",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/change-pass-a/SKILL.md": {
+    "mtime": 1782237987.346423,
+    "ast_hash": "e1cc8d6c6cc64b306ecef7647bea45bf",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/change-pass-b/SKILL.md": {
+    "mtime": 1782237987.347425,
+    "ast_hash": "537157c7cc211adf44824786eef169f4",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/ci-status/SKILL.md": {
+    "mtime": 1782237987.3484242,
+    "ast_hash": "7a62db1d5dd193fc82de6e04785c134e",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/commit/SKILL.md": {
+    "mtime": 1782237987.3494337,
+    "ast_hash": "7d01ff553d6fe83498ef547db6d41ed8",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/complete-ticket/SKILL.md": {
+    "mtime": 1782237987.350424,
+    "ast_hash": "ca0eecce6505648f71eb88bab7ef6fb1",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/council/SKILL.md": {
+    "mtime": 1782237987.350424,
+    "ast_hash": "19d241a6ca1b066184ada0c83ee8ac95",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/create-milestone-prd/SKILL.md": {
+    "mtime": 1782237987.3514264,
+    "ast_hash": "2bb99433f64743b3b71fd340832c628b",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/create-prd-tickets/SKILL.md": {
+    "mtime": 1782237987.352423,
+    "ast_hash": "83c2a7ad85340d4222d2f8418a5e6608",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/create-product-requirement-doc/SKILL.md": {
+    "mtime": 1782237987.353424,
+    "ast_hash": "770d8b068f7270534ccc05391283dc41",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/design-review/SKILL.md": {
+    "mtime": 1782237987.3544238,
+    "ast_hash": "40b9d9f9e19b56ca34e7be51a176e714",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/init-project/SKILL.md": {
+    "mtime": 1782237987.3558261,
+    "ast_hash": "56f0ec38da2eb537fa6274958670a9c8",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/jira-reconcile-docs/SKILL.md": {
+    "mtime": 1782237987.3558261,
+    "ast_hash": "14fc45b668142cd2d853cdd622232e64",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/lightweight-change/SKILL.md": {
+    "mtime": 1782237987.3606234,
+    "ast_hash": "98379251820c3451b1990e4ce0d9a297",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/merge-pr/SKILL.md": {
+    "mtime": 1782237987.3606234,
+    "ast_hash": "020f863ffd6f4a8a6a19673ec6c8afa8",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/milestone-review/SKILL.md": {
+    "mtime": 1782237987.3606234,
+    "ast_hash": "8a1f116f41dc383cb7b9707bb662a640",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/milestone-status/SKILL.md": {
+    "mtime": 1782237987.362631,
+    "ast_hash": "b7bfc76a43973ac6c9e9e269cec3c156",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/new-project/SKILL.md": {
+    "mtime": 1782237987.362631,
+    "ast_hash": "4db6936ecf8270a99b1ee51d378018df",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/new-ticket/SKILL.md": {
+    "mtime": 1782237987.362631,
+    "ast_hash": "92b1ed6f847ffd306399b909d35215a2",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/pmo-manage/SKILL.md": {
+    "mtime": 1782237987.3646407,
+    "ast_hash": "3975423d41854b40311738f67fce2fbb",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/pmo-status/SKILL.md": {
+    "mtime": 1782237987.3646407,
+    "ast_hash": "d391b8578772effb8f958257f179323f",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/pr-description/SKILL.md": {
+    "mtime": 1782237987.3666506,
+    "ast_hash": "d106faa890b843fa084fbbc9265e4c7f",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/pre-flight/SKILL.md": {
+    "mtime": 1782237987.3666506,
+    "ast_hash": "1f38d12b3fda523a76f2d8d4b9034e7e",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/project-snapshot/SKILL.md": {
+    "mtime": 1782237987.3666506,
+    "ast_hash": "b4769bd6a0c9ecb11aec23b84b9e7522",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/project-status-report/SKILL.md": {
+    "mtime": 1782237987.3686569,
+    "ast_hash": "56f9f9c987228e6d098ff96d3067b9cf",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/pull-request/SKILL.md": {
+    "mtime": 1782237987.3686569,
+    "ast_hash": "a1f44d8675d640e168c818b0844abbd6",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/quality-gate/SKILL.md": {
+    "mtime": 1782237987.3686569,
+    "ast_hash": "96ee285d317b93ec660c80b2964ee0d0",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/reimplement-clean-branch/SKILL.md": {
+    "mtime": 1782237987.3706632,
+    "ast_hash": "16f8b80ff100e03bf42edae2c45db29d",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/sequential-commit/SKILL.md": {
+    "mtime": 1782237987.3706632,
+    "ast_hash": "d2a2654c10014ec4e6fd61ab33b0fde9",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/spec-validate/SKILL.md": {
+    "mtime": 1782237987.4708838,
+    "ast_hash": "fb1934201da52a770da856913e978916",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/sprint-checkin/SKILL.md": {
+    "mtime": 1782237987.4708838,
+    "ast_hash": "2e3085d479250eeac454e22debb089b6",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/sprint-complete/SKILL.md": {
+    "mtime": 1782237987.4728987,
+    "ast_hash": "dcc6a856317385d1db70e8914d2b27da",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/start-ticket/SKILL.md": {
+    "mtime": 1782237987.4728987,
+    "ast_hash": "96d96c7c39858f41bd3cf44a23a06dd3",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/sync/SKILL.md": {
+    "mtime": 1782237987.4759026,
+    "ast_hash": "f067fbeaf1386cb125ae3cfb5534020c",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/test-coverage/SKILL.md": {
+    "mtime": 1782237987.476897,
+    "ast_hash": "4c4c62bfb0f39b6aacf9f348cda836b0",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/troubleshoot-setup/SKILL.md": {
+    "mtime": 1782237987.476897,
+    "ast_hash": "9456c3078a27e143bd72bf53b025e5dc",
+    "semantic_hash": ""
+  },
+  "ce/.agents/skills/update-config/SKILL.md": {
+    "mtime": 1782237987.477897,
+    "ast_hash": "17ce912a9e775de3f1b4ed171596d5c4",
+    "semantic_hash": ""
+  },
+  "ce/.github/README.md": {
+    "mtime": 1782237987.4788976,
+    "ast_hash": "9ce02c0c3a72442dce18cb3318c50028",
+    "semantic_hash": ""
+  },
+  "ce/.github/workflows/ci-checks.yml": {
+    "mtime": 1782237987.4788976,
+    "ast_hash": "994c6620aa6bcb82a8f7bceb5ebad7ca",
+    "semantic_hash": ""
+  },
+  "ce/.github/workflows/e2e-tests.yml": {
+    "mtime": 1782237987.479897,
+    "ast_hash": "980e754262a583aa46979d5ce1794786",
+    "semantic_hash": ""
+  },
+  "ce/.github/workflows/lighthouse.yml": {
+    "mtime": 1782237987.479897,
+    "ast_hash": "7ea8bd91506ad41f4399e58ec8c8da5a",
+    "semantic_hash": ""
+  },
+  "ce/.husky/README.md": {
+    "mtime": 1782237987.480898,
+    "ast_hash": "40b9892a03e71a22da52cd48970896ef",
+    "semantic_hash": ""
+  },
+  "ce/CI-CD/GUIDELINES.md": {
+    "mtime": 1782237987.4828973,
+    "ast_hash": "e8ed94fb338a0d4d35343a7c2dcd381e",
+    "semantic_hash": ""
+  },
+  "ce/CI-CD/README.md": {
+    "mtime": 1782237987.4838989,
+    "ast_hash": "921199a586265963547e6cfd3da5e0eb",
+    "semantic_hash": ""
+  },
+  "ce/Code Review/GUIDELINES.md": {
+    "mtime": 1782237987.484898,
+    "ast_hash": "686c0de401b36d9169d4bd20a27535a6",
+    "semantic_hash": ""
+  },
+  "ce/Code Review/README.md": {
+    "mtime": 1782237987.484898,
+    "ast_hash": "65ddf85ebda33713b2f604aed3dcbf10",
+    "semantic_hash": ""
+  },
+  "ce/Development/GUIDELINES.md": {
+    "mtime": 1782237987.4858987,
+    "ast_hash": "dfe9a6cde34246211fcbec28ff989ea1",
+    "semantic_hash": ""
+  },
+  "ce/Development/README.md": {
+    "mtime": 1782237987.4868977,
+    "ast_hash": "4d3465001977e6d9c44a880208824226",
+    "semantic_hash": ""
+  },
+  "ce/Epics/GUIDELINES.md": {
+    "mtime": 1782237987.487897,
+    "ast_hash": "0a2a9a837909f2383528efc27c42190f",
+    "semantic_hash": ""
+  },
+  "ce/Epics/README.md": {
+    "mtime": 1782237987.4888983,
+    "ast_hash": "bcc84195d265856337e13b57c732ca3d",
+    "semantic_hash": ""
+  },
+  "ce/Epics/epic-template.md": {
+    "mtime": 1782237987.489673,
+    "ast_hash": "e9bdea50ec9a1ceeb9455d34f11f3e04",
+    "semantic_hash": ""
+  },
+  "ce/Milestones/GUIDELINES.md": {
+    "mtime": 1782237987.4916854,
+    "ast_hash": "8c8b022e8b395954a8f8f01825fc2f17",
+    "semantic_hash": ""
+  },
+  "ce/Milestones/README.md": {
+    "mtime": 1782237987.4936812,
+    "ast_hash": "70769db17227b553db949b59cb0066d2",
+    "semantic_hash": ""
+  },
+  "ce/Milestones/milestone-template.md": {
+    "mtime": 1782237987.494682,
+    "ast_hash": "e068596f4fcb67cec07fb7bc1cf676da",
+    "semantic_hash": ""
+  },
+  "ce/PRD/GUIDELINES.md": {
+    "mtime": 1782237987.4956822,
+    "ast_hash": "55bb78203863eadebc730913d864fd08",
+    "semantic_hash": ""
+  },
+  "ce/PRD/README.md": {
+    "mtime": 1782237987.4956822,
+    "ast_hash": "bc315c29978f08af68528d5fd12a64ba",
+    "semantic_hash": ""
+  },
+  "ce/PRD/milestone-prd-template.md": {
+    "mtime": 1782237987.4956822,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "ce/PRD/prd-template.md": {
+    "mtime": 1782237987.4966803,
+    "ast_hash": "a1d7744c44c108e1eb7d7ebf5373e575",
+    "semantic_hash": ""
+  },
+  "ce/PRD/system-prd-template.md": {
+    "mtime": 1782237987.4976814,
+    "ast_hash": "643b9f7ddc9e3c8970376699bf22cc30",
+    "semantic_hash": ""
+  },
+  "ce/README.md": {
+    "mtime": 1782237987.4976814,
+    "ast_hash": "0e47732ce57e71972f209d10083df56a",
+    "semantic_hash": ""
+  },
+  "ce/SHARED-GUIDELINES.md": {
+    "mtime": 1782237987.4986815,
+    "ast_hash": "cdf9061e391ab23dca56ddcde1668693",
+    "semantic_hash": ""
+  },
+  "ce/SOW/GUIDELINES.md": {
+    "mtime": 1782237987.4996815,
+    "ast_hash": "4e8ee85f364e39ee082aa9de9c5bcb6c",
+    "semantic_hash": ""
+  },
+  "ce/SOW/README.md": {
+    "mtime": 1782237987.4996815,
+    "ast_hash": "88a887c2910e4048de87d3346b84d5ef",
+    "semantic_hash": ""
+  },
+  "ce/SOW/architecture-template.md": {
+    "mtime": 1782237987.5006835,
+    "ast_hash": "64c408c6d43c2c47d58756a127f283de",
+    "semantic_hash": ""
+  },
+  "ce/SOW/project-input-template.md": {
+    "mtime": 1782237987.5016859,
+    "ast_hash": "8b37977abddd245b270072ec080c1a91",
+    "semantic_hash": ""
+  },
+  "ce/SOW/sow-template.md": {
+    "mtime": 1782237987.5016859,
+    "ast_hash": "5e2bf46d461573c45cee9de9330ddcc7",
+    "semantic_hash": ""
+  },
+  "ce/Sprints/GUIDELINES.md": {
+    "mtime": 1782237987.5026858,
+    "ast_hash": "892c0b06c0603445155086b683be3ca6",
+    "semantic_hash": ""
+  },
+  "ce/Sprints/README.md": {
+    "mtime": 1782237987.5026858,
+    "ast_hash": "575c59f13eec3043f538ed5cce204557",
+    "semantic_hash": ""
+  },
+  "ce/Sprints/sprint-plan-template.md": {
+    "mtime": 1782237987.5036838,
+    "ast_hash": "c3016081e7c2c0add53541c3b76b6002",
+    "semantic_hash": ""
+  },
+  "ce/Testing/GUIDELINES.md": {
+    "mtime": 1782237987.5036838,
+    "ast_hash": "ac7a711629d6fbb357fc2cbfda2ad1c3",
+    "semantic_hash": ""
+  },
+  "ce/Testing/README.md": {
+    "mtime": 1782237987.5057864,
+    "ast_hash": "02464c7e55db943c759376389cc7b7c4",
+    "semantic_hash": ""
+  },
+  "ce/agents/README.md": {
+    "mtime": 1782237987.5063355,
+    "ast_hash": "aef20b3b94f49f807dab5edce5fc7b8c",
+    "semantic_hash": ""
+  },
+  "ce/agents/ambient-assistant.md": {
+    "mtime": 1782237987.5083742,
+    "ast_hash": "2828bd7fd993a9c3d6b764788562df6b",
+    "semantic_hash": ""
+  },
+  "ce/agents/council/README.md": {
+    "mtime": 1782237987.5103853,
+    "ast_hash": "76061af64b1435df15e580c6a6286b15",
+    "semantic_hash": ""
+  },
+  "ce/agents/council/adversary.md": {
+    "mtime": 1782237987.5103853,
+    "ast_hash": "0525335abae125b1322937882bf5e370",
+    "semantic_hash": ""
+  },
+  "ce/agents/council/designer.md": {
+    "mtime": 1782237987.5103853,
+    "ast_hash": "d223af6e55669968112a7209ce099669",
+    "semantic_hash": ""
+  },
+  "ce/agents/council/developer.md": {
+    "mtime": 1782237987.512392,
+    "ast_hash": "e3f580df2fd0864c98459708ddc640b0",
+    "semantic_hash": ""
+  },
+  "ce/agents/council/pmo.md": {
+    "mtime": 1782237987.512392,
+    "ast_hash": "193f20af74de26d3ee8be9ea791810f2",
+    "semantic_hash": ""
+  },
+  "ce/agents/council/reporter.md": {
+    "mtime": 1782237987.512392,
+    "ast_hash": "0634428bd36aff2fcdbed7d78ad15b29",
+    "semantic_hash": ""
+  },
+  "ce/agents/design-assistant.md": {
+    "mtime": 1782237987.5144005,
+    "ast_hash": "03cc59987bf7291cae25e0edc20cb6ca",
+    "semantic_hash": ""
+  },
+  "ce/agents/developer-assistant.md": {
+    "mtime": 1782237987.5144005,
+    "ast_hash": "2144b50ffd3c18411915af2942c3500b",
+    "semantic_hash": ""
+  },
+  "ce/agents/gate-check.md": {
+    "mtime": 1782237987.5144005,
+    "ast_hash": "772cf9653c620a26b11abb8d917c1e7d",
+    "semantic_hash": ""
+  },
+  "ce/agents/pmo-assistant.md": {
+    "mtime": 1782237987.5164087,
+    "ast_hash": "28816713ed6d315ed8af8f79c22aeb52",
+    "semantic_hash": ""
+  },
+  "ce/docs/process-review/ce-ai-skills-review.md": {
+    "mtime": 1783463266.101322,
+    "ast_hash": "401d29c82b3c369629c5f303d024f3bb",
+    "semantic_hash": ""
+  },
+  "ce/docs/skill-index/skill-inventory.md": {
+    "mtime": 1783463358.7020304,
+    "ast_hash": "62424a1a911e0773e885ca929a23ce77",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/agent-instruction-template.md": {
+    "mtime": 1783463406.687738,
+    "ast_hash": "84b6ed75c5595ecb60952dbbce816e98",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/ai-skill-template.md": {
+    "mtime": 1783463387.0064025,
+    "ast_hash": "d2229c011a569676487fb9aaf2753dbc",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/failure-handling-template.md": {
+    "mtime": 1783463504.553556,
+    "ast_hash": "b6172d74d70ec2f373de766b2105c6f0",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/human-review-checklist-template.md": {
+    "mtime": 1783463469.779666,
+    "ast_hash": "65820bd2e8b0374bdbe21e5491bcad8c",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/prompt-template.md": {
+    "mtime": 1783463438.4934034,
+    "ast_hash": "c813cdf5f701f0bc5b7b46f875c9b600",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/skill-test-template.md": {
+    "mtime": 1783463454.0143118,
+    "ast_hash": "c3ffdc7ca40c46f777bbf725975a5f7e",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/tool-use-rule-template.md": {
+    "mtime": 1783463485.732227,
+    "ast_hash": "c48119389829abf7907cabea4e4f1864",
+    "semantic_hash": ""
+  },
+  "ce/docs/templates/workflow-template.md": {
+    "mtime": 1783463422.0424814,
+    "ast_hash": "c5ea23a0ca0176b033508887752e6f44",
+    "semantic_hash": ""
+  },
+  "ce/skills/security-sweep.md": {
+    "mtime": 1783441021.8445342,
+    "ast_hash": "5d0ef7877a370986c2d45fb9db68d1cd",
+    "semantic_hash": ""
+  },
+  "ce/skills/the-bug-hunter.md": {
+    "mtime": 1783441021.8445342,
+    "ast_hash": "7f40405ea8b9e23366d9bc926679966f",
+    "semantic_hash": ""
+  },
+  "ce/skills/the-honest-advisor.md": {
+    "mtime": 1783441021.8445342,
+    "ast_hash": "e6fcb04b005137f00cecd4f3405a570f",
+    "semantic_hash": ""
+  },
+  "ce/skills/the-planner.md": {
+    "mtime": 1783441021.8455875,
+    "ast_hash": "caf8195f3335588c8729a7c81994756f",
+    "semantic_hash": ""
+  },
+  "ce/skills/the-setup.md": {
+    "mtime": 1783441021.8455875,
+    "ast_hash": "c0a577c10b35b00a4889296316cd002c",
+    "semantic_hash": ""
+  },
+  "ce/templates/AGENTS-project.md": {
+    "mtime": 1782237987.5275753,
+    "ast_hash": "162ef03917f8b9c6b9bda5a7a2deb3ee",
+    "semantic_hash": ""
+  },
+  "ce/templates/CLAUDE-project.md": {
+    "mtime": 1782237987.545224,
+    "ast_hash": "162ef03917f8b9c6b9bda5a7a2deb3ee",
+    "semantic_hash": ""
+  },
+  "ce/templates/GEMINI-project.md": {
+    "mtime": 1782237987.545224,
+    "ast_hash": "162ef03917f8b9c6b9bda5a7a2deb3ee",
+    "semantic_hash": ""
+  },
+  "ce/templates/README.md": {
+    "mtime": 1782237987.5462294,
+    "ast_hash": "bc695f6b9379929563fffa450d72684a",
+    "semantic_hash": ""
+  },
+  "ce/templates/copilot-instructions.md": {
+    "mtime": 1782237987.5472305,
+    "ast_hash": "162ef03917f8b9c6b9bda5a7a2deb3ee",
+    "semantic_hash": ""
+  },
+  "config/app.yaml": {
+    "mtime": 1780425609.7555254,
+    "ast_hash": "8f7cbe88f7ed051b7db51e70580f0aa6",
+    "semantic_hash": ""
+  },
+  "config/jurisdictions.yaml": {
+    "mtime": 1780425638.4980211,
+    "ast_hash": "31c43ddaa1dc4b10c1821f70da07baba",
+    "semantic_hash": ""
+  },
+  "config/sources.yaml": {
+    "mtime": 1781625631.44137,
+    "ast_hash": "2f2b07264b14980ab20acacd6845745b",
+    "semantic_hash": ""
+  },
+  "docs/DATA_DICTIONARY.md": {
+    "mtime": 1782249517.615945,
+    "ast_hash": "86de2de6b39a52b17e302cf989b8d4b4",
+    "semantic_hash": ""
+  },
+  "docs/PATTERNS.md": {
+    "mtime": 1782249517.616946,
+    "ast_hash": "bf10187400d678041d25c17aab714e50",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-06-obbba-deductions.md": {
+    "mtime": 1783441021.8475876,
+    "ast_hash": "9aa5e63b95b009464e4024059d9dcfd1",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-07-07-strategy-stacks.md": {
+    "mtime": 1783441021.8485878,
+    "ast_hash": "c2bd4ff2d953fb35537a9b97d73b7599",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-06-obbba-deductions-design.md": {
+    "mtime": 1783441021.8485878,
+    "ast_hash": "8cac5c54ed8d05f352cd53a7500b145b",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-07-06-strategy-stacks-design.md": {
+    "mtime": 1783441021.8495882,
+    "ast_hash": "26bf57238af5ef7200d6b1433d32cd70",
+    "semantic_hash": ""
+  },
+  "forms/federal_forms.yaml": {
+    "mtime": 1780690785.559954,
+    "ast_hash": "07650507ed04d43014b91813cf6b5105",
+    "semantic_hash": ""
+  },
+  "forms/local_forms.yaml": {
+    "mtime": 1780425702.9483786,
+    "ast_hash": "ee653b7e35a9d1059be90892154b8fc3",
+    "semantic_hash": ""
+  },
+  "forms/state_forms.yaml": {
+    "mtime": 1780509090.8030863,
+    "ast_hash": "c5a84068042cca861d3ac60a94689c52",
+    "semantic_hash": ""
+  },
+  "frontend/index.html": {
+    "mtime": 1780433751.754497,
+    "ast_hash": "063b18612208e082cc98da092ecf3f9e",
+    "semantic_hash": ""
+  },
+  "rules/eligibility_rules/county-rules.yaml": {
+    "mtime": 1780690785.5677435,
+    "ast_hash": "8f0fc3d4e7d9a9e0ea975e9cf6b40c63",
+    "semantic_hash": ""
+  },
+  "rules/eligibility_rules/example-rule.yaml": {
+    "mtime": 1780425597.5309875,
+    "ast_hash": "25e653ed0f98ce887e346fe121a3a0ea",
+    "semantic_hash": ""
+  },
+  "rules/eligibility_rules/federal-rules.yaml": {
+    "mtime": 1780690785.5687406,
+    "ast_hash": "7b37b3c175b883684bbf83905c4d6a2a",
+    "semantic_hash": ""
+  },
+  "rules/eligibility_rules/state-rules.yaml": {
+    "mtime": 1780509107.3069966,
+    "ast_hash": "f1783d0d3bcdf7849aff9632842489b9",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/00_data_summary_2025.txt": {
+    "mtime": 1781625631.4716208,
+    "ast_hash": "26539f0a0f89da0988d2347298152938",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/FIELD_MAP.md": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "74fe792323c6dbdda6f375558f3148a4",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/FORM_MAPPING_PROCESS.md": {
+    "mtime": 1783441021.8535905,
+    "ast_hash": "54d716e8ba03c067e7696b6d0e15cc69",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/INSTRUCTIONS_FOR_CPA.txt": {
+    "mtime": 1781625631.47381,
+    "ast_hash": "dda2e59497f4cc0e6b7831b1d1dc54ef",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/all_fields.txt": {
+    "mtime": 1781625631.4743445,
+    "ast_hash": "2ec02945f7f2dc805087b2dee81253d9",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/f1040_2025.md": {
+    "mtime": 1781625631.478742,
+    "ast_hash": "7050d9e0866ff2bbedcf24b79ccad3cd",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/f1040s1a_fields.txt": {
+    "mtime": 1783442658.8434987,
+    "ast_hash": "32cf73af08ef3454675dfc499510310f",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/map_f1040.md": {
+    "mtime": 1781625631.5862405,
+    "ast_hash": "845fed4ee6102e28dcd296c5b68cc1f4",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/map_f1040s1.md": {
+    "mtime": 1781625631.587235,
+    "ast_hash": "d9df6e788b202df815f6fd62a696d643",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/map_f1040sb.md": {
+    "mtime": 1781625631.587235,
+    "ast_hash": "31c0c64107670af480a692c17d8b94d6",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/map_f1040sc.md": {
+    "mtime": 1781625631.5882392,
+    "ast_hash": "60124891583ef13f7668832893751fcb",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/map_f1040sd.md": {
+    "mtime": 1781625631.589235,
+    "ast_hash": "d7c12268e83e523621bcc2102b7b4f0e",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/map_f1040sse.md": {
+    "mtime": 1781625631.590235,
+    "ast_hash": "d94d530c994f09c2e21451350dec9e70",
+    "semantic_hash": ""
+  },
+  "tax_library/county/county-agricultural-use-valuation.yaml": {
+    "mtime": 1780690785.575437,
+    "ast_hash": "bdbb975e196c741dfd4499a50c4ca225",
+    "semantic_hash": ""
+  },
+  "tax_library/county/county-disability-property-tax-exemption.yaml": {
+    "mtime": 1780690785.575437,
+    "ast_hash": "dbe25a5ee52e31fde62042115ffa3618",
+    "semantic_hash": ""
+  },
+  "tax_library/county/county-homestead-exemption.yaml": {
+    "mtime": 1780690785.575437,
+    "ast_hash": "9514dc736912de0b99169ae370bbab13",
+    "semantic_hash": ""
+  },
+  "tax_library/county/county-senior-property-tax-freeze.yaml": {
+    "mtime": 1780690785.5774498,
+    "ast_hash": "d30c9602ee42bc05879421506ea31b84",
+    "semantic_hash": ""
+  },
+  "tax_library/county/county-solar-exemption.yaml": {
+    "mtime": 1780690785.5774498,
+    "ast_hash": "6813b493c03628360075933361661401",
+    "semantic_hash": ""
+  },
+  "tax_library/county/county-veteran-property-tax-exemption.yaml": {
+    "mtime": 1780690785.5794585,
+    "ast_hash": "bc79ce19b532a2396d988600de0d3d6e",
+    "semantic_hash": ""
+  },
+  "tax_library/example-benefit.yaml": {
+    "mtime": 1780425574.5980096,
+    "ast_hash": "c12e736845d9dfa21d36cfd358ae073a",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-1031-exchange.yaml": {
+    "mtime": 1780427687.9585865,
+    "ast_hash": "b6c0b938badec5fe168241a9acc66b19",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-25c-energy-home-improvement.yaml": {
+    "mtime": 1780509471.660716,
+    "ast_hash": "f539eb635133b54b2d9cd6a95116a596",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-529-to-roth-rollover.yaml": {
+    "mtime": 1780509618.840955,
+    "ast_hash": "700c511ad29a853be623fb187fcc7620",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-831b-microcaptive.yaml": {
+    "mtime": 1783441021.8775346,
+    "ast_hash": "ea7aea81ef6042d2c8663eaae5e4aa70",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-american-opportunity-credit.yaml": {
+    "mtime": 1783441021.8775346,
+    "ast_hash": "168320f41af71e7136756ee71337a0f0",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-annual-gift-exclusion.yaml": {
+    "mtime": 1783441021.8785355,
+    "ast_hash": "98d87cfe5362ae6d074d6839d0198615",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-augusta-rule.yaml": {
+    "mtime": 1780427710.1113732,
+    "ast_hash": "0fce999725a76963c82591423fbf5aa3",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-backdoor-roth.yaml": {
+    "mtime": 1783441021.8795369,
+    "ast_hash": "6bfc82b546b51d0a756ac520cf54082c",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-bonus-depreciation.yaml": {
+    "mtime": 1780427600.3505125,
+    "ast_hash": "98a44fedff4729cead986650337104e2",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-business-vehicle.yaml": {
+    "mtime": 1780427622.3324382,
+    "ast_hash": "fd35772769c0ba1d0b07c04f2cc69ec9",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-capital-gains-harvesting.yaml": {
+    "mtime": 1780509520.1556206,
+    "ast_hash": "a3b065372e127c3bacfacb4e14b1c9da",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-charitable-contribution.yaml": {
+    "mtime": 1780427733.5054893,
+    "ast_hash": "e92483744ae0ef7c3fda2d3b55fb015d",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-child-care-credit.yaml": {
+    "mtime": 1780427797.2664747,
+    "ast_hash": "cd239f8fded25ef8a3802153055e7b7c",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-child-tax-credit.yaml": {
+    "mtime": 1783441021.8795369,
+    "ast_hash": "8e2c7481e5b9da1d6c06ea32703b581a",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-clean-energy-credit.yaml": {
+    "mtime": 1783441021.880533,
+    "ast_hash": "7b7b4e018e2b15489615e73d0022e20c",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-conservation-easement.yaml": {
+    "mtime": 1780690785.580933,
+    "ast_hash": "d2b83d7c9aa392598bbc212b43aeb027",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-cost-segregation.yaml": {
+    "mtime": 1780428036.8744888,
+    "ast_hash": "659a9075f256f179e9049f34804b367a",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-crut.yaml": {
+    "mtime": 1783441021.880533,
+    "ast_hash": "9261e6f2a0607115f20558ef4f1125c3",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-donor-advised-fund.yaml": {
+    "mtime": 1783441021.8815331,
+    "ast_hash": "1fa963e83736267957e62bb8caff90c2",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-eitc.yaml": {
+    "mtime": 1780427817.522446,
+    "ast_hash": "7fd18900a4ac6219f0a1f88365908e19",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-employer-childcare-credit.yaml": {
+    "mtime": 1780690785.5819156,
+    "ast_hash": "2cea810704f9ad36c827c2f7bdb426ac",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-ev-credit.yaml": {
+    "mtime": 1780427883.4522812,
+    "ast_hash": "e5883161bf78f098b7c8bdc678824aa1",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-excess-fica-refund.yaml": {
+    "mtime": 1780690785.5829172,
+    "ast_hash": "95c6352a7ec81108f347dcf09e0d1a4e",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-foreign-earned-income.yaml": {
+    "mtime": 1783441021.8815331,
+    "ast_hash": "7c59227c97e374ebd28e4e648bb4eea9",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-home-office-deduction.yaml": {
+    "mtime": 1781625631.717686,
+    "ast_hash": "d3851c8a647b7078719dfb9651beb2ee",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-hsa.yaml": {
+    "mtime": 1783441021.8825333,
+    "ast_hash": "18f554627560722d4df23cd558df330c",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-ichra-qsehra.yaml": {
+    "mtime": 1780690785.5839157,
+    "ast_hash": "2be2e02b8c4a9c9c9496a15e650ecc8a",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-installment-sale.yaml": {
+    "mtime": 1780690785.5849147,
+    "ast_hash": "837e4d0948d17d151fb19adcfe85a295",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-lifetime-learning-credit.yaml": {
+    "mtime": 1783441021.8825333,
+    "ast_hash": "c161320c49b2716a3bf2fca2f4b81d62",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-mortgage-interest.yaml": {
+    "mtime": 1780427902.3082736,
+    "ast_hash": "81c3ec00082c9b51544c417b0fd1daf8",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-net-unrealized-appreciation.yaml": {
+    "mtime": 1780690785.5859146,
+    "ast_hash": "415f5ce9b57ca129293c15f4b79515dd",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-nol-carryforward.yaml": {
+    "mtime": 1780509594.0981662,
+    "ast_hash": "46ecce24d40b841191622578781ed8d8",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-nongrantor-dynasty-trust.yaml": {
+    "mtime": 1783441021.8835373,
+    "ast_hash": "d740998ae4399cd7ea03b263f21868ad",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-opportunity-zone.yaml": {
+    "mtime": 1780427974.4472873,
+    "ast_hash": "c3ab0edfdb00e416f725669fcb5ac276",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-passive-activity-loss.yaml": {
+    "mtime": 1780427665.9909048,
+    "ast_hash": "d5c753e4b8c8a5b300f83ceee2e88937",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-premium-tax-credit.yaml": {
+    "mtime": 1780509545.3565032,
+    "ast_hash": "728f924c187759e22761be231e9adad9",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-qbi-deduction.yaml": {
+    "mtime": 1780427447.5859973,
+    "ast_hash": "32fbc7decfc1dd3be47b899fae44000e",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-qlac.yaml": {
+    "mtime": 1780690785.5859146,
+    "ast_hash": "f175969ef1a1570d5391cec11199b672",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-qsbs-exclusion.yaml": {
+    "mtime": 1780509569.6481917,
+    "ast_hash": "4e20a86355b8ab50b99b0c94b5393e00",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-real-estate-depreciation.yaml": {
+    "mtime": 1780427645.8966558,
+    "ast_hash": "5a4db4e8a80656e2ad4cfc65f36cfd5d",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-real-estate-professional.yaml": {
+    "mtime": 1780428016.2521732,
+    "ast_hash": "8957e6991ab8f01c346f1740dd589d71",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-s-corp-election.yaml": {
+    "mtime": 1780427473.1214728,
+    "ast_hash": "949f480f48bc0107cb76a3f75a7dfec4",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-salt-deduction.yaml": {
+    "mtime": 1780427918.8933437,
+    "ast_hash": "15ad542fac21edda368e87efaf0b70dd",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-savers-credit.yaml": {
+    "mtime": 1780509496.614186,
+    "ast_hash": "eb2821ef6a3b460d7a9598a0328ba8c6",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-section-121-exclusion.yaml": {
+    "mtime": 1780427938.0406046,
+    "ast_hash": "f5bb992c406f51a6846c114ba9f11cd8",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-section-179.yaml": {
+    "mtime": 1780427582.0839868,
+    "ast_hash": "ced024b4266c77229ecbb7081e06de61",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-self-employed-health-insurance.yaml": {
+    "mtime": 1780427538.879545,
+    "ast_hash": "739c73007b8673e9501bcf4607572488",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-sep-ira.yaml": {
+    "mtime": 1780427496.2391407,
+    "ast_hash": "934d9f6ae0e6be84a9fe7f3ff62663ca",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-small-employer-retirement-startup-credit.yaml": {
+    "mtime": 1780509643.3778746,
+    "ast_hash": "70d878490c3df8c169561601c655f8fe",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-solo-401k.yaml": {
+    "mtime": 1780427518.273087,
+    "ast_hash": "dae6b91ad6cb3c5843a428cceaf1c063",
+    "semantic_hash": ""
+  },
+  "tax_library/federal/federal-work-opportunity-credit.yaml": {
+    "mtime": 1780690785.5869157,
+    "ast_hash": "0dde48b21a83a7aede1b5fdc1c6719a5",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-01.yaml": {
+    "mtime": 1780504813.183721,
+    "ast_hash": "a4acd6352dbce1828478fc719719b331",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-02.yaml": {
+    "mtime": 1780504813.183721,
+    "ast_hash": "ce023cd7ea5202ff03b5d35ced402608",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-03.yaml": {
+    "mtime": 1780504813.1817167,
+    "ast_hash": "bc3a6ca1d51de3f52189ff504d6dc7a1",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-04.yaml": {
+    "mtime": 1780504813.1817167,
+    "ast_hash": "01e0ef92713a4b3ee6215d6b033d4ae5",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-05.yaml": {
+    "mtime": 1780504813.1797123,
+    "ast_hash": "a34d83e704779eb150ed486a1a668983",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-06.yaml": {
+    "mtime": 1780504813.1777077,
+    "ast_hash": "aa4199672a6a1dad2a007ed5fedeb877",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-07.yaml": {
+    "mtime": 1780504813.1777077,
+    "ast_hash": "f4fa3160a718fcb792477fe4181f026b",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-08.yaml": {
+    "mtime": 1780504813.1757033,
+    "ast_hash": "1d7633fac932d0df98307d03982ef097",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-09.yaml": {
+    "mtime": 1780504813.1736975,
+    "ast_hash": "61ec39517cf768867a42faeb738baeaf",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-10.yaml": {
+    "mtime": 1780504813.1736975,
+    "ast_hash": "8b8289efc64ed0550b14880cf9320e15",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-11.yaml": {
+    "mtime": 1780504813.1716926,
+    "ast_hash": "ff6d9a3ec24dc18056f954265cd68b1e",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-12.yaml": {
+    "mtime": 1780504813.1699457,
+    "ast_hash": "70076152af5e08a2d6b0256eaeb9c742",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-13.yaml": {
+    "mtime": 1780504813.1679394,
+    "ast_hash": "fb76ab2da6b720291600a0b9b4da8c8b",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-14.yaml": {
+    "mtime": 1780504813.1679394,
+    "ast_hash": "40b7c8b1a1181bfcf4a71a538dbcb094",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-15.yaml": {
+    "mtime": 1780504813.1659348,
+    "ast_hash": "c5accf9a9e85c9ca3d339b197f2f73e8",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-16.yaml": {
+    "mtime": 1780504813.1659348,
+    "ast_hash": "c886441cde65c753ce59daebff5bde32",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-17.yaml": {
+    "mtime": 1780504813.1639295,
+    "ast_hash": "cfad324c8e5b9747a59a29a18a97556f",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-18.yaml": {
+    "mtime": 1780504813.1619253,
+    "ast_hash": "68c5252528e8c42ab6f7fa751e990907",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-19.yaml": {
+    "mtime": 1780504813.1619253,
+    "ast_hash": "2d518475497244ab99476956eeac87af",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-20.yaml": {
+    "mtime": 1780504813.1599195,
+    "ast_hash": "cd610723d7e82c4a9383b00e7b4bba02",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-21.yaml": {
+    "mtime": 1780504813.1579137,
+    "ast_hash": "4a4d9444ae5976582372cd148904fc3d",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-22.yaml": {
+    "mtime": 1780504813.1579137,
+    "ast_hash": "4c8151a700554ecebcfc5f180f95c52c",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-01-01-internal-revenue-bulletin-2026-23.yaml": {
+    "mtime": 1780504813.1559088,
+    "ast_hash": "36a527db263f52ac4f332aee1bff7afe",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-04-open-meeting-of-the-taxpayer-advocacy-panel-joint-.yaml": {
+    "mtime": 1780504813.2270558,
+    "ast_hash": "a08d1800bd01e18336d29968da81ee51",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-04-treatment-of-income-from-indian-fishing-rights-rel.yaml": {
+    "mtime": 1780504813.233069,
+    "ast_hash": "19794af4db3723d354f93effad4a03d0",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-05-irs-recognizes-importance-of-small-businesses-prov.yaml": {
+    "mtime": 1780504813.1559088,
+    "ast_hash": "d24d88196f93594a4fecb9f52ed598c9",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-05-irs-requests-applications-for-2027-irsac-membershi.yaml": {
+    "mtime": 1780504813.1539037,
+    "ast_hash": "ea44b75c59a7501f872ffd3e645f8ec7",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-06-irs-updates-conservation-easement-site-settlement-.yaml": {
+    "mtime": 1780504813.151898,
+    "ast_hash": "409067558c8ffb257bccf9aacf61fa68",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-06-low-income-taxpayer-clinic-grant-program-availabil.yaml": {
+    "mtime": 1780504813.2250514,
+    "ast_hash": "6e382cae64e51defa814e8e13efdfb24",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-08-section-45z-clean-fuel-production-credit-hearing.yaml": {
+    "mtime": 1780504813.223047,
+    "ast_hash": "af90db9734334aa05e18eee57f9464f7",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-11-9-how-long-will-treasury-operate-the-ssbci-ta-gran.yaml": {
+    "mtime": 1780504813.1874719,
+    "ast_hash": "cb6b17ae7a0527136305706e4cff7951",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-12-agency-information-collection-activities-comment-r.yaml": {
+    "mtime": 1780504813.221042,
+    "ast_hash": "ab237c89fd4c043f2e1fc2d4b1c92e9a",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-12-agency-information-collection-activities-requestin.yaml": {
+    "mtime": 1780504813.2172894,
+    "ast_hash": "bd0c7807a03b2b11a3a3fd279f3b530f",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-13-excepted-fertility-benefits.yaml": {
+    "mtime": 1780504813.2152834,
+    "ast_hash": "d7e10f4d62085706ec7a25aaa7e94db5",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-13-irs-announces-terms-of-a-time-limited-settlement-o.yaml": {
+    "mtime": 1780504813.151898,
+    "ast_hash": "63d8502e11c7449d338d75b33743c3ba",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-15-may-15-2026shapiro-administration-extends-deadline.yaml": {
+    "mtime": 1780513035.1558867,
+    "ast_hash": "5ba103564f9e013fd28602e65fa634e7",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-18-electronic-furnishing-of-payee-statements-regardin.yaml": {
+    "mtime": 1780504813.211274,
+    "ast_hash": "ea8a5c2738872f0ebb002b0003756395",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-18-superfund-tax-on-chemical-substances-request-to-mo.yaml": {
+    "mtime": 1780504813.2132788,
+    "ast_hash": "88397166e393cc79817f82f1d906be79",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-20-agency-information-collection-activities-comment-r.yaml": {
+    "mtime": 1780504813.2092688,
+    "ast_hash": "fe23948c94f29e6f0cc0180e5d05f319",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-20-returns-relating-to-sales-or-exchanges-of-certain-.yaml": {
+    "mtime": 1780504813.207264,
+    "ast_hash": "fc7d592cff91f7874a3612014e57defc",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-21-art-advisory-panel-notice-of-closed-meeting.yaml": {
+    "mtime": 1780504813.2052584,
+    "ast_hash": "766ab6dcea798d41b06653c2768ab7e0",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-21-electronic-tax-administration-advisory-committee-p.yaml": {
+    "mtime": 1780504813.2052584,
+    "ast_hash": "ad0f8403ae1d2f9d63a401fdda535fbf",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-22-agency-information-collection-activities-comment-r.yaml": {
+    "mtime": 1780504813.201507,
+    "ast_hash": "7f76064418e36274c589725c5dc1b16a",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-22-irs-ceo-frank-j-bisignano-visits-ohio-to-tout-work.yaml": {
+    "mtime": 1780504813.149892,
+    "ast_hash": "3d91966c0f7139c65afc5bf3ba74c941",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-27-irs-to-offer-saturday-hours-at-taxpayer-assistance.yaml": {
+    "mtime": 1780504813.0490298,
+    "ast_hash": "731782ff20dbdc9e3c49fc0b24055c3e",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-28-open-meeting-of-the-taxpayer-advocacy-panel-joint-.yaml": {
+    "mtime": 1780504813.1995013,
+    "ast_hash": "195220b5ef3c6422f4f1f7b3bf5bfe22",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-05-29-irs-releases-new-look-back-interest-calculator-for.yaml": {
+    "mtime": 1780504813.0470228,
+    "ast_hash": "44f33278aa1f816151360d81c66bda67",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-01-credit-for-renewable-electricity-production-and-pu.yaml": {
+    "mtime": 1780504813.1974967,
+    "ast_hash": "4da9b82c1808632fd0fd353ff08c70d7",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-01-income-of-foreign-governments-and-of-international.yaml": {
+    "mtime": 1780504813.1974967,
+    "ast_hash": "4608369eb351949f6070853b37affa89",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-01-june-01-2026revenue-department-releases-may-2026-c.yaml": {
+    "mtime": 1780513035.1548865,
+    "ast_hash": "a551c65ae068e290450b8ea7efc0c1ef",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-02-agency-information-collection-activities-comment-r.yaml": {
+    "mtime": 1780504813.1934872,
+    "ast_hash": "7e532243b7898891abbca74bbf6c5086",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-02-estate-tax-closing-letter-user-fee-update.yaml": {
+    "mtime": 1780504813.1954925,
+    "ast_hash": "56475cbdae43157a267d92f8417b78da",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-03-guidance-on-tax-exempt-refunding-bonds-hearing.yaml": {
+    "mtime": 1780504813.189477,
+    "ast_hash": "f96ba491680e493dcf984e655d77a41a",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-03-hconres50-a-concurrent-resolution-concerning-the-e.yaml": {
+    "mtime": 1780504813.2368202,
+    "ast_hash": "040dd2f4ed5e52147eb8b559ebbd0f7a",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-03-hr718-smoking-cost-recovery-and-education-tax-act-.yaml": {
+    "mtime": 1780504813.2348144,
+    "ast_hash": "b94c37dbb4251615b2eb2acaead7cd80",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-03-hr8803-iran-war-oil-crisis-windfall-profits-tax-ac.yaml": {
+    "mtime": 1780513035.153888,
+    "ast_hash": "bd153f6c1e710852d8c6fc6071fd3741",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-03-hr8816-tax-cut-for-striking-workers-act-of-2026.yaml": {
+    "mtime": 1780513035.150887,
+    "ast_hash": "a10d0858a92f006cf422ab118a7e2e6f",
+    "semantic_hash": ""
+  },
+  "tax_library/future_law/2026-06-03-s2779-tax-cut-for-striking-workers-act-of-2025.yaml": {
+    "mtime": 1780513035.1518872,
+    "ast_hash": "62eccd456efc0c9d397486e48a68fb01",
+    "semantic_hash": ""
+  },
+  "tax_library/stacks/appreciated-asset-charitable-stack.yaml": {
+    "mtime": 1783441021.8835373,
+    "ast_hash": "9b7bea96a8ef7c71cbce2bada2ebdc62",
+    "semantic_hash": ""
+  },
+  "tax_library/stacks/business-owner-deduction-stack.yaml": {
+    "mtime": 1783441021.8845334,
+    "ast_hash": "725760c47646a2faae35d04ac7e8e5fc",
+    "semantic_hash": ""
+  },
+  "tax_library/stacks/exit-estate-stack.yaml": {
+    "mtime": 1783441021.8845334,
+    "ast_hash": "e7e5bc5d393b9f0fde1ca5ae3944940d",
+    "semantic_hash": ""
+  },
+  "tax_library/state/state-529-deduction.yaml": {
+    "mtime": 1780508919.0822315,
+    "ast_hash": "9416a63651961d8379601e28b350a686",
+    "semantic_hash": ""
+  },
+  "tax_library/state/state-ev-credit.yaml": {
+    "mtime": 1780508976.5896838,
+    "ast_hash": "7f28b6c21a8ab9741ad7bbba3323e830",
+    "semantic_hash": ""
+  },
+  "tax_library/state/state-homestead-exemption.yaml": {
+    "mtime": 1780508955.7166166,
+    "ast_hash": "90b5945bbe599ffb6bbe4f8fdc148707",
+    "semantic_hash": ""
+  },
+  "tax_library/state/state-no-income-tax.yaml": {
+    "mtime": 1780508873.7213898,
+    "ast_hash": "bd77d920ca3c68dbe4c2f1ca2374060b",
+    "semantic_hash": ""
+  },
+  "tax_library/state/state-pte-election.yaml": {
+    "mtime": 1783441021.885533,
+    "ast_hash": "aecf0a8ce563be578a89798e429027c7",
+    "semantic_hash": ""
+  },
+  "tax_library/state/state-retirement-income-exemption.yaml": {
+    "mtime": 1780508938.398982,
+    "ast_hash": "665173573a3e26d9a27c2363ae553738",
+    "semantic_hash": ""
+  },
+  "user_data/businesses.yaml": {
+    "mtime": 1781730225.789322,
+    "ast_hash": "49a17c973414fea4a3ebb44001c6c7b3",
+    "semantic_hash": ""
+  },
+  "user_data/dependents.yaml": {
+    "mtime": 1780425517.9792483,
+    "ast_hash": "ea3287596e7d21ee81fd25915d6230c3",
+    "semantic_hash": ""
+  },
+  "user_data/documents_index.yaml": {
+    "mtime": 1780425546.996254,
+    "ast_hash": "47f7a3d6a04ccd2002d925d052a8f36e",
+    "semantic_hash": ""
+  },
+  "user_data/goals.yaml": {
+    "mtime": 1780425532.3514884,
+    "ast_hash": "b20c362b540dc70a25a892485f1d43e5",
+    "semantic_hash": ""
+  },
+  "user_data/healthcare.yaml": {
+    "mtime": 1780425507.1025856,
+    "ast_hash": "e0771063bd08d95153e9d55330f58f62",
+    "semantic_hash": ""
+  },
+  "user_data/household.yaml": {
+    "mtime": 1781625631.718686,
+    "ast_hash": "528b0239330c813b98cb5e650dcf8bfc",
+    "semantic_hash": ""
+  },
+  "user_data/income.yaml": {
+    "mtime": 1780425446.4897532,
+    "ast_hash": "f205fbc10d3c048974faec509d498244",
+    "semantic_hash": ""
+  },
+  "user_data/investments.yaml": {
+    "mtime": 1780425481.0802574,
+    "ast_hash": "b523263a35ec832834c8fc5e4ba1e769",
+    "semantic_hash": ""
+  },
+  "user_data/real_estate.yaml": {
+    "mtime": 1780425470.4748933,
+    "ast_hash": "378e4a302ec9f4ae0e2a950ac0b2a70f",
+    "semantic_hash": ""
+  },
+  "user_data/retirement.yaml": {
+    "mtime": 1780425495.023221,
+    "ast_hash": "242b878bb18ec52bcaeefabc1a5c6463",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040.pdf": {
+    "mtime": 1780703251.7419899,
+    "ast_hash": "ac8ba4b22e4c1b8640b6e96fb0ff28bd",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040s1.pdf": {
+    "mtime": 1780703251.7419899,
+    "ast_hash": "79da012dd8ed1839d7a79c0ea9a829ad",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040s1a.pdf": {
+    "mtime": 1783441607.900051,
+    "ast_hash": "8645ade1664f6ae5aa2c0df7f3274dd0",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040s3.pdf": {
+    "mtime": 1781625631.4553807,
+    "ast_hash": "1518be09bc5f3b18575703d11e70f12b",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040s8812.pdf": {
+    "mtime": 1781625631.4573755,
+    "ast_hash": "632000345cc64511ac3e2e9eb5edee53",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sa.pdf": {
+    "mtime": 1781625631.4593742,
+    "ast_hash": "cdf5e06ba711d1f4097ef7bd03bf630b",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sb.pdf": {
+    "mtime": 1780703251.7440355,
+    "ast_hash": "ee74a5d6ca0046e3ec7c48d0ad4aad38",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sc.pdf": {
+    "mtime": 1780703251.7460406,
+    "ast_hash": "ceae837c852519a628d4da2eae9d602c",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sd.pdf": {
+    "mtime": 1780703251.7460406,
+    "ast_hash": "8a97b160b55866cb547932adf7795590",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sf.pdf": {
+    "mtime": 1781625631.4613755,
+    "ast_hash": "a9bd3b39f7cf2fd28d07a5c00348b458",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sh.pdf": {
+    "mtime": 1781625631.4633753,
+    "ast_hash": "27eb98ce0342c042060c0e26781ebe36",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f1040sse.pdf": {
+    "mtime": 1780703251.7480483,
+    "ast_hash": "71fffc9084a1cd82db72aa774cf069cf",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f2441.pdf": {
+    "mtime": 1781625631.4643724,
+    "ast_hash": "594bce320e791665e71734f0b10e6f75",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f5695.pdf": {
+    "mtime": 1781625631.4673724,
+    "ast_hash": "852c6a7060249a16f38bed4aa6d3e6bf",
+    "semantic_hash": ""
+  },
+  "state/form_cache/f8863.pdf": {
+    "mtime": 1781625631.4699278,
+    "ast_hash": "d57ca03f4c7329cb58cbfd647fbd1045",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/annotated_f1040.pdf": {
+    "mtime": 1781625631.4776258,
+    "ast_hash": "4794f7394867b168b5ce4532c0be0557",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_all_f1040s3.pdf": {
+    "mtime": 1781625631.4807398,
+    "ast_hash": "2e705a6cec423378debef42041bbd3ef",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_all_f1040s8812.pdf": {
+    "mtime": 1781625631.4826531,
+    "ast_hash": "cfe742d3016b3436ad1e8d2ac7a92b9c",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040.pdf": {
+    "mtime": 1783441933.0813532,
+    "ast_hash": "595f31b96b6b2ca6838c8fa752b393e0",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040s1.pdf": {
+    "mtime": 1783441933.281332,
+    "ast_hash": "43c0792499d42cf3329fa5bcaafb689f",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040s1a.pdf": {
+    "mtime": 1783441933.3998168,
+    "ast_hash": "c19164f6fd1414da83f2d76a0e86f0c8",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040s3.pdf": {
+    "mtime": 1783441933.492576,
+    "ast_hash": "3f6e538604fc2f3e9bd14478e07b7c67",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040s8812.pdf": {
+    "mtime": 1783441933.6166668,
+    "ast_hash": "fa0903b414eb42586b78c91f83f84a9d",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sa.pdf": {
+    "mtime": 1783441933.6964195,
+    "ast_hash": "cf4f066f953251d9c514299be8f98928",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sb.pdf": {
+    "mtime": 1783441933.8477893,
+    "ast_hash": "e8b8ced6a815d754d819f027eaa47fec",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sc.pdf": {
+    "mtime": 1783441934.0705924,
+    "ast_hash": "5cee2ce2a2ec287e55e7a675807f6c61",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sd.pdf": {
+    "mtime": 1783441934.2447026,
+    "ast_hash": "f773b2fddcbcfb773bbb50b49396c391",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sf.pdf": {
+    "mtime": 1783441934.4965715,
+    "ast_hash": "6db8719f2dacd17b76d9b3ef516c0904",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sh.pdf": {
+    "mtime": 1783441934.697685,
+    "ast_hash": "b46a8a33f77ff11a191874934c1b6342",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f1040sse.pdf": {
+    "mtime": 1783441934.7962494,
+    "ast_hash": "da46432e250577ea5e1d304c0db61b95",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f2441.pdf": {
+    "mtime": 1781625631.5041473,
+    "ast_hash": "69d176ad8a5f0b3216b715b59b27ae2c",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f5695.pdf": {
+    "mtime": 1783441935.1977172,
+    "ast_hash": "13dd0b95ae45793db5c243d0f8faeb33",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/flat_labeled_f8863.pdf": {
+    "mtime": 1781625631.509145,
+    "ast_hash": "76ce07bf1c39b19344d4555b832db318",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/form_1040_filled_2025.pdf": {
+    "mtime": 1781625631.5121436,
+    "ast_hash": "50d951b1829cb03935d868cfaecd7841",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040.pdf": {
+    "mtime": 1783441929.7000651,
+    "ast_hash": "ff7848577b7c1d72346f26f748017135",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040s1.pdf": {
+    "mtime": 1783441929.901535,
+    "ast_hash": "ee59d7510d1019fd2294d977b0638186",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040s1a.pdf": {
+    "mtime": 1783441930.0470212,
+    "ast_hash": "afc3cbd28c791ed8c669856fd65c33bf",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040s3.pdf": {
+    "mtime": 1781625631.5181458,
+    "ast_hash": "59cd958533b981ddfe5fc06c1b7a302e",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040s8812.pdf": {
+    "mtime": 1781625631.5201442,
+    "ast_hash": "d65360ba7fcd801b990d9276009ada95",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sa.pdf": {
+    "mtime": 1781625631.521145,
+    "ast_hash": "b4079c25ae4aac7aa9c5d09cd3480cd7",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sb.pdf": {
+    "mtime": 1783441930.2012534,
+    "ast_hash": "bf8363b69723a57659c55f2dffcdd5d4",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sc.pdf": {
+    "mtime": 1783441930.5647466,
+    "ast_hash": "a53101c6f6290cf7f75446d662805dcb",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sd.pdf": {
+    "mtime": 1783441930.748675,
+    "ast_hash": "ad5cce225e2bd60431f42b19e77ba76d",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sf.pdf": {
+    "mtime": 1783441931.9969141,
+    "ast_hash": "125e34c4f1ce1a38e2bc394f394394e7",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sh.pdf": {
+    "mtime": 1783441931.6965742,
+    "ast_hash": "ca741df7675cefc8b525ed16793213ce",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f1040sse.pdf": {
+    "mtime": 1783441930.8294554,
+    "ast_hash": "da73940583a8ec758a5fe4b40894eb51",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_all_f5695.pdf": {
+    "mtime": 1783441931.4642262,
+    "ast_hash": "d7cc4a3a9f47dbfc168ca6807004b966",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_gap.pdf": {
+    "mtime": 1781625631.5593123,
+    "ast_hash": "2cf272d95578c15f1a3b8f50f95dd2ee",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_income.pdf": {
+    "mtime": 1781625631.56334,
+    "ast_hash": "19c5d008072c667c6b3e7147041b5cc4",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/labeled_p2.pdf": {
+    "mtime": 1781625631.5822372,
+    "ast_hash": "a5a02137a7bd82407b063088e077569c",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040.pdf": {
+    "mtime": 1781625631.593235,
+    "ast_hash": "ab048c112030647e13809fbfb0cebd22",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040s1.pdf": {
+    "mtime": 1781625631.5962615,
+    "ast_hash": "3004b44cf5c71511c65755ff201d07b3",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040sb.pdf": {
+    "mtime": 1781625631.5972383,
+    "ast_hash": "a49716936c6f385722963fa006eff3ee",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040sc_0.pdf": {
+    "mtime": 1781625631.599252,
+    "ast_hash": "652b6885eb74527cda37d34e8e0b1eac",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040sd.pdf": {
+    "mtime": 1781625631.6022346,
+    "ast_hash": "4bd2e9584f381398b39c8df776358da8",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040sf.pdf": {
+    "mtime": 1781625631.6042352,
+    "ast_hash": "6db64a167405bd2a1f0ea87f14d702e6",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040sh.pdf": {
+    "mtime": 1781625631.606234,
+    "ast_hash": "79ca6b148ee8f244860775ed86f1e342",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_f1040sse.pdf": {
+    "mtime": 1781625631.6082337,
+    "ast_hash": "099d9cd55ad7e050c8ed17178d914692",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_schc.pdf": {
+    "mtime": 1781625631.6112359,
+    "ast_hash": "8a81c273faf124f6c91a2265a7c6340b",
+    "semantic_hash": ""
+  },
+  "state/pdf_check/verify_schf.pdf": {
+    "mtime": 1781625631.6142378,
+    "ast_hash": "260ef759be926ccadc58abfca949944e",
+    "semantic_hash": ""
+  }
+}

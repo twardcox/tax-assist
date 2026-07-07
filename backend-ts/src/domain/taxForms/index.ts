@@ -49,6 +49,7 @@ export async function computeTaxFigures(userId: string, taxYear: number): Promis
   c["_need_sch_e"] = Array.isArray(c["schedule_e_records"]) && (c["schedule_e_records"] as unknown[]).length > 0;
   c["_need_sch_se"] = Number(c["se_tax"]) > 0;
   c["_need_sch3"] = Number(c["schedule3_line8"]) > 0;
+  c["_need_sch_1a"] = Number(c["schedule_1a_total"]) > 0;
   c["_need_sch8812"] = (Number(c["qualifying_children"]) + Number(c["other_dependent_count"])) > 0;
   c["_need_f8863"] = Number(c["education_credit"]) > 0;
   c["_need_f2441"] = Number(c["child_care_credit"]) > 0;
@@ -92,6 +93,9 @@ export async function buildFormPackage(userId: string, taxYear: number): Promise
   const formsIncluded = ["Form 1040 — U.S. Individual Income Tax Return"];
   if (Number(c["total_adjustments"]) > 0 || Number(c["schedule1_additional"]) !== 0) {
     formsIncluded.push("Schedule 1 — Additional Income and Adjustments");
+  }
+  if (Number(c["schedule_1a_total"]) > 0) {
+    formsIncluded.push("Schedule 1-A — Additional Deductions");
   }
   if (!c["using_standard"]) {
     formsIncluded.push("Schedule A — Itemized Deductions");

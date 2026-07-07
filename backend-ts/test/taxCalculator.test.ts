@@ -394,16 +394,17 @@ describe("scenario 12 · all above-the-line adjustments", () => {
 describe("scenario 13 · single · age 67 + blind → extra standard deduction", () => {
   // extra = 2000(age≥65) + 2000(blind) = 4000
   // standard = 15750+4000 = 19750 (OBBBA base)
-  // taxable = 45000-19750 = 25250
-  // tax = 11925×0.10 + 13325×0.12 = 1192.50+1599 = 2791.50
+  // senior deduction = 6000
+  // taxable = 45000-19750-6000 = 19250
+  // tax = 11925×0.10 + 7325×0.12 = 1192.50+879 = 2071.50
   const c = run(d({
     taxpayer: { age: 67, blind: true },
     w2: [{ wages: 45000 }],
   }));
 
   test("standard_deduction = 19750", () => expect(c.standard_deduction).toBeCloseTo(19750, 2));
-  test("taxable_income = 25250", () => expect(c.taxable_income).toBeCloseTo(25250, 2));
-  test("ordinary_tax = 2791.50", () => expect(c.ordinary_tax).toBeCloseTo(2791.50, 2));
+  test("taxable_income = 19250", () => expect(c.taxable_income).toBeCloseTo(19250, 2));
+  test("ordinary_tax = 2071.50", () => expect(c.ordinary_tax).toBeCloseTo(2071.50, 2));
 });
 
 // ─── 14. Other income types ───────────────────────────────────────────────────
@@ -570,4 +571,156 @@ describe("scenario 20 · multiple W2s · HSA payroll · retirement contributions
   test("hsa_payroll = 3000", () => expect(c.hsa_payroll).toBeCloseTo(3000, 2));
   test("w2_retirement = 11000", () => expect(c.w2_retirement).toBeCloseTo(11000, 2));
   test("total_income = 130000", () => expect(c.total_income).toBeCloseTo(130000, 2));
+});
+
+// ─── OBBBA Schedule 1-A deductions (2025–2028) ───────────────────────────────
+describe("schedule 1-A · qualified tips", () => {
+  test("basic W-2 tips under cap, no phaseout", () => {
+    // wages 60000 (tips included in Box 1), tips 20000 → deduction 20000
+    // taxable = 60000 − 15750 − 20000 = 24250
+    const c = run(d({ w2: [{ wages: 60000, qualified_tips: 20000 }] }));
+    expect(c.tips_deduction).toBeCloseTo(20000, 2);
+    expect(c.schedule_1a_total).toBeCloseTo(20000, 2);
+    expect(c.taxable_income).toBeCloseTo(24250, 2);
+  });
+
+  test("tips capped at 25000", () => {
+    const c = run(d({ w2: [{ wages: 60000, qualified_tips: 30000 }] }));
+    expect(c.qualified_tips_total).toBeCloseTo(30000, 2);
+    expect(c.tips_deduction).toBeCloseTo(25000, 2);
+  });
+
+  test("phaseout: 10% of MAGI over 150k (single)", () => {
+    // MAGI 160000 → excess 10000 → reduction 1000 → 10000 − 1000 = 9000
+    const c = run(d({ w2: [{ wages: 160000, qualified_tips: 10000 }] }));
+    expect(c.tips_deduction).toBeCloseTo(9000, 2);
+  });
+
+  test("fully phased out", () => {
+    // MAGI 400000 → reduction 25000 ≥ capped 20000 → 0
+    const c = run(d({ w2: [{ wages: 400000, qualified_tips: 20000 }] }));
+    expect(c.tips_deduction).toBeCloseTo(0, 2);
+  });
+
+  test("SE tips limited to that business's net profit", () => {
+    const c = run(d({
+      se: [{ business_name: "Cuts", gross_revenue: 20000, net_profit: 3000, qualified_tips: 8000 }],
+    }));
+    expect(c.qualified_tips_se).toBeCloseTo(3000, 2);
+    expect(c.tips_deduction).toBeCloseTo(3000, 2);
+  });
+
+  test("SE tips zero when business runs a loss", () => {
+    const c = run(d({
+      se: [{ business_name: "Cuts", gross_revenue: 5000, net_profit: -2000, qualified_tips: 4000 }],
+    }));
+    expect(c.qualified_tips_se).toBeCloseTo(0, 2);
+  });
+
+  test("Form 4137 unreported tips count as qualified tips", () => {
+    const data = d({ w2: [{ wages: 30000 }] });
+    (data.income as Record<string, unknown>).other_wages = { tip_income_unreported: 1000 };
+    const c = run(data);
+    expect(c.tips_deduction).toBeCloseTo(1000, 2);
+  });
+});
+
+describe("schedule 1-A · qualified overtime", () => {
+  test("cap 12500 single / 25000 MFJ", () => {
+    const single = run(d({ w2: [{ wages: 100000, qualified_overtime: 30000 }] }));
+    expect(single.overtime_deduction).toBeCloseTo(12500, 2);
+    const mfj = run(d({ fs: "married_filing_jointly", w2: [{ wages: 100000, qualified_overtime: 30000 }] }));
+    expect(mfj.overtime_deduction).toBeCloseTo(25000, 2);
+  });
+});
+
+describe("schedule 1-A · MFS treatment", () => {
+  test("MFS denied tips/overtime/senior, allowed car loan at single threshold", () => {
+    const data = d({
+      fs: "married_filing_separately",
+      taxpayer: { age: 70 },
+      w2: [{ wages: 50000, qualified_tips: 5000, qualified_overtime: 5000 }],
+    });
+    (data.income as Record<string, unknown>).new_deductions = { car_loan_interest_paid: 3000 };
+    const c = run(data);
+    expect(c.tips_deduction).toBeCloseTo(0, 2);
+    expect(c.overtime_deduction).toBeCloseTo(0, 2);
+    expect(c.senior_deduction).toBeCloseTo(0, 2);
+    expect(c.car_loan_deduction).toBeCloseTo(3000, 2);
+    expect(c.schedule_1a_total).toBeCloseTo(3000, 2);
+  });
+});
+
+describe("schedule 1-A · car loan interest", () => {
+  test("capped at 10000", () => {
+    const data = d({ w2: [{ wages: 80000 }] });
+    (data.income as Record<string, unknown>).new_deductions =
+      { car_loan_interest_paid: 15000, vehicle_vin: "1HGCM82633A004352" };
+    const c = run(data);
+    expect(c.car_loan_deduction).toBeCloseTo(10000, 2);
+    expect(c.car_loan_vin).toBe("1HGCM82633A004352");
+  });
+
+  test("phaseout: 20% of MAGI over 100k (single)", () => {
+    // MAGI 120000 → excess 20000 × 0.20 = 4000 → 8000 − 4000 = 4000
+    const data = d({ w2: [{ wages: 120000 }] });
+    (data.income as Record<string, unknown>).new_deductions = { car_loan_interest_paid: 8000 };
+    const c = run(data);
+    expect(c.car_loan_deduction).toBeCloseTo(4000, 2);
+  });
+});
+
+describe("schedule 1-A · senior deduction + spouse std-deduction fix", () => {
+  test("single 65+ gets 6000 under threshold", () => {
+    // std = 15750 + 2000 (extra 65) = 17750; taxable = 30000 − 17750 − 6000 = 6250
+    const c = run(d({ taxpayer: { age: 70 }, w2: [{ wages: 30000 }] }));
+    expect(c.senior_count).toBe(1);
+    expect(c.senior_deduction).toBeCloseTo(6000, 2);
+    expect(c.taxable_income).toBeCloseTo(6250, 2);
+  });
+
+  test("MFJ both 65+: 12000 senior + spouse counted in extra standard deduction", () => {
+    // std = 31500 + 1600 (tp 65) + 1600 (sp 65) = 34700  ← spouse fix
+    // taxable = 50000 − 34700 − 12000 = 3300
+    const c = run(d({
+      fs: "married_filing_jointly",
+      taxpayer: { age: 66 },
+      householdExtra: { spouse: { age: 67 } },
+      w2: [{ wages: 50000 }],
+    }));
+    expect(c.senior_count).toBe(2);
+    expect(c.senior_deduction).toBeCloseTo(12000, 2);
+    expect(c.standard_deduction).toBeCloseTo(34700, 2);
+    expect(c.taxable_income).toBeCloseTo(3300, 2);
+  });
+
+  test("phaseout: 6% of MAGI over 75k (single)", () => {
+    // excess 25000 × 0.06 = 1500 → 6000 − 1500 = 4500
+    const c = run(d({ taxpayer: { age: 70 }, w2: [{ wages: 100000 }] }));
+    expect(c.senior_deduction).toBeCloseTo(4500, 2);
+  });
+});
+
+describe("schedule 1-A · QBI interplay and 2024 no-op", () => {
+  test("QBI income limit base subtracts schedule 1-A total", () => {
+    // SE 50000: se_tax = 50000×0.9235×0.153 = 7064.775; ded 3532.3875
+    // AGI = 70000 − 3532.3875 = 66467.6125; tips ded 10000
+    // tiBeforeQbi = 66467.6125 − 15750 − 10000 = 40717.6125
+    // qbi = min(50000×0.2, 40717.6125×0.2) = 8143.5225 (would be 10000 without the fix)
+    // taxable = 66467.6125 − 15750 − 8143.5225 − 10000 = 32574.09
+    const c = run(d({
+      w2: [{ wages: 20000, qualified_tips: 10000 }],
+      se: [{ business_name: "Shop", gross_revenue: 60000, net_profit: 50000 }],
+    }));
+    expect(c.qbi_deduction).toBeCloseTo(8143.5225, 2);
+    expect(c.taxable_income).toBeCloseTo(32574.09, 2);
+  });
+
+  test("2024: whole block is a no-op", () => {
+    const data = d({ taxpayer: { age: 70 }, w2: [{ wages: 60000, qualified_tips: 20000 }] });
+    const c = new TaxCalculator(data, 2024).compute();
+    expect(c.schedule_1a_total).toBeCloseTo(0, 2);
+    // 2024 std 14600 + 1950 (extra 65) = 16550; taxable = 60000 − 16550
+    expect(c.taxable_income).toBeCloseTo(43450, 2);
+  });
 });

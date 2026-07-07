@@ -113,9 +113,20 @@ export function buildSummaryText(
     ? `Standard ($${Math.round(stdAmt).toLocaleString("en-US")} — ${fsLabel})`
     : `Itemized ($${Math.round(itmAmt).toLocaleString("en-US")} — Schedule A)`;
   lines.push(line("12", `Deduction used: ${deductionNote}`, d(c["deduction"])));
-  lines.push(line("13", "Qualified Business Income (QBI) deduction (§199A)", d(c["qbi_deduction"])));
+  lines.push(line("13a", "Qualified Business Income (QBI) deduction (§199A)", d(c["qbi_deduction"])));
+  lines.push(line("13b", "Additional deductions (Schedule 1-A)", d(c["schedule_1a_total"])));
   lines.push(hr());
   lines.push(line("15", "TAXABLE INCOME", d(c["taxable_income"])));
+
+  if (Number(c["schedule_1a_total"] ?? 0) > 0) {
+    lines.push(section("SCHEDULE 1-A — ADDITIONAL DEDUCTIONS (OBBBA, 2025-2028)"));
+    lines.push(line("", `Qualified tips deduction (reported: ${d(c["qualified_tips_total"])})`, d(c["tips_deduction"])));
+    lines.push(line("", `Qualified overtime deduction (reported: ${d(c["qualified_overtime_total"])})`, d(c["overtime_deduction"])));
+    lines.push(line("", "New-car loan interest deduction  [CPA REVIEW]", d(c["car_loan_deduction"])));
+    lines.push(line("", `Senior deduction (${Number(c["senior_count"] ?? 0)} × $6,000, phased)`, d(c["senior_deduction"])));
+    lines.push(hr());
+    lines.push(line("38", "TOTAL ADDITIONAL DEDUCTIONS → Form 1040 Line 13b", d(c["schedule_1a_total"])));
+  }
 
   // ── TAX ──────────────────────────────────────────────────────────────────────
   lines.push(section("TAX COMPUTATION"));
