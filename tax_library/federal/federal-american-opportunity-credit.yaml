@@ -54,7 +54,7 @@ deadlines:
   - deadline: "Annual return — April 15 (or extension)"
 
 stacking_rules:
-  compatible_with: [529-plan-distributions, lifetime-learning-credit]
+  compatible_with: [lifetime-learning-credit]
   conflicts_with:
     - rule: "Cannot claim AOTC and Lifetime Learning Credit for the same student in the same year"
     - rule: "Expenses paid with 529 distributions cannot also be claimed for AOTC"

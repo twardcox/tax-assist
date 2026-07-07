@@ -59,7 +59,7 @@ deadlines:
   - deadline: "Best practice: contribute in January, convert immediately (same tax year)"
 
 stacking_rules:
-  compatible_with: [solo-401k, sep-ira-contribution, mega-backdoor-roth]
+  compatible_with: [solo-401k, sep-ira-contribution]
   conflicts_with:
     - rule: "Pro-rata rule: pre-tax IRA balances dilute the tax-free nature of conversion — consider rolling pre-tax IRA into employer 401(k) first"
 

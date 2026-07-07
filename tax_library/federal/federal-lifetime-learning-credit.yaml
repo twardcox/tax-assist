@@ -50,7 +50,7 @@ deadlines:
   - deadline: "Annual return — April 15 (or extension)"
 
 stacking_rules:
-  compatible_with: [529-plan-distributions]
+  compatible_with: [529-to-roth-rollover]
   conflicts_with:
     - rule: "Cannot claim for same student as AOTC in same year"
 

@@ -58,7 +58,7 @@ deadlines:
   - deadline: "Must have HDHP coverage in effect for the months being contributed"
 
 stacking_rules:
-  compatible_with: [self-employed-health-insurance, medical-expense-deduction]
+  compatible_with: [self-employed-health-insurance]
   conflicts_with:
     - rule: "Cannot contribute if enrolled in general-purpose FSA (limited FSA is allowed)"
     - rule: "Cannot contribute if enrolled in Medicare Part A or B"

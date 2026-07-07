@@ -52,7 +52,7 @@ deadlines:
   - deadline: "Annual return — April 15 (automatic 2-month extension for taxpayers abroad = June 15)"
 
 stacking_rules:
-  compatible_with: [foreign-tax-credit]
+  compatible_with: []
   conflicts_with:
     - rule: "Cannot use Foreign Tax Credit on income excluded via FEIE"
 
