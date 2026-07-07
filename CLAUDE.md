@@ -143,6 +143,16 @@ only the documentation was stale):
 - Sch SE `f1_3[0]` (Line 1a) and Sch B header name/SSN fields were missing from the map; added
 - Sch H section was entirely undocumented; added in full
 
+## Strategy Stacks — SHIPPED (2026-07-07, branch `audit`)
+
+Multi-rule tax combinations per `docs/superpowers/specs/2026-07-06-strategy-stacks-design.md`
+(plan: `docs/superpowers/plans/2026-07-07-strategy-stacks.md`): 4 new benefits
+(`donor-advised-fund`, `crut-664`, `831b-microcaptive`, `nongrantor-dynasty-trust` — the last
+two with explicit abuse boundaries per T.D. 10029 / IR-2023-65), 3 authored stacks in
+`tax_library/stacks/`, deterministic roll-up evaluator (`scanner/stacks.ts`, `ScanRun.stacks`),
+Dashboard stack cards (`StackCard.jsx`), and the authoring-aid miner
+(`npm run suggest:stacks`). 396 tests, lint + both builds green; UI verified live via Playwright.
+
 ## Next Sprint Goals
 
 1. **Add more benefit rules** — extend the library beyond the current 58 benefits
