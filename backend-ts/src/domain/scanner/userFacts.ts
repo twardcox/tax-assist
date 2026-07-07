@@ -354,6 +354,12 @@ export class UserFacts {
     return toNumber(financials.net_profit_loss);
   }
 
+  firstBusinessGrossRevenue(): number {
+    const biz = this.firstBusiness();
+    const financials = toObject(biz.financials);
+    return toNumber(financials.gross_revenue);
+  }
+
   firstBusinessChildcareExpenses(): number {
     const biz = this.firstBusiness();
     const financials = toObject(biz.financials);

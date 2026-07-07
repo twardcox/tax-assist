@@ -1298,6 +1298,44 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "831b-microcaptive": (_benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "Micro-captive insurance requires an operating business — none recorded."
+      };
+    }
+
+    const revenue = facts.firstBusinessGrossRevenue();
+    if (revenue <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has a business — record gross revenue to assess whether captive economics can make sense.",
+        missing_facts: ["businesses.financials.gross_revenue"],
+        next_steps: ["Record gross revenue under business financials"]
+      };
+    }
+
+    if (revenue < 1000000) {
+      return {
+        status: "not_applicable",
+        message: `Business revenue $${revenue.toLocaleString()} is below the ~$1M level where captive formation and annual administration costs (typically $50k–$100k/year) can be justified by genuine insurance needs.`
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: `Business revenue $${revenue.toLocaleString()} could support a §831(b) captive (2025 premium ceiling $2.85M) — but only with real insurance risk. CAUTION: low-loss-ratio and circular-financing configurations are listed transactions / transactions of interest under T.D. 10029 (Jan 2025).`,
+      next_steps: [
+        "Commission an independent feasibility study identifying real, material, uninsured business risks",
+        "Premiums must be actuarially priced at arm's length — never reverse-engineered from a deduction target",
+        "Verify diversification: ≤20% of net written premiums from any one policyholder",
+        "Expect Form 8886 disclosure obligations if loss-ratio or financing factors under T.D. 10029 are met",
+        "Engage both a CPA and an attorney experienced in captives — avoid turnkey promoters"
+      ]
+    };
+  },
+
   "conservation-easement": (_benefit, facts) => {
     if (!facts.hasAnyRealEstate()) {
       return {

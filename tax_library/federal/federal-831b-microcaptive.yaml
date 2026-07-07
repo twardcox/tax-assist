@@ -1,0 +1,84 @@
+id: 831b-microcaptive
+name: Micro-Captive Insurance Company — §831(b)
+category: business_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "831(b); 162"
+  irs_publication: "T.D. 10029 (Reg. §§1.6011-10, 1.6011-11)"
+  form_instruction: "Instructions for Form 8886"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  A captive insurance company electing §831(b) is taxed only on investment
+  income, while premiums the operating business pays it are deductible under
+  §162 — IF the arrangement is insurance in the commonly accepted sense: real
+  risk shifting, real risk distribution, arm's-length actuarial pricing, and
+  claims actually paid. The 2025 premium ceiling is $2.85M (indexed), with a
+  diversification requirement (no more than 20% of net written premiums from
+  any one policyholder, or the ownership look-through alternative).
+
+estimated_value:
+  typical_range: "$50,000 – $1,000,000+/year of premium moved to a 0%-on-underwriting vehicle"
+  calculation_basis: "Deductible premium × marginal rate, less formation/admin costs ($50k–$100k+/yr)"
+  depends_on: [gross_revenue, insurable_risks, premium_pricing, loss_ratio]
+
+eligibility_rules:
+  - rule: "Must be a genuine insurance company: risk shifting + risk distribution (Avrahami, Syzygy, Caylor line of cases)"
+  - rule: "§831(b) election: net written premiums ≤ $2.85M (2025, indexed)"
+  - rule: "Diversification: ≤20% of net written premiums from any one policyholder, or spouse/lineal-descendant ownership look-through"
+  - rule: "Premiums must be actuarially determined at arm's length — never reverse-engineered from a deduction target"
+  - rule: "Claims process must be real and used; policies must cover plausible, non-duplicative risks"
+
+phaseouts:
+  - rule: "Election unavailable above the indexed premium ceiling; graduate to §831(a) taxation"
+
+required_user_facts:
+  - fact: "businesses.financials.gross_revenue"
+  - fact: "businesses.entity_type"
+
+required_documents:
+  - document: "Independent feasibility study identifying real uninsured risks"
+  - document: "Actuarial premium-pricing report"
+  - document: "Captive domicile license and policies issued"
+  - document: "Form 8886 disclosures if T.D. 10029 factors are met"
+
+required_forms:
+  - form: "Form 1120-PC (captive's return) with §831(b) election"
+  - form: "Form 8886 (Reportable Transaction Disclosure) when required"
+
+deadlines:
+  - deadline: "Premiums deductible only once coverage is bound — 6-9 month formation lead time"
+  - deadline: "Form 8886 due with the return for each year of participation in a reportable transaction"
+
+stacking_rules:
+  compatible_with: [s-corp-election, section-179-expensing]
+  conflicts_with:
+    - rule: "Circular financing (captive lending reserves back to the insured or its owners) is a listed-transaction factor"
+
+risk_level: high
+
+planning_notes: |
+  ABUSE BOUNDARY (the reason this entry is flagged): under T.D. 10029 (final regs,
+  January 2025), a §831(b) captive is a LISTED TRANSACTION when its loss ratio is
+  under 30% (10-year window) and financing flows back to insureds/owners, and a
+  TRANSACTION OF INTEREST when the loss ratio is under 60%. Listed status means
+  mandatory Form 8886/8918 disclosure, promoter penalties, and near-certain exam.
+  Micro-captives are a perennial IRS Dirty Dozen item; the IRS record in Tax Court
+  (Avrahami, Syzygy, Caylor) is built on premiums priced to the deduction, duplicate
+  coverage, and no claims. The legitimate version exists — manufacturers, contractors,
+  medical groups with real uninsured exposure — but only with independent actuaries
+  and real claims. Never buy from a turnkey promoter.
+
+qualification_pathways:
+  - "If revenue ~$1M+ with genuine uninsured risks: commission an independent feasibility study"
+
+review_required:
+  cpa: true
+  attorney: true
+
+last_verified: 2026-07-07
+next_review: 2027-07-01

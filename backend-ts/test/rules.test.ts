@@ -2825,4 +2825,48 @@ describe("strategy-stack benefit rules", () => {
     );
     expect(result.status).toBe("not_applicable");
   });
+
+  test("831b-microcaptive nearly eligible for a high-revenue business", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({
+        businesses: {
+          businesses: [{ entity_type: "s_corp", financials: { gross_revenue: 3000000 } }]
+        }
+      })
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("T.D. 10029");
+  });
+
+  test("831b-microcaptive nearly eligible with business but no revenue recorded", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({
+        businesses: { businesses: [{ entity_type: "llc_single" }] }
+      })
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("businesses.financials.gross_revenue");
+  });
+
+  test("831b-microcaptive not applicable below revenue threshold", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({
+        businesses: {
+          businesses: [{ entity_type: "sole_prop", financials: { gross_revenue: 400000 } }]
+        }
+      })
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("831b-microcaptive not applicable with no business", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("not_applicable");
+  });
 });
