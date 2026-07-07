@@ -157,12 +157,43 @@ not fine print. Reuses the page's existing status-chip styling.
   optional-member-ignored, not_applicable propagation, risk_level max), loader
   validation failures (dangling benefit_id, missing sequence).
 - Scan-route test asserting `stacks` is present and consistent with member results.
+- Miner: unit test of the pure graph/scoring function (compatibility edges,
+  conflict exclusion, Jaccard ranking, dangling-id warning).
+
+### 6. Authoring aid — candidate stack miner
+
+`backend-ts/scripts/suggestStacks.mjs` — an offline, one-shot report for the library
+author (never part of the runtime scan). Method:
+
+1. Load every benefit YAML in `tax_library/federal/`.
+2. Build an undirected compatibility graph from `stacking_rules.compatible_with`
+   (edge when either side names the other), dropping pairs listed in
+   `conflicts_with`.
+3. Score each connected pair/cluster by **fact-profile overlap** — the Jaccard
+   overlap of `required_user_facts` — since benefits sharing facts fit the same
+   taxpayer profile and can actually be used together.
+4. Emit ranked candidate stacks: member ids, the shared fact profile, max member
+   `risk_level`, and which members already appear in an authored stack (so the
+   report surfaces *new* material, not what's already curated).
+
+Output is advisory text on stdout. A candidate becomes a real stack only by an
+author writing the `tax_library/stacks/` YAML — interactions and playbooks are
+never generated. The graph/scoring logic lives in one pure function with a unit
+test; the script is a thin CLI over it.
+
+Data quality note: `stacking_rules` is currently unread by any code, so some
+`compatible_with` references may be stale or use inconsistent ids. The miner
+warns on dangling ids rather than crashing; fixing them is part of running it
+for the first time.
 
 ## Out of scope (flagged)
 
 - Dollar-precise combined-value computation (interactions are authored text +
   per-member estimates; no second calculator).
-- Emergent combination discovery from `stacking_rules` (possible later hint layer).
+- Runtime emergent-combination discovery (the miner is authoring-time only).
+- Mechanism tagging (produces/consumes attribute metadata) on all 47 existing
+  YAMLs — a future enrichment that would sharpen miner scoring; fact overlap is
+  the cheap proxy for now.
 - State-level stacks; scenario-engine what-if integration for stacks.
 - Any modeling of the promoted §643(b) scheme as a benefit — it appears only as a
   named warning inside `nongrantor-dynasty-trust`.
