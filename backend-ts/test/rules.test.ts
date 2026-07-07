@@ -2757,3 +2757,43 @@ describe("rules parity", () => {
     expect(result.missing_facts).toContain("businesses.employees.wotc_hires");
   });
 });
+describe("strategy-stack benefit rules", () => {
+  // Base shape only — each test spreads a literal id so the parity tests above
+  // (which grep this file for `id: "<rule-id>"`) can see it.
+  const minimalBenefit = {
+    category: "individual_deduction",
+    jurisdiction: "federal",
+    risk_level: "low",
+    required_forms: [],
+    required_documents: [],
+    review_required: {}
+  };
+
+  test("donor-advised-fund eligible now with appreciated stock", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "donor-advised-fund", name: "Donor-Advised Fund" },
+      makeFacts({
+        investments: { taxable_accounts: [{ unrealized_gains: 80000 }] }
+      })
+    );
+    expect(result.status).toBe("eligible_now");
+    expect(result.next_steps.length).toBeGreaterThan(0);
+  });
+
+  test("donor-advised-fund eligible now when itemizing without appreciated stock", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "donor-advised-fund", name: "Donor-Advised Fund" },
+      makeFacts({ household: { itemizing_deductions: true } })
+    );
+    expect(result.status).toBe("eligible_now");
+  });
+
+  test("donor-advised-fund nearly eligible with no facts", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "donor-advised-fund", name: "Donor-Advised Fund" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.itemizing_deductions");
+  });
+});

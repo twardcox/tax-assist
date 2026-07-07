@@ -1,0 +1,78 @@
+id: donor-advised-fund
+name: Donor-Advised Fund (DAF) — §170 / §4966
+category: individual_deduction
+jurisdiction: federal
+
+authority:
+  irc_section: "170; 4966"
+  irs_publication: "526"
+  form_instruction: "Instructions for Form 8283"
+  state_source: null
+
+status: active
+benefit_type: deduction
+
+summary: |
+  A donor-advised fund at a sponsoring organization gives an immediate §170
+  deduction (60% of AGI for cash, 30% for long-term appreciated stock at full
+  FMV) while grants to operating charities happen on your own schedule. The
+  timing decoupling enables "bunching" several years of giving into one
+  deduction year to clear the standard deduction, and donating appreciated
+  shares in-kind means the capital gain is never realized.
+
+estimated_value:
+  typical_range: "$5,000 – $100,000+/year depending on giving levels and appreciation"
+  calculation_basis: "Contribution × marginal rate, plus capital-gains tax avoided on donated shares"
+  depends_on: [donation_amount, unrealized_gains, itemizing, marginal_rate]
+
+eligibility_rules:
+  - rule: "Contribution to a sponsoring organization's DAF is a completed gift — irrevocable"
+  - rule: "Cash contributions: 60% of AGI ceiling; long-term appreciated securities: 30% of AGI at FMV"
+  - rule: "Securities held ≤1 year deduct at basis, not FMV — hold past one year before donating"
+  - rule: "Non-cash gifts over $500 require Form 8283; publicly traded securities need no appraisal"
+  - rule: "§4966/§4967 excise taxes on taxable distributions and donor benefit — grants must be to public charities with no personal benefit"
+
+phaseouts:
+  - rule: "Excess over AGI ceilings carries forward 5 years"
+
+required_user_facts:
+  - fact: "household.itemizing_deductions"
+  - fact: "household.estimated_agi"
+  - fact: "investments.taxable_accounts[*].unrealized_gains"
+
+required_documents:
+  - document: "DAF sponsoring-organization contribution confirmation"
+  - document: "Brokerage in-kind transfer confirmation for donated shares"
+  - document: "Form 8283 for non-cash gifts over $500"
+
+required_forms:
+  - form: "Schedule A (itemized deductions)"
+  - form: "Form 8283 (non-cash charitable contributions over $500)"
+
+deadlines:
+  - deadline: "Contribution must be completed (shares received by sponsor) by December 31"
+  - deadline: "Start in-kind transfers by November — year-end brokerage queues run weeks"
+
+stacking_rules:
+  compatible_with: [charitable-contribution-deduction, crut-664, capital-gains-harvesting]
+  conflicts_with:
+    - rule: "A QCD cannot go to a DAF — QCDs require an operating charity"
+
+risk_level: low
+
+planning_notes: |
+  - Bunching: contribute 2-3 years of planned giving in one high-income year, grant it out over time
+  - Always donate long-term appreciated shares in-kind rather than cash from selling them
+  - Legislative watch: payout-requirement proposals for DAFs recur in Congress; none enacted as of 2025
+  - Sponsor fees (typically 0.6%/yr tiers) are the cost of the timing flexibility
+
+qualification_pathways:
+  - "If using the standard deduction: bunch giving via a DAF to exceed it in alternating years"
+  - "If holding long-term appreciated stock: donate shares in-kind for FMV deduction plus gain avoidance"
+
+review_required:
+  cpa: false
+  attorney: false
+
+last_verified: 2026-07-07
+next_review: 2027-07-01

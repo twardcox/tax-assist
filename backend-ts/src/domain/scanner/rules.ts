@@ -1234,6 +1234,41 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "donor-advised-fund": (_benefit, facts) => {
+    if (facts.hasAppreciatedTaxableStock()) {
+      return {
+        status: "eligible_now",
+        message:
+          "Appreciated positions in taxable accounts — donate long-term shares to a DAF in-kind at full fair market value (30% AGI ceiling): the gain is never realized and grants can be spread over years.",
+        next_steps: [
+          "Open a DAF at a sponsoring organization (most major brokerages offer one)",
+          "Contribute long-term appreciated shares in-kind, not cash from selling them",
+          "Bunch 2-3 years of planned giving into one contribution to clear the standard deduction",
+          "Grant to operating charities on your own schedule"
+        ]
+      };
+    }
+
+    if (facts.itemizing() === true) {
+      return {
+        status: "eligible_now",
+        message:
+          "Itemizing confirmed — a DAF takes the full §170 deduction this year (60% AGI ceiling for cash) while grants to charities follow on your schedule.",
+        next_steps: ["Consider bunching future years' planned giving into the current-year DAF contribution"]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        "A DAF pays off when you have appreciated stock to donate or enough giving to itemize — record unrealized gains and itemization status.",
+      missing_facts: [
+        "investments.taxable_accounts[*].unrealized_gains",
+        "household.itemizing_deductions"
+      ]
+    };
+  },
+
   "conservation-easement": (_benefit, facts) => {
     if (!facts.hasAnyRealEstate()) {
       return {
