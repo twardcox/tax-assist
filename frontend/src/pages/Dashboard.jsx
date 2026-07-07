@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import StatusBadge, { STATUS_CONFIG } from "../components/StatusBadge";
+import StackCard from "../components/StackCard";
 
 const STATUS_ORDER = [
   "eligible_now",
@@ -297,6 +298,23 @@ export default function Dashboard() {
               <SummaryCard key={s} status={s} count={results.counts[s] ?? 0} />
             ))}
           </div>
+
+          {/* Strategy stacks */}
+          {results.stacks?.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase mb-3">Strategy Stacks</h2>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {[...results.stacks]
+                  .sort((a, b) => {
+                    const rank = (s) => { const i = STATUS_ORDER.indexOf(s.status); return i === -1 ? STATUS_ORDER.length : i; };
+                    return rank(a) - rank(b);
+                  })
+                  .map((s) => (
+                    <StackCard key={s.stack_id} stack={s} />
+                  ))}
+              </div>
+            </div>
+          )}
 
           {/* Filters */}
           <div className="flex gap-3 mb-4">
