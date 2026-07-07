@@ -151,6 +151,11 @@ export class UserFacts {
     return agi > 0 ? agi : null;
   }
 
+  estimatedNetWorth(): number {
+    const hh = toObject(this.data.household);
+    return toNumber(hh.estimated_net_worth);
+  }
+
   businesses(): Array<Record<string, unknown>> {
     const businessesSection = toObject(this.data.businesses);
     const list = businessesSection.businesses;
@@ -354,6 +359,12 @@ export class UserFacts {
     return toNumber(financials.net_profit_loss);
   }
 
+  firstBusinessGrossRevenue(): number {
+    const biz = this.firstBusiness();
+    const financials = toObject(biz.financials);
+    return toNumber(financials.gross_revenue);
+  }
+
   firstBusinessChildcareExpenses(): number {
     const biz = this.firstBusiness();
     const financials = toObject(biz.financials);
@@ -499,6 +510,12 @@ export class UserFacts {
     const investments = toObject(this.data.investments);
     const taxableAccounts = toObjectArray(investments.taxable_accounts);
     return taxableAccounts.some((account) => toNumber(account.unrealized_gains) > 0);
+  }
+
+  totalUnrealizedTaxableGains(): number {
+    const investments = toObject(this.data.investments);
+    const taxableAccounts = toObjectArray(investments.taxable_accounts);
+    return taxableAccounts.reduce((sum, account) => sum + toNumber(account.unrealized_gains), 0);
   }
 
   hasStartupEquity(): boolean {

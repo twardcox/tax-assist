@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { query, queryOne, execute } from "./client";
+import { queryOne, execute } from "./client";
 
 export type UserRow = {
   id: string;

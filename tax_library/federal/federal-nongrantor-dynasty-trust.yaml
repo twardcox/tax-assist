@@ -1,0 +1,85 @@
+id: nongrantor-dynasty-trust
+name: GST-Exempt Dynasty Trust (Non-Grantor) — §§641–643, Ch. 13
+category: estate
+jurisdiction: federal
+
+authority:
+  irc_section: "641-643; 2631"
+  irs_publication: "IR-2023-65 (Dirty Dozen warning)"
+  form_instruction: "Instructions for Forms 709 and 1041"
+  state_source: null
+
+status: active
+benefit_type: exclusion
+
+summary: |
+  The honest version: a dynasty trust is an ESTATE/GST tool, not an income-tax
+  eliminator. Allocating GST exemption ($13.99M per person in 2025; $15M from
+  2026 under OBBBA) to a long-duration trust removes the assets AND all their
+  future growth from estate and generation-skipping tax for as many generations
+  as state law allows. A non-grantor dynasty trust pays its own income tax at
+  compressed brackets (the 37% bracket starts around $15,650), which is a COST,
+  accepted in exchange for narrow benefits: its own SALT deduction and its own
+  QSBS §1202 exclusion — both constrained by the §643(f) anti-multiplication rule.
+
+estimated_value:
+  typical_range: "$1M – $10M+ of estate/GST tax avoided on sheltered growth (40% × appreciation)"
+  calculation_basis: "Future appreciation removed from the taxable estate × 40% estate/GST rate"
+  depends_on: [net_worth, expected_growth, gst_exemption_remaining, state_situs]
+
+eligibility_rules:
+  - rule: "Meaningful only when net worth approaches the estate/GST exemption ($13.99M single / $27.98M married, 2025)"
+  - rule: "GST exemption must be affirmatively allocated (Form 709) at funding"
+  - rule: "Trust must be drafted in a state permitting long/perpetual trusts (SD, NV, DE, AK, etc.)"
+  - rule: "Non-grantor status requires giving up grantor powers — no revocability, no swap powers"
+  - rule: "§643(f): multiple trusts with substantially the same grantors and beneficiaries and a principal purpose of tax avoidance are aggregated"
+
+phaseouts:
+  - rule: "Exemption is per-person and use-it-or-lose-it against lifetime gifts; OBBBA set $15M from 2026"
+
+required_user_facts:
+  - fact: "household.estimated_net_worth"
+  - fact: "goals.primary_goals.transfer_wealth_to_heirs"
+
+required_documents:
+  - document: "Executed irrevocable trust instrument"
+  - document: "Form 709 gift-tax return with GST exemption allocation"
+  - document: "Appraisals for hard-to-value funded assets"
+
+required_forms:
+  - form: "Form 709 (gift/GST) in the funding year"
+  - form: "Form 1041 (trust income tax) annually"
+
+deadlines:
+  - deadline: "Form 709 due April 15 following the funding year"
+  - deadline: "Fund before major appreciation events — pre-exit valuations shelter more growth per exemption dollar"
+
+stacking_rules:
+  compatible_with: [crut-664, installment-sale, annual-gift-tax-exclusion, qsbs-exclusion]
+  conflicts_with:
+    - rule: "Assets funded into a CRUT cannot also fund the dynasty trust"
+
+risk_level: high
+
+planning_notes: |
+  SCAM WARNING (the reason this entry is flagged): the "§643(b) trust" promoted
+  online — claiming income allocated to corpus escapes taxation — is a fraud the
+  IRS named in the 2023 Dirty Dozen (IR-2023-65). §643(b) merely defines
+  fiduciary-accounting income; §641 taxes the trust's taxable income regardless
+  of what the deed labels corpus. Promoters sell these as "non-grantor complex
+  discretionary spendthrift trusts" with copyright/mineral-rights garnish; buyers
+  face back taxes, fraud penalties, and promoter-client privilege does not exist.
+  This entry NEVER recommends that scheme. The legitimate tools are: GST-exemption
+  leverage for estate tax, plus narrow non-grantor income-tax uses (a trust-level
+  SALT deduction, per-trust QSBS §1202 capacity) that survive §643(f) only with
+  genuinely different beneficiaries or non-tax purposes.
+
+qualification_pathways:
+  - "If net worth approaches the exemption with transfer goals: engage an estate attorney before the next liquidity event"
+
+review_required:
+  cpa: true
+  attorney: true
+
+last_verified: 2026-07-07
+next_review: 2027-07-01

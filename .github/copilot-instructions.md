@@ -12,3 +12,5 @@
 - Keep changes focused and minimal.
 - Prefer existing repo conventions.
 - If a task touches the agent bundle, update the corresponding docs in `ce/` and keep Claude and Copilot instructions aligned.
+## Session handoff (2026-07-07)
+Read HANDOFF-COPILOT.md at repo root, then ce/skills/*.md (the-setup, the-planner, the-honest-advisor, the-bug-hunter, security-sweep). Next task: execute docs/superpowers/plans/2026-07-06-obbba-deductions.md.

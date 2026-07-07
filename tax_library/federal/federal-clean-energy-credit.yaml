@@ -49,7 +49,7 @@ deadlines:
   - deadline: "Property must be installed and placed in service during tax year"
 
 stacking_rules:
-  compatible_with: [energy-efficient-home-improvement-credit]
+  compatible_with: [25c-energy-home-improvement]
   conflicts_with: []
 
 risk_level: low

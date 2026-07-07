@@ -1,5 +1,6 @@
 import type { ScanResult, ScanStatus } from "./types";
 import { UserFacts } from "./userFacts";
+import { getTaxParamsClosest } from "../taxForms/taxParams";
 
 type RawBenefit = Record<string, unknown>;
 
@@ -224,8 +225,9 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
+    const ctcPerChild = getTaxParamsClosest(facts.taxYear).child_tax_credit;
     if (qualifyingNoSsn.length > 0) {
-      const creditValue = qualifying.length * 2000;
+      const creditValue = qualifying.length * ctcPerChild;
       return {
         status: "nearly_eligible",
         message: `${qualifyingNoSsn.length} child(ren) missing SSN - credit requires SSN by return due date.`,
@@ -234,7 +236,7 @@ const rules: Record<string, RuleFn> = {
       };
     }
 
-    const baseCredit = qualifying.length * 2000;
+    const baseCredit = qualifying.length * ctcPerChild;
     if (agi && agi > cliff) {
       const excess = agi - cliff;
       const reduction = (Math.floor(excess / 1000) + 1) * 50;
@@ -247,7 +249,7 @@ const rules: Record<string, RuleFn> = {
       }
       return {
         status: "eligible_now",
-        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $2,000 = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
+        message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) x $${ctcPerChild.toLocaleString()} = ~$${baseCredit.toLocaleString()}. Partial credit: ~$${remaining.toLocaleString()} remaining after phaseout.`,
         estimated_value: `~$${baseCredit.toLocaleString()}/year`,
         phaseout_note: `AGI $${agi.toLocaleString()} is above the ${cliff.toLocaleString()} phaseout threshold.`
       };
@@ -255,7 +257,7 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $2,000.`,
+      message: `Child Tax Credit: ${qualifying.length} qualifying child(ren) × $${ctcPerChild.toLocaleString()}.`,
       estimated_value: `~$${baseCredit.toLocaleString()}/year`,
       next_steps: ["Report on Schedule 8812", "Up to $1,700 per child may be refundable (ACTC)"]
     };
@@ -1196,12 +1198,13 @@ const rules: Record<string, RuleFn> = {
     const itemizing = facts.itemizing();
 
     if (itemizing === false) {
+      const std = getTaxParamsClosest(facts.taxYear).standard_deduction;
       return {
         status: "eligible_if_changed",
         message: "Not currently itemizing — charitable deduction only applies when itemizing.",
         changes_needed: [
           "Calculate total itemized deductions (mortgage interest + SALT + charitable)",
-          "If total exceeds standard deduction ($30,000 MFJ / $15,000 Single), itemize",
+          `If total exceeds standard deduction ($${std.married_filing_jointly.toLocaleString()} MFJ / $${std.single.toLocaleString()} Single), itemize`,
           "Consider bunching 2-3 years of giving via a Donor-Advised Fund"
         ]
       };
@@ -1228,6 +1231,144 @@ const rules: Record<string, RuleFn> = {
       status: "eligible_now",
       message: "Charitable contribution deduction available (itemizing confirmed).",
       next_steps: nextSteps
+    };
+  },
+
+  "donor-advised-fund": (_benefit, facts) => {
+    if (facts.hasAppreciatedTaxableStock()) {
+      return {
+        status: "eligible_now",
+        message:
+          "Appreciated positions in taxable accounts — donate long-term shares to a DAF in-kind at full fair market value (30% AGI ceiling): the gain is never realized and grants can be spread over years.",
+        next_steps: [
+          "Open a DAF at a sponsoring organization (most major brokerages offer one)",
+          "Contribute long-term appreciated shares in-kind, not cash from selling them",
+          "Bunch 2-3 years of planned giving into one contribution to clear the standard deduction",
+          "Grant to operating charities on your own schedule"
+        ]
+      };
+    }
+
+    if (facts.itemizing() === true) {
+      return {
+        status: "eligible_now",
+        message:
+          "Itemizing confirmed — a DAF takes the full §170 deduction this year (60% AGI ceiling for cash) while grants to charities follow on your schedule.",
+        next_steps: ["Consider bunching future years' planned giving into the current-year DAF contribution"]
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message:
+        "A DAF pays off when you have appreciated stock to donate or enough giving to itemize — record unrealized gains and itemization status.",
+      missing_facts: [
+        "investments.taxable_accounts[*].unrealized_gains",
+        "household.itemizing_deductions"
+      ]
+    };
+  },
+
+  "crut-664": (_benefit, facts) => {
+    if (!facts.hasAppreciatedTaxableStock()) {
+      return {
+        status: "not_applicable",
+        message: "A CRUT is built around appreciated assets — no unrealized gains recorded in taxable accounts."
+      };
+    }
+
+    const gains = facts.totalUnrealizedTaxableGains();
+    if (gains < 250000) {
+      return {
+        status: "not_applicable",
+        message: `Unrealized gains $${gains.toLocaleString()} are below the ~$250,000 level where CRUT drafting and annual administration costs are justified — consider a donor-advised fund instead.`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `$${gains.toLocaleString()} of unrealized gains could fund a charitable remainder unitrust: no gain recognized when the trust sells, a 5–50% unitrust payout, and a §170 deduction equal to the present value of the charity's remainder (must be ≥10% of the contribution).`,
+      next_steps: [
+        "Model payout rate and term — the remainder must pass the 10% present-value test at the current §7520 rate",
+        "Deduction is capped at 30% of AGI for appreciated property to a public charity (5-year carryforward)",
+        "Distributions are taxed under §664(b) four-tier ordering — ordinary income first, then capital gain",
+        "Fund the trust BEFORE any binding sale agreement exists — a prearranged sale collapses the deferral",
+        "Engage an estate attorney to draft and a CPA for the annual Form 5227"
+      ]
+    };
+  },
+
+  "831b-microcaptive": (_benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "Micro-captive insurance requires an operating business — none recorded."
+      };
+    }
+
+    const revenue = facts.firstBusinessGrossRevenue();
+    if (revenue <= 0) {
+      return {
+        status: "nearly_eligible",
+        message: "Has a business — record gross revenue to assess whether captive economics can make sense.",
+        missing_facts: ["businesses.financials.gross_revenue"],
+        next_steps: ["Record gross revenue under business financials"]
+      };
+    }
+
+    if (revenue < 1000000) {
+      return {
+        status: "not_applicable",
+        message: `Business revenue $${revenue.toLocaleString()} is below the ~$1M level where captive formation and annual administration costs (typically $50k–$100k/year) can be justified by genuine insurance needs.`
+      };
+    }
+
+    return {
+      status: "nearly_eligible",
+      message: `Business revenue $${revenue.toLocaleString()} could support a §831(b) captive (2025 premium ceiling $2.85M) — but only with real insurance risk. CAUTION: low-loss-ratio and circular-financing configurations are listed transactions / transactions of interest under T.D. 10029 (Jan 2025).`,
+      next_steps: [
+        "Commission an independent feasibility study identifying real, material, uninsured business risks",
+        "Premiums must be actuarially priced at arm's length — never reverse-engineered from a deduction target",
+        "Verify diversification: ≤20% of net written premiums from any one policyholder",
+        "Expect Form 8886 disclosure obligations if loss-ratio or financing factors under T.D. 10029 are met",
+        "Engage both a CPA and an attorney experienced in captives — avoid turnkey promoters"
+      ]
+    };
+  },
+
+  "nongrantor-dynasty-trust": (_benefit, facts) => {
+    const netWorth = facts.estimatedNetWorth();
+
+    if (netWorth <= 0) {
+      if (facts.transferWealthGoal() === true) {
+        return {
+          status: "nearly_eligible",
+          message: "Wealth-transfer goal set — record estimated net worth to assess whether GST-exempt dynasty trust planning applies (2025 exemption $13.99M per person).",
+          missing_facts: ["household.estimated_net_worth"]
+        };
+      }
+      return {
+        status: "not_applicable",
+        message: "Dynasty trust planning is an estate/GST tool — no wealth-transfer goal or net worth recorded."
+      };
+    }
+
+    if (netWorth < 10000000) {
+      return {
+        status: "not_applicable",
+        message: `Estimated net worth $${netWorth.toLocaleString()} is below estate/GST exemption territory ($13.99M per person in 2025; $15M from 2026 under OBBBA) — a dynasty trust adds cost and complexity without estate-tax benefit at this level.`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `Estimated net worth $${netWorth.toLocaleString()} approaches the estate/GST exemption — a GST-exempt dynasty trust locks in today's $13.99M per-person exemption across generations. NOTE: this is estate/GST leverage, NOT income-tax elimination; a non-grantor trust pays compressed-bracket income tax (37% bracket starts ≈ $15,650).`,
+      next_steps: [
+        "Engage an estate attorney — the trust must be irrevocable and GST exemption allocated on Form 709",
+        "Beware promoted \"§643(b) untaxed corpus\" schemes — an IRS Dirty Dozen scam (IR-2023-65); §641 taxes trust income regardless of corpus allocation",
+        "Narrow income-tax uses (trust-level SALT deduction, per-trust QSBS capacity) are constrained by the §643(f) anti-multiplication rule",
+        "Coordinate with a CPA on annual Form 1041 and long-duration state situs (SD, NV, DE, AK)"
+      ]
     };
   },
 
@@ -2416,7 +2557,7 @@ const rules: Record<string, RuleFn> = {
 
     return {
       status: "eligible_now",
-      message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} Entity-level state tax payment can bypass the $10,000 SALT cap at the owner level.`,
+      message: `PTE election available in ${primary}.${nonResNote}${multiNote}${formationNote} Entity-level state tax payment can bypass the SALT cap at the owner level ($40,000 for 2025, phasing back toward $10,000 above ~$500k MAGI).`,
       next_steps: nextSteps
     };
   },

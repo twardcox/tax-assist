@@ -2707,19 +2707,35 @@ describe("API baseline", () => {
     await app.close();
   });
 
-  test("tax law update validates source and starts background update", async () => {
+  test("tax law update requires auth, validates source, and starts background update", async () => {
     const app = await buildApp();
+
+    const unauthRes = await app.inject({
+      method: "POST",
+      url: "/api/tax-law/update?source=irs_news&dry_run=true"
+    });
+    expect(unauthRes.statusCode).toBe(401);
+
+    const regRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: { email: "taxlaw-update@example.com", password: "Test1234!", display_name: "Tax Law" }
+    });
+    const token = (regRes.json() as { token: string }).token;
+    const authHeaders = { authorization: `Bearer ${token}` };
 
     const badSourceRes = await app.inject({
       method: "POST",
-      url: "/api/tax-law/update?source=not_real"
+      url: "/api/tax-law/update?source=not_real",
+      headers: authHeaders
     });
     expect(badSourceRes.statusCode).toBe(400);
     expect((badSourceRes.json() as { detail: string }).detail).toContain("Unknown source");
 
     const triggerRes = await app.inject({
       method: "POST",
-      url: "/api/tax-law/update?source=irs_news&days=14&dry_run=true"
+      url: "/api/tax-law/update?source=irs_news&days=14&dry_run=true",
+      headers: authHeaders
     });
     expect(triggerRes.statusCode).toBe(200);
     expect(triggerRes.json()).toEqual({
@@ -2735,6 +2751,13 @@ describe("API baseline", () => {
   test("tax law route rejects invalid bounds and surfaces already running state", async () => {
     const app = await buildApp();
 
+    const regRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: { email: "taxlaw-bounds@example.com", password: "Test1234!", display_name: "Tax Law" }
+    });
+    const authHeaders = { authorization: `Bearer ${(regRes.json() as { token: string }).token}` };
+
     const invalidLimitRes = await app.inject({
       method: "GET",
       url: "/api/tax-law/changes?limit=0"
@@ -2744,7 +2767,8 @@ describe("API baseline", () => {
 
     const invalidDaysRes = await app.inject({
       method: "POST",
-      url: "/api/tax-law/update?days=0"
+      url: "/api/tax-law/update?days=0",
+      headers: authHeaders
     });
     expect(invalidDaysRes.statusCode).toBe(400);
     expect((invalidDaysRes.json() as { detail: string }).detail).toContain("days must be between 1 and 365");
@@ -2760,7 +2784,8 @@ describe("API baseline", () => {
     try {
       const alreadyRunningRes = await app.inject({
         method: "POST",
-        url: "/api/tax-law/update?source=irs_news&days=14&dry_run=true"
+        url: "/api/tax-law/update?source=irs_news&days=14&dry_run=true",
+        headers: authHeaders
       });
       expect(alreadyRunningRes.statusCode).toBe(200);
       expect(alreadyRunningRes.json()).toEqual({
@@ -2786,9 +2811,16 @@ describe("API baseline", () => {
     expect(invalidLimitTypeRes.statusCode).toBe(422);
     expect((invalidLimitTypeRes.json() as { detail: string }).detail).toBe("Validation error");
 
+    const regRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/register",
+      payload: { email: "taxlaw-types@example.com", password: "Test1234!", display_name: "Tax Law" }
+    });
+
     const invalidDryRunRes = await app.inject({
       method: "POST",
-      url: "/api/tax-law/update?dry_run=maybe"
+      url: "/api/tax-law/update?dry_run=maybe",
+      headers: { authorization: `Bearer ${(regRes.json() as { token: string }).token}` }
     });
     expect(invalidDryRunRes.statusCode).toBe(422);
     expect((invalidDryRunRes.json() as { detail: string }).detail).toBe("Validation error");
@@ -3077,6 +3109,36 @@ describe("API baseline", () => {
     });
     expect(invalidFilingFormatRes.statusCode).toBe(422);
     expect((invalidFilingFormatRes.json() as { detail: string }).detail).toBe("Validation error");
+
+    await app.close();
+  });
+});
+
+describe("strategy stacks", () => {
+  test("POST /api/scan returns strategy stacks consistent with member statuses", async () => {
+    const app = await buildApp();
+    const response = await app.inject({ method: "POST", url: "/api/scan?tax_year=2025" });
+
+    expect(response.statusCode).toBe(200);
+    const payload = response.json();
+    expect(payload.stacks.map((s: { stack_id: string }) => s.stack_id).sort()).toEqual([
+      "appreciated-asset-charitable-stack",
+      "business-owner-deduction-stack",
+      "exit-estate-stack"
+    ]);
+
+    for (const stack of payload.stacks) {
+      const dead = (s: string) => s === "not_applicable" || s === "expired";
+      const required = stack.members.filter((m: { required: boolean }) => m.required);
+      const expected = required.some((m: { status: string }) => dead(m.status))
+        ? "not_applicable"
+        : required.every((m: { status: string }) => m.status === "eligible_now")
+          ? "eligible_now"
+          : "nearly_eligible";
+      expect(stack.status).toBe(expected);
+      expect(stack.sequence.length).toBeGreaterThan(0);
+      expect(["low", "medium", "high"]).toContain(stack.risk_level);
+    }
 
     await app.close();
   });

@@ -4,6 +4,8 @@ const CONFIG = {
   eligible_if_changed: { bg: "bg-blue-900",    text: "text-blue-300",    label: "If Changed" },
   future_opportunity:  { bg: "bg-purple-900",  text: "text-purple-300",  label: "Future" },
   high_risk:           { bg: "bg-red-900",     text: "text-red-300",     label: "High Risk" },
+  not_applicable:      { bg: "bg-gray-800",    text: "text-gray-500",    label: "Not Applicable" },
+  expired:             { bg: "bg-gray-800",    text: "text-red-400",     label: "Expired" },
   unknown:             { bg: "bg-gray-800",    text: "text-gray-400",    label: "Unknown" },
 };
 

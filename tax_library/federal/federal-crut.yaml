@@ -1,0 +1,83 @@
+id: crut-664
+name: Charitable Remainder Unitrust (CRUT) — §664
+category: estate
+jurisdiction: federal
+
+authority:
+  irc_section: "664; 170"
+  irs_publication: "526; 4302"
+  form_instruction: "Instructions for Form 5227"
+  state_source: null
+
+status: active
+benefit_type: deferral
+
+summary: |
+  Contribute appreciated assets to a charitable remainder unitrust: the trust
+  sells without recognizing gain, pays you 5–50% of trust value annually for
+  life or a term of years, and the remainder passes to charity. You get an
+  immediate §170 deduction equal to the present value of the charitable
+  remainder (which must be at least 10% of the contribution). Distributions
+  are taxed under the §664(b) four-tier ordering: ordinary income first, then
+  capital gain, then other income, then tax-free corpus.
+
+estimated_value:
+  typical_range: "$25,000 – $500,000+ in deferred capital-gains tax plus a PV-of-remainder deduction"
+  calculation_basis: "Gain deferred on trust's sale + PV of charitable remainder × marginal rate"
+  depends_on: [unrealized_gains, payout_rate, term, section_7520_rate, agi]
+
+eligibility_rules:
+  - rule: "Unitrust payout must be between 5% and 50% of annually revalued trust assets"
+  - rule: "Present value of charitable remainder must be ≥10% of contributed value (§664(d)(2)(D))"
+  - rule: "§170 deduction for appreciated property to a public-charity remainder: 30% of AGI ceiling, 5-year carryforward"
+  - rule: "Assets must be transferred BEFORE any binding sale agreement — prearranged sales are taxed to the donor (assignment of income)"
+  - rule: "No self-dealing (§4941); dealer property / inventory is unsuitable funding"
+
+phaseouts:
+  - rule: "Deduction limited to 30% of AGI (appreciated property, public charity remainder); excess carries forward 5 years"
+
+required_user_facts:
+  - fact: "investments.taxable_accounts[*].unrealized_gains"
+  - fact: "household.estimated_agi"
+  - fact: "goals.primary_goals.transfer_wealth_to_heirs"
+
+required_documents:
+  - document: "Executed trust instrument drafted by an attorney"
+  - document: "Qualified appraisal for non-publicly-traded contributed assets"
+  - document: "Brokerage transfer confirmations for funded assets"
+
+required_forms:
+  - form: "Form 5227 (Split-Interest Trust Information Return) — every year"
+  - form: "Form 8283 (non-cash charitable contribution)"
+  - form: "Schedule A (deduction year)"
+
+deadlines:
+  - deadline: "Trust must be drafted, executed, and funded before any binding sale agreement"
+  - deadline: "Form 5227 due April 15 following each trust year"
+
+stacking_rules:
+  compatible_with: [charitable-contribution-deduction, donor-advised-fund, installment-sale, nongrantor-dynasty-trust]
+  conflicts_with:
+    - rule: "Assets inside a CRUT cannot also fund other transfer vehicles — decide the split first"
+
+risk_level: medium
+
+planning_notes: |
+  - Legitimate and long-established; the flagged variants are early terminations engineered
+    to strip the charity's remainder and funding with dealer property — both draw IRS
+    enforcement attention
+  - Model the 10% remainder test at the current §7520 rate before drafting — low rates
+    make lifetime CRUTs for young donors fail the test
+  - NIMCRUT / flip-CRUT variants control distribution timing for illiquid assets
+  - Pair with a DAF: DAF for ceiling-sized gifts, CRUT for the concentrated block
+
+qualification_pathways:
+  - "If holding a concentrated position too large for one year's AGI ceilings: fund a CRUT before sale"
+  - "If charitably inclined with a liquidity event coming: draft 60-90 days ahead"
+
+review_required:
+  cpa: true
+  attorney: true
+
+last_verified: 2026-07-07
+next_review: 2027-07-01

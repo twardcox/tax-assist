@@ -79,7 +79,7 @@ export async function registerTaxLawRoutes(app: FastifyInstance): Promise<void> 
     };
   });
 
-  app.post("/tax-law/update", async (request) => {
+  app.post("/tax-law/update", { preHandler: app.authenticate }, async (request) => {
     const query = UpdateQuerySchema.parse(request.query ?? {});
 
     const source = query.source;

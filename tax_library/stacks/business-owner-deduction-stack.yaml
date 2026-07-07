@@ -1,0 +1,80 @@
+id: business-owner-deduction-stack
+kind: strategy_stack
+name: Business Owner Deduction Stack (§162 family + §179/§168(k) + optional §831(b))
+jurisdiction: federal
+target_profile: |
+  Who this fits: profitable owner-operators (sole prop, LLC, or S-Corp) layering
+  entity structure, everyday §162 deductions, and equipment expensing into one
+  coordinated plan. The captive layer only fits businesses with ~$1M+ revenue
+  and genuine uninsured risks.
+members:
+  - benefit_id: s-corp-election
+    role: "Foundation: entity layer — reasonable salary + distributions to cut SE tax"
+    required: true
+  - benefit_id: home-office-deduction
+    role: "§162 layer: deduct the business-use share of the home via an accountable plan"
+    required: false
+  - benefit_id: business-vehicle-deduction
+    role: "§162 layer: mileage or actual-expense deduction for business vehicle use"
+    required: false
+  - benefit_id: augusta-rule
+    role: "§280A(g): rent your home to the business ≤14 days/year, income tax-free"
+    required: false
+  - benefit_id: section-179-expensing
+    role: "Expensing layer: immediate write-off of equipment up to the §179 limit"
+    required: false
+  - benefit_id: bonus-depreciation
+    role: "Expensing layer: §168(k) bonus depreciation on qualifying property"
+    required: false
+  - benefit_id: 831b-microcaptive
+    role: "Advanced layer: captive premiums deductible under §162 — ONLY with real insurance risk"
+    required: false
+interactions: |
+  Sequencing matters. The S-Corp election changes whose return the deductions land
+  on: once elected, home-office and vehicle costs must run through an accountable
+  plan (reimbursements from the S-Corp), not Schedule C. Augusta-rule rent is
+  deductible to the S-Corp and tax-free to you, but needs documented fair-market
+  rates and a real business purpose per meeting. §179 and bonus depreciation apply
+  to the same asset pool — elect §179 per asset first, bonus sweeps the remainder;
+  both reduce QBI, so model against the §199A deduction before maxing them.
+  Captive premiums also reduce operating income (and QBI); the captive is the last
+  layer added, never the first.
+sequence:
+  - step: 1
+    action: "Confirm S-Corp status (Form 2553) and set a defensible reasonable salary"
+    timing: "Q1 — by March 15 for the election to apply to the current year"
+    professional: cpa
+  - step: 2
+    action: "Adopt a written accountable plan; start monthly home-office and vehicle reimbursements"
+    timing: "Q1"
+    professional: cpa
+  - step: 3
+    action: "Document Augusta-rule rentals as they happen: agenda, attendees, comparable rate quotes, invoice"
+    timing: "throughout the year, 14-day maximum"
+    professional: none
+  - step: 4
+    action: "Plan equipment purchases; place assets in service and elect the §179 / bonus split"
+    timing: "before 12/31 — the in-service date controls, not the payment date"
+    professional: cpa
+  - step: 5
+    action: "Only if revenue and real risk justify it: independent captive feasibility study, then formation"
+    timing: "6-9 month lead time; premiums deductible only once coverage is bound"
+    professional: cpa+attorney
+combined_value: |
+  Typical range $15,000 – $150,000+/year: SE-tax savings from the S-Corp layer
+  (~$10-20k at $150k+ profit), $3-15k from accountable-plan reimbursements and
+  Augusta rent, and equipment expensing that scales with purchases. Captive
+  premiums (ceiling $2.85M, 2025) defer tax on underwriting profit but carry real
+  cost and risk — value exists only if the insurance is real. Per-member estimates
+  control; no combined dollar total is computed.
+risk_level: high
+abuse_boundary: |
+  The captive member is why this stack is flagged. T.D. 10029 (January 2025) makes
+  certain §831(b) captives listed transactions (loss ratio under 30% plus financing
+  flowing back to the insured or its owners) or transactions of interest (loss
+  ratio under 60%). Listed status means Form 8886 disclosure, promoter penalties,
+  and near-certain examination. If premiums are priced to hit a deduction target
+  instead of actuarial risk, that is the fact pattern the IRS wins in court
+  (Avrahami, Syzygy, Caylor). Run this stack without the captive unless there is
+  genuine, material, uninsured risk priced by an independent actuary.
+review_required: { cpa: true, attorney: true }

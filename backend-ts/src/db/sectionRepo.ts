@@ -1,4 +1,4 @@
-import { query, queryOne, execute } from "./client";
+import { queryOne, execute } from "./client";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -31,6 +31,10 @@ function boolCol(val: unknown): number {
   return val ? 1 : 0;
 }
 
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
 
 // ── Canonical getter: always read from data_json ──────────────────────────────
 
@@ -49,7 +53,7 @@ async function getHousehold(userId: string, taxYear: number): Promise<Record<str
 }
 
 async function saveHousehold(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO household_data (
       user_id, tax_year, data_json,
@@ -86,7 +90,7 @@ async function getIncome(userId: string, taxYear: number): Promise<Record<string
 }
 
 async function saveIncome(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO income_data (
       user_id, tax_year, data_json,
@@ -134,7 +138,7 @@ async function getBusinesses(userId: string, taxYear: number): Promise<Record<st
 }
 
 async function saveBusinesses(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO businesses_data (user_id, tax_year, data_json, businesses, updated_at)
     VALUES ($1, $2, $3, $4, $5)
@@ -152,7 +156,7 @@ async function getRealEstate(userId: string, taxYear: number): Promise<Record<st
 }
 
 async function saveRealEstate(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO real_estate_data (user_id, tax_year, data_json, properties, updated_at)
     VALUES ($1, $2, $3, $4, $5)
@@ -170,7 +174,7 @@ async function getInvestments(userId: string, taxYear: number): Promise<Record<s
 }
 
 async function saveInvestments(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO investments_data (
       user_id, tax_year, data_json,
@@ -202,7 +206,7 @@ async function getRetirement(userId: string, taxYear: number): Promise<Record<st
 }
 
 async function saveRetirement(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO retirement_data (
       user_id, tax_year, data_json,
@@ -234,7 +238,7 @@ async function getHealthcare(userId: string, taxYear: number): Promise<Record<st
 }
 
 async function saveHealthcare(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO healthcare_data (
       user_id, tax_year, data_json,
@@ -273,7 +277,7 @@ async function getDependents(userId: string, taxYear: number): Promise<Record<st
 }
 
 async function saveDependents(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO dependents_data (user_id, tax_year, data_json, dependents, updated_at)
     VALUES ($1, $2, $3, $4, $5)
@@ -291,7 +295,7 @@ async function getGoals(userId: string, taxYear: number): Promise<Record<string,
 }
 
 async function saveGoals(userId: string, taxYear: number, data: Record<string, unknown>): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO goals_data (
       user_id, tax_year, data_json,
@@ -328,17 +332,11 @@ async function getSectionBlob(userId: string, taxYear: number, section: string):
     "SELECT data_json FROM section_data WHERE user_id = $1 AND tax_year = $2 AND section = $3",
     [userId, taxYear, section]
   );
-
-  if (!row) return {};
-  try {
-    return (JSON.parse(row.data_json) as Record<string, unknown>) ?? {};
-  } catch {
-    return {};
-  }
+  return row ? safeJson(row.data_json, {}) : {};
 }
 
 async function saveSectionBlob(userId: string, taxYear: number, section: string, data: object): Promise<void> {
-  const now = new Date().toISOString();
+  const now = nowIso();
   await execute(`
     INSERT INTO section_data (user_id, tax_year, section, data_json, updated_at)
     VALUES ($1, $2, $3, $4, $5)
@@ -384,30 +382,61 @@ export async function saveSectionData(userId: string, taxYear: number, section: 
   await saveSectionBlob(userId, taxYear, section, data);
 }
 
-function assignPath(target: Record<string, unknown>, dotPath: string, operation: string, value: unknown): boolean {
+function assignPath(target: Record<string, unknown>, dotPath: string, operation: "set" | "add", value: unknown): boolean {
   const parts = dotPath.split(".").filter(Boolean);
   if (parts.length === 0) return false;
 
+  const BANNED = new Set(["__proto__", "constructor", "prototype"]);
+  if (parts.some(p => BANNED.has(p))) return false;
+
   let current: unknown = target;
-  for (const part of parts.slice(0, -1)) {
-    if (!current || typeof current !== "object" || Array.isArray(current)) return false;
-    const obj = current as Record<string, unknown>;
-    if (!(part in obj) || obj[part] == null || typeof obj[part] !== "object") {
-      obj[part] = {};
+
+  try {
+    for (const part of parts.slice(0, -1)) {
+      if (Array.isArray(current)) {
+        const index = Number(part);
+        if (!Number.isInteger(index) || index < 0) return false;
+        current = current[index];
+      } else if (current && typeof current === "object") {
+        const obj = current as Record<string, unknown>;
+        if (!(part in obj) || obj[part] == null || typeof obj[part] !== "object") {
+          obj[part] = {};
+        }
+        current = obj[part];
+      } else {
+        return false;
+      }
     }
-    current = obj[part];
-  }
 
-  const last = parts[parts.length - 1];
-  if (!current || typeof current !== "object" || Array.isArray(current)) return false;
+    const last = parts[parts.length - 1];
+    if (Array.isArray(current)) {
+      const index = Number(last);
+      if (!Number.isInteger(index) || index < 0) return false;
+      while (current.length <= index) {
+        current.push(null);
+      }
+      if (operation === "add") {
+        current[index] = Number(current[index] ?? 0) + Number(value ?? 0);
+      } else {
+        current[index] = value;
+      }
+      return true;
+    }
 
-  const obj = current as Record<string, unknown>;
-  if (operation === "add") {
-    obj[last] = Number(obj[last] ?? 0) + Number(value ?? 0);
-  } else {
-    obj[last] = value;
+    if (current && typeof current === "object") {
+      const obj = current as Record<string, unknown>;
+      if (operation === "add") {
+        obj[last] = Number(obj[last] ?? 0) + Number(value ?? 0);
+      } else {
+        obj[last] = value;
+      }
+      return true;
+    }
+
+    return false;
+  } catch {
+    return false;
   }
-  return true;
 }
 
 export async function applyDotPathToSection(
@@ -415,7 +444,7 @@ export async function applyDotPathToSection(
   taxYear: number,
   section: string,
   dotPath: string,
-  operation: string,
+  operation: "set" | "add",
   value: unknown
 ): Promise<boolean> {
   const data = await getSectionData(userId, taxYear, section);

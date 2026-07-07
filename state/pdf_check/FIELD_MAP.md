@@ -1,6 +1,14 @@
 # IRS Form Field Map — Tax Year 2025
 # Verified via markitdown + visual inspection
 
+> **REVISION GUARD:** The IRS re-publishes form PDFs at the same URL, and a new
+> revision can renumber AcroForm fields (the "Created 9/5/25" Form 1040 revision
+> shifted every index after f1_53/f2_06 and invalidated the previous mapping).
+> This map is valid only for the exact PDFs whose sha256 prefixes are pinned in
+> `backend-ts/scripts/checkFieldMappings.mjs` — that script exits immediately if
+> a cached PDF no longer matches. If the cache refreshes to a new revision,
+> re-derive the mapping (FORM_MAPPING_PROCESS.md) before trusting any output.
+
 ## Form 1040 — Page 1 (AcroForm Page1)
 
 ### Header — field positions verified via mapFieldPositions.mjs (2026-06-11)
@@ -12,7 +20,9 @@ Name fields begin at f1_14 (Y≈94 from page top).
 | f1_01[0] | 48, 229 | Alternate tax year "beginning" date | — | not filled |
 | f1_02[0] | 48, 366 | Alternate tax year "ending" date | — | not filled |
 | f1_03[0] | 48, 469 | Alternate tax year ending year | — | not filled |
-| f1_04–f1_10 | 61, * | Deceased/spouse death dates, combat zone text | — | not filled |
+| f1_05–f1_07 | 61, * | Deceased taxpayer date MM/DD/YYYY | `household.taxpayer_date_of_death` | ✓ verified live 2026-07-06 |
+| f1_08–f1_10 | 61, * | Deceased spouse date MM/DD/YYYY | `household.spouse_date_of_death` | ✓ |
+| f1_04 | 61, * | Combat zone text | — | not filled |
 | f1_11–f1_13 | 73, * | "Other" section text fields | — | not filled |
 | **f1_14[0]** | **94, 36** | **Your first name and middle initial** | `household.taxpayer.first_name` | ✓ FIXED |
 | **f1_15[0]** | **94, 253** | **Your last name** | `household.taxpayer.last_name` | ✓ FIXED |
@@ -84,85 +94,101 @@ Tab order does not match visual reading order, but the visual grouping is defini
 | c1_43[0] | 7b-1 | Schedule D not required | `income.investment_income.schedule_d_not_required` | ✓ FIXED |
 | c1_44[0] | 7b-2 | Includes child's capital gain | `income.investment_income.child_capital_gain_included` | ✓ FIXED |
 
-### Income (Line Numbers)
+### Income (Line Numbers) — REMAPPED 2026-07-06 for form revision "Created 9/5/25"
+> The IRS re-published the 2025 Form 1040 (footer: "Created 9/5/25", cached sha256
+> prefix `3d31c226df0d189c`). That revision shifted every f1_XX index after f1_53 and
+> moved lines 12–18 entirely to Page 2 — Page 1 now ends at Line 11a. The previous
+> version of this table was correct only for the earlier revision. Verified three ways
+> 2026-07-06: widget-position dump against IRS-printed captions, live value check
+> (`checkFieldMappings.mjs`), and visual render inspection.
+
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| f1_47[0] | 1a | Total amount from W-2, box 1 | `wages` | ✓ |
-| f1_48[0] | 1b | Household employee wages | — | not filled |
-| f1_49[0] | 1c | Tip income | — | not filled |
-| f1_50[0] | 1d | Medicaid waiver payments | — | not filled |
+| f1_47[0] | 1a | Total amount from W-2, box 1 | `wages` | ✓ verified 2026-07-06 |
+| f1_48[0] | 1b | Household employee wages | `household_employee_wages` | ✓ |
+| f1_49[0] | 1c | Tip income not on line 1a | `tip_income_unreported` | ✓ |
+| f1_50[0] | 1d | Medicaid waiver payments | `medicaid_waiver_payments` | ✓ |
 | f1_51[0] | 1e | Taxable dependent care benefits | — | not filled |
 | f1_52[0] | 1f | Employer adoption benefits | — | not filled |
 | f1_53[0] | 1g | Wages from Form 8919 | — | not filled |
-| f1_54[0] | 1h | Other earned income | — | not filled |
-| f1_55[0] | 2b | Taxable interest | `taxable_interest` | ✓ |
-| f1_56[0] | 3b | Ordinary dividends | `ordinary_dividends` | ✓ |
-| f1_57[0] | 3a | Qualified dividends | `qualified_dividends` | ✓ |
-| f1_58[0] | 4a | IRA distributions — gross | `ira_gross` | ✓ |
-| f1_59[0] | 4b | IRA distributions — taxable | `ira_taxable` | ✓ |
-| f1_60[0] | 5a | Pensions and annuities — gross | `pension_gross` | ✓ |
-| f1_61[0] | 5b | Pensions and annuities — taxable | `pension_taxable` | ✓ |
-| f1_62[0] | 6a | Social security benefits — gross | `ss_gross` | ✓ |
-| f1_63[0] | 6b | Social security benefits — taxable | `ss_taxable` | ✓ |
-| f1_64[0] | (year) | Lump-sum election year (§86(e)) | — | not filled |
-| f1_65[0] | 7a | Capital gain or (loss) | `capital_gains_net` | ✓ |
-| f1_66[0] | 8 | Additional income (Schedule 1, line 10) | `schedule1_additional` | ✓ |
-| f1_67[0] | 9 | TOTAL INCOME | `total_income` | ✓ |
-| f1_68[0] | 10 | Adjustments to income (Schedule 1, line 26) | `total_adjustments` | ✓ |
-| f1_69[0] | 11a | ADJUSTED GROSS INCOME | `agi` | ✓ |
+| f1_54[0] | 1h | Other earned income — type blank | — | not filled |
+| f1_55[0] | 1h | Other earned income — amount | `other_earned_income` | ✓ |
+| f1_56[0] | 1i | Nontaxable combat pay election | — | not filled |
+| f1_57[0] | 1z | Add lines 1a through 1h | sum of 1a–1h fills | ✓ |
+| f1_58[0] | 2a | Tax-exempt interest | — | not filled (not modeled) |
+| f1_59[0] | 2b | Taxable interest | `taxable_interest` | ✓ |
+| f1_60[0] | 3a | Qualified dividends | `qualified_dividends` | ✓ |
+| f1_61[0] | 3b | Ordinary dividends | `ordinary_dividends` | ✓ |
+| f1_62[0] | 4a | IRA distributions — gross | `ira_gross` | ✓ |
+| f1_63[0] | 4b | IRA distributions — taxable | `ira_taxable` | ✓ |
+| f1_64[0] | 4c-3 | IRA "other" text blank | — | not filled |
+| f1_65[0] | 5a | Pensions and annuities — gross | `pension_gross` | ✓ |
+| f1_66[0] | 5b | Pensions and annuities — taxable | `pension_taxable` | ✓ |
+| f1_67[0] | 5c-3 | Pension "other" text blank | — | not filled |
+| f1_68[0] | 6a | Social security benefits — gross | `ss_gross` | ✓ |
+| f1_69[0] | 6b | Social security benefits — taxable | `ss_taxable` | ✓ |
+| f1_70[0] | 7a | Capital gain or (loss) | `capital_gains_net` | ✓ |
+| f1_71[0] | 7b | Child's capital gain amount blank | — | not filled |
+| f1_72[0] | 8 | Additional income (Schedule 1, line 10) | `schedule1_additional` | ✓ |
+| f1_73[0] | 9 | TOTAL INCOME | `total_income` | ✓ |
+| f1_74[0] | 10 | Adjustments to income (Schedule 1, line 26) | `total_adjustments` | ✓ |
+| f1_75[0] | 11a | ADJUSTED GROSS INCOME | `agi` | ✓ |
 
-### Deductions / Tax (bottom of Page 1 — also repeated on Page 2)
-| Field | Line | Form Label | ComputedValues Key | Status |
-|---|---|---|---|---|
-| f1_70[0] | 12e | Standard or itemized deduction | `deduction` | ✓ |
-| f1_71[0] | 13a | Qualified Business Income deduction (§199A) | `qbi_deduction` | ✓ |
-| f1_72[0] | 14 | Add lines 12e + 13a + 13b | `deduction + qbi_deduction` | ✓ |
-| f1_73[0] | 15 | TAXABLE INCOME | `taxable_income` | ✓ |
-| f1_74[0] | 16 | Tax | `income_tax_before_credits` | ✓ |
-| f1_75[0] | 18 | Add lines 16 and 17 (no AMT) | `income_tax_before_credits` | ✓ |
+(Lines 12–18 no longer exist on Page 1 in this revision — see Page 2 below.)
 
 ---
 
 ## Form 1040 — Page 2 (AcroForm Page2)
 
-### Tax and Credits carry-over
-| Field | Line | Form Label | ComputedValues Key | Status |
-|---|---|---|---|---|
-| f2_01[0] | 11b | Amount from line 11a (AGI carryover) | `agi` | ✓ FIXED |
-| f2_02[0] | 12e | Standard or itemized deduction | `deduction` | ✓ FIXED |
-| f2_03[0] | 13a | QBI deduction (§199A) | `qbi_deduction` | ✓ FIXED |
-| f2_04[0] | 13b | Additional deductions (Sch 1-A, line 38) | — | not filled (zero) |
-| f2_05[0] | 14 | Add lines 12e + 13a + 13b | `deduction + qbi_deduction` | ✓ FIXED |
-| f2_06[0] | 15 | TAXABLE INCOME | `taxable_income` | ✓ FIXED |
+### Tax and Credits — REMAPPED 2026-07-06 for form revision "Created 9/5/25"
+> f2_07 is now the line-16 checkbox-3 text blank, shifting every amount field
+> from line 16 on. Lines 16/18 exist only on Page 2 in this revision.
 
-### Credits
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| f2_07[0] | 19 | Child tax credit or credit for other dependents | `ctc_with_odc` (CTC + ODC from Sch 8812) | ✓ FIXED 2026-06-13 |
-| f2_08[0] | 20 | Amount from Schedule 3, line 8 | `schedule3_line8` | ✓ FIXED 2026-06-13 |
-| f2_09[0] | 21 | TOTAL CREDITS | `total_credits` | ✓ |
-| f2_10[0] | 22 | Tax after credits | `income_tax_after_credits` | ✓ |
-| f2_11[0] | 23 | Other taxes including SE tax | `se_tax` | ✓ |
-| f2_12[0] | 24 | TOTAL TAX | `total_tax` | ✓ |
+| f2_01[0] | 11b | Amount from line 11a (AGI carryover) | `agi` | ✓ verified 2026-07-06 |
+| f2_02[0] | 12e | Standard or itemized deduction | `deduction` | ✓ |
+| f2_03[0] | 13a | QBI deduction (§199A) | `qbi_deduction` | ✓ |
+| f2_04[0] | 13b | Additional deductions (Sch 1-A, line 38) | — | not filled (zero) |
+| f2_05[0] | 14 | Add lines 12e + 13a + 13b | `deduction + qbi_deduction` | ✓ |
+| f2_06[0] | 15 | TAXABLE INCOME | `taxable_income` | ✓ |
+| f2_07[0] | 16 | Tax form checkbox-3 text blank | — | not filled |
+| f2_08[0] | 16 | Tax | `income_tax_before_credits` | ✓ |
+| f2_09[0] | 17 | Amount from Schedule 2, line 3 | — | not filled (Sch 2 not modeled) |
+| f2_10[0] | 18 | Add lines 16 and 17 | `income_tax_before_credits` | ✓ |
+| f2_11[0] | 19 | Child tax credit or credit for other dependents | `ctc_with_odc` (CTC + ODC from Sch 8812) | ✓ |
+| f2_12[0] | 20 | Amount from Schedule 3, line 8 | `schedule3_line8` | ✓ |
+| f2_13[0] | 21 | TOTAL CREDITS | `total_credits` | ✓ |
+| f2_14[0] | 22 | Tax after credits | `income_tax_after_credits` | ✓ |
+| f2_15[0] | 23 | Other taxes including SE tax | `se_tax + household_employment_tax` | ✓ |
+| f2_16[0] | 24 | TOTAL TAX | `total_tax` | ✓ |
 
 ### Payments
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| f2_13[0] | 25a | Federal income tax withheld — W-2 | `w2_withholding` | ✓ |
-| f2_14[0] | 25b | Federal income tax withheld — 1099 / other | `other_withholding` | ✓ FIXED |
-| f2_15[0] | 25c | Other forms (see instructions) | — | not filled (zero) |
-| f2_17[0] | 25d | Add lines 25a + 25b + 25c | `w2_withholding + other_withholding` | ✓ FIXED |
-| f2_18[0] | 26 | 2025 estimated tax payments | `estimated_tax_payments` | ✓ |
-| SSN_ReadOrder[0].f2_22[0] | 26 footnote | Former spouse SSN | `household.payments.former_spouse_ssn` | ✓ FIXED |
-| f2_24[0] | 33 | TOTAL PAYMENTS | `total_payments` | ✓ |
+| f2_17[0] | 25a | Federal income tax withheld — W-2 | `w2_withholding` | ✓ verified 2026-07-06 |
+| f2_18[0] | 25b | Federal income tax withheld — 1099 / other | `other_withholding` | ✓ |
+| f2_19[0] | 25c | Other forms (see instructions) | — | not filled (zero) |
+| f2_20[0] | 25d | Add lines 25a + 25b + 25c | `w2_withholding + other_withholding` | ✓ |
+| f2_21[0] | 26 | 2025 estimated tax payments | `estimated_tax_payments` | ✓ |
+| SSN_ReadOrder[0].f2_22[0] | 26 footnote | Former spouse SSN | `household.payments.former_spouse_ssn` | ✓ |
+| f2_23[0] | 27a | Earned income credit (EIC) | `earned_income_credit` | ✓ |
+| f2_24[0] | 28 | Additional child tax credit (Sch 8812) | `additional_ctc` | ✓ |
+| f2_25[0] | 29 | American opportunity credit (Form 8863, line 8) | — | not filled |
+| f2_26[0] | 30 | Refundable adoption credit (Form 8839) | — | not filled |
+| f2_27[0] | 31 | Amount from Schedule 3, line 15 | — | not filled |
+| f2_28[0] | 32 | Total other payments and refundable credits | `earned_income_credit + additional_ctc` | ✓ |
+| f2_29[0] | 33 | TOTAL PAYMENTS | `total_payments` | ✓ |
 
 ### Refund / Amount Owed
 | Field | Line | Form Label | ComputedValues Key | Status |
 |---|---|---|---|---|
-| f2_25[0] | 34 | Amount overpaid | `refund` | ✓ |
-| f2_26[0] | 35a | Amount of line 34 to refund | `refund − apply_to_next_year` (direct refund) | ✓ verified live 2026-06-16 |
-| f2_27[0] | 36 | Amount applied to 2026 estimated tax | `household.payments.apply_to_next_year` | ✓ verified live 2026-06-16 |
-| f2_28[0] | 37 | Amount owed | `amount_owed` | ✓ |
+| f2_30[0] | 34 | Amount overpaid | `refund` | ✓ verified 2026-07-06 |
+| f2_31[0] | 35a | Amount of line 34 to refund | `refund − apply_to_next_year` (direct refund) | ✓ |
+| RoutingNo[0].f2_32[0] | 35b | Direct deposit routing number | `household.payments.routing_number` | ✓ |
+| AccountNo[0].f2_33[0] | 35d | Direct deposit account number | `household.payments.account_number` | ✓ |
+| f2_34[0] | 36 | Amount applied to 2026 estimated tax | `household.payments.apply_to_next_year` | ✓ |
+| f2_35[0] | 37 | Amount owed | `amount_owed` | ✓ |
 
 ---
 

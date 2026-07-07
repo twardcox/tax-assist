@@ -50,7 +50,7 @@ deadlines:
   - deadline: "Form 709 due April 15 of following year if required"
 
 stacking_rules:
-  compatible_with: [lifetime-gift-tax-exemption]
+  compatible_with: [nongrantor-dynasty-trust]
   conflicts_with: []
 
 risk_level: low

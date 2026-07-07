@@ -1,0 +1,63 @@
+id: appreciated-asset-charitable-stack
+kind: strategy_stack
+name: Appreciated-Asset Charitable Stack (§170 + DAF + CRUT)
+jurisdiction: federal
+target_profile: |
+  Who this fits: concentrated appreciated positions (>1 year holding), charitable
+  intent, and high-income years — an exit, a large bonus, or a planned Roth
+  conversion.
+members:
+  - benefit_id: charitable-contribution-deduction
+    role: "Foundation: the itemized §170 deduction and its AGI ceilings"
+    required: true
+  - benefit_id: donor-advised-fund
+    role: "Bunch multiple years of giving; donate stock at FMV, gain never realized"
+    required: true
+  - benefit_id: crut-664
+    role: "For positions too large for one year's AGI ceiling: defer gain, spread income"
+    required: false
+interactions: |
+  All three share the §170 AGI ceilings, and the ordering rules apply cash (60%)
+  before appreciated property (30%). A DAF contribution of long-term stock is
+  capped at 30% of AGI with a 5-year carryforward — donate in the highest-AGI year
+  to use the ceiling. When one position's gain is too large for the ceilings to
+  absorb, the CRUT takes over: the trust sells without recognizing gain, and the
+  §170 deduction is only the present value of the charitable remainder, so it
+  consumes far less ceiling per dollar of asset moved. DAF first for
+  liquidity-sized gifts; CRUT for the concentrated block.
+sequence:
+  - step: 1
+    action: "Inventory long-term appreciated positions (>1 year holding) and estimate this year's AGI"
+    timing: "Q3"
+    professional: none
+  - step: 2
+    action: "Open a DAF; transfer shares in-kind BEFORE any sale agreement exists"
+    timing: "before 12/31 — start by November, year-end brokerage queues run weeks"
+    professional: cpa
+  - step: 3
+    action: "Size the DAF gift against the 30%-of-AGI ceiling; carry forward any excess (5 years)"
+    timing: "with the transfer"
+    professional: cpa
+  - step: 4
+    action: "For a block too large for the ceilings: attorney drafts a CRUT, verify the 10% remainder test at the current §7520 rate, then fund it"
+    timing: "60-90 day lead time before any planned liquidity event"
+    professional: cpa+attorney
+  - step: 5
+    action: "File Form 8283 for non-cash gifts over $500; qualified appraisal if over $5,000 (publicly traded securities exempt)"
+    timing: "with the return"
+    professional: cpa
+combined_value: |
+  On a $500k long-term position with $300k of gain: donating in-kind avoids
+  roughly $60-71k of capital-gains tax and yields a deduction worth ~$150-185k at
+  high brackets (subject to the 30% AGI ceiling, 5-year carryforward). A CRUT on a
+  larger block defers the entire gain and adds a remainder deduction. Per-member
+  estimates control; no combined dollar total is computed.
+risk_level: medium
+abuse_boundary: |
+  Two boundaries. (1) Prearranged sales: if shares reach the DAF or CRUT after a
+  binding sale agreement exists, the donor is taxed on the gain anyway
+  (assignment-of-income doctrine) — transfer first, negotiate after. (2) Abusive
+  CRUT variants — early terminations engineered to strip the charity's remainder,
+  or funding with dealer property — draw §4941/§507 scrutiny and appear in IRS
+  enforcement campaigns.
+review_required: { cpa: true, attorney: true }

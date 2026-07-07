@@ -2757,3 +2757,150 @@ describe("rules parity", () => {
     expect(result.missing_facts).toContain("businesses.employees.wotc_hires");
   });
 });
+describe("strategy-stack benefit rules", () => {
+  // Base shape only — each test spreads a literal id so the parity tests above
+  // (which grep this file for `id: "<rule-id>"`) can see it.
+  const minimalBenefit = {
+    category: "individual_deduction",
+    jurisdiction: "federal",
+    risk_level: "low",
+    required_forms: [],
+    required_documents: [],
+    review_required: {}
+  };
+
+  test("donor-advised-fund eligible now with appreciated stock", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "donor-advised-fund", name: "Donor-Advised Fund" },
+      makeFacts({
+        investments: { taxable_accounts: [{ unrealized_gains: 80000 }] }
+      })
+    );
+    expect(result.status).toBe("eligible_now");
+    expect(result.next_steps.length).toBeGreaterThan(0);
+  });
+
+  test("donor-advised-fund eligible now when itemizing without appreciated stock", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "donor-advised-fund", name: "Donor-Advised Fund" },
+      makeFacts({ household: { itemizing_deductions: true } })
+    );
+    expect(result.status).toBe("eligible_now");
+  });
+
+  test("donor-advised-fund nearly eligible with no facts", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "donor-advised-fund", name: "Donor-Advised Fund" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.itemizing_deductions");
+  });
+
+  test("crut-664 eligible now with large unrealized gains", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "crut-664", name: "Charitable Remainder Unitrust" },
+      makeFacts({
+        investments: { taxable_accounts: [{ unrealized_gains: 400000 }] }
+      })
+    );
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("400,000");
+  });
+
+  test("crut-664 not applicable when gains are below setup-cost threshold", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "crut-664", name: "Charitable Remainder Unitrust" },
+      makeFacts({
+        investments: { taxable_accounts: [{ unrealized_gains: 50000 }] }
+      })
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("crut-664 not applicable with no appreciated assets", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "crut-664", name: "Charitable Remainder Unitrust" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("831b-microcaptive nearly eligible for a high-revenue business", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({
+        businesses: {
+          businesses: [{ entity_type: "s_corp", financials: { gross_revenue: 3000000 } }]
+        }
+      })
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message).toContain("T.D. 10029");
+  });
+
+  test("831b-microcaptive nearly eligible with business but no revenue recorded", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({
+        businesses: { businesses: [{ entity_type: "llc_single" }] }
+      })
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("businesses.financials.gross_revenue");
+  });
+
+  test("831b-microcaptive not applicable below revenue threshold", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({
+        businesses: {
+          businesses: [{ entity_type: "sole_prop", financials: { gross_revenue: 400000 } }]
+        }
+      })
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("831b-microcaptive not applicable with no business", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "831b-microcaptive", name: "Micro-Captive Insurance" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("nongrantor-dynasty-trust eligible now at estate-scale net worth", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({ household: { estimated_net_worth: 18000000 } })
+    );
+    expect(result.status).toBe("eligible_now");
+    expect(result.next_steps.join(" ")).toContain("IR-2023-65");
+  });
+
+  test("nongrantor-dynasty-trust nearly eligible with wealth-transfer goal but no net worth", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({ goals: { primary_goals: { transfer_wealth_to_heirs: true } } })
+    );
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.missing_facts).toContain("household.estimated_net_worth");
+  });
+
+  test("nongrantor-dynasty-trust not applicable below estate-exemption territory", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({ household: { estimated_net_worth: 2000000 } })
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("nongrantor-dynasty-trust not applicable with no goal and no net worth", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "nongrantor-dynasty-trust", name: "Non-Grantor Dynasty Trust" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+});

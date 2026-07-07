@@ -93,6 +93,13 @@ export const schema = {
           source: "Form 1040 Line 11 from the return you filed last year.",
         },
         {
+          key: "estimated_net_worth",
+          label: "Estimated Net Worth",
+          type: "currency",
+          description: "Rough total of everything you own minus everything you owe. Only used to flag estate-scale planning (the estate/GST exemption is $13.99M per person in 2025).",
+          source: "Add up accounts, real estate, and business value; subtract mortgages and other debts. A rough estimate is fine.",
+        },
+        {
           key: "itemizing_deductions",
           label: "Itemizing Deductions?",
           type: "tristate",

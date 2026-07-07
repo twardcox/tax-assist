@@ -37,81 +37,36 @@ function normalizeExtractionResult(value: Record<string, unknown>): NormalizedAi
 export function parseAiResponseText(raw: string): NormalizedAiExtraction {
   const jsonMatch = raw.match(/\{.*\}/s);
   if (!jsonMatch) {
-    return {
-      error: "Could not parse AI response",
-      suggested_updates: [],
-      confidence: "low",
-      notes: raw.slice(0, 500),
-      benefit_ids: [],
-      deductible_pct: 1,
-      form_line: null
-    };
+    return errorResult("Could not parse AI response", raw.slice(0, 500));
   }
 
   try {
     const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
     return normalizeExtractionResult(parsed);
   } catch (error) {
-    return {
-      error: `Could not parse AI response: ${(error as Error).message}`,
-      suggested_updates: [],
-      confidence: "low",
-      notes: raw.slice(0, 500),
-      benefit_ids: [],
-      deductible_pct: 1,
-      form_line: null
-    };
+    return errorResult(`Could not parse AI response: ${(error as Error).message}`, raw.slice(0, 500));
   }
 }
 
+function errorResult(error: string, notes: string): NormalizedAiExtraction {
+  return { error, notes, suggested_updates: [], confidence: "low", benefit_ids: [], deductible_pct: 1, form_line: null };
+}
+
 export function missingApiKeyResult(): NormalizedAiExtraction {
-  return {
-    error: "ANTHROPIC_API_KEY not set",
-    suggested_updates: [],
-    confidence: "low",
-    notes: "Set ANTHROPIC_API_KEY to enable AI extraction.",
-    benefit_ids: [],
-    deductible_pct: 1,
-    form_line: null
-  };
+  return errorResult("ANTHROPIC_API_KEY not set", "Set ANTHROPIC_API_KEY to enable AI extraction.");
 }
 
 export function missingAnthropicPackageResult(): NormalizedAiExtraction {
-  return {
-    error: "anthropic package not installed",
-    suggested_updates: [],
-    confidence: "low",
-    notes: "Run: npm install @anthropic-ai/sdk",
-    benefit_ids: [],
-    deductible_pct: 1,
-    form_line: null
-  };
+  return errorResult("anthropic package not installed", "Run: npm install @anthropic-ai/sdk");
 }
 
 export function anthropicApiErrorResult(message: string, statusCode: number | undefined, model: string): NormalizedAiExtraction {
   const notes = statusCode === 400 || statusCode === 404
     ? `Model '${model}' was rejected by the API. Set the CLAUDE_MODEL environment variable to a valid model ID.`
     : "Extraction failed — see error.";
-
-  return {
-    error: message,
-    suggested_updates: [],
-    confidence: "low",
-    notes,
-    benefit_ids: [],
-    deductible_pct: 1,
-    form_line: null
-  };
+  return errorResult(message, notes);
 }
 
 export function genericExtractionErrorResult(message: string): NormalizedAiExtraction {
-  return {
-    error: message,
-    suggested_updates: [],
-    confidence: "low",
-    notes: "Extraction failed — see error.",
-    benefit_ids: [],
-    deductible_pct: 1,
-    form_line: null
-  };
+  return errorResult(message, "Extraction failed — see error.");
 }

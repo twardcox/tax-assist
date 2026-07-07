@@ -108,7 +108,7 @@ CLAUDE_MODEL=claude-haiku-4-5-20251001  # Optional: override AI model for docume
 CONGRESS_API_KEY=...              # Optional: Congress.gov scraper (defaults to DEMO_KEY)
 DAWSON_USERNAME=...               # US Tax Court login
 DAWSON_PASSWORD=...               # US Tax Court login
-JWT_SECRET_KEY=...                # Optional: JWT signing secret (defaults to dev key — set in prod)
+JWT_SECRET_KEY=...                # Required outside test mode: JWT signing secret (server refuses to issue tokens without it)
 ```
 
 ---
@@ -220,7 +220,12 @@ Produces a CPA-ready ZIP package containing filled official IRS PDFs + a print-r
 - Credits: Child Tax Credit (with phase-out), other dependent credit, child/dependent care, education (AOTC simplified), EV credit (§30D)
 - SE tax via Schedule SE (with SS wage base coordination against W-2 wages)
 - Payments: W-2 withholding, estimated payments; refund or amount owed
-- Tax parameters stored for both 2024 and 2025 (brackets, standard deductions, SS wage base, phase-out thresholds)
+- Tax parameters (brackets, standard deductions, SS wage base, phase-out thresholds, SALT cap) live in
+  `backend-ts/src/domain/taxForms/taxParams.generated.ts` — a checked-in snapshot generated from
+  [PolicyEngine US](https://github.com/PolicyEngine/policyengine-us) parameter YAML (which cites IRS revenue
+  procedures and enacted law). Regenerate with `npm run update:tax-params`, review the diff against the cited
+  sources, and keep `test/taxParams.test.ts` (hand-verified pins) in sync. Runtime never fetches — the snapshot
+  is the vetted source of truth. Currently 2024 + 2025; add a year to `YEARS` in `scripts/updateTaxParams.mjs`.
 
 **`compute_tax_figures(user_id, tax_year) → dict`** — runs TaxCalculator only, no PDFs. Used by the instant compute endpoint.
 
