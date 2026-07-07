@@ -2796,4 +2796,33 @@ describe("strategy-stack benefit rules", () => {
     expect(result.status).toBe("nearly_eligible");
     expect(result.missing_facts).toContain("household.itemizing_deductions");
   });
+
+  test("crut-664 eligible now with large unrealized gains", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "crut-664", name: "Charitable Remainder Unitrust" },
+      makeFacts({
+        investments: { taxable_accounts: [{ unrealized_gains: 400000 }] }
+      })
+    );
+    expect(result.status).toBe("eligible_now");
+    expect(result.message).toContain("400,000");
+  });
+
+  test("crut-664 not applicable when gains are below setup-cost threshold", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "crut-664", name: "Charitable Remainder Unitrust" },
+      makeFacts({
+        investments: { taxable_accounts: [{ unrealized_gains: 50000 }] }
+      })
+    );
+    expect(result.status).toBe("not_applicable");
+  });
+
+  test("crut-664 not applicable with no appreciated assets", () => {
+    const result = evaluateBenefit(
+      { ...minimalBenefit, id: "crut-664", name: "Charitable Remainder Unitrust" },
+      makeFacts({})
+    );
+    expect(result.status).toBe("not_applicable");
+  });
 });

@@ -501,6 +501,12 @@ export class UserFacts {
     return taxableAccounts.some((account) => toNumber(account.unrealized_gains) > 0);
   }
 
+  totalUnrealizedTaxableGains(): number {
+    const investments = toObject(this.data.investments);
+    const taxableAccounts = toObjectArray(investments.taxable_accounts);
+    return taxableAccounts.reduce((sum, account) => sum + toNumber(account.unrealized_gains), 0);
+  }
+
   hasStartupEquity(): boolean {
     const investments = toObject(this.data.investments);
     if (investments.has_qualified_small_business_stock === true) {

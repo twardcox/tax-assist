@@ -1269,6 +1269,35 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "crut-664": (_benefit, facts) => {
+    if (!facts.hasAppreciatedTaxableStock()) {
+      return {
+        status: "not_applicable",
+        message: "A CRUT is built around appreciated assets — no unrealized gains recorded in taxable accounts."
+      };
+    }
+
+    const gains = facts.totalUnrealizedTaxableGains();
+    if (gains < 250000) {
+      return {
+        status: "not_applicable",
+        message: `Unrealized gains $${gains.toLocaleString()} are below the ~$250,000 level where CRUT drafting and annual administration costs are justified — consider a donor-advised fund instead.`
+      };
+    }
+
+    return {
+      status: "eligible_now",
+      message: `$${gains.toLocaleString()} of unrealized gains could fund a charitable remainder unitrust: no gain recognized when the trust sells, a 5–50% unitrust payout, and a §170 deduction equal to the present value of the charity's remainder (must be ≥10% of the contribution).`,
+      next_steps: [
+        "Model payout rate and term — the remainder must pass the 10% present-value test at the current §7520 rate",
+        "Deduction is capped at 30% of AGI for appreciated property to a public charity (5-year carryforward)",
+        "Distributions are taxed under §664(b) four-tier ordering — ordinary income first, then capital gain",
+        "Fund the trust BEFORE any binding sale agreement exists — a prearranged sale collapses the deferral",
+        "Engage an estate attorney to draft and a CPA for the annual Form 5227"
+      ]
+    };
+  },
+
   "conservation-easement": (_benefit, facts) => {
     if (!facts.hasAnyRealEstate()) {
       return {
