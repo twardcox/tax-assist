@@ -62,11 +62,11 @@ All are triggered by explicit slash invocation (`disable-model-invocation` on th
 | `jira-reconcile-docs.md` | Jira ↔ docs drift repair | Jira + artifacts | Reconciliation report | Jira tools | — | none | **Keep** |
 | `start-ticket.md` | Ticket pickup → branch → In Progress → next steps | Ticket key or lists | Branch, transition, tailored next-steps | Jira, GitHub, config tools | HITL plan/diff protocol for agent path; known In-Progress-abandonment behavior documented | `skill-test-start-ticket.md` | **Keep** (assignee wording, upstream) |
 | `commit.md` / `sequential-commit.md` | Conventional commits (auto-sequential ≥15 paths) | Staged work | Commits | git | CHANGELOG-per-commit rule applies | none | **Keep** |
-| `pre-flight.md` / `test-coverage.md` / `architecture-check.md` / `design-review.md` / `ai-review.md` | Pre-PR gate family | Diff/branch | Gate reports | test/lint/build, `ai-review-prompt.cjs` | ai-review `allowed-tools: all` too broad (upstream) | none | **Keep** |
+| `pre-flight.md` / `test-coverage.md` / `architecture-check.md` / `design-review.md` / `ai-review.md` | Pre-PR gate family | Diff/branch | Gate reports | test/lint/build, `ai-review-prompt.cjs` | ai-review `allowed-tools: all` too broad (upstream). **Non-AI baseline note:** the AI reviewers (`ai-review`, council) run after deterministic gates (tests/typecheck/lint via pre-flight) — that ordering is the required non-AI baseline for AI review; keep it | none | **Keep** |
 | `council.md` | Review-panel orchestration (597 lines) | Scope | Combined findings + verdict | sub-agent dispatch, `adversarial_critique` | Adversary isolation preserved | none | **Keep** (largest file; consider split per sub-agent, upstream) |
 | `pull-request.md` / `pr-description.md` / `merge-pr.md` / `complete-ticket.md` | PR lifecycle | Branch/PR | PR, description, merge, Done transition | GitHub + Jira tools | Human PR review required (persona rule) | none | **Keep** |
 | `reimplement-clean-branch.md` | Clean-history reimplementation | Messy branch | Clean branch | git | destructive-adjacent: verify before discarding work | none | **Keep** (add explicit checkpoint, upstream) |
-| `ci-status.md` / `sync.md` / `update-config.md` / `troubleshoot-setup.md` / `pre-flight.md` | Env/config/CI utilities | — | Status/config updates | CI, config tools | — | none | **Keep** |
+| `ci-status.md` / `sync.md` / `update-config.md` / `troubleshoot-setup.md` | Env/config/CI utilities | — | Status/config updates | CI, config tools | — | none | **Keep** |
 
 ## E. Generated skill stubs (`.agents/skills/*/SKILL.md`) — 45 files
 
@@ -90,6 +90,19 @@ One consolidated row: every stub is generator-output (`scripts/generate-ce-agent
 | `agents/README.md`, `agents/council/README.md` | Agent rosters + add-an-agent procedure | — | **Keep** |
 
 ---
+
+## G. AI-behavior-adjacent code (noted, not inventoried)
+
+`scripts/*.cjs` (hook runner, pre-flight check, branch/commit-msg validators, ai-review prompt generator), `.husky/` hooks, and `.github/workflows/` are **code, not instructions** (out of scope for this inventory), but they *enforce* several instruction-layer rules (branch naming, commit format, CI gates). If an instruction about branches/commits/CI changes, check these for a matching code change.
+
+---
+
+### Inventory change log
+
+| Date | Change |
+|---|---|
+| 2026-07-07 | Created (review pass) |
+| 2026-07-07 | Audit pass: removed duplicate `pre-flight.md` entry from utilities row; added non-AI-baseline note to pre-PR gate row; added section G; statuses of audited skill rows unchanged (all edits were within-skill fixes, see [ce-ai-skills-audit.md](../process-review/ce-ai-skills-audit.md)) |
 
 ### Maintenance rule
 
