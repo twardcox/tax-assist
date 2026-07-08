@@ -17,6 +17,7 @@ const fs = require("fs");
 
 const { loadConfig } = require("../lib/load-config.cjs");
 const log = require("../lib/log.cjs");
+const { detectPackageManager, runCmd, execCmd } = require("../lib/pm.cjs");
 
 // ---------------------------------------------------------------------------
 // Map git hook names → config keys and handler functions
@@ -85,10 +86,12 @@ async function main() {
 async function runPreCommit(config, hookConfig) {
   log.dim("[pre-commit]");
 
+  const pm = detectPackageManager();
+
   // 1. Lint-staged (ESLint + Prettier on staged files only)
   if (hookConfig.lintStaged) {
     log.info("Running lint-staged...");
-    execSync("pnpm exec lint-staged", { stdio: "inherit" });
+    execSync(`${execCmd(pm)} lint-staged`, { stdio: "inherit" });
     log.success("✓ lint-staged passed");
   } else {
     log.dim("[pre-commit] lintStaged disabled - skipping");
@@ -98,7 +101,7 @@ async function runPreCommit(config, hookConfig) {
   if (hookConfig.typeCheck) {
     log.info("Running TypeScript type check...");
     try {
-      execSync("pnpm exec tsc --noEmit", { stdio: "inherit" });
+      execSync(`${execCmd(pm)} tsc --noEmit`, { stdio: "inherit" });
       log.success("✓ Type check passed");
     } catch (err) {
       log.error("Type check failed");
@@ -112,12 +115,12 @@ async function runPreCommit(config, hookConfig) {
     try {
       // Check if test:unit script exists
       const pkgPath = path.join(process.cwd(), "package.json");
-      let testCmd = "pnpm exec vitest run";
+      let testCmd = `${execCmd(pm)} vitest run`;
 
       if (fs.existsSync(pkgPath)) {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
         if (pkg.scripts?.["test:unit"]) {
-          testCmd = "pnpm run test:unit";
+          testCmd = `${runCmd(pm)} test:unit`;
         }
       }
 

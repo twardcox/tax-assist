@@ -10,9 +10,9 @@ The user invoked **`/ce`**. Show the full CE Agent Skills catalog - like running
 
 ## Steps
 
-1. Call **`resources/read`** with URI **`ce://skills`** to get the live skills index.
+1. List the local skills index: the directories under `ce/.agents/skills/` (each `SKILL.md` frontmatter has the name and description). The static groupings below cover the standard set.
 2. Present the catalog grouped by category (see groupings below).
-3. For each skill, show the **name** (as `/name`) and the **description** from the index.
+3. For each skill, show the **name** (as `/name`) and the **description**.
 4. If the user has a specific goal, point them to the one most relevant skill.
 
 ## Catalog groupings
@@ -110,6 +110,6 @@ Use these categories when displaying the skills. Match by name prefix/pattern:
 
 Offer one primary next step. If the user is mid-flow or unsure what to do next, suggest `/ce-status` to check the current project state.
 
-## If the resource read fails
+## If the directory listing fails
 
-Call **`get_slash_command`** with **`command_name: ce`** or display the static groupings above directly.
+Display the static groupings above directly.

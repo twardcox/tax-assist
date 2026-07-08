@@ -1,72 +1,36 @@
 ---
-description: Pull framework files from the CE server and replace them in the repo
-argument-hint:
+description: Sync framework files between this project and the master CE bundle
+argument-hint: [path-to-master-bundle]
 allowed-tools: all
 ---
 
 ## Task
 
-**Sync** means: **pull** the current framework bundle from the **CE MCP server** and **replace** the copied files in the **open project root** (your git repo) so they match the server. That is the same file set as the Development copy from **`init_project`**: `.cursor/rules/ce`, `.cursor/rules.json`, `.cursor/skills`, `.ce/scripts`, `.ce/lib`, `.github`, `.husky`.
+**Sync** keeps a project's copy of the CE bundle aligned with the user's **master bundle** (the canonical `ce/` directory the user maintains and copies into every project). It works in both directions - say which one applies before touching files:
 
-- **Replace** = overwrite existing files where the server has a canonical version; create missing paths. Do **not** leave a single dump **`.txt`** outside the tree - materialize **real paths** under the repo root.
+- **Pull** (default): update this project's `ce/`, `.agents/skills/`, and installed rules/scripts from the master bundle.
+- **Push back**: the user improved a framework file *in this project* and wants the improvement in the master bundle so future projects get it.
 
----
+If `$ARGUMENTS` gives the master bundle path, use it; otherwise ask.
 
-## 1. Pull and overwrite (default)
+## Steps (pull)
 
-Do **not** require **`diff_init_files`** first. Apply the bundle, then review with **`git diff`**.
+1. `git status` - require a clean tree (or explicit user OK) before overwriting framework files.
+2. Diff the master bundle against the project copies: `ce/`, `.agents/skills/`, installed rules, `ce/scripts/` + `ce/lib/` (or `.ce/scripts` + `.ce/lib`), and `.husky/` if installed. Show the summary.
+3. **Never overwrite project-specific files:** `ce/skills/` Project Facts, `.ce-project.json`, `CLAUDE.md`, and any file the user customized (the diff will show it - ask when unsure).
+4. Copy the agreed files, then `git diff` for review and suggest a commit.
 
-### 1a. Local MCP (server can write your checkout)
+## Steps (push back)
 
-Call **`sync_init_files`** with **`apply: true`** (optional **`paths`** to limit scope, e.g. `[".ce/scripts"]`). That writes server versions for paths that are missing or differ from the server.
-
-Then **`git diff`**, run pre-flight if scripts changed, and commit.
-
-### 1b. Hosted MCP - project root is server storage (`/data/...`)
-
-**`diff_init_files`** and **`sync_init_files`** **error** here - the server cannot write your laptop repo. **`init_project`** skips copying the Development bundle to `/data` - use **`get_init_files`** / this playbook. **Pull and replace locally** using **section 2**.
-
----
-
-## 2. Pull and replace when MCP cannot write your workspace (hosted)
-
-Use the **same** bundle as MCP **`get_init_files`**. **Preferred: HTTP** (one download, overwrite via unzip).
-
-### 2a. HTTP - ZIP (preferred)
-
-1. Resolve **`CE_SERVER_URL`** from the project **`.env`**: strip **`/mcp`**, **`/sse`**, trailing slashes → **origin** (e.g. `https://…` or `http://127.0.0.1:3000`). If absent, ask the user for the MCP host **origin** (no `/mcp`).
-2. **`curl`** **`GET {origin}/framework/init-files.zip`**. If **401**, retry with **`Authorization: Bearer`** using **`CE_PROJECT_TOKEN`** from **`.env`** (or another CE bearer for this server).
-3. Unzip **into the project root** with overwrite, e.g. **`unzip -o /tmp/ce-init-files.zip -d {workspaceRoot}`** (PowerShell: **`Expand-Archive -Force`**). Paths inside the zip are repo-relative - they **replace** existing files.
-4. Optional **`paths`** query on the URL: **`?paths=.ce/scripts&paths=.github`** (comma-separated also works) to limit scope.
-
-### 2b. HTTP - JSON (if ZIP is awkward)
-
-**`GET {origin}/framework/init-files.json`** (same auth). Parse **`files`**: **`[{ path, content }]`**. Write each **`content`** to **`{workspaceRoot}/{path}`** (overwrites). Schema: **`ce-init-files-v1`**.
-
-### 2c. MCP - JSON (fallback)
-
-Call **`get_init_files`** with **`format: "json"`** (optional **`paths`**). Write each **`files[]`** entry under the project root (overwrites).
-
-### Finish
-
-**`git diff`**, pre-flight if scripts changed, suggest commit.
-
----
-
-## 3. Optional: preview with `diff_init_files`
-
-When the MCP **project root is your real repo** (local server) and you want a **read-only report** before overwriting, call **`diff_init_files`** (optional **`paths`**), then **`sync_init_files`** with **`apply: true`** if you still want to apply.
-
----
+1. Identify the improved file(s) and confirm they are **generic** (no project facts baked in).
+2. Copy into the master bundle, updating any catalog/README rows there.
+3. Remind the user that other projects pick this up on their next `/sync` pull.
 
 ## Rules
 
-- **Overwrite warning:** replacing framework copies discards local edits to those files unless recovered from git - suggest **stash/commit** first if they customized **`.cursor/rules/ce`** or copied scripts.
-- **Local server alternative:** run the MCP server with **`pnpm start /path/to/repo`** so **`sync_init_files`** (and optional **`diff_init_files`**) use your git working tree. See **[Quick start](https://coherence-engine.fly.dev/ce/docs/quick-start.md)** in the framework repo.
+- Overwriting discards local edits - always diff first, and stash/commit beforehand.
+- Generated or vendored files are synced whole; hand-merged only when both sides changed.
 
-## Optional scope
+## Optional: CE MCP server
 
-Use **`paths`** on **`sync_init_files`**, **`diff_init_files`**, **`get_init_files`**, and on HTTP (**`?paths=`**) to sync only part of the tree, for example:
-
-- `[".ce/scripts", ".ce/lib"]` - dev scripts only
-- `[".github"]` - CI workflows only
+Projects connected to the upstream Coherence Engine server can use its `sync_init_files` / `get_init_files` tools or `GET {origin}/framework/init-files.zip` instead of a local master bundle. Optional - never required.

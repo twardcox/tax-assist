@@ -8,7 +8,7 @@ Execute CE Change Workflow - APPLY. After a dry-run and explicit user confirmati
 
 ## Authoritative Rules
 
-- You MUST follow Docs/GUIDELINES.md exactly (or read ce://docs/change-runbook if the project does not have it yet).
+- You MUST follow the change workflow exactly: use the project's `Docs/GUIDELINES.md` when it exists, otherwise `ce/Change Workflow/README.md` in this bundle.
 - You MUST NOT apply changes without explicit human confirmation.
 - Never modify locked tickets (statusCategory != "To Do").
 - Never delete issues.

@@ -8,7 +8,7 @@ Execute CE Change Workflow - PASS B (Updated Backlog Proposal). Generate updated
 
 ## Authoritative Rules
 
-- You MUST follow Docs/GUIDELINES.md exactly (or read ce://docs/change-runbook if the project does not have it yet).
+- You MUST follow the change workflow exactly: use the project's `Docs/GUIDELINES.md` when it exists, otherwise `ce/Change Workflow/README.md` in this bundle.
 - Jira snapshot is the source of truth for status and existing keys.
 - Pass B MUST NOT mutate Jira.
 - Pass B MUST generate updated-epics-and-tickets.md in the exact structure required by the importer script.

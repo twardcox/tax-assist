@@ -18,25 +18,31 @@ const { execSync } = require("child_process");
 const path = require("path");
 const { loadConfig } = require("../lib/load-config.cjs");
 const log = require("../lib/log.cjs");
+const { detectPackageManager, runCmd, execCmd } = require("../lib/pm.cjs");
 
 async function runPreFlight() {
   console.log("\n🚀 Running pre-flight checks...\n");
 
   const config = loadConfig();
   const framework = detectFramework();
+  const pm = detectPackageManager();
 
   const checks = [];
 
   // 1. ESLint
   if (config.ci?.linting !== false) {
-    if (framework === "nextjs") {
+    if (framework === "nextjs" || hasScript("lint")) {
       checks.push({
-        name: "ESLint (Next.js)",
-        cmd: "pnpm run lint",
+        name: "ESLint",
+        cmd: `${runCmd(pm)} lint`,
         emoji: "🔍",
       });
     } else {
-      checks.push({ name: "ESLint", cmd: "pnpm exec eslint .", emoji: "🔍" });
+      checks.push({
+        name: "ESLint",
+        cmd: `${execCmd(pm)} eslint .`,
+        emoji: "🔍",
+      });
     }
   }
 
@@ -44,7 +50,7 @@ async function runPreFlight() {
   if (config.ci?.formatting !== false) {
     checks.push({
       name: "Prettier",
-      cmd: "pnpm exec prettier --check .",
+      cmd: `${execCmd(pm)} prettier --check .`,
       emoji: "💅",
     });
   }
@@ -53,18 +59,20 @@ async function runPreFlight() {
   if (config.ci?.typeCheck !== false) {
     checks.push({
       name: "TypeScript",
-      cmd: "pnpm exec tsc --noEmit",
+      cmd: `${execCmd(pm)} tsc --noEmit`,
       emoji: "📘",
     });
   }
 
-  // 4. Vitest
+  // 4. Unit tests
   if (config.ci?.unitTests !== false) {
     const testCmd = hasScript("test:unit")
-      ? "pnpm run test:unit"
-      : "pnpm exec vitest run";
+      ? `${runCmd(pm)} test:unit`
+      : hasScript("test")
+        ? `${runCmd(pm)} test`
+        : `${execCmd(pm)} vitest run`;
     checks.push({
-      name: "Vitest",
+      name: "Unit tests",
       cmd: testCmd,
       emoji: "🧪",
     });
@@ -96,8 +104,10 @@ async function runPreFlight() {
   log.success("✅ All pre-flight checks passed!");
   log.info("\n📋 Next steps:");
   log.info("  1. Stage your changes: git add .");
-  log.info("  2. (Optional) Run AI review: pnpm run ai:review");
-  log.info('  3. Commit: git commit -m "YOUR-123: Your message"\n');
+  log.info(
+    `  2. (Optional) Run AI review: node ce/scripts/ai-review-prompt.cjs`,
+  );
+  log.info('  3. Commit: git commit -m "Your message"\n');
 }
 
 function detectFramework() {

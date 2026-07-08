@@ -1,62 +1,58 @@
 ---
-description: Dev client - Development dev setup via `init_project`. Cowork new project → `/new-project`.
-argument-hint:
+description: Adopt the CE bundle into the current project - copy skills, rules, scripts, CI, hooks, and create config
+argument-hint: [path-to-master-bundle]
 allowed-tools: all
 ---
 
-## Which flow?
+## Task
 
-| Where you work                    | Playbook                       | What happens                                                                                                                                   |
-| --------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Planning client (e.g. Cowork)** | **`/new-project`**             | Full onboarding: **`init_project`**, then **`setup_project`** / Jira / GitHub / optional Drive - see **`ce://commands/new-project`**.          |
-| **Dev client (e.g. IDE)**         | **`/init-project`** (this doc) | Run **`init_project`** once before Development so the repo gets the Development framework bundle when the MCP root is your **local** checkout. |
+Set up **this repository** to use the CE workflow bundle. The bundle is self-contained: no MCP server, Jira, or external service is required. Everything the agent needs lives in local files.
 
-**Do not duplicate the Cowork playbook here.** Use **`/new-project`** in Cowork for new-project layout and integrations.
+**Source of truth:** the user's master bundle - the `ce/` directory in the repo where the canonical copy is maintained. If `$ARGUMENTS` gives a path, use it; otherwise ask the user where their master bundle lives.
 
----
+## Steps
 
-## Development (dev client) - `init_project`
+1. **Copy the bundle** into the project root as `ce/` (docs, playbooks, templates) - the whole directory, preserving structure.
 
-**`/init-project` in the dev client** is a **shortcut** for invoking the **`init_project`** MCP tool - same tool Cowork uses for layout; in a local workspace it also **copies** the Development bundle (rules, skills, scripts, `.github`, `.husky`). It does **not** replace **`/new-project`** for full Cowork onboarding.
+2. **Install the tool-facing pieces** at the project root:
 
-Run **`init_project`** to set up the CE project for **Development** (Developer in the dev client). Sprint Planning (Sprint Planning) is done in Cowork by PM/PO; run this **before** starting Development (Development).
+   - `ce/.agents/skills/` → `.agents/skills/` (cross-tool Agent Skills)
+   - `ce/.agents/skills/` → `.claude/skills/` when the project uses Claude Code (same content; Claude Code reads `.claude/`)
+   - `ce/.agents/rules/` → the client's rules directory (e.g. `.claude/rules/` or `.cursor/rules/ce/`)
+   - `ce/.github/workflows/` → `.github/workflows/` **only if wanted** - review each workflow and adjust the package-manager commands to the project first
+   - `ce/.husky/` → `.husky/` **only if the project uses husky** - the hooks locate `ce/scripts/hook-runner.cjs` (or `.ce/scripts/` if you install the scripts there) automatically
 
-### What to do
+3. **Create `.ce-project.json`** at the project root (or run `/update-config`). Minimal tracker-neutral config:
 
-1. **Invoke the `init_project` MCP tool** - optional **`project_name`** / **`project_key`** per server docs. If the CE MCP server is connected, call **`init_project`**.
+   ```json
+   {
+     "toolkit": {
+       "hooks": {
+         "preCommit": { "enabled": true, "lintStaged": false },
+         "commitMsg": { "enabled": true, "requireTicket": false },
+         "prePush": { "enabled": true }
+       }
+     }
+   }
+   ```
 
-2. **Hosted MCP / server storage (`/data/…`):** The tool may **not** write into your laptop repo. In that case run **`get_init_files`** with **`format: "json"`**, parse **`files`**, and write each **`path`** under the open workspace root - or follow **`/sync`**. **Do not** save the tool response as a single `.txt` outside the repo - write real files at the listed paths.
+   Ticket enforcement (`requireTicket`, `branchPattern`) is **opt-in** - only add `toolkit.jira` when the project actually uses a tracker.
 
-3. **`init_project` copies locally when allowed (or `get_init_files` provides):**
+4. **Create the project instruction file** from `ce/templates/` (`CLAUDE-project.md` → `CLAUDE.md`, `copilot-instructions.md` → `.github/copilot-instructions.md`, etc. as fits the tools in use). Fill in the project specifics.
 
-   - `.cursor/rules/ce` (framework rules)
-   - `.cursor/rules.json`
-   - `.github` (CI workflows)
-   - `.husky` (git hooks)
-   - `.ce/scripts` and `.ce/lib` (development scripts)
+5. **Instantiate the local skills.** Copy `ce/skills/` and fill in each skill's **Project Facts** block with this project's real values (ports, commands, credentials-by-name, domain policies). Delete skills that don't apply; add project skills using `ce/docs/templates/ai-skill-template.md`.
 
-   **`.ce-project.json`** is created or updated as part of project setup; layout dirs (`research/`, `agent-docs/`, …) come from the same tool when Cowork has already run **`init_project`** - do not invent paths manually unless the tool output says to.
+6. **Verify:**
+   - `node ce/scripts/pre-flight-check.cjs` runs (checks may fail on a fresh repo - the script itself must execute)
+   - a test commit passes the hooks (or hooks report "not found - skipping" if intentionally not installed)
+   - `/ce` lists the catalog
 
-4. **Follow the tool output** - it returns next steps (e.g. dev client MCP setup URL, **`setup_project`** for Jira/GitHub if needed).
+## Rules
 
-5. **Verify GitHub access** - Call `github_list_branches` to confirm the configured token can reach the repository.
+- Do not point the project at any external CE server; the local bundle is canonical.
+- Copy, don't symlink - each project owns its copy and may customize it. Improvements worth keeping flow back to the master bundle by hand (see `/sync`).
+- Never overwrite an existing `CLAUDE.md`, `.ce-project.json`, or customized skill without showing a diff and confirming.
 
-   - ✅ If it returns a branch list: GitHub is connected and ready.
-   - ❌ If it returns a 404 "repository not found" error: the GitHub token does not have access to this repo. This is commonly caused by a **fine-grained personal access token** that was scoped to the wrong repository. Fix it:
+## Optional: CE MCP server
 
-     1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens**
-     2. Click the token named for this server (e.g. `ce-mcp-server`)
-     3. Click **Edit** next to "Repository access"
-     4. Add the project repo (e.g. `owner/project-repo`) to the selected repositories list
-     5. Save - no `.env` change needed if the token value hasn't changed
-     6. Re-run `github_list_branches` to confirm access
-
-   - ❌ If it returns a 401/403 error: the token itself is invalid or expired - regenerate it at GitHub and update `GITHUB_TOKEN` in `.env`, then restart the MCP server.
-
-### Rules (dev client)
-
-- Run once in or just prior to Development when the developer first opens the project in their dev client.
-- If the CE MCP server is not connected, instruct the user to add it and retry.
-- When the server cannot write locally, **always use `get_init_files` (JSON) and write each path** (or **`/sync`**) so all init files are present.
-- **Always run the GitHub access check (step 5)** - do not skip it. Fine-grained token scope issues are a common blocker and must be surfaced before development begins.
-- Add project-specific rules alongside the framework rules (e.g. `.cursor/rules/ce/`) to augment the base ruleset.
+If a project does connect the upstream Coherence Engine MCP server, its `init_project` / `get_init_files` tools can perform the copy instead. That path is optional and never required by this bundle.
