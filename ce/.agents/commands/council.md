@@ -516,7 +516,7 @@ skills, collect their full output.
 
 After agent(s) complete, apply this matrix. Invoke any triggered skill via
 `get_slash_command` with `command_name: <skill-name>` (or `resources/read` with URI
-`ce://commands/<skill-name>`). Follow each loaded playbook step by step. Capture full
+`ce/.agents/commands/<skill-name>.md`). Follow each loaded playbook step by step. Capture full
 output - do not summarize or filter.
 
 | Trigger                                                        | Skill                 | Applicability guard                               |

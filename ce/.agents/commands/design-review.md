@@ -19,7 +19,7 @@ Invoke the appropriate MCP prompt **before** running the checklist:
 | Jira ticket key            | `design_validate_ticket` with `ticket_key`                   | Pre-implementation — after `/start-ticket`, before coding |
 | General / pre-PR           | `design_agent` with `mode`: `epic` \| `ticket` \| `delivery` | Default; use `delivery` for pre-PR second pass            |
 
-Load `ce://agents/design` if not already in context.
+Load `ce/agents/design-assistant.md` if not already in context.
 
 ## Modes
 
@@ -61,7 +61,7 @@ Load `ce://agents/design` if not already in context.
 
 ## Design Readiness Checklist
 
-Run all seven dimensions from `ce://agents/design`. Classify each finding:
+Run all seven dimensions from `ce/agents/design-assistant.md`. Classify each finding:
 
 - **Blocking** — developer would invent UX, states, or DS primitives
 - **Should-fix** — clarity or DS adoption; could proceed with assumptions
@@ -127,4 +127,4 @@ Log in the report. Design Agent does **not** accept `Output Approved.` (Gate-Che
 
 - `/council design` — implementation fidelity after code exists
 - `/architecture-check` — architecture conformance (separate gate)
-- `ce://agents/design` — full agent definition and severity table
+- `ce/agents/design-assistant.md` — full agent definition and severity table

@@ -16,7 +16,7 @@ Commit your work with a concise summary following conventional commit format.
 1. Count paths in scope for this commit:
    - If anything is staged: `git diff --cached --name-only | wc -l` (each line is one path).
    - If nothing is staged: `git status --short | wc -l` (each line is one path among modified, deleted, untracked, etc.).
-2. If the count is **15 or more**: **do not** use the single-commit steps below. Instead, load **`ce://commands/sequential-commit`** (or **`get_slash_command`** with `sequential-commit`) and follow that playbook end-to-end. Tell the user one line: e.g. "15+ paths in scope-using sequential commits per CE threshold."
+2. If the count is **15 or more**: **do not** use the single-commit steps below. Instead, read **`ce/.agents/commands/sequential-commit.md`** and follow that playbook end-to-end. Tell the user one line: e.g. "15+ paths in scope-using sequential commits per CE threshold."
 3. If the count is **14 or fewer**: continue with the steps below.
 
 ### Single commit (14 or fewer paths)

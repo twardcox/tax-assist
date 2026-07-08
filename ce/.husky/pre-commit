@@ -1,2 +1,9 @@
 #!/usr/bin/env sh
-node ".ce/scripts/hook-runner.cjs" pre-commit 1>&2
+# Locate the CE bundle (.ce/ preferred, ce/ fallback) and dispatch.
+for d in .ce ce; do
+  if [ -f "$d/scripts/hook-runner.cjs" ]; then
+    node "$d/scripts/hook-runner.cjs" pre-commit 1>&2
+    exit $?
+  fi
+done
+echo "[ce] hook-runner.cjs not found in .ce/ or ce/ - skipping pre-commit hook" 1>&2

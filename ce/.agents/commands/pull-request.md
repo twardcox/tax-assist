@@ -12,7 +12,7 @@ Take the current feature branch from “ready to ship” to **an open pull reque
 
 ### 1. Pre-PR gate (required before this command)
 
-Run these **in order** for **every** PR - whether the human or the agent did the implementation. Load each playbook from **`ce://commands/{name}`** (or use **`get_slash_command`**) and follow it.
+Run these **in order** for **every** PR - whether the human or the agent did the implementation. Read each playbook from **`ce/.agents/commands/{name}.md`** and follow it.
 
 | Order | Slash                 | Purpose                                                                                                                 |
 | ----- | --------------------- | ----------------------------------------------------------------------------------------------------------------------- |

@@ -14,8 +14,8 @@ The user opened a **PMO management loop** session via `/pmo-manage`. Orient the 
 
 ## Authoritative context
 
-- Follow `ce://guidelines/shared` and `ce://guidelines/project-rules` for conventions
-- Change workflow: `ce://docs/change-runbook` (or `Docs/GUIDELINES.md` in the project)
+- Follow `ce/SHARED-GUIDELINES.md` and `ce/.agents/rules/project-rules.md` for conventions
+- Change workflow: the project's `Docs/GUIDELINES.md` when it exists, otherwise `ce/Change Workflow/README.md`
 
 ## Step 1 - Integrations
 

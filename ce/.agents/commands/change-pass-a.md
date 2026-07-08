@@ -8,7 +8,7 @@ Execute CE Change Workflow - PASS A (Change Impact Analysis). Produce exactly on
 
 ## Authoritative Rules
 
-- You MUST follow Docs/GUIDELINES.md exactly (or read ce://docs/change-runbook if the project does not have it yet).
+- You MUST follow the change workflow exactly: use the project's `Docs/GUIDELINES.md` when it exists, otherwise `ce/Change Workflow/README.md` in this bundle.
 - Jira snapshot is the source of truth for current execution state.
 - PASS A MUST NOT mutate Jira (no apply scripts, no status changes).
 - PASS A MUST produce exactly ONE output file and must OVERWRITE it (do not append).

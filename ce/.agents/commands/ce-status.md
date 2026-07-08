@@ -1,58 +1,44 @@
 ---
-description: Server and project config status - shows client info, integrations, and .ce-project.json snapshot
+description: Project workflow status - installation, config snapshot, current phase, and suggested next commands
 argument-hint:
 allowed-tools: all
 ---
 
 ## Task
 
-The user invoked **`/ce-status`**. Show a complete status dashboard: MCP client, server, current project, integrations, and the full `.ce-project.json` configuration snapshot.
+The user invoked **`/ce-status`**. Show a status dashboard for the CE workflow in this repository and suggest the next command. All checks are local - no server call.
 
 ## Steps (strict order)
 
-1. **Call `get_client_info`** - reports the detected MCP client name, skill variant (`cursor` / `claude-code` / `agents`), and the primary skills directory for this session.
+1. **Installation:** confirm `ce/` (or `.ce/`) bundle, `.agents/skills/` (and `.claude/skills/` when present), and hooks. Note anything missing (fix: `/init-project` or `/troubleshoot-setup`).
 
-2. **Call `show_project_config`** - reports integrations status (Jira ✅/❌/⚠️, GitHub ✅/❌/⚠️, Google Drive ✅/⚠️), project root path, config file location (`.ce-project.json`), and persisted toolkit config.
+2. **Config:** read `.ce-project.json` if present and display it in a fenced JSON block. If absent, say defaults are in effect (tracker-neutral, hooks enabled).
 
-3. **Read `.ce-project.json`** - from the config file path reported in step 2, read the raw file and display its full contents in a fenced JSON code block.
+3. **Infer the current phase** from what exists on disk:
 
-4. **Present the status dashboard** in this structure:
+   | Signal | Phase |
+   |--------|-------|
+   | No `research/` inputs, no SOW+ | Pre-SOW → `/quality-gate pre-sow`, then SOW+ |
+   | SOW+ exists, no System PRD | PRD → `/create-product-requirement-doc` |
+   | System PRD, missing milestone PRDs | PRD → `/create-milestone-prd` |
+   | Milestone PRDs, no tickets/tasks | Milestones → `/breakdown-milestone`, `/create-prd-tickets` |
+   | Tickets/specs exist, work ongoing | Development → `/start-ticket`, `/pmo-manage` |
+   | Feature branch with commits | In flight → `/pre-flight`, `/pull-request` |
 
-````
-Coherence Engine - Status
+   Check `agent-docs/`, `specs/tasks/`, `reports/`, and `git status`/`git log` for these signals. If the project skipped the planning phases deliberately (many do), say so neutrally - the dev-loop commands stand alone.
 
-── Server
-   Client:         <clientName from get_client_info>
-   Skill variant:  <skillVariant>
-   Skills dir:     <primarySkillDirectory>
+4. **Present the dashboard:**
 
-── Project
-   Root:           <projectRoot from show_project_config>
-   Config file:    <path to .ce-project.json>
+   ```
+   Coherence Engine - Status
+   ── Installation   bundle / skills / hooks: ✅ or issue
+   ── Config         .ce-project.json snapshot (or "defaults")
+   ── Tracker        configured tracker + pattern, or "none (tracker-neutral)"
+   ── Phase          inferred phase + evidence
+   ── Next steps     1-3 concrete commands, most relevant first
+   ```
 
-── Integrations
-   Jira:           ✅/❌/⚠️  <detail>
-   GitHub:         ✅/❌/⚠️  <detail>
-   Google Drive:   ✅/⚠️  <detail>
+## Rules
 
-── .ce-project.json
-   ```json
-   { ... full contents ... }
-````
-
-── Next steps
-• <any ❌ or ⚠️ items with fix instructions>
-• (none if all green)
-
-```
-
-## If configuration is incomplete
-
-- ❌ integrations: point to **`/troubleshoot-setup`** or **`/update-config`**
-- Missing `.ce-project.json`: point to **`/init-project`** (first-time setup) or **`/update-config`**
-- `get_client_info` returns unknown client: advise adding `?client_name=cursor` (or `claude-code`) to the MCP server URL
-
-## If `show_project_config` or `get_client_info` fails
-
-Explain the error briefly. Point to **`/troubleshoot-setup`** (no arguments - runs the full diagnostic) as the next step.
-```
+- Base every line on files/commands actually inspected this session - no cached assumptions.
+- If installation is broken, stop at step 1 and point to `/troubleshoot-setup`.

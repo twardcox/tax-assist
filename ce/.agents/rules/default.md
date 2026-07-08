@@ -2,15 +2,22 @@
 
 ## Navigation
 
-- See `ce://guidelines/project-rules` for project-specific rules and conventions.
-- Use CE MCP tools: `list_artifacts`, `read_artifact`, `save_artifact`, etc.
+- Project-specific rules and conventions: `ce/.agents/rules/project-rules.md` (baseline) plus any project overrides alongside it.
+- All command playbooks live in `ce/.agents/commands/` - the local files are the single source of truth. (`ce://` URIs only resolve when the optional CE MCP server is connected; never require it.)
 
-## Development (Development) Workflow
+## Tracker-neutral operation
 
-1. Read the Jira Story ticket - it contains all acceptance criteria for the user story.
-2. Create feature branch: `feature/PROJ-123-descriptive-name`
-3. Implement using acceptance criteria from the ticket.
-4. Quality gate: run tests, type-check, and lint per project conventions (e.g. `pnpm test && pnpm run typecheck && pnpm run lint`).
+The workflow works with or without a ticket tracker:
+
+- Steps that mention Jira (or any tracker) are **conditional**: run them when the project's `.ce-project.json` configures a tracker; otherwise note the skip in one line and continue - never block on a missing tracker.
+- Without a tracker, specs under `agent-docs/` and `specs/tasks/` are the backlog of record, and commit messages need no ticket reference.
+
+## Development Workflow
+
+1. Read the ticket or task spec - it contains the acceptance criteria for the work.
+2. Create a feature branch with a descriptive name (include the ticket key when the project uses one, e.g. `feature/PROJ-123-descriptive-name`).
+3. Implement using the acceptance criteria.
+4. Quality gate: run the project's test, type-check, and lint commands (use the project's package manager - check the lockfile; do not assume pnpm).
 5. Check for linter errors on edited paths before finishing.
 
 ## Data Hygiene

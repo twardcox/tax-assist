@@ -37,8 +37,9 @@ const path = require("path");
 
 const DEFAULT_CONFIG_FILE = ".ce-project.json";
 const DEFAULT_TICKET_PATTERN = "[A-Z][A-Z0-9]+-[0-9]+";
-const DEFAULT_BRANCH_PATTERN =
-  "^(feature|fix|bugfix|chore)/([A-Z][A-Z0-9]+-[0-9]+)-.+";
+// Tracker-neutral default: no branch-name enforcement unless a pattern is
+// explicitly configured in .ce-project.json (toolkit.jira.branchPattern).
+const DEFAULT_BRANCH_PATTERN = "";
 /** Default hosted origin when CE_SERVER_URL is unset (matches CI E2E workflow). */
 const DEFAULT_CE_SERVER_ORIGIN = "https://coherence-engine.fly.dev";
 
@@ -120,7 +121,10 @@ function buildMerged(raw, source) {
       },
       commitMsg: {
         enabled: toolkit.hooks?.commitMsg?.enabled !== false,
-        requireTicket: toolkit.hooks?.commitMsg?.requireTicket !== false,
+        // Tracker-neutral default: ticket references in commit messages are
+        // opt-in. Set toolkit.hooks.commitMsg.requireTicket = true in
+        // .ce-project.json for projects that use a ticket tracker.
+        requireTicket: toolkit.hooks?.commitMsg?.requireTicket === true,
       },
       prePush: {
         enabled: toolkit.hooks?.prePush?.enabled !== false,

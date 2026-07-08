@@ -90,8 +90,8 @@ The Developer agent assists with:
 
 ## See Also
 
-- [SOW+ Architecture](../ce/SOW/architecture-template.md)
-- [Sprint Planning Development](../ce/Phase%20VI%20-%20Development/)
+- [SOW+ Architecture](../SOW/architecture-template.md)
+- [Development phase](../Development/)
 - [design-assistant.md](./design-assistant.md) - spec and design-system readiness (`/design-review`)
 - [council/developer.md](./council/developer.md) - craft review role when invoked via `/council developer`
 - [agents/README.md](./README.md)

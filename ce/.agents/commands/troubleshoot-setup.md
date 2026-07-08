@@ -1,35 +1,33 @@
 ---
-description: Diagnose CE server setup - reports what is configured, missing, and provides exact fix steps
+description: Diagnose CE workflow setup in this project - reports what is configured, missing, and exact fix steps
 allowed-tools: all
 ---
 
 ## Task
 
-The user invoked `/troubleshoot-setup`. Run the CE setup diagnostic and surface every fix needed before continuing.
+The user invoked `/troubleshoot-setup`. Run a local diagnostic of the CE workflow installation in this repository and surface every fix needed. No server is involved - every check is a local file or command.
 
-## Steps
+## Checks (run all, report ✅/⚠️/❌ per row)
 
-1. Call the **`troubleshoot_setup`** MCP tool with **no arguments**.
-2. Read the output and interpret every line:
-   - ✅ - integration is working; no action needed
-   - ❌ - broken; follow the exact fix steps in the output
-   - ⚠️ - partially configured; follow the recommendation to complete setup
-3. List every ❌ and ⚠️ with the fix steps in a clear table or bullet list.
-4. After the user applies all fixes, instruct them to **restart the MCP server** and run `/troubleshoot-setup` again to confirm.
+| # | Check | How | Fix if failing |
+|---|-------|-----|----------------|
+| 1 | Bundle present | `ce/` (or `.ce/`) exists with `.agents/commands/`, `scripts/`, `lib/` | Run `/init-project` |
+| 2 | Skills installed | `.agents/skills/` and/or `.claude/skills/` exist and match `ce/.agents/skills/` (spot-check 2-3 stubs) | Re-copy from the bundle; stale MCP-era stubs mention `ce://` URIs - replace them |
+| 3 | Node available | `node --version` ≥ 18 | Install Node / fix PATH |
+| 4 | Scripts run | `node ce/scripts/pre-flight-check.cjs` executes (individual checks may fail on a dirty repo - the script itself must not crash) | Check the error; `ce/lib/` must sit next to `ce/scripts/` |
+| 5 | Config parses | `.ce-project.json` absent (defaults OK) or valid JSON | Fix JSON; see `/update-config` |
+| 6 | Hooks wired | If `.husky/` exists: hook files call `hook-runner.cjs` and `git config core.hooksPath` points at `.husky` | Reinstall from `ce/.husky/`; run the project's husky setup |
+| 7 | Ticket enforcement intentional | If `toolkit.hooks.commitMsg.requireTicket` is `true` or `toolkit.jira.branchPattern` is set: confirm the project really uses that tracker convention | Set `requireTicket: false` / remove the pattern for tracker-less projects |
+| 8 | Instruction file | `CLAUDE.md` (or the client's equivalent) exists and mentions the `ce/` bundle | Create from `ce/templates/` |
+| 9 | Local skills instantiated | `ce/skills/*.md` Project Facts blocks contain real values, not template placeholders | Fill them in per `/init-project` step 5 |
+| 10 | GitHub CLI (only if PR flow used) | `gh auth status` | `gh auth login` |
 
-## Common issues
+## Output
 
-| Symbol                | Issue                                                      | Fix                                  |
-| --------------------- | ---------------------------------------------------------- | ------------------------------------ |
-| ❌ Jira credentials   | `JIRA_API_TOKEN`, `JIRA_EMAIL`, or `JIRA_BASE_URL` missing | Set env vars; restart server         |
-| ❌ GitHub credentials | `GITHUB_TOKEN` missing                                     | Set env var; restart server          |
-| ⚠️ No project key     | `JIRA_PROJECT_KEY` or `GITHUB_REPO` unset                  | Run `/update-config` or set env vars |
-
-## When all systems are ready
-
-The tool prints **"🎉 All systems ready!"**. Suggest running `get_next_steps` (or `/ce-status`) to see what to work on next.
+List every ❌ and ⚠️ with its exact fix. If all green: "🎉 All systems ready" and suggest `/ce-status`.
 
 ## Rules
 
-- Do not assume anything is configured - always read the tool output directly.
-- Do not proceed with any phase work if ❌ items remain for integrations the current task depends on.
+- Do not assume anything is configured - run the checks.
+- Do not proceed with phase work while ❌ items remain for things the current task depends on.
+- Optional integrations (tracker, Drive, MCP server) are ⚠️ at worst - never ❌ - when simply absent.

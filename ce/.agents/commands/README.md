@@ -1,10 +1,12 @@
-# CE Slash Commands - Product & Planning (Claude)
+# CE Slash Commands (Command Playbooks)
 
-Cross-tool slash commands for **Coherence Engine** - the **generic/tool-agnostic namespace** compatible with Gemini CLI, GitHub Copilot CLI, Codex, `gh skill`, and any other MCP-capable AI tool that reads the `.agents/` convention.
+Cross-tool slash-command playbooks for **Coherence Engine** in the tool-agnostic `.agents/` convention (readable by Gemini CLI, GitHub Copilot CLI, Codex, `gh skill`, and any tool that follows it).
 
-**All commands are available across all three namespaces** (`.agents/`, `.claude/`, `.cursor/`) with namespace-appropriate content. This namespace covers the full command set with generic wording. For Claude Code–specific versions, see `.claude/commands/`. For Cursor-specific versions, see `.cursor/commands/`.
+**These files are the single source of truth.** The skill stubs in `../skills/` load them by path; when a project needs Claude Code (`.claude/commands/`) or Cursor (`.cursor/commands/`) copies, copy from here and keep them in sync via `/sync`.
 
-**Hub commands:** **`/ce`** is the **static** entry point - shows all commands grouped by phase and client (no live status call). **`/ce-status`** (mirrored in the dev client) runs **`get_next_steps`**, prints a **short** phase/status summary, then lists **planning + dev client** slash commands with **suggested next steps** highlighted (`ce://commands/ce-status`).
+**Tracker-neutral:** steps that mention Jira are conditional - run them only when the project configures a tracker in `.ce-project.json`; otherwise note the skip and continue (see `../rules/default.md`).
+
+**Hub commands:** **`/ce`** is the **static** entry point - shows all commands grouped by phase (no live status check). **`/ce-status`** inspects the repo, prints a **short** phase/status summary, then suggests next commands.
 
 ## Usage
 
@@ -45,7 +47,7 @@ In Claude Code (Cowork), type `/` followed by the command name:
 
 ### PMO - management loop (active project)
 
-When Sprint Planning planning exists and the project is in **ongoing** delivery, use these (load via `get_slash_command` or Agent Skills; not in the curated `ce://commands` index except where noted).
+When sprint planning exists and the project is in **ongoing** delivery, use these (invoke via Agent Skills or read the playbook file directly).
 
 | Command               | Description                                                                                  | Arguments |
 | --------------------- | -------------------------------------------------------------------------------------------- | --------- |
@@ -65,7 +67,7 @@ When Sprint Planning planning exists and the project is in **ongoing** delivery,
 
 ### Jira & Backlog Change (CE Change Workflow)
 
-Run `/new-ticket` to start. For user stories, pass-a and pass-b run automatically; then run `/change-apply` to apply. See `Docs/GUIDELINES.md`.
+Run `/new-ticket` to start. For user stories, pass-a and pass-b run automatically; then run `/change-apply` to apply. Change workflow: the project's `Docs/GUIDELINES.md` when it exists, otherwise `../../Change Workflow/README.md`.
 
 | Command          | Description                                                                     | Arguments |
 | ---------------- | ------------------------------------------------------------------------------- | --------- |
@@ -78,8 +80,8 @@ Run `/new-ticket` to start. For user stories, pass-a and pass-b run automaticall
 
 | Command         | Description                                                                                                                                                                                        | Arguments |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `/new-project`  | **Cowork:** New project - **`init_project`**, then **`setup_project`** / Jira / GitHub / optional Drive (`ce://commands/new-project`).                                                             | -         |
-| `/init-project` | **Dev client:** Development - run **`init_project`** before development (`ce://commands/init-project`). Cowork onboarding uses **`/new-project`** (same tool; this playbook is developer-focused). | -         |
+| `/new-project`  | New project onboarding: planning layout, config, instruction files, optional tracker/GitHub wiring                                                                                                 | `[project-name]` |
+| `/init-project` | Adopt the CE bundle into the current repo: copy skills, rules, scripts, CI, hooks; create config and instruction files                                                                             | `[path-to-master-bundle]` |
 
 ### Project Config
 
@@ -87,13 +89,13 @@ Run `/new-ticket` to start. For user stories, pass-a and pass-b run automaticall
 | ---------------- | ---------------------------------------------- | ---------------------- |
 | `/update-config` | Update .ce-project.json (hooks, CI, agentDocs) | `[section e.g. hooks]` |
 
-### MCP prompts (not slash commands)
+### MCP prompts (optional server only)
 
-Invoke via the MCP client’s **prompts** list (**`ListPrompts`** / **`GetPrompt`**), not `/{name}`.
+Only relevant when a project connects the optional CE MCP server; invoke via the MCP client's **prompts** list, not `/{name}`. Without the server, use `/pmo-status` or `/project-status-report` instead.
 
 | Prompt           | Description                                                                                                                                                                                                                       |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_status` | Cross-phase status - **Jira board first** (`jira_snapshot` with snapshot JSON in `reports/`), then artifacts, quality, traceability, **token usage**; optional GitHub. Final markdown via **`save_report`** under **`reports/`**. |
+| `project_status` | Cross-phase status - tracker board first, then artifacts, quality, traceability; report saved under `reports/`. |
 
 ---
 
@@ -137,7 +139,7 @@ Invoke via the MCP client’s **prompts** list (**`ListPrompts`** / **`GetPrompt
 
 ### Scope Changes and Ticket Creation (any phase)
 
-- `/new-ticket` - create a task/bug (quick) or user story (full workflow: auto-runs pass-a + pass-b, then `/change-apply`). See `Docs/GUIDELINES.md`.
+- `/new-ticket` - create a task/bug (quick) or user story (full workflow: auto-runs pass-a + pass-b, then `/change-apply`). See `../../Change Workflow/README.md`.
 
 ---
 
@@ -200,6 +202,6 @@ Do something with $ARGUMENTS.
 
 - Run `/spec-validate` on any artifact before presenting it for HITL approval
 - Use `/quality-gate` at every phase transition - don't skip gates
-- For scope changes at any phase: `/new-ticket` (user story path) → review summary → `/change-apply` (follow `Docs/GUIDELINES.md`)
+- For scope changes at any phase: `/new-ticket` (user story path) → review summary → `/change-apply` (follow the change workflow in `../../Change Workflow/README.md`)
 - **Management loop (active project):** start with `/pmo-manage` or `/pmo-status`; use `/sprint-checkin` at sprint start; `/sprint-complete` at sprint end
 - Chain naturally: `/create-product-requirement-doc` → `/create-milestone-prd` → `/breakdown-milestone` → `/create-prd-tickets`
