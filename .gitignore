@@ -12,6 +12,9 @@ state/update_state.json
 # ── Private taxpayer facts & books (real data — never commit; public repo) ────
 user_data/private/
 
+# ── Database backups (real data at rest — never commit) ───────────────────────
+backups/
+
 # ── User-uploaded documents ───────────────────────────────────────────────────
 documents/receipts/*
 documents/contracts/*
