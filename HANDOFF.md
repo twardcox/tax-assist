@@ -1,12 +1,31 @@
 # UTBIS Handoff Document
 **Universal Tax Benefit Intelligence System**
 **Project root:** `d:\programs\tax-assist`
-**Last updated:** 2026-06-10
+**Last updated:** 2026-07-10
 **Backend Runtime:** TypeScript/Fastify (`backend-ts`) | **Legacy Python:** retained for migration references
 
 ---
 
 ## Claude Code Handoff
+
+### New workstream (2026-07-10): First real user — owner's LLC books + trigger benefits
+
+Entry point: `docs/backlog/first-real-user-private-overlay.md` (committed on this branch). The owner's
+single-member LLC becomes UTBIS's first real user profile. Already in place (local-only, gitignored —
+verify `git check-ignore` before any commit; repo is PUBLIC): `user_data/private/books/2026-transactions.csv`
+(real business books), `user_data/private/businesses.local.yaml` (real facts, some TODO-owner fields),
+`user_data/private/README.md` (monthly ritual). `.gitignore` rule for `user_data/private/` is committed.
+
+**Translation note:** the backlog draft was written against the README/ROADMAP (Python scanner + YAML)
+view. Since the live system is TS + SQLite ("My Data" UI, multi-user, gitignored DB), Story A (private
+overlay) may reduce to entering real facts via My Data — decide overlay-vs-DB at design review. Story B
+stands as written: add §41 R&D credit (+§174A note) to the benefit library and support threshold-style
+"almost available" reporting (distance-to-threshold: ~$5k/yr cash spend → §41 CPA conversation;
+~$40k/yr net profit → S-corp election). Story C (monthly books ritual command) depends on A+B. The CSV
+books remain the cash system of record regardless of implementation choice. Cross-repo context:
+`d:\programs\public-data\lab-overview\` cost-and-monetization-discipline.md §1.7–1.10 + project-cost-ledger.md.
+
+### TS migration (previous workstream)
 
 This workspace is mid-migration from Python to TypeScript. The active runtime path is `backend-ts`. The tax-law updater migration is complete and `scripts/update_tax_law.py` has been retired.
 
