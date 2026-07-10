@@ -22,8 +22,8 @@ overlay) may reduce to entering real facts via My Data — decide overlay-vs-DB 
 stands as written: add §41 R&D credit (+§174A note) to the benefit library and support threshold-style
 "almost available" reporting (distance-to-threshold: ~$5k/yr cash spend → §41 CPA conversation;
 ~$40k/yr net profit → S-corp election). Story C (monthly books ritual command) depends on A+B. The CSV
-books remain the cash system of record regardless of implementation choice. Cross-repo context:
-`d:\programs\public-data\lab-overview\` cost-and-monetization-discipline.md §1.7–1.10 + project-cost-ledger.md.
+books remain the cash system of record regardless of implementation choice. Cross-repo context (outside this repo):
+`public-data/lab-overview/` cost-and-monetization-discipline.md §1.7–1.10 + project-cost-ledger.md.
 
 ### TS migration (previous workstream)
 
