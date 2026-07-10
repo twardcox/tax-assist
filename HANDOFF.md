@@ -8,21 +8,25 @@
 
 ## Claude Code Handoff
 
-### New workstream (2026-07-10): First real user — owner's LLC books + trigger benefits
+### First Real User arc — SHIPPED 2026-07-10 (branch `first-real-user`, unpushed)
 
-Entry point: `docs/backlog/first-real-user-private-overlay.md` (committed on this branch). The owner's
-single-member LLC becomes UTBIS's first real user profile. Already in place (local-only, gitignored —
-verify `git check-ignore` before any commit; repo is PUBLIC): `user_data/private/books/2026-transactions.csv`
-(real business books), `user_data/private/businesses.local.yaml` (real facts, some TODO-owner fields),
-`user_data/private/README.md` (monthly ritual). `.gitignore` rule for `user_data/private/` is committed.
+Full CE run (SOW+ → PRDs → milestone plan → epics → stories → sprints → dev) in one day; all
+artifacts in `agent-docs/2026-07-10-*`; final report: `agent-docs/2026-07-10-sprint-report-first-real-user.md`.
+Design decision (recorded in `docs/backlog/first-real-user-private-overlay.md`): **no YAML overlay** —
+real facts enter via My Data (scanner reads per-user Postgres; DB is outside the repo).
 
-**Translation note:** the backlog draft was written against the README/ROADMAP (Python scanner + YAML)
-view. Since the live system is TS + SQLite ("My Data" UI, multi-user, gitignored DB), Story A (private
-overlay) may reduce to entering real facts via My Data — decide overlay-vs-DB at design review. Story B
-stands as written: add §41 R&D credit (+§174A note) to the benefit library and support threshold-style
-"almost available" reporting (distance-to-threshold: ~$5k/yr cash spend → §41 CPA conversation;
-~$40k/yr net profit → S-corp election). Story C (monthly books ritual command) depends on A+B. The CSV
-books remain the cash system of record regardless of implementation choice. Cross-repo context (outside this repo):
+Shipped: **M1** `npm run backup:db` (dated pg_dump, restore verified) + entry checklist
+(`docs/my-data-entry-checklist.md`); **M2** threshold-trigger benefits — YAML `trigger:` blocks
+(gte|lte), `TriggerStatus` on `ScanResult`, §41 R&D credit record ($5k cash-spend trigger),
+S-corp $40k net-profit trigger, Dashboard "Trigger Watch" table + report section; **M3**
+`npm run ritual -- --user <email>` (validate books CSV → aggregates → scan → report, in-process).
+Also: local `npm test` now uses `tax_assist_test` DB — it was truncating the dev DB (data-loss
+landmine for real facts; fixed in `d9248c8`). 449 tests green.
+
+**Waiting on owner (10 min):** enter real facts per `docs/my-data-entry-checklist.md`, then run the
+ritual — first real trigger report. Books CSV stays the cash system of record. Known env quirk:
+port 5432 double-bound (native PG 18 owns `tax_assist`; Docker `image-upload-postgres` also
+listens — currently harmless). API runs on :8001, not :8000. Cross-repo context:
 `public-data/lab-overview/` cost-and-monetization-discipline.md §1.7–1.10 + project-cost-ledger.md.
 
 ### TS migration (previous workstream)
