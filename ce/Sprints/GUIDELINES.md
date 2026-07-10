@@ -21,7 +21,7 @@ When presenting the sprint plan for approval, include this checklist. The PM/PO 
 
 ## After sprint completion
 
-When the sprint is **done**, PMO runs **`/sprint-complete`** to produce one markdown report in **`reports/`**: sprint outcomes vs plan (including carryover), the **cost line** (below), and the same project-wide status steps as the **`project_status`** MCP prompt. See the **`sprint-complete`** slash command in **`ce/.claude/commands/`**.
+When the sprint is **done**, PMO runs **`/sprint-complete`** to produce one markdown report in **`reports/`**: sprint outcomes vs plan (including carryover), the **cost line** (below), and the same project-wide status steps as the **`project_status`** MCP prompt. See the **`sprint-complete`** slash command in **`ce/.agents/commands/sprint-complete.md`**.
 
 ### Cost line (required in every sprint report)
 
