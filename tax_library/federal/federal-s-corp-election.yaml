@@ -64,6 +64,14 @@ stacking_rules:
 
 risk_level: moderate
 
+# Threshold trigger (M2 / EP-002): heuristic breakeven where S Corp payroll overhead is usually
+# repaid by SE-tax savings. Adjustable here without a code change; "evaluate with CPA" only.
+trigger:
+  metric: net_profit
+  label: "Net profit"
+  threshold: 40000
+  comparison: gte
+
 planning_notes: |
   - Run payroll throughout the year — do not pay all W-2 compensation in December
   - IRS audits low W-2 salary / high distribution splits aggressively

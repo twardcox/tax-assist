@@ -359,6 +359,25 @@ export class UserFacts {
     return toNumber(financials.net_profit_loss);
   }
 
+  // Trigger metrics sum across all businesses (M2 design review 2026-07-10).
+  totalBusinessNetProfit(): number {
+    return this.businesses().reduce(
+      (sum, biz) => sum + toNumber(toObject(biz.financials).net_profit_loss),
+      0
+    );
+  }
+
+  totalBusinessCashOperatingSpend(): number {
+    return this.businesses().reduce((sum, biz) => {
+      const financials = toObject(biz.financials);
+      return sum + toNumber(financials.operating_expenses) + toNumber(financials.cost_of_goods_sold);
+    }, 0);
+  }
+
+  hasBusinessFinancials(): boolean {
+    return this.businesses().some((biz) => Object.keys(toObject(biz.financials)).length > 0);
+  }
+
   firstBusinessGrossRevenue(): number {
     const biz = this.firstBusiness();
     const financials = toObject(biz.financials);

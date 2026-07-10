@@ -69,6 +69,31 @@ function futureSection(results: ScanResult[]): string[] {
   return lines;
 }
 
+function fmtCurrency(value: number): string {
+  const abs = Math.abs(value).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return value < 0 ? `-$${abs}` : `$${abs}`;
+}
+
+function triggerWatchSection(results: ScanResult[]): string[] {
+  const items = results.filter((r) => r.trigger);
+  if (items.length === 0) return [];
+  const lines: string[] = [
+    "## Trigger Watch — CPA Conversation Thresholds",
+    "",
+    "| Benefit | Metric | Threshold | Current | Distance | Fired |",
+    "|---------|--------|-----------|---------|----------|-------|",
+  ];
+  for (const r of items) {
+    const t = r.trigger!;
+    const threshold = `${t.comparison === "lte" ? "≤ " : "≥ "}${fmtCurrency(t.threshold)}`;
+    lines.push(
+      `| ${r.benefit_name} | ${t.label} | ${threshold} | ${fmtCurrency(t.current_value)} | ${fmtCurrency(t.distance)} | ${t.fired ? "**YES — evaluate with CPA**" : "no"} |`
+    );
+  }
+  lines.push("");
+  return lines;
+}
+
 function highRiskSection(results: ScanResult[]): string[] {
   const items = results.filter((r) => r.status === "high_risk");
   if (items.length === 0) return [];
@@ -97,6 +122,7 @@ export function writeOpportunityReport(scan: ScanRun): void {
   }
   lines.push("");
 
+  lines.push(...triggerWatchSection(scan.results));
   lines.push(...eligibleNowSection(scan.results));
   lines.push(...nearlyEligibleSection(scan.results));
   lines.push(...eligibleIfChangedSection(scan.results));

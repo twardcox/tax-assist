@@ -8,6 +8,17 @@ export type ScanStatus =
   | "expired"
   | "unknown";
 
+// Threshold-trigger status (System PRD §5.2). Thresholds live in benefit YAML, not code.
+export type TriggerStatus = {
+  metric: string;
+  label: string;
+  threshold: number;
+  comparison: "gte" | "lte";
+  current_value: number;
+  distance: number; // dollars to firing; 0 when fired
+  fired: boolean;
+};
+
 export type ScanResult = {
   benefit_id: string;
   benefit_name: string;
@@ -24,6 +35,7 @@ export type ScanResult = {
   forms_required: string[];
   phaseout_note: string;
   review_required: boolean;
+  trigger?: TriggerStatus;
 };
 
 export type SequenceStep = {

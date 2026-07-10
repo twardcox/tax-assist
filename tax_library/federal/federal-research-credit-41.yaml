@@ -1,0 +1,83 @@
+id: research-credit-41
+name: Research & Development Credit (§41)
+category: business_credit
+jurisdiction: federal
+
+authority:
+  irc_section: "41, 174A"
+  irs_publication: "Instructions for Form 6765"
+  form_instruction: "Instructions for Form 6765 (Credit for Increasing Research Activities)"
+  state_source: null
+
+status: active
+benefit_type: credit
+
+summary: |
+  Credit for increasing research activities. Qualified research expenses (QREs) can include
+  wages, supplies, research-use cloud/LLM computing costs, and 65% of contract research.
+  Qualified small businesses may elect to apply the credit against payroll taxes instead of
+  income tax (valuable pre-profit); otherwise unused credit carries forward up to 20 years.
+  The 2025 act (§174A) restored immediate expensing of domestic research costs.
+  UTBIS flags the CPA conversation only — it does not compute the credit or determine
+  whether specific activities meet the §41 four-part test.
+
+estimated_value:
+  typical_range: "~6–10% of qualified research expenses"
+  calculation_basis: "Regular or Alternative Simplified Credit method over QREs — CPA computation required"
+  depends_on: [qualified_research_expenses, business_structure, gross_receipts_history]
+
+eligibility_rules:
+  - rule: "Research must satisfy the §41 four-part test: permitted purpose, technological in nature, elimination of uncertainty, process of experimentation"
+  - rule: "Expenses must be qualified research expenses (QREs): in-house wages/supplies/computer rental (incl. research cloud compute), 65% of contract research"
+  - rule: "Payroll-tax offset path: qualified small business (< $5M gross receipts, no receipts before the prior 5-year window)"
+  - rule: "Contemporaneous documentation of research activities strongly advised (project records, spend ledgers)"
+
+phaseouts: []
+
+required_user_facts:
+  - fact: "businesses[*].financials.operating_expenses"
+  - fact: "businesses[*].financials.cost_of_goods_sold"
+  - fact: "businesses[*].industry"
+
+required_documents:
+  - document: "Spend ledger for research costs (cloud/LLM compute invoices, contractor agreements)"
+  - document: "Contemporaneous project documentation (experiment records, iteration logs)"
+
+required_forms:
+  - form: "Form 6765 (Credit for Increasing Research Activities)"
+  - form: "Form 8974 (payroll-tax offset path, filed with Form 941)"
+
+deadlines:
+  - deadline: "Claimed on timely filed return (incl. extensions); payroll-offset election must be made on an original return"
+
+stacking_rules:
+  compatible_with: [qbi-deduction, s-corp-election]
+  conflicts_with: []
+
+risk_level: moderate
+
+# Threshold trigger (M2 / EP-002): lab standing trigger §1.10 — ~$5k/yr cash operating spend
+# makes the CPA conversation worth its fee. Adjustable here without a code change.
+trigger:
+  metric: annual_cash_operating_spend
+  label: "Annual cash operating spend"
+  threshold: 5000
+  comparison: gte
+
+planning_notes: |
+  - §174A (2025 act) restored immediate expensing of domestic research costs — ask the CPA how
+    expensing and the credit interact for the current year
+  - Pre-profit companies: the QSB payroll-tax offset makes the credit valuable before income tax exists
+  - Research-use LLM/cloud compute is a plausible QRE category for AI-development businesses;
+    contemporaneous llm-call ledgers and project repos are supporting documentation
+  - Non-goal: UTBIS does not compute the credit, allocate QREs, or prepare Form 6765
+
+qualification_pathways:
+  - "If below the spend trigger: track research spend by category; revisit when annual cash spend approaches $5,000"
+  - "If at/above trigger: schedule a CPA conversation about a §41 study and the §174A expensing election"
+
+review_required:
+  cpa: required
+  attorney: false
+
+last_verified: 2026-07-10
