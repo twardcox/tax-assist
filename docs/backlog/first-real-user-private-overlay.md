@@ -33,11 +33,11 @@ worth its fee.
 - Output section mirrors a trigger table: threshold, current value, fired/not-fired.
 - Non-goal: computing the credit or preparing elections — this flags CPA conversations only.
 
-## Story C (later) — `scripts/update_books.py` monthly ritual
+## Story C (later) — Monthly books ritual command (TypeScript)
 
 One command: append/validate `books/<year>-transactions.csv`, recompute overlay financials
-aggregates, run `scan_opportunities.py`, print the trigger table. Target: monthly bookkeeping
-in ≤15 minutes. (Depends on A + B.)
+aggregates, run the backend scan (`POST /api/scan`), and review `reports/opportunity_report.md`.
+Target: monthly bookkeeping in ≤15 minutes. (Depends on A + B.)
 
 ## Notes
 
