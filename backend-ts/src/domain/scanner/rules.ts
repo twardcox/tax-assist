@@ -1,6 +1,7 @@
 import type { ScanResult, ScanStatus } from "./types";
 import { UserFacts } from "./userFacts";
 import { getTaxParamsClosest } from "../taxForms/taxParams";
+import { evaluateTrigger, triggerThreshold } from "./triggers";
 
 type RawBenefit = Record<string, unknown>;
 
@@ -2024,6 +2025,49 @@ const rules: Record<string, RuleFn> = {
     };
   },
 
+  "research-credit-41": (benefit, facts) => {
+    if (facts.businesses().length === 0) {
+      return {
+        status: "not_applicable",
+        message: "§41 research credit requires a business conducting qualified research."
+      };
+    }
+
+    if (!facts.hasBusinessFinancials()) {
+      return {
+        status: "unknown",
+        message: "Business exists but no financials are recorded — cannot evaluate the §41 spend trigger.",
+        missing_facts: ["businesses[*].financials.operating_expenses"]
+      };
+    }
+
+    const spend = facts.totalBusinessCashOperatingSpend();
+    const threshold = triggerThreshold(benefit) ?? 5000;
+
+    if (spend >= threshold) {
+      return {
+        status: "nearly_eligible",
+        message:
+          `Annual cash operating spend of $${spend.toLocaleString()} meets the ~$${threshold.toLocaleString()} trigger — ` +
+          "evaluate the §41 research credit with a CPA. QREs may include research cloud/LLM compute and 65% of contract research. " +
+          "UTBIS flags the conversation only; it does not compute the credit.",
+        next_steps: [
+          "Bring contemporaneous documentation (project records, spend ledger) to a CPA",
+          "Ask about §174A immediate expensing of domestic research costs (2025 act)",
+          "If a qualified small business: ask about the payroll-tax offset election (up to 20-yr credit carryforward otherwise)"
+        ]
+      };
+    }
+
+    return {
+      status: "future_opportunity",
+      message:
+        `Annual cash operating spend of $${spend.toLocaleString()} is $${(threshold - spend).toLocaleString()} below ` +
+        `the ~$${threshold.toLocaleString()} CPA-conversation trigger for the §41 research credit. ` +
+        "Track research spend (cloud/LLM compute, contract research) — evaluate with a CPA when the trigger fires."
+    };
+  },
+
   "s-corp-election": (_benefit, facts) => {
     if (!facts.hasSelfEmployment()) {
       return {
@@ -3023,8 +3067,12 @@ export function evaluateBenefit(benefit: RawBenefit, facts: UserFacts): ScanResu
   }
 
   const evaluated = rule(benefit, facts);
+  // A not_applicable benefit gets no trigger row — e.g. business triggers are noise for a
+  // profile with no business.
+  const trigger = evaluated.status === "not_applicable" ? undefined : evaluateTrigger(benefit, facts);
   return {
     ...base,
+    ...(trigger ? { trigger } : {}),
     status: evaluated.status,
     message: evaluated.message,
     estimated_value: evaluated.estimated_value ?? base.estimated_value,

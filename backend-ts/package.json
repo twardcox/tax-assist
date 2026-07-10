@@ -9,6 +9,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "seed:test-user": "tsx src/scripts/createTestUser.ts",
+    "backup:db": "node scripts/backupDb.mjs",
+    "ritual": "tsx src/scripts/monthlyRitual.ts",
     "update:tax-params": "node scripts/updateTaxParams.mjs",
     "suggest:stacks": "tsx scripts/suggestStacks.mjs",
     "typecheck": "tsc --noEmit",

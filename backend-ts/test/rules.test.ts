@@ -27,7 +27,7 @@ describe("rules parity", () => {
     const testSource = readFileSync("test/rules.test.ts", "utf8");
 
     const ruleIds = Array.from(
-      rulesSource.matchAll(/^\s*"([a-z0-9-]+)": \(_benefit, facts\) => \{/gm),
+      rulesSource.matchAll(/^\s*"([a-z0-9-]+)": \(_?benefit, facts\) => \{/gm),
       (match) => match[1]
     );
     const testedIds = new Set(
@@ -45,7 +45,7 @@ describe("rules parity", () => {
     const testSource = readFileSync("test/rules.test.ts", "utf8");
 
     const ruleIds = new Set(
-      Array.from(rulesSource.matchAll(/^\s*"([a-z0-9-]+)": \(_benefit, facts\) => \{/gm), (match) => match[1])
+      Array.from(rulesSource.matchAll(/^\s*"([a-z0-9-]+)": \(_?benefit, facts\) => \{/gm), (match) => match[1])
     );
     const testIds = Array.from(testSource.matchAll(/id:\s*"([a-z0-9-]+)"/g), (match) => match[1]).filter(
       (id) => id !== "some-obscure-benefit"
@@ -1394,6 +1394,135 @@ describe("rules parity", () => {
 
     expect(result.status).toBe("not_applicable");
     expect(result.message).toContain("already taxed as an S Corp");
+  });
+
+  test("research credit 41 is not applicable without a business", () => {
+    const result = evaluateBenefit(
+      {
+        id: "research-credit-41",
+        name: "Research & Development Credit (§41)",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {},
+        trigger: { metric: "annual_cash_operating_spend", threshold: 5000, comparison: "gte" }
+      },
+      makeFacts({})
+    );
+
+    expect(result.status).toBe("not_applicable");
+    expect(result.trigger).toBeUndefined();
+  });
+
+  test("research credit 41 is unknown with missing facts when financials absent", () => {
+    const result = evaluateBenefit(
+      {
+        id: "research-credit-41",
+        name: "Research & Development Credit (§41)",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {},
+        trigger: { metric: "annual_cash_operating_spend", threshold: 5000, comparison: "gte" }
+      },
+      makeFacts({
+        businesses: { businesses: [{ entity_type: "llc_single" }] }
+      })
+    );
+
+    expect(result.status).toBe("unknown");
+    expect(result.missing_facts).toContain("businesses[*].financials.operating_expenses");
+  });
+
+  test("research credit 41 below threshold reports future opportunity with distance", () => {
+    const result = evaluateBenefit(
+      {
+        id: "research-credit-41",
+        name: "Research & Development Credit (§41)",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {},
+        trigger: { metric: "annual_cash_operating_spend", threshold: 5000, comparison: "gte" }
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            { entity_type: "llc_single", financials: { operating_expenses: 1200, cost_of_goods_sold: 0 } }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("future_opportunity");
+    expect(result.message).toContain("$3,800 below");
+    expect(result.trigger).toMatchObject({
+      metric: "annual_cash_operating_spend",
+      threshold: 5000,
+      current_value: 1200,
+      distance: 3800,
+      fired: false
+    });
+  });
+
+  test("research credit 41 fires at exactly the threshold with CPA language", () => {
+    const result = evaluateBenefit(
+      {
+        id: "research-credit-41",
+        name: "Research & Development Credit (§41)",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {},
+        trigger: { metric: "annual_cash_operating_spend", threshold: 5000, comparison: "gte" }
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            { entity_type: "llc_single", financials: { operating_expenses: 5000 } }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.message.toLowerCase()).toContain("evaluate the §41 research credit with a cpa");
+    expect(result.trigger).toMatchObject({ fired: true, distance: 0, current_value: 5000 });
+  });
+
+  test("research credit 41 above threshold fires and sums spend across businesses", () => {
+    const result = evaluateBenefit(
+      {
+        id: "research-credit-41",
+        name: "Research & Development Credit (§41)",
+        category: "business_credit",
+        jurisdiction: "federal",
+        risk_level: "moderate",
+        required_forms: [],
+        required_documents: [],
+        review_required: {},
+        trigger: { metric: "annual_cash_operating_spend", threshold: 5000, comparison: "gte" }
+      },
+      makeFacts({
+        businesses: {
+          businesses: [
+            { entity_type: "llc_single", financials: { operating_expenses: 4000, cost_of_goods_sold: 500 } },
+            { entity_type: "sole_prop", financials: { operating_expenses: 2000 } }
+          ]
+        }
+      })
+    );
+
+    expect(result.status).toBe("nearly_eligible");
+    expect(result.trigger).toMatchObject({ fired: true, current_value: 6500, distance: 0 });
   });
 
   test("bonus depreciation is eligible now when assets are placed in service", () => {

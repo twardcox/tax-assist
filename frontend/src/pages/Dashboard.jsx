@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import StatusBadge, { STATUS_CONFIG } from "../components/StatusBadge";
 import StackCard from "../components/StackCard";
+import TriggerTable from "../components/TriggerTable";
 
 const STATUS_ORDER = [
   "eligible_now",
@@ -298,6 +299,9 @@ export default function Dashboard() {
               <SummaryCard key={s} status={s} count={results.counts[s] ?? 0} />
             ))}
           </div>
+
+          {/* Trigger watch */}
+          <TriggerTable results={results.results} />
 
           {/* Strategy stacks */}
           {results.stacks?.length > 0 && (
