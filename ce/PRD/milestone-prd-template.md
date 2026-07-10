@@ -1,88 +1,58 @@
-# Milestone PRD: [M#] - [Milestone Name]
+# Milestone PRD: [MX — Milestone Name]
 
-<!-- NOTE: This file was empty (0 bytes) while being referenced by README.md as the Milestone
-     PRD template. Filled 2026-07-07 during the AI-skills review pass, consistent with
-     system-prd-template.md and PRD/GUIDELINES.md. If an upstream coherence-engine version of
-     this template exists, prefer syncing that over this local reconstruction. -->
+> **Provenance:** Locally generated 2026-07-08 by intent-reconstruction from `system-prd-template.md`, `prd-template.md`, and PRD/GUIDELINES.md (the canonical file shipped empty). Replace with the upstream version when syncing with github.com/assembleinc/coherence-engine.
 
-## Version History
+**Parent:** [system-prd.md](./system-prd.md) · **Depends on:** [milestone IDs or —] · **Duration:** [X weeks] · **Version:** [1.0 (date)]
 
-| Version | Date | Author | Changes |
-| ------- | ---- | ------ | ------- |
-| 0.1     |      |        | Initial draft |
+Shared context (data models, glossary, cross-cutting requirements) lives in the System PRD and is **referenced, not duplicated** here. A Milestone PRD is detailed and iterable; the System PRD is stable.
 
-## 1. Milestone Context
+## 1. Objective
 
-### 1.1 Purpose
+[One paragraph: what user value this milestone delivers and why it matters. Written so its absence would be felt — not a restatement of the feature list.]
 
-What this milestone delivers and why now. One paragraph.
+## 2. User Stories (this milestone)
 
-### 1.2 Position in System
+[Each story this milestone implements, in full. These seed the Epics phase — include all acceptance criteria here so epics elaborate rather than invent.]
 
-- **System PRD:** [link to system-prd]
-- **Depends on:** [M#s and what specifically]
-- **Enables:** [M#s and what specifically]
-- **Impact on other milestones:** [what changes for them if this slips or changes shape]
+### Story [MX-N]: [Title]
 
-### 1.3 Success Criteria
+**As a** [user type], **I want** [action], **so that** [benefit].
 
-Measurable statements — the milestone is done when these are demonstrably true.
+**Acceptance Criteria:**
+- [ ] [Specific, testable criterion]
+- [ ] [Specific, testable criterion]
 
-## 2. Scope
+**Edge Cases:** [case → expected behavior; one line each]
 
-### 2.1 In Scope
+## 3. Functional Requirements
 
-### 2.2 Out of Scope
+| ID | Requirement | Priority | Rationale |
+| --- | --- | --- | --- |
+| MX-FR-01 | [Requirement] | Must/Should/Could | [Trace to System PRD FR or business objective] |
 
-Explicit non-goals, especially anything a reader might reasonably assume is included.
+## 4. Non-Functional Requirements (delta from System PRD §6)
 
-## 3. User Stories
+[Only what is new or different for this milestone. "No milestone-specific NFRs" is a valid entry.]
 
-One subsection per story. Every story carries **all** its acceptance criteria (one Jira story per user story — do not split ACs across tickets).
+## 5. Data Requirements
 
-### 3.1 [Story ID] - [Story Name]
+[Tables/entities touched, by reference to the canonical data models. Note any schema changes — these require a System PRD change-log entry.]
 
-**As a** [user], **I want** [capability], **so that** [outcome].
+## 6. Dependencies & Assumptions
 
-**Acceptance Criteria (Given/When/Then):**
+[Hard dependencies on other milestones; external dependencies; which System PRD assumptions (A1, A2…) this milestone resolves or relies on.]
 
-- Given … When … Then …
+## 7. Out of Scope (this milestone)
 
-**Edge cases:**
+[What later milestones own, so this one can refuse it by pointer.]
 
-## 4. Functional Requirements
+## 8. Exit Gate
 
-Numbered, testable requirements for this milestone only. Reference System PRD shared context rather than restating it.
+[Measurable criteria that close the milestone. These feed the Milestones-phase plan and Sprint goals.]
 
-## 5. Non-Functional Requirements
+- [ ] [Criterion]
+- [ ] [Criterion]
 
-Only the NFRs this milestone moves: performance, security, accessibility, compliance. Reference System PRD §6 for the system-wide baseline.
+## 9. Traceability
 
-## 6. Data and API Impact
-
-- **Data model changes:** [deltas against System PRD §5.2 canonical models]
-- **API contract changes:** [deltas against System PRD §5.3]
-- **Migrations required:**
-
-## 7. Epic Breakdown
-
-| Epic | Name | Stories | Dependencies | Notes |
-| ---- | ---- | ------- | ------------ | ----- |
-
-## 8. Assumptions and Open Questions
-
-Label assumptions explicitly; open questions get an owner and a needed-by date.
-
-## 9. Risks
-
-| Risk | Likelihood | Impact | Mitigation |
-| ---- | ---------- | ------ | ---------- |
-
-## 10. Approvals
-
-| Role | Name | Date | Status |
-| ---- | ---- | ---- | ------ |
-| Product Owner |  |  |  |
-| Tech Lead |  |  |  |
-
-Gate: proceeds to Milestone planning only after `Output Approved.` at the phase checkpoint (see SHARED-GUIDELINES.md).
+[Optional: map to pre-existing plans, tickets, or roadmap items that seeded this milestone.]
