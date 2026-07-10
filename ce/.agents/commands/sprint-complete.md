@@ -26,6 +26,7 @@ Use **`$ARGUMENTS`** when the user names a sprint (name, number, or Jira sprint 
    - **Goal vs outcome** - sprint goal from the plan vs what shipped (from Jira statuses and plan).
    - **Stories** - table or list: key, summary, planned, final status; **carryover** called out explicitly.
    - **Lightweight retrospective** - bullets: goals met?, blockers, risks, dependencies for the **next** sprint.
+   - **Cost line** (required - see `ce/Sprints/GUIDELINES.md`) - cash spend this sprint from the project's spend ledger (never memory), external/expert spend, owner-hours (coarse estimate; sprint + cumulative), cumulative vs the plan's caps. If the Project Binding declares a cost & hours ledger, update it as part of this step.
 
 ### B. Full project status (same order as `project_status`)
 
@@ -54,6 +55,7 @@ Merge **A** (sprint closure) **above** the standard outline from **`project_stat
 **Report outline**
 
 - **### Sprint complete** - (from step A: identity, goal vs outcome, stories, carryover, retrospective bullets)
+- **### Cost line** - (from step A: cash spend, external spend, owner-hours, cumulative vs caps)
 - **### Jira status** - (from **`jira_snapshot`**; mention **`reports/jira-snapshot-*.json`** when **`save_to_file`** was true)
 - **### Phase Completion**
 - **### Spec Quality**

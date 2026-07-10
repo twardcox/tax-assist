@@ -10,6 +10,7 @@
 | --------------- | --------------------------------------- |
 | Sprint duration | [1 or 2] weeks                          |
 | Team capacity   | [X] story points / [Y] hours per sprint |
+| Spend cap       | [$X cash per sprint / per-story caps from plan budget] |
 | Start date      | [Date]                                  |
 | End date        | [Date]                                  |
 
