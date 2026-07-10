@@ -5,6 +5,22 @@
 
 ## Story A — Private facts overlay
 
+> **Design review 2026-07-10: overlay REJECTED — enter real facts via the My Data UI (DB).**
+> The draft below was written against the stale Python-scanner/YAML view. In the live system every
+> authenticated scan reads per-user facts from PostgreSQL (`UserFacts.fromUserSections`,
+> `backend-ts/src/domain/scanner/scan.ts:32`); `fromYaml` is only the no-user fallback. The DB lives
+> outside the repo entirely (DATABASE_URL) — stronger than gitignore — and the YAML→DB bootstrap
+> runs only when the user table is empty (`db/bootstrap.ts:29`), so entered data is never overwritten.
+> An overlay-merge would be code the scan path never executes.
+>
+> What survives from Story A:
+> 1. **Human task:** owner registers/logs in and enters the `businesses.local.yaml` facts through
+>    My Data (use `entity_type: llc_single` — the scanner's vocabulary; `llc_single_member` is not
+>    a recognized value). `businesses.local.yaml` stays as the local worksheet feeding that entry.
+> 2. **Code task (only one):** a test asserting `git check-ignore` passes for `user_data/private/`,
+>    protecting the books CSV — which remains the cash system of record regardless.
+> 3. Acceptance criteria 1–2 below are void; 3–4 stand.
+
 As a user with real financial data in a public repo, I want the scanner to merge a gitignored
 private overlay over the public `user_data/*.yaml` templates, so real facts drive results
 without ever being committable.
