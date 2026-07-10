@@ -14,13 +14,25 @@ When presenting the sprint plan for approval, include this checklist. The PM/PO 
 - [ ] Capacity balanced - no sprint overloaded relative to team velocity
 - [ ] Milestone alignment preserved - sprint sequence matches milestone order
 - [ ] Sprint assignments synced to Jira (if project uses Jira)
+- [ ] Spend caps stated - any story that spends cash (LLM/API/data/expert) carries a dollar cap from the plan
 - [ ] Ready for development handoff - developers can pick from sprint backlog
 
 ---
 
 ## After sprint completion
 
-When the sprint is **done**, PMO runs **`/sprint-complete`** to produce one markdown report in **`reports/`**: sprint outcomes vs plan (including carryover) and the same project-wide status steps as the **`project_status`** MCP prompt. See the **`sprint-complete`** slash command in **`ce/.claude/commands/`**.
+When the sprint is **done**, PMO runs **`/sprint-complete`** to produce one markdown report in **`reports/`**: sprint outcomes vs plan (including carryover), the **cost line** (below), and the same project-wide status steps as the **`project_status`** MCP prompt. See the **`sprint-complete`** slash command in **`ce/.claude/commands/`**.
+
+### Cost line (required in every sprint report)
+
+| Item | Source |
+| --- | --- |
+| Cash spend this sprint (LLM/API/data) | The project's spend ledger (e.g. an `llm_calls` table) - never memory or a provider dashboard alone |
+| External/expert/counsel spend | Invoices |
+| Owner-hours | Coarse estimate (±25% is fine) - sprint + cumulative for the project |
+| Cumulative vs caps | Compare against the plan's budget caps; crossing a cap is a stop-and-report event |
+
+If the Project Binding declares a **cost & hours ledger**, the cost line also updates it. At terminal verdicts (kill/park/GO), quote cumulative hours + spend; bindings with a **work authorization** model book the outcome there (collection or write-off).
 
 ---
 
